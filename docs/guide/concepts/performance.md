@@ -1,55 +1,12 @@
-# 12. Performance
+# Performance
 
-[← Testing your game](../environments/web/testing.md) · [Guide index](../README.md) · Next: [Troubleshooting →](../troubleshooting.md)
+[← States](states.md) · [Guide index](../README.md)
 
-Oly is built around one cost model: **data in WASM memory is cheap to reach from C++, and cheap from TS only in batches**. Each call from TS into WASM (or back) has a fixed cost. Pay it per system, per table or per event batch — never per entity.
+Oly is built around one cost model: **a query walks columns of components that sit next to each other in memory**. A system that touches a few components of many entities is cheap. A system that allocates, moves entities between tables or reads data it does not need is not.
 
 The measured numbers are in [performance](../../architecture/performance.md) and [benchmarks](../../benchmarks/README.md). This page turns them into rules.
 
-## The rules
-
-### 1. Iterate with `eachBlock`, not with `get` per entity
-
-```ts
-// slow: two boundary crossings and one object per entity
-for (const enemy of enemies) {
-  const position = world.get(enemy, Position);
-  world.set(enemy, Position, { x: position.x + 1 });
-}
-
-// fast: one crossing per table, no objects
-world.query({ write: [Position], with: [Enemy] }).eachBlock((block) => {
-  const position = block.write(Position);
-  for (let row = 0; row < block.count; ++row) {
-    position.x.set(row, position.x.get(row) + 1);
-  }
-});
-```
-
-`get`, `set`, `single` and `trySingle` are for **one** entity: the player, the boss, the camera.
-
-### 2. Move per-entity work to C++
-
-A TS system costs at least one crossing per call and runs in the JS engine. A C++ system runs next to the data, can be inlined and vectorized by the compiler. Movement, collision, AI and weapons belong in C++ once the entity count grows ([C++ gameplay](../10-cpp-gameplay.md)).
-
-### 3. In hot TS loops, use `raw()`
-
-`field.raw()` gives the typed array, base and stride. One array access per element, no method call:
-
-```ts
-const x = block.write(Position).x.raw();
-for (let row = 0; row < block.count; ++row) {
-  x.array[x.base + row * x.stride] += 1;
-}
-```
-
-Take raw arrays inside the block and do not call anything that can allocate in WASM (spawn, add, emit) while you use them: if WASM memory grows, the old array is detached.
-
-### 4. Handle events in batches
-
-Handlers already receive a whole batch per call. Do the loop inside the handler. Emitting thousands of events is fine; the queue is a byte buffer.
-
-### 5. Avoid archetype churn
+## Avoid archetype churn
 
 Every `add` or `remove` moves the entity to another table: it copies its components. Doing it every step to many entities costs more than a field write.
 
@@ -62,37 +19,53 @@ For example, a `Dash` component keeps `ready` and `active` as `u8` fields, becau
 
 The first move to a new combination of components creates an archetype and a cached edge. After that, the same move costs O(components) with no allocation.
 
-### 6. Split components by who reads them
+## Split components by who reads them
 
 A system that reads `Position` loads only the `Position` column into the cache. If `Position` also carried `health` and `name`, every movement step would drag them along. Small components read together go together; data read by different systems goes apart.
 
-### 7. Reuse queries — or don't worry about it
+## Reuse queries
 
-`world.query(spec)` is cached by its spec. Calling it inside a system every step is a map lookup, not a new query. Still, in very hot TS code you can keep the `Query` object in a variable.
+`context.query<...>()` is cached by its shape. Calling it inside a system every step is a map lookup, not a new query. Still, in a very hot system you can take the reference once (`auto& enemies = context.query<...>()`) and use it in a nested loop.
 
-### 8. Watch the fragmentation
+Iterate with `each` or `eachBlock`, and use `get` for **one** entity: the player, the boss, the camera. A `get` per entity in a loop repeats a lookup that the iteration already did.
 
-Many small tables (one entity per combination) make `eachBlock` call your function many times with `count` 1. Prefer a few fixed combinations per kind of entity. In C++, `oly::ecs::stats(world)` shows the archetype count and a histogram of table sizes.
+```cpp
+OLY_SYSTEM(drift) {
+  context.query<Position, const Velocity>(oly::ecs::With<Enemy>{}).eachBlock([](std::span<Position> positions, std::span<const Velocity> velocities) {
+    for (size_t row = 0; row < positions.size(); ++row) {
+      positions[row].x += velocities[row].x;
+    }
+  });
+}
+```
 
-### 9. Keep render cheap
+`eachBlock` gives the compiler whole columns, which it can vectorize. Register it as shown in [Engine, loop and systems](engine-and-systems.md#register-systems).
 
-Render runs once per display frame, which may be 144 times per second. Draw with batched queries and avoid allocating objects per entity there.
+## Watch the fragmentation
+
+Many small tables (one entity per combination) make `eachBlock` call your function many times with a span of 1. Prefer a few fixed combinations per kind of entity. `oly::ecs::stats(world)` shows the archetype count and a histogram of table sizes.
+
+## Keep render cheap
+
+Render runs once per display frame, which may be 144 times per second. Draw with queries and avoid allocating per entity there.
 
 ## Measuring
 
 - Compare against a baseline in the **same run**: the environment is noisy (WSL2). The engine's benchmarks report ratios, not absolute times.
-- In the browser, use the Chromium profiler on the running game.
-- For the engine's own benchmarks and the WASM boundary benchmark, see [commands](../../development/commands.md#ecs-benchmarks).
+- For the engine's own benchmarks, see [commands](../../development/commands.md#ecs-benchmarks).
+- A native game can be profiled with any native profiler on the `native-games-release` build.
 
 ## Debug vs. release
 
-| Build | Asserts | Use |
+| Preset | Asserts | Use |
 |---|---|---|
-| `wasm-games` | on | development: C++ contract violations stop with a message |
-| `wasm-games-release` | off | shipping and measuring |
+| `debug-asan`, `native-games`, `wasm-games` | on | development: contract violations (`OLY_ASSERT`) stop with a message |
+| `release`, `native-games-release`, `wasm-games-release` | off | shipping and measuring |
 
-In release, the TS layer still validates everything that goes through it and throws `ContractError`. A violation inside your **C++** code is not checked and is undefined behaviour. Run your tests in the debug preset.
+`OLY_ASSERT` only runs in debug. In release, a contract violation in your C++ code is not checked and is undefined behaviour. Run your tests in a debug preset.
 
 ## Next
 
-[13. Troubleshooting →](../troubleshooting.md): what each error means.
+[Troubleshooting](../troubleshooting.md): what each error means.
+
+In other clients: [TypeScript, across the WASM boundary](../environments/web/boundary.md).
