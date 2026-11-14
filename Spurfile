@@ -6,6 +6,7 @@ _fail() {
 _image_for() {
   case $1 in
     wasm* | native-clang* | schema-tool) echo wasm ;;
+    windows*) echo windows ;;
     *) echo dev ;;
   esac
 }
@@ -96,6 +97,35 @@ test: ## build and run the tests of $PRESET (default debug-asan)
 
   PRESET=$preset spur build
   ctest --preset "$preset" --no-tests=error "$@"
+
+## Run ctest on a native-games* preset (default native-games): the native host and the desktop games.
+##
+##   ./spur native-games-test -R '^native_host\.'
+native-games-test: ## the tests of a native-games* preset
+  preset=${PRESET:-native-games}
+  case $preset in
+    native-games*) ;;
+    *) _fail 64 "needs a native-games* preset (got: $preset)" ;;
+  esac
+
+  PRESET=$preset spur test "$@"
+
+## Build a desktop game and print the path of its executable.
+##
+##   ./spur desktop drift
+##   PRESET=windows-release ./spur desktop drift
+desktop: ## build a game for the desktop and print its executable
+  preset=${PRESET:-native-games-release}
+  _require_game "$@"
+  _in "$(_image_for "$preset")" -- "$@"
+
+  PRESET=$preset spur build
+
+  suffix=
+  case $preset in
+    windows*) suffix=.exe ;;
+  esac
+  printf 'build/%s/games/%s_game%s\n' "$preset" "$1" "$suffix"
 
 ## Run a command in the dev container, or a shell.
 ##

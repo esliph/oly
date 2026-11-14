@@ -1,0 +1,11 @@
+# drift.oly
+component Position { x: f32, y: f32 }
+component Velocity { x: f32, y: f32 }
+component Extent { halfWidth: f32, halfHeight: f32 }
+tag Player
+tag Rock
+event PlayerHit { player: entity }
+action move: axis2d
+action restart: button
+state playing
+state gameOver

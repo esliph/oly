@@ -1,3 +1,2 @@
-if(OLY_ENVIRONMENT STREQUAL "web")
-  add_subdirectory(arena)
-endif()
+add_subdirectory(arena)
+add_subdirectory(drift)
