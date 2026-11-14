@@ -38,6 +38,9 @@ In C++, the same violations stop on `OLY_ASSERT` in debug builds (`wasm-games`, 
 | `does not belong to this runtime's schema` | an entry from another generated schema module | import the entries from the game's `schema.generated.js` |
 | `invalid type name` / `invalid field` | schema naming rules | `PascalCase` types, `camelCase` fields, no C++ keywords |
 | `<game>.oly:<line>:<column>: ...` when building | a schema rule is broken | fix that line; the rules are in [Schema](02-schema.md#naming-rules) |
+| `<game> is a web game, but this build is native` (or the reverse) when configuring | the game's `ENVIRONMENT` is not the environment of the preset | wrap the game's `CMakeLists.txt` in `if(OLY_ENVIRONMENT STREQUAL "...")`, see [Desktop games](native-desktop.md#build-it) |
+| `declareSchema: the Engine already declares events, actions or states` | `declareSchema` called after a manual `declareEvent`, `declareState` or action declaration | call `declareSchema` first and declare nothing by hand |
+| `SDL_InitSubSystem(video): ...` or `SDL window: ...` (`std::runtime_error` from `Window`) | no display or video driver on the machine | run on a desktop session, or set `SDL_VIDEO_DRIVER=dummy` for a headless run |
 | `Engine already disposed` / `World already disposed` | use after `dispose()` | keep the engine alive while the game runs |
 | `World belongs to the Engine; use engine.dispose()` | `engine.world.dispose()` | dispose the engine instead |
 

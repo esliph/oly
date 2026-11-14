@@ -163,6 +163,24 @@ context.requestState(states::playing);
 context.fixedDeltaTime();  context.time();  context.paused();
 ```
 
+## C++-only and desktop games
+
+```cpp
+oly::app::declareSchema(engine);                          // events, actions and states of the schema, in schema order; once, on a fresh Engine
+oly::input::isKey(usage);                                 // true if the HID usage is one of Key
+
+oly::native_host::Window window({"Title", 640, 480});     // throws std::runtime_error if SDL cannot open it; the size is the logical size
+window.window();  window.renderer();                      // SDL_Window*, SDL_Renderer*
+oly::native_host::run(engine, window, {.maxFrames = 600, .frameSeconds = 1.0 / 60});   // exit code; maxFrames 0 = until closed
+oly::native_host::keyButtonOf(SDL_SCANCODE_W);            // std::optional<PhysicalButton>
+```
+
+```cmake
+oly_add_game(<game>_game ENVIRONMENT web|native SCHEMA <game>.oly SOURCES <files> DEPENDS <modules>)
+```
+
+C API (valid C11 and C++20): `#include "oly/capi/c_api.h"` and `#include "oly/capi/engine_api.h"`.
+
 ## Errors
 
 `ContractError` (wrong use) · `SchemaMismatchError` (rebuild the WASM) · `OLY_ASSERT` in C++ debug builds. See [Troubleshooting](13-troubleshooting.md).

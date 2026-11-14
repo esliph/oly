@@ -99,15 +99,18 @@ Keeping `game.ts` free of the DOM is what lets you [test the game in Node](11-te
 ### 4. `CMakeLists.txt`
 
 ```cmake
-file(GLOB nativeSources CONFIGURE_DEPENDS native/*.cpp)
+if(OLY_ENVIRONMENT STREQUAL "web")
+  file(GLOB nativeSources CONFIGURE_DEPENDS native/*.cpp)
 
-oly_add_game(hello_game
-  SCHEMA ${CMAKE_CURRENT_SOURCE_DIR}/hello.oly
-  SOURCES ${nativeSources}
-  DEPENDS ecs app capi)
+  oly_add_game(hello_game
+    ENVIRONMENT web
+    SCHEMA ${CMAKE_CURRENT_SOURCE_DIR}/hello.oly
+    SOURCES ${nativeSources}
+    DEPENDS ecs app capi)
+endif()
 ```
 
-The target name must be `<folder>_game`: `./spur game hello` looks for `hello_game.mjs`.
+`ENVIRONMENT` says where the game runs (`web` or `native`), and a game builds only in its own environment: the `if` keeps the folder out of the other builds. The target name must be `<folder>_game`: `./spur game hello` looks for `hello_game.mjs`.
 
 ### 5. `hello.oly`
 
@@ -271,7 +274,7 @@ Add the two TS projects to the `references` of the root `tsconfig.json`:
 |---|---|---|
 | **TS only** | prototypes, small games, few entities | `hello.oly` and TS systems. The `native/` folder can be empty: the WASM still holds the engine and your structs. |
 | **TS + C++** (recommended) | real games | per-entity work (movement, collision, AI) in C++; render, HUD, waves, score and menus in TS. |
-| **C++ only** | native tools, benchmarks, a future native host | an `oly::app::Engine` over an `oly::ecs::World`, with no TS at all. See [C++ gameplay](10-cpp-gameplay.md#a-c-only-game). |
+| **C++ only** | native tools, benchmarks, a desktop game | an `oly::app::Engine` over an `oly::ecs::World`, with no TS at all. See [C++ gameplay](10-cpp-gameplay.md#a-c-only-game). To open a window on Linux or Windows, see [Desktop games](native-desktop.md). |
 
 ## Next
 

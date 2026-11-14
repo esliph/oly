@@ -32,6 +32,8 @@ The same verb stands for the same concept in C++, in the C API and in TS.
 | call script code | — (C++ code is called directly) | `olyEngineSetScriptInvoker` (per engine, dispatch by `kind`) | installed by `Runtime.createEngine` |
 | restrict to states | `Engine::setSystemStates/setHandlerStates` (and `*StateMask`) | `olyEngineSetSystemStates/SetHandlerStates` | `registration.inState(...states)` |
 | persist (remove the state scope) | `SystemContext/DirectContext::persist`, `Scheduler::persist` | `olyContextPersist`, `olyEnginePersistTask` | `context.persist`, `schedule.persist` |
+| declare the schema (events, actions, states) | `oly::app::declareSchema(engine)` (generated, in `schema_declaration.generated.cpp`) | (done by `olyEngineCreate`) | (done by `Runtime.createEngine`) |
+| desktop window and loop | `oly::native_host::Window`, `oly::native_host::run(engine, window, options)` | — | — |
 | variant by ID | `ById` suffix: `addById`, `removeById`, `hasById`, `getById`, `tryGetById`, `queryById` | (all by ID) | — |
 
 ## Naming rules

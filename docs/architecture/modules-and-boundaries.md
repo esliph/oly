@@ -10,8 +10,10 @@ graph BT
   app --> input
   capi --> app
   webHost_native["web_host (C++, web only)"] --> capi
+  nativeHost["native_host (C++, native only, SDL3)"] --> app
   games["games (oly_add_game)"] --> capi
   games --> webHost_native
+  games --> nativeHost
   schema_typescript["schema_typescript (C++, native only)"] --> schema["schema (C++, native only)"]
   webHost["@oly/web-host"] --> tscore
   testing["@oly/testing"] --> tscore
@@ -27,10 +29,15 @@ graph BT
 | `app` | `oly::app` | `input ecs core` | library |
 | `capi` | `oly::capi` | `app input ecs core` | `OBJECT` |
 | `web_host` | `oly::web_host` | `capi` | `OBJECT`, built only with Emscripten |
+| `native_host` | `oly::native_host` | `app input ecs core` + SDL3 | library, built only with `OLY_BUILD_NATIVE_HOST` |
 | `schema` | `oly::schema` | — | `STATIC`, native builds only |
 | `schema_typescript` | `oly::schema_typescript` | `schema` | `OBJECT`, native builds only |
 
 `capi` and `web_host` are `OBJECT` because, in a static library, the linker would discard the unreferenced members and take the `EMSCRIPTEN_KEEPALIVE` functions with them.
+
+`native_host` depends on `app`, never on `capi`: a C++ game and a C++ host use `oly::app::Engine` directly. It links SDL3 statically and `PUBLIC`, so a game's drawing code can include `<SDL3/SDL.h>`.
+
+The C API headers, `oly/capi/c_api.h` and `oly/capi/engine_api.h`, are valid C11 and C++20: `capi.foreign_client` is a `.c` file that includes only them.
 
 ## How the boundaries are enforced
 
@@ -39,7 +46,7 @@ The boundaries do not hold by convention alone. Three mechanisms enforce them:
 1. **The build.** `oly_add_module(NAME <m> DEPENDS <...>)` links only the declared modules. `ecs` does not link `capi`, so an include of `capi` inside the ECS does not compile.
 2. **The `oly.lint.boundaries` lint** (`tools/check_boundaries.py`, runs in ctest, with a self-test in `oly.lint.boundaries_selftest`). It rejects:
    - `#include "oly/<x>/..."` in a module or game that did not declare `<x>` in `DEPENDS` (dependencies are `PUBLIC` and transitive, so only the lint catches the undeclared direct include);
-   - `oly/<x>/detail/` included outside `engine/runtime/<x>/` (the module's own tests and benchmarks may);
+   - `oly/<x>/detail/` included outside module `<x>`'s own directory (its tests and benchmarks may);
    - `@oly/core/internal` imported outside `engine/`;
    - `@oly/core/generated` imported outside `*.generated.ts` and `@oly/core`;
    - `@oly/web-host` imported in `@oly/core`;

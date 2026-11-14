@@ -29,3 +29,17 @@ The DOM-free game (`installGame`) is kept separate from the browser shell (`main
 `./spur game arena` assembles a static folder in `build/wasm-games-release/web/arena/` (`index.html`, esbuild's `main.js`, `.mjs` and `.wasm`). The `.mjs` does not go into the bundle: it is loaded at run time. `./spur serve arena`, in the `web` service, serves that folder on port 8000 ([build-and-tests.md](build-and-tests.md)).
 
 The manual checklist and the list of what was missing in the engine, what belongs to the game and what was worked around are in `games/arena/README.md`.
+
+# Games: `games/drift`
+
+Drift is the desktop example: the player steers a square, rocks fall, touching one ends the run. It is a C++-only game on the `native` environment (`oly_add_game(... ENVIRONMENT native ...)`) and runs in a window on Linux and Windows.
+
+```
+games/drift/
+  drift.oly        components, tags, the PlayerHit event, move and restart actions, playing and gameOver states
+  native/          the gameplay in C++, with no SDL: systems in three phases, a handler, state hooks, a repeating task
+  desktop/         main.cpp (World, Engine, declareSchema, Window, run) and render.cpp (the Render system, SDL drawing)
+  README.md        controls and how to run
+```
+
+`ENVIRONMENT` says where a game runs, and a game builds only in its own environment: `arena` on `web`, `drift` on `native`. Each game's `CMakeLists.txt` adds its target only there. `./spur desktop drift` builds it and prints the executable's path; `drift.desktop` runs it headless in ctest.

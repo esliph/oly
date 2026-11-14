@@ -6,7 +6,7 @@ If you want to know *why* the engine is built this way, read [the architecture d
 
 ## What you can build
 
-Oly is a 2D engine for the browser (and Node). With it you can:
+Oly is a 2D engine for the browser (and Node), and for C++-only games in a desktop window. With it you can:
 
 - keep thousands of entities in an archetype ECS and iterate over them without copies;
 - write gameplay in **TypeScript**, in **C++** (compiled to WebAssembly) or mix both in the same phase;
@@ -45,6 +45,7 @@ Then use these as references:
 |---|---|
 | [Recipes](recipes.md) | you want a ready pattern: projectile, cooldown, spawner, pickup, health, timer, nearest target, key rebinding and more |
 | [Cheat sheet](cheat-sheet.md) | you remember the idea but not the exact name or signature |
+| [Desktop games](native-desktop.md) | you want a C++-only game in a window on Linux or Windows |
 | [Glossary](../architecture/glossary.md) | you need the same operation in C++, C API and TS |
 
 ## The big picture in one example
@@ -118,7 +119,7 @@ runInBrowser(engine);
 
 ## Example games
 
-Complete example games live in [`games/`](../../games/), one folder per game. Each one has its own `README.md` that says what it shows and how to run it. After this guide, they are the best reference: real code that uses every part of the engine together.
+Complete example games live in [`games/`](../../games/), one folder per game, for the web and for the desktop. Each one has its own `README.md` that says what it shows and how to run it. After this guide, they are the best reference: real code that uses every part of the engine together.
 
 All example games follow the same layout ([Getting started](01-getting-started.md#create-your-own-game)), so once you know one, you can read any of them.
 

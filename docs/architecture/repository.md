@@ -2,9 +2,9 @@
 
 ```
 CMakeLists.txt  CMakePresets.json  Spurfile  spur   C++ build and task runner
-Dockerfile  Dockerfile.wasm  docker-compose.yaml    toolchains (gcc:14 and emsdk 3.1.74)
+Dockerfile  Dockerfile.wasm  Dockerfile.windows  docker-compose.yaml    toolchains (gcc:14, emsdk 3.1.74, mingw-w64 + Wine)
 package.json  tsconfig.base.json  tsconfig.json     npm workspaces and project references
-cmake/            build functions: OlyModule, OlyGame, OlyOptions, OlyWarnings, OlyWasm, Dependencies
+cmake/            build functions: OlyModule, OlyGame, OlyOptions, OlyWarnings, OlyWasm, Dependencies; toolchains/mingw-w64.cmake
 engine/
   runtime/        C++, one module per folder: <m>/{include/oly/<m>, src, tests, bench}
     core/         dependency-free utilities
@@ -17,12 +17,14 @@ engine/
     web/host/js/                  @oly/web-host: browser layer
     web/host/native/              web_host: C++ linked into every web game's WASM (JS script invoker)
     web/clients/typescript/codegen/  schema_typescript: the TS emitter of oly-schema
+    native/host/                  native_host: SDL3 window, input translation and the run loop for desktop games
   schema/         the game schema tooling
     format/       the .oly language and its test corpus
     codegen/      oly-schema: parser, validation, layout, hash, emitters, C++ emitter
   testing/        @oly/testing (private): fixture game, WASM tests, boundary benchmarks
 games/
   arena/          validation game (arena.oly, C++ in native/, TS package in web/ (src/, tests/))
+  drift/          desktop example, C++ only (drift.oly, gameplay in native/, SDL shell in desktop/)
 tools/            measurement and lint scripts (Python and shell)
 docs/
   architecture/   this documentation

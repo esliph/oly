@@ -244,7 +244,7 @@ int main() {
 
 Inside a handler registered with `on<T>`, read the batch with `context.events<T>()`, which returns a `std::span<const T>`. The macros (`OLY_SYSTEM`...) are only needed when TS registers by name.
 
-Today there is no native window or renderer: a C++-only host is a test, a tool or a benchmark. The engine is ready for one: a host only calls `frame`, `setHidden` and the input functions (`buttonDown`, `buttonUp`, `pointerMove`, `releaseAll`).
+The loop above is a test, a tool or a benchmark: it calls `frame` itself. For a game in a window, use the native host, which calls `frame`, `setHidden` and the input functions (`buttonDown`, `buttonUp`, `pointerMove`, `releaseAll`) for you: see [Desktop games](native-desktop.md). With a schema, call `oly::app::declareSchema(engine)` instead of declaring each event, action and state by hand.
 
 ## Advanced: your own exported C functions
 

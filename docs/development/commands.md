@@ -2,7 +2,7 @@
 
 There is no C++ toolchain on the Windows host: everything runs in a container via Docker Compose, driven by `./spur <task>` from Git Bash. The host needs Git Bash and Docker. The services are described in [../architecture/build-and-tests.md](../architecture/build-and-tests.md#toolchain).
 
-`./spur --list` shows the tasks, and `./spur --describe <task>` the help of one. Each task runs in the container its preset needs (`dev`: gcc:14 + cmake + perf; `wasm`: emsdk + Clang + node + Python); typed inside the wrong container, it exits with 64.
+`./spur --list` shows the tasks, and `./spur --describe <task>` the help of one. Each task runs in the container its preset needs (`dev`: gcc:14 + cmake + perf; `wasm`: emsdk + Clang + node + Python; `windows`: mingw-w64 + Wine); typed inside the wrong container, it exits with 64.
 
 - Run `docker compose build` once after pulling the change that introduced `./spur`: images built before it lack `OLY_TOOLCHAIN` and stop with exit 69.
 - `-x` and `-n` given on the host show only the dispatch to the container. To trace a task, run it inside: `./spur dev ./spur -x test`.
@@ -21,6 +21,21 @@ PRESET=release ./spur build       # builds tests + benchmarks in Release, assert
 
 - Build in `build/<preset>/`. Test executables in `build/<preset>/tests/<module>_<suite>`; benchmark executables in `build/<preset>/bench/ecs_bench_*`.
 - Fuzz (`fuzz_vs_model`, parts of `command_buffer`): seed and number of operations via `OLY_FUZZ_SEED` and `OLY_FUZZ_OPS` (`engine/runtime/ecs/tests/support/model.hpp`). The seed used is printed to stderr to reproduce a failure.
+
+## Desktop games and Windows
+
+```sh
+./spur native-games-test                   # ctest in the native-games preset: native_host.*, drift.desktop and everything else
+./spur desktop drift                       # builds native-games-release and prints build/native-games-release/games/drift_game
+./spur windows-test                        # cross-compiles with MinGW and runs every test under Wine (preset windows)
+PRESET=windows-release ./spur desktop drift   # build/windows-release/games/drift_game.exe, static
+./spur windows                             # a shell in the windows container (docker compose run --rm windows)
+./spur windows x86_64-w64-mingw32-objdump -p build/windows-release/games/drift_game.exe
+```
+
+- `native-games-test` accepts only `native-games*` presets, and `windows-test` only `windows*` ones. The arguments go to ctest.
+- A desktop executable opens a window, so run it on the host, outside the container. `drift_game --frames 600` runs headless with `SDL_VIDEO_DRIVER=dummy`.
+- The first configure of a `native-games*` or `windows*` preset fetches SDL3.
 
 ## ECS benchmarks
 
