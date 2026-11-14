@@ -11,7 +11,7 @@ import re
 import sys
 
 IGNORED_DIRECTORIES = {"build", "node_modules", ".git", ".superpowers", "dist", "dist-tests", ".claude"}
-CPP_EXTENSIONS = (".hpp", ".cpp", ".h", ".inl")
+CPP_EXTENSIONS = (".hpp", ".cpp", ".h", ".c", ".inl")
 TS_EXTENSION = ".ts"
 
 INCLUDE_PATTERN = re.compile(r'^\s*#\s*include\s+"oly/([a-z_]+)/([^"]*)"')
@@ -24,7 +24,7 @@ MODULE_INCLUDE_DIRECTORY = re.compile(r"^(.+)/include/oly/([a-z_]+)$")
 EMSCRIPTEN_PATTERN = re.compile(r"__EMSCRIPTEN(?:_[a-z]+)?__|\bEM_[A-Z_]+|\bEMSCRIPTEN_[A-Z_]+|<emscripten[./]")
 EMSCRIPTEN_ALLOWED_PREFIX = "engine/environments/web/"
 # OLY_API is the core's only Emscripten-aware line (EMSCRIPTEN_KEEPALIVE on WASM).
-OLY_API_HEADER = "engine/runtime/capi/include/oly/capi/c_api.hpp"
+OLY_API_HEADER = "engine/runtime/capi/include/oly/capi/c_api.h"
 
 TS_IMPORT_PATTERN = re.compile(r"""(?:\bfrom\s+|\bimport\s*\(?\s*)["'](\.{1,2}/[^"']*|@oly/[^"']*)["']""")
 

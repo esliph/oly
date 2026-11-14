@@ -1,6 +1,6 @@
 #pragma once
 
-#include "oly/capi/c_api.hpp"
+#include "oly/capi/c_api.h"
 #include "oly/ecs/world.hpp"
 
 namespace oly::capi {

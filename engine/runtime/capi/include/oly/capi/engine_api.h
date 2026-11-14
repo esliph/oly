@@ -1,10 +1,10 @@
 #pragma once
 
-#include <cstdint>
+#include <stdint.h>
 
-#include "oly/capi/c_api.hpp"
+#include "oly/capi/c_api.h"
 
-struct OlyEngine;
+typedef struct OlyEngine OlyEngine;
 
 #define OLY_INVALID_SYSTEM 0xFFFFFFFFu
 #define OLY_INVALID_HANDLER 0xFFFFFFFFu
@@ -22,24 +22,26 @@ struct OlyEngine;
 #define OLY_STATE_ENTER 0u
 #define OLY_STATE_EXIT 1u
 
-struct OlyTaskHandle {
+typedef struct OlyTaskHandle {
   uint32_t slot;
   uint32_t generation;
-};
+} OlyTaskHandle;
 
 // Mirror of oly::input::ActionState (12 B per action): JS reads the snapshot straight from the heap.
-struct OlyActionState {
+typedef struct OlyActionState {
   float x;
   float y;
   uint32_t flags;
-};
+} OlyActionState;
 
 #define OLY_ACTION_PRESSED 1u
 #define OLY_ACTION_HELD 2u
 #define OLY_ACTION_RELEASED 4u
 #define OLY_ACTION_VALID 8u
 
+#ifdef __cplusplus
 extern "C" {
+#endif
 // Runs the script code of one engine. `kind` is OLY_SCRIPT_SYSTEM (`id` is the system; `events` null and `eventCount`
 // 0), OLY_SCRIPT_HANDLER (`id` is the handler; `events` is the batch, with the event struct's layout), OLY_SCRIPT_TASK
 // (`id` is the task's scriptId; `events` null and `eventCount` 1 on the last run, 0 on the others),
@@ -138,4 +140,7 @@ OLY_API void olySystemSpawn(OlyEngine* engine, OlyEntity* out);
 OLY_API void olySystemDestroy(OlyEngine* engine, uint32_t index, uint32_t generation);
 OLY_API void olySystemAdd(OlyEngine* engine, uint32_t index, uint32_t generation, uint32_t componentId, void* value);
 OLY_API void olySystemRemove(OlyEngine* engine, uint32_t index, uint32_t generation, uint32_t componentId);
+
+#ifdef __cplusplus
 }
+#endif

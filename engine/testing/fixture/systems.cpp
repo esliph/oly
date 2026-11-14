@@ -4,7 +4,7 @@
 #include "oly/app/state_context.hpp"
 #include "oly/app/system.hpp"
 #include "oly/app/task_context.hpp"
-#include "oly/capi/c_api.hpp"
+#include "oly/capi/c_api.h"
 #include "oly/capi/engine.hpp"
 #include "oly/capi/world.hpp"
 #include "oly/ecs/entity.hpp"

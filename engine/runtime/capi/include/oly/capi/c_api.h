@@ -1,36 +1,41 @@
 #pragma once
 
-#include <cstdint>
+#include <stdint.h>
 
 #if defined(__EMSCRIPTEN__)
 #include <emscripten.h>
 #define OLY_API EMSCRIPTEN_KEEPALIVE
+#elif defined(_WIN32)
+#define OLY_API __declspec(dllexport)
 #else
-#define OLY_API
+#define OLY_API __attribute__((visibility("default")))
 #endif
 
-struct OlyWorld;
-struct OlyQuery; // opaque: it is an oly::ecs::QueryById*
-struct OlyIteration; // opaque: occupies a slot of the OlyWorld iteration stack
+typedef struct OlyWorld OlyWorld;
+typedef struct OlyQuery OlyQuery; // opaque: it is an oly::ecs::QueryById*
+typedef struct OlyIteration OlyIteration; // opaque: occupies a slot of the OlyWorld iteration stack
 
-extern "C" {
-struct OlyEntity {
+typedef struct OlyEntity {
   uint32_t index;
   uint32_t generation;
-};
+} OlyEntity;
 
-OLY_API OlyWorld* olyWorldCreate();
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+OLY_API OlyWorld* olyWorldCreate(void);
 OLY_API void olyWorldDestroy(OlyWorld* world);
 // 1 if ok; 0 with the reason truncated into `message` (NUL-terminated). With capacity 0, `message` is not written.
 OLY_API int32_t olyWorldCheckInvariants(OlyWorld* world, char* message, uint32_t capacity);
 
-OLY_API uint32_t olySchemaHash();
-OLY_API uint32_t olySchemaComponentCount();
+OLY_API uint32_t olySchemaHash(void);
+OLY_API uint32_t olySchemaComponentCount(void);
 // schemaIndex < olySchemaComponentCount(), unchecked.
 OLY_API uint32_t olySchemaComponentId(uint32_t schemaIndex);
 OLY_API uint32_t olyComponentSize(uint32_t componentId); // 0 for tag
 OLY_API uint32_t olyComponentAlignment(uint32_t componentId);
-OLY_API uint32_t olySchemaEventCount();
+OLY_API uint32_t olySchemaEventCount(void);
 // eventIndex < olySchemaEventCount(), unchecked. The index is the event's index in the schema, which is also its
 // event type in the Engine (olyEngineEmit, olyEngineAdd*Handler).
 OLY_API uint32_t olySchemaEventSize(uint32_t eventIndex);
@@ -39,12 +44,12 @@ OLY_API uint32_t olySchemaEventAlignment(uint32_t eventIndex);
 #define OLY_ACTION_BUTTON 0u
 #define OLY_ACTION_AXIS2D 1u
 #define OLY_ACTION_POINTER 2u
-OLY_API uint32_t olySchemaActionCount();
+OLY_API uint32_t olySchemaActionCount(void);
 // actionIndex < olySchemaActionCount(), unchecked. The index is the action's index in the schema, which is also its
 // ActionId in the Engine.
 OLY_API uint32_t olySchemaActionKind(uint32_t actionIndex);
 // The state's index in the schema is its StateId in the Engine.
-OLY_API uint32_t olySchemaStateCount();
+OLY_API uint32_t olySchemaStateCount(void);
 
 // Structural changes (spawn, destroy, add, remove) require no open iteration; destroy, add and remove
 // also require an alive entity (OLY_ASSERT). Any structural change invalidates the pointers from
@@ -54,11 +59,11 @@ OLY_API void olyEntityDestroy(OlyWorld* world, uint32_t index, uint32_t generati
 OLY_API int32_t olyEntityIsAlive(OlyWorld* world, uint32_t index, uint32_t generation);
 
 // Moves the value from `value` (olyComponentSize(componentId) bytes); if the entity already has the component, replaces it.
-// For a tag, `value` is ignored and may be nullptr.
+// For a tag, `value` is ignored and may be NULL.
 OLY_API void olyComponentAdd(OlyWorld* world, uint32_t index, uint32_t generation, uint32_t componentId, void* value);
 OLY_API void olyComponentRemove(OlyWorld* world, uint32_t index, uint32_t generation, uint32_t componentId);
 OLY_API int32_t olyComponentHas(OlyWorld* world, uint32_t index, uint32_t generation, uint32_t componentId);
-// nullptr if the entity is dead, the component is absent or is a tag.
+// NULL if the entity is dead, the component is absent or is a tag.
 OLY_API void* olyComponentGet(OlyWorld* world, uint32_t index, uint32_t generation, uint32_t componentId);
 
 // componentIds = read | write | with | without, concatenated. The query belongs to the World (there is no destroy) and is
@@ -72,4 +77,7 @@ OLY_API OlyQuery* olyQueryCreate(OlyWorld* world, const uint32_t* componentIds, 
 OLY_API OlyIteration* olyQueryBegin(OlyWorld* world, OlyQuery* query, uint32_t* outBlockCount, const uintptr_t** outDescriptors);
 // Ends the innermost iteration; any other order is a contract violation (OLY_ASSERT).
 OLY_API void olyQueryEnd(OlyWorld* world, OlyIteration* iteration);
+
+#ifdef __cplusplus
 }
+#endif

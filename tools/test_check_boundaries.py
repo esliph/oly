@@ -183,6 +183,14 @@ class CheckBoundariesTest(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("engine/runtime/app/include/oly/app/x.h:1: Emscripten (__EMSCRIPTEN__) is allowed only in engine/environments/web/ and OLY_API", output)
 
+    def test_emscripten_in_runtime_c_file_fails(self):
+        self.write("engine/runtime/capi/src/x.c", "#ifdef __EMSCRIPTEN__\n#endif\n")
+
+        code, output = self.run_check([])
+
+        self.assertEqual(code, 1)
+        self.assertIn("engine/runtime/capi/src/x.c:1: Emscripten (__EMSCRIPTEN__) is allowed only in engine/environments/web/ and OLY_API", output)
+
     def test_wasm_skip_in_runtime_bench_passes(self):
         self.write("engine/runtime/app/bench/b.cpp", "#if !defined(__EMSCRIPTEN__)\n#endif\n")
 
@@ -192,7 +200,7 @@ class CheckBoundariesTest(unittest.TestCase):
         self.assertEqual(output, "")
 
     def test_emscripten_in_allowed_places_passes(self):
-        self.write("engine/runtime/capi/include/oly/capi/c_api.hpp", "#include <emscripten.h>\n#define OLY_API EMSCRIPTEN_KEEPALIVE\n")
+        self.write("engine/runtime/capi/include/oly/capi/c_api.h", "#include <emscripten.h>\n#define OLY_API EMSCRIPTEN_KEEPALIVE\n")
         self.write("engine/environments/web/host/native/src/x.cpp", "#include <emscripten.h>\nEM_JS(void, f, (), {});\n")
         self.write("engine/runtime/app/tests/t.cpp", "#if !defined(__EMSCRIPTEN__)\n#endif\n")
 

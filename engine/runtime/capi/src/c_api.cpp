@@ -1,4 +1,4 @@
-#include "oly/capi/c_api.hpp"
+#include "oly/capi/c_api.h"
 
 #include <algorithm>
 #include <cstring>

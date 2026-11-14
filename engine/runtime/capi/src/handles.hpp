@@ -6,8 +6,8 @@
 #include <vector>
 
 #include "oly/app/engine.hpp"
-#include "oly/capi/c_api.hpp"
-#include "oly/capi/engine_api.hpp"
+#include "oly/capi/c_api.h"
+#include "oly/capi/engine_api.h"
 #include "oly/ecs/query_by_id.hpp"
 #include "oly/ecs/world.hpp"
 

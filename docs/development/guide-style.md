@@ -14,7 +14,7 @@ The public API is:
 | `@oly/web-host` exports | `engine/environments/web/host/js/src/index.ts` |
 | C++ public headers | `engine/runtime/<module>/include/oly/<module>/*.hpp`, except `detail/` |
 | registration macros | `OLY_SYSTEM`, `OLY_HANDLER`, `OLY_STATE_HOOK` |
-| the C API | `engine/runtime/capi/include/oly/capi/c_api.hpp` |
+| the C API | `engine/runtime/capi/include/oly/capi/c_api.h` |
 | the schema language and the generated code | `engine/schema/format/`, `engine/schema/codegen/`, `engine/environments/web/clients/typescript/codegen/`, `@oly/core/generated` |
 | how a game is built | `cmake/OlyGame.cmake` (`oly_add_game`), the `schema-tool`, `game`, `serve` and `games-test` tasks of the `Spurfile` |
 | behaviour a game relies on | loop order, deferred vs. direct changes, event rounds, scope rules, validity of views, error messages |

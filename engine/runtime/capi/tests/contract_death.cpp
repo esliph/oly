@@ -8,8 +8,8 @@
 
 #include "oly/app/engine.hpp"
 #include "oly/app/schema.hpp"
-#include "oly/capi/c_api.hpp"
-#include "oly/capi/engine_api.hpp"
+#include "oly/capi/c_api.h"
+#include "oly/capi/engine_api.h"
 #include "oly/capi/schema_registry.hpp"
 #include "oly/core/assert.hpp"
 #include "oly/ecs/component.hpp"

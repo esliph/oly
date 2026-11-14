@@ -1,4 +1,4 @@
-#include "oly/capi/engine_api.hpp"
+#include "oly/capi/engine_api.h"
 
 #include <doctest/doctest.h>
 
@@ -10,7 +10,7 @@
 #include "oly/app/handler.hpp"
 #include "oly/app/system.hpp"
 #include "oly/app/task_context.hpp"
-#include "oly/capi/c_api.hpp"
+#include "oly/capi/c_api.h"
 #include "oly/capi/engine.hpp"
 #include "test_events.hpp"
 
