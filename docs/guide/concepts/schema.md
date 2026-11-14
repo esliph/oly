@@ -1,8 +1,8 @@
-# 2. Schema
+# Schema
 
-[← Getting started](../environments/web/getting-started.md) · [Guide index](../README.md) · Next: [World and entities →](world-and-entities.md)
+[Guide index](../README.md) · Next: [World and entities →](world-and-entities.md)
 
-The schema is the **single source** of your game's data. You write it once, in a `<game>.oly` file. The build generates the matching C++ and TS from it, so TS and C++ always agree on the memory layout.
+The schema is the **single source** of your game's data. You write it once, in a `<game>.oly` file. The build generates the matching C++ (and the code of each client) from it, so every language agrees on the memory layout.
 
 ## The five kinds of entries
 
@@ -35,17 +35,13 @@ state playing
 
 Whitespace is free and `#` starts a comment. A field list can span several lines and may end with a comma.
 
-TS gets every entry from the generated module, and C++ from the generated header:
-
-```ts
-import schema, { Health, shoot } from "../schema.generated.js";
-```
+C++ gets every entry from the generated header:
 
 ```cpp
 #include "schema.generated.hpp"
 ```
 
-The default export is the schema you pass to `loadRuntime`. You pass the entries to every API call: `world.get(entity, Health)`, `context.emit(EnemyDied, ...)`, `actions.button(shoot)`. There are no string lookups at run time.
+Components, tags and events are structs with the name you wrote (`Health`, `Enemy`, `EnemyDied`). Actions are `actions::shoot` and states are `states::playing`. You pass them to every API call: `context.get<Health>(entity)`, `context.emit(EnemyDied{...})`, `context.actions().button(actions::shoot)`. There are no string lookups at run time, and a typo such as `actions::shoto` is a compile error.
 
 ## Field types
 
@@ -58,7 +54,7 @@ The default export is the schema you pass to `loadRuntime`. You pass the entries
 | `i32` `u32` | `int32_t` `uint32_t` | health, score, ids |
 | `entity` | `oly::ecs::Entity` | a reference to another entity |
 
-There are no 64-bit integers (they would need `BigInt` in JS) and no strings. Keep text, sprites and other assets on the TS side, indexed by a number in a component.
+There are no 64-bit integers (a client in JavaScript could not read them) and no strings. Keep text, sprites and other assets outside the schema, indexed by a number in a component.
 
 Booleans are a `u8` field with `0` or `1`:
 
@@ -82,7 +78,7 @@ Other rules:
 - An event needs at least one field.
 - A field name appears once per component or event.
 - A name can appear only once in the file (components, tags, events, actions and states share one namespace).
-- An action or state cannot be a TypeScript reserved word such as `function`, because TS gets it as a constant.
+- An action or state cannot be a reserved word of a client language such as `function`, because that client gets it as a constant.
 - At most 32 states.
 
 ## Order matters
@@ -92,7 +88,7 @@ Each entry gets an index inside its group, in the order you write them:
 - **Events**: the index is the dispatch order. Earlier events are handled first in each round ([Events](events.md#order)).
 - **Actions** and **states**: the index is the id used in C++ (`actions::shoot`, `states::playing`).
 
-Changing the order, adding or removing an entry changes the **schema hash**. The WASM must be rebuilt.
+Changing the order, adding or removing an entry changes the **schema hash**. Every build that embeds the schema must be rebuilt.
 
 ## Memory layout
 
@@ -118,7 +114,13 @@ Each archetype stores one column per component (SoA across components). Inside a
 
 ## What the build generates
 
-On every build, `oly-schema` reads the `.oly` file and writes two files. They are generated, never committed and never edited.
+On every build, `oly-schema` reads the `.oly` file and writes the generated files of the game. They are never committed and never edited. For C++ they are:
+
+| File | Holds |
+|---|---|
+| `schema.generated.hpp` | the structs, `actions::` and `states::` |
+| `schema_registry.generated.cpp` | the schema hash and the component ids, which the C API reads |
+| `schema_declaration.generated.cpp` | `oly::app::declareSchema(Engine&)` |
 
 From the schema above, `schema.generated.hpp` contains:
 
@@ -141,37 +143,20 @@ namespace states {
 }
 ```
 
-A typo such as `actions::shoto` in C++ is a compile error.
+`oly::app::declareSchema(engine)` declares the events, actions and states in schema order, so the index in the schema is the id. Call it once, on an `Engine` that declares nothing yet (`OLY_ASSERT` otherwise):
 
-`schema.generated.ts` has one constant per entry and the schema as the default export:
-
-```ts
-export const Health = componentType("Health", { value: "i32" }, 1, { size: 4, alignment: 4, offsets: { value: 0 } });
-// ...
-export default schemaOf([Position, Health, Weapon, Target, Enemy, Frozen, EnemyDied, move, aim, shoot, menu, playing], 0x1a2b3c4d);
+```cpp
+oly::app::declareSchema(engine);
 ```
 
-## The schema check at start-up
-
-```ts
-import { loadRuntime, SchemaMismatchError } from "@oly/core";
-
-try {
-  const runtime = await loadRuntime(factory, schema);
-} catch (error) {
-  if (error instanceof SchemaMismatchError) {
-    console.error("rebuild the WASM:", error.message);
-  }
-  throw error;
-}
-```
-
-`loadRuntime` compares the hash, the number of entries and the size and alignment of each type. The message names the first type that differs.
+Where you do not own the `Engine`, the host does this for you ([the web host](../environments/web/getting-started.md), [the desktop host](../environments/native/getting-started.md)).
 
 ## Using the schema in several places
 
-Import the generated module everywhere: from the game, from the shell and from tests. An entry from another generated module is refused by `loadRuntime` and by the API calls, because the runtime only accepts the entries of its own schema.
+Include the generated header everywhere: from the game, from the shell and from tests. The runtime only accepts the entries of its own schema.
 
 ## Next
 
-[3. World and entities →](world-and-entities.md): create entities from these types.
+[World and entities →](world-and-entities.md): create entities from these types.
+
+In other clients: [TypeScript](../environments/web/typescript/schema.md).
