@@ -1,4 +1,4 @@
-# 6. Events
+# Events
 
 [← Engine, loop and systems](engine-and-systems.md) · [Guide index](../README.md) · Next: [Input →](input.md)
 
@@ -13,37 +13,53 @@ Use events when one thing must trigger several independent reactions: an enemy d
 event EnemyDied { entity: entity, x: f32, y: f32 }
 ```
 
-```ts
-// a system emits
-if (health.value.get(row) <= 0) {
-  context.emit(EnemyDied, { entity: block.entity(row), x: position.x.get(row), y: position.y.get(row) });
+A system emits with the generated struct:
+
+```cpp
+OLY_SYSTEM(killDead) {
+  context.query<const Health, const Position>(oly::ecs::With<Enemy>{}).each([&](oly::ecs::Entity entity, const Health& health, const Position& position) {
+    if (health.value <= 0) {
+      context.emit(EnemyDied{entity, position.x, position.y});
+    }
+  });
 }
 ```
 
-```ts
-// a handler reacts
-engine.on(EnemyDied, "countKill", (context, batch) => {
-  score.kills += batch.count;
-});
+A handler reacts. `OLY_HANDLER(name, Event)` defines `void name(HandlerContext& context, std::span<const Event> events)`:
+
+```cpp
+OLY_HANDLER(countKill, EnemyDied) {
+  Score& score = std::get<1>(context.query<Score>().single());
+  score.kills += static_cast<int32_t>(events.size());
+}
 ```
 
-Missing fields in `emit` are `0`.
+**Where you own the `Engine`** (native):
+
+```cpp
+engine.addSystem(oly::app::Phase::Update, "killDead", killDead);
+engine.on<EnemyDied>("countKill", [](oly::app::HandlerContext& context) { countKill(context, context.events<EnemyDied>()); });
+```
+
+The macro's function takes the batch as a span, and `on<T>` takes a `HandlerFunction` (a function of the context alone), so the registration is a captureless lambda that passes the batch in.
+
+**On the web**, the client registers it by name: [TypeScript](../environments/web/typescript/events.md#declare-emit-handle).
+
+Emitting an event that the schema does not declare is a contract violation (`OLY_ASSERT`).
 
 ## Handlers receive batches
 
 A handler is called **once per batch**, not once per event. The batch holds every event of that type emitted since the last round, in emission order.
 
-```ts
-engine.on(EnemyDied, "spawnCorpses", (context, batch) => {
-  const events = batch.read();
-
-  for (let index = 0; index < batch.count; ++index) {
-    context.spawn([Corpse, Position], { Position: { x: events.x.get(index), y: events.y.get(index) } });
+```cpp
+OLY_HANDLER(spawnCorpses, EnemyDied) {
+  for (const EnemyDied& died : events) {
+    context.spawn(Corpse{}, Position{died.x, died.y});
   }
-});
+}
 ```
 
-`batch.read()` returns views over the event queue in WASM memory, with no copy. Like query views, they are valid only during the handler call.
+The span points into the event queue, with no copy. It is valid only during the handler call.
 
 ## Handlers change the world directly
 
@@ -51,65 +67,66 @@ Handlers run **after** the phases, outside any iteration. So their `spawn`, `des
 
 Because of that, the entity named in an event may already be dead: another handler may have destroyed it, or two bullets may have reported the same death. Always check:
 
-```ts
-engine.on(CoinCollected, "collectCoin", (context, batch) => {
-  const coins = batch.read().coin;
+```cpp
+OLY_HANDLER(collectCoin, CoinCollected) {
+  Score& score = std::get<1>(context.query<Score>().single());
 
-  for (let index = 0; index < batch.count; ++index) {
-    const coin = coins.get(index);
-    if (context.isAlive(coin)) {
-      context.destroy(coin);
+  for (const CoinCollected& collected : events) {
+    if (context.isAlive(collected.coin)) {
+      context.destroy(collected.coin);
       score.coins += 1;
     }
   }
-});
+}
 ```
 
 ## The engine does not remove duplicates
 
 If two bullets hit the same enemy in one step, `EnemyDied` arrives twice. Decide in the handler what a duplicate means:
 
-```ts
-engine.on(EnemyDied, "countKill", (_context, batch) => {
-  const enemies = batch.read().entity;
-  const counted = new Set<Entity>();
+```cpp
+OLY_HANDLER(countKillOnce, EnemyDied) {
+  Score& score = std::get<1>(context.query<Score>().single());
+  std::unordered_set<oly::ecs::Entity, oly::ecs::EntityHash> counted;
 
-  for (let index = 0; index < batch.count; ++index) {
-    const enemy = enemies.get(index);
-    if (!counted.has(enemy)) {
-      counted.add(enemy);
+  for (const EnemyDied& died : events) {
+    if (counted.insert(died.entity).second) {
       score.kills += 1;
     }
   }
-});
+}
 ```
 
 ## Order
 
-- **Between types**: the order of the events in the schema. Every round handles the first event type, then the second, and so on.
-- **Between handlers of one type**: registration order. C++ and TS handlers mix.
+- **Between types**: the order of the events in the schema ([Schema](schema.md#order-matters)). Every round handles the first event type, then the second, and so on.
+- **Between handlers of one type**: registration order. Handlers written in different languages mix.
 
 ### Put the destroying handler last
 
 Register the handlers that **read** the entity before the one that **destroys** it:
 
-```ts
-engine.addNativeHandler(EnemyDied, "dropCoin");                          // reads the position
-engine.on(EnemyDied, "countKill", (_context, batch) => countKill(score, batch));
-engine.addNativeHandler(EnemyDied, "destroyDead");                       // destroys: last
+**Where you own the `Engine`** (native):
+
+```cpp
+engine.on<EnemyDied>("dropCoin", [](oly::app::HandlerContext& context) { dropCoin(context, context.events<EnemyDied>()); });   // reads the position
+engine.on<EnemyDied>("countKill", [](oly::app::HandlerContext& context) { countKill(context, context.events<EnemyDied>()); });
+engine.on<EnemyDied>("destroyDead", [](oly::app::HandlerContext& context) { destroyDead(context, context.events<EnemyDied>()); });   // destroys: last
 ```
+
+**On the web**, the client registers them by name: [TypeScript](../environments/web/typescript/events.md#order).
 
 ## Rounds: events that cause events
 
 What a handler emits goes to the **next round of the same step**. Rounds repeat until no event is pending.
 
-```ts
-engine.on(EnemyDied, "chainExplosion", (context, batch) => {
+```cpp
+OLY_HANDLER(chainExplosion, EnemyDied) {
   // nearby enemies take damage; some of them die and emit EnemyDied again (next round)
-});
+}
 ```
 
-The number of rounds per step is limited by `maxEventRounds` (default 16). Reaching it means an event loop (A emits B, B emits A): a contract error in debug builds. Raise the limit only if your chain is legitimately deep.
+The number of rounds per step is limited by `maxEventRounds` (default 16, see [Engine, loop and systems](engine-and-systems.md#create-the-engine)). Reaching it means an event loop (A emits B, B emits A): a contract violation. Raise the limit only if your chain is legitimately deep.
 
 ## When events are dispatched
 
@@ -124,40 +141,25 @@ An event nobody handles is discarded at the end of the step.
 
 ## Restrict handlers to states
 
-```ts
-engine.on(PlayerDied, "endRound", (context) => context.requestState(gameOver)).inState(playing);
-```
-
-With an active state that is not in the list, the handler is skipped.
-
-## C++ handlers
-
-Declare the handler in C++ with `OLY_HANDLER(name, EventType)` and register it from TS by name. `events` is a `std::span<const EventType>`.
+`on` returns a `HandlerId`. Give it to `setHandlerStates`:
 
 ```cpp
-#include "oly/app/handler.hpp"
-#include "schema.generated.hpp"
-
-OLY_HANDLER(destroyDead, EnemyDied) {
-  for (const EnemyDied& died : events) {
-    if (context.isAlive(died.entity)) {
-      context.destroy(died.entity);
-    }
-  }
+OLY_HANDLER(endRound, PlayerDied) {
+  context.requestState(states::gameOver);
 }
 ```
 
-```ts
-engine.addNativeHandler(EnemyDied, "destroyDead");
-```
-
-Registering a name that does not exist, or a handler declared for a different event type, throws `ContractError`.
-
-C++ systems emit with the generated struct:
+**Where you own the `Engine`** (native):
 
 ```cpp
-context.emit(EnemyDied{enemy, position.x, position.y});
+oly::app::HandlerId endRoundId = engine.on<PlayerDied>("endRound", [](oly::app::HandlerContext& context) { endRound(context, context.events<PlayerDied>()); });
+
+engine.setHandlerStates(endRoundId, {states::playing});
 ```
+
+**On the web**, the client registers it by name: [TypeScript](../environments/web/typescript/events.md#restrict-handlers-to-states).
+
+With an active state that is not in the list, the handler is skipped.
 
 ## Events vs. other tools
 
@@ -166,9 +168,11 @@ context.emit(EnemyDied{enemy, position.x, position.y});
 | several reactions to one fact, now | an event |
 | something to happen after N seconds | the [schedule](schedule.md) |
 | to keep data on an entity across steps | a component |
-| to mark entities for another system to process | a tag (`add(entity, Hit)`), then a query `with: [Hit]` |
+| to mark entities for another system to process | a tag (`context.add(entity, Hit{})`), then a query `With<Hit>` |
 | to change screens | a [state](states.md) |
 
 ## Next
 
-[7. Input →](input.md): turn keys and mouse into actions.
+[Input →](input.md): turn keys and mouse into actions.
+
+In other clients: [TypeScript](../environments/web/typescript/events.md).
