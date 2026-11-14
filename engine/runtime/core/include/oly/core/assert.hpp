@@ -17,7 +17,10 @@ namespace oly::core {
 
   namespace detail {
     [[noreturn]]
-#if defined(__GNUC__) || defined(__clang__)
+#if defined(__MINGW32__) && !defined(__clang__)
+    // MinGW reads printf as the Microsoft format, which has no %zu.
+    __attribute__((format(gnu_printf, 4, 5)))
+#elif defined(__GNUC__) || defined(__clang__)
     __attribute__((format(printf, 4, 5)))
 #endif
     void assertFail(const char* expression, const char* file, int line, const char* format, ...) noexcept;

@@ -97,6 +97,22 @@
       }
     },
     {
+      "name": "windows-base", "hidden": true, "inherits": "base",
+      "toolchainFile": "${sourceDir}/cmake/toolchains/mingw-w64.cmake",
+      "cacheVariables": { "OLY_BUILD_NATIVE_HOST": "ON", "OLY_BUILD_GAMES": "ON" }
+    },
+    {
+      "name": "windows", "inherits": "windows-base",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug", "OLY_SANITIZE": "OFF", "OLY_BUILD_TESTS": "ON", "OLY_BUILD_BENCH": "OFF" }
+    },
+    {
+      "name": "windows-release", "inherits": "windows-base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release", "OLY_SANITIZE": "OFF", "OLY_ENABLE_ASSERTS": "0",
+        "OLY_BUILD_TESTS": "OFF", "OLY_BUILD_BENCH": "OFF"
+      }
+    },
+    {
       "name": "wasm-games", "inherits": "wasm-debug",
       "cacheVariables": { "OLY_BUILD_GAMES": "ON" }
     },
@@ -121,6 +137,8 @@
     { "name": "wasm-debug", "configurePreset": "wasm-debug" },
     { "name": "native-games", "configurePreset": "native-games" },
     { "name": "native-games-release", "configurePreset": "native-games-release" },
+    { "name": "windows", "configurePreset": "windows" },
+    { "name": "windows-release", "configurePreset": "windows-release" },
     { "name": "wasm-games", "configurePreset": "wasm-games" },
     { "name": "wasm-games-release", "configurePreset": "wasm-games-release" }
   ],
@@ -136,6 +154,7 @@
     { "name": "wasm-debug", "configurePreset": "wasm-debug", "output": { "outputOnFailure": true } },
     { "name": "native-games", "configurePreset": "native-games", "output": { "outputOnFailure": true } },
     { "name": "native-games-release", "configurePreset": "native-games-release", "output": { "outputOnFailure": true } },
+    { "name": "windows", "configurePreset": "windows", "output": { "outputOnFailure": true } },
     { "name": "wasm-games", "configurePreset": "wasm-games", "output": { "outputOnFailure": true } },
     { "name": "wasm-games-release", "configurePreset": "wasm-games-release", "output": { "outputOnFailure": true } }
   ]

@@ -110,6 +110,18 @@ native-games-test: ## the tests of a native-games* preset
 
   PRESET=$preset spur test "$@"
 
+## Cross-compile for Windows and run ctest on a windows* preset (default windows) under Wine.
+##
+##   ./spur windows-test -R '^native_host\.'
+windows-test: ## the tests of a windows* preset, under Wine
+  preset=${PRESET:-windows}
+  case $preset in
+    windows*) ;;
+    *) _fail 64 "needs a windows* preset (got: $preset)" ;;
+  esac
+
+  PRESET=$preset spur test "$@"
+
 ## Build a desktop game and print the path of its executable.
 ##
 ##   ./spur desktop drift
@@ -142,6 +154,15 @@ dev: ## command or shell in the dev container
 ##   ./spur wasm node --version
 wasm: ## command or shell in the wasm container
   _in wasm -- "$@"
+
+  [ "$#" -gt 0 ] || set -- bash
+  exec "$@"
+
+## Run a command in the windows container (MinGW and Wine), or a shell.
+##
+##   ./spur windows x86_64-w64-mingw32-objdump -p build/windows-release/games/drift_game.exe
+windows: ## command or shell in the windows container
+  _in windows -- "$@"
 
   [ "$#" -gt 0 ] || set -- bash
   exec "$@"

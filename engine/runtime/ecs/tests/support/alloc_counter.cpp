@@ -4,6 +4,10 @@
 #include <cstdlib>
 #include <new>
 
+#if defined(_WIN32)
+#include <malloc.h>
+#endif
+
 namespace {
   std::atomic<size_t> g_count{0};
 
@@ -16,12 +20,30 @@ namespace {
     throw std::bad_alloc();
   }
 
+  // msvcrt has no aligned_alloc, and memory from _aligned_malloc must go back through _aligned_free.
+#if defined(_WIN32)
+  void* alignedMalloc(size_t alignmentBytes, size_t size) {
+    return _aligned_malloc(size, alignmentBytes);
+  }
+
+  void alignedFree(void* pointer) noexcept {
+    _aligned_free(pointer);
+  }
+#else
+  void* alignedMalloc(size_t alignmentBytes, size_t size) {
+    return std::aligned_alloc(alignmentBytes, (size + alignmentBytes - 1) / alignmentBytes * alignmentBytes); // aligned_alloc requires a multiple of the alignment
+  }
+
+  void alignedFree(void* pointer) noexcept {
+    std::free(pointer);
+  }
+#endif
+
   void* allocateAligned(size_t size, std::align_val_t alignment) {
     g_count.fetch_add(1, std::memory_order_relaxed);
 
     const size_t alignmentBytes = static_cast<size_t>(alignment);
-    size = (size + alignmentBytes - 1) / alignmentBytes * alignmentBytes; // aligned_alloc requires a multiple of the alignment
-    if (void* pointer = std::aligned_alloc(alignmentBytes, size ? size : alignmentBytes)) {
+    if (void* pointer = alignedMalloc(alignmentBytes, size ? size : alignmentBytes)) {
       return pointer;
     }
     throw std::bad_alloc();
@@ -92,20 +114,20 @@ void operator delete[](void* pointer, const std::nothrow_t&) noexcept {
   std::free(pointer);
 }
 void operator delete(void* pointer, std::align_val_t) noexcept {
-  std::free(pointer);
+  alignedFree(pointer);
 }
 void operator delete[](void* pointer, std::align_val_t) noexcept {
-  std::free(pointer);
+  alignedFree(pointer);
 }
 void operator delete(void* pointer, size_t, std::align_val_t) noexcept {
-  std::free(pointer);
+  alignedFree(pointer);
 }
 void operator delete[](void* pointer, size_t, std::align_val_t) noexcept {
-  std::free(pointer);
+  alignedFree(pointer);
 }
 void operator delete(void* pointer, std::align_val_t, const std::nothrow_t&) noexcept {
-  std::free(pointer);
+  alignedFree(pointer);
 }
 void operator delete[](void* pointer, std::align_val_t, const std::nothrow_t&) noexcept {
-  std::free(pointer);
+  alignedFree(pointer);
 }

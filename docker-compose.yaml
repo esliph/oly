@@ -39,6 +39,15 @@ services:
       - ./build:/app/build
     command: bash
 
+  windows:
+    build:
+      context: .
+      dockerfile: Dockerfile.windows
+    volumes:
+      - .:/app
+      - ./build:/app/build
+    command: bash
+
   web:
     build:
       context: .

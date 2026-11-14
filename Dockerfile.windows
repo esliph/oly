@@ -1,0 +1,14 @@
+FROM debian:trixie-slim
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends cmake make git python3 ca-certificates \
+    g++-mingw-w64-x86-64-posix gcc-mingw-w64-x86-64-posix binutils-mingw-w64-x86-64 wine wine64 \
+  && rm -rf /var/lib/apt/lists/*
+
+ENV WINEPREFIX=/opt/wine WINEDEBUG=-all
+
+# Created once at image build: the first Wine start takes many seconds and would otherwise land inside a ctest timeout.
+RUN wineboot --init
+
+WORKDIR /app
+ENV OLY_TOOLCHAIN=windows
