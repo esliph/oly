@@ -1,6 +1,6 @@
 # 6. Events
 
-[← Engine, loop and systems](05-engine-and-systems.md) · [Guide index](README.md) · Next: [Input →](07-input.md)
+[← Engine, loop and systems](engine-and-systems.md) · [Guide index](../README.md) · Next: [Input →](input.md)
 
 An event is a small message: "this enemy died here", "the player picked up this coin". The system that sees it happen **emits** it. Any number of **handlers** react to it later in the same step. The emitter does not know who listens.
 
@@ -164,11 +164,11 @@ context.emit(EnemyDied{enemy, position.x, position.y});
 | You want | Use |
 |---|---|
 | several reactions to one fact, now | an event |
-| something to happen after N seconds | the [schedule](08-schedule.md) |
+| something to happen after N seconds | the [schedule](schedule.md) |
 | to keep data on an entity across steps | a component |
 | to mark entities for another system to process | a tag (`add(entity, Hit)`), then a query `with: [Hit]` |
-| to change screens | a [state](09-states.md) |
+| to change screens | a [state](states.md) |
 
 ## Next
 
-[7. Input →](07-input.md): turn keys and mouse into actions.
+[7. Input →](input.md): turn keys and mouse into actions.

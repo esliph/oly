@@ -1,6 +1,6 @@
 # 8. Schedule
 
-[← Input](07-input.md) · [Guide index](README.md) · Next: [States →](09-states.md)
+[← Input](input.md) · [Guide index](../README.md) · Next: [States →](states.md)
 
 The scheduler runs code **later** or **repeatedly**, on the **game clock**. Game time stops when the game pauses, so timers stop too. You never need to count frames or compare `Date.now()`.
 
@@ -90,7 +90,7 @@ function stunFor(context: SystemContext, enemy: Entity, seconds: number): void {
 ## Pause, states and recovery
 
 - **Pause**: tasks do not run and the clock does not move. A 2-second `after` scheduled before a 10-second pause still fires 2 game seconds later.
-- **States**: a task created while a state is active is **scoped** to it. A state change cancels it. This is what makes "play again" safe: the old wave timer does not keep spawning in the menu. Use `schedule.persist(handle)` to keep a task across state changes. See [States](09-states.md#scope-automatic-clean-up).
+- **States**: a task created while a state is active is **scoped** to it. A state change cancels it. This is what makes "play again" safe: the old wave timer does not keep spawning in the menu. Use `schedule.persist(handle)` to keep a task across state changes. See [States](states.md#scope-automatic-clean-up).
 - **Created during step 2**: a task scheduled by another task runs from the next step on. `after(0)` inside a task is not a loop.
 - **Exceptions**: scheduled tasks survive an interrupted frame.
 
@@ -138,4 +138,4 @@ On the last run of an `after`, the discard does **not** run; release the resourc
 
 ## Next
 
-[9. States →](09-states.md): menus, rounds and game over with automatic clean-up.
+[9. States →](states.md): menus, rounds and game over with automatic clean-up.

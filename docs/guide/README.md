@@ -17,7 +17,7 @@ Oly is a 2D engine for the browser (and Node), and for C++-only games in a deskt
 - organize the game in **states** (menu → playing → game over) that clean up after themselves;
 - **test the game in Node** with a fake clock and fake input.
 
-Oly does **not** draw, play audio or do physics. You draw with whatever you want (Canvas 2D, WebGL, a test recorder) inside a render system. See [Limits](13-troubleshooting.md#what-oly-does-not-do).
+Oly does **not** draw, play audio or do physics. You draw with whatever you want (Canvas 2D, WebGL, a test recorder) inside a render system. See [Limits](troubleshooting.md#what-oly-does-not-do).
 
 ## Learning path
 
@@ -25,19 +25,19 @@ Read in order the first time. Each page builds on the one before.
 
 | # | Page | You learn to |
 |---|---|---|
-| 1 | [Getting started](01-getting-started.md) | build the engine, run the example game and create your own game folder |
-| 2 | [Schema](02-schema.md) | declare components, tags, events, actions and states |
-| 3 | [World and entities](03-world-and-entities.md) | create, change, read and destroy entities |
-| 4 | [Queries](04-queries.md) | iterate over entities fast, filter them, find "the only one" |
-| 5 | [Engine, loop and systems](05-engine-and-systems.md) | run the game loop, register systems, pause, render |
-| 6 | [Events](06-events.md) | let systems talk without knowing each other |
-| 7 | [Input](07-input.md) | bind keys and mouse to actions and read them |
-| 8 | [Schedule](08-schedule.md) | run code later or every N seconds on the game clock |
-| 9 | [States](09-states.md) | build menu, playing and game over screens that reset cleanly |
+| 1 | [Getting started](environments/web/getting-started.md) | build the engine, run the example game and create your own game folder |
+| 2 | [Schema](concepts/schema.md) | declare components, tags, events, actions and states |
+| 3 | [World and entities](concepts/world-and-entities.md) | create, change, read and destroy entities |
+| 4 | [Queries](concepts/queries.md) | iterate over entities fast, filter them, find "the only one" |
+| 5 | [Engine, loop and systems](concepts/engine-and-systems.md) | run the game loop, register systems, pause, render |
+| 6 | [Events](concepts/events.md) | let systems talk without knowing each other |
+| 7 | [Input](concepts/input.md) | bind keys and mouse to actions and read them |
+| 8 | [Schedule](concepts/schedule.md) | run code later or every N seconds on the game clock |
+| 9 | [States](concepts/states.md) | build menu, playing and game over screens that reset cleanly |
 | 10 | [C++ gameplay](10-cpp-gameplay.md) | write systems, handlers and hooks in C++, or a C++-only game |
-| 11 | [Testing your game](11-testing.md) | run the game in Node with fake time and input |
-| 12 | [Performance](12-performance.md) | keep the hot path fast across the WASM boundary |
-| 13 | [Troubleshooting](13-troubleshooting.md) | understand each error and fix the common mistakes |
+| 11 | [Testing your game](environments/web/testing.md) | run the game in Node with fake time and input |
+| 12 | [Performance](concepts/performance.md) | keep the hot path fast across the WASM boundary |
+| 13 | [Troubleshooting](troubleshooting.md) | understand each error and fix the common mistakes |
 
 Then use these as references:
 
@@ -45,7 +45,7 @@ Then use these as references:
 |---|---|
 | [Recipes](recipes.md) | you want a ready pattern: projectile, cooldown, spawner, pickup, health, timer, nearest target, key rebinding and more |
 | [Cheat sheet](cheat-sheet.md) | you remember the idea but not the exact name or signature |
-| [Desktop games](native-desktop.md) | you want a C++-only game in a window on Linux or Windows |
+| [Desktop games](environments/native/getting-started.md) | you want a C++-only game in a window on Linux or Windows |
 | [Glossary](../architecture/glossary.md) | you need the same operation in C++, C API and TS |
 
 ## The big picture in one example
@@ -119,9 +119,9 @@ runInBrowser(engine);
 
 ## Example games
 
-Complete example games live in [`games/`](../../games/), one folder per game, for the web and for the desktop. Each one has its own `README.md` that says what it shows and how to run it. After this guide, they are the best reference: real code that uses every part of the engine together.
+Complete example games live in [`games/`](../../games), one folder per game, for the web and for the desktop. Each one has its own `README.md` that says what it shows and how to run it. After this guide, they are the best reference: real code that uses every part of the engine together.
 
-All example games follow the same layout ([Getting started](01-getting-started.md#create-your-own-game)), so once you know one, you can read any of them.
+All example games follow the same layout ([Getting started](environments/web/getting-started.md#create-your-own-game)), so once you know one, you can read any of them.
 
 ## Conventions used in this guide
 

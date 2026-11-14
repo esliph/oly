@@ -26,7 +26,7 @@ What to update:
 | new function, method, option or macro | the page of its topic, the [cheat sheet](../guide/cheat-sheet.md) and, if it enables a new pattern, a [recipe](../guide/recipes.md) |
 | renamed or changed signature | every example that uses it (search the whole `docs/guide/`) and the cheat sheet |
 | removed | every mention; replace examples that depended on it |
-| new or changed error | the table in [Troubleshooting](../guide/13-troubleshooting.md) |
+| new or changed error | the table in [Troubleshooting](../guide/troubleshooting.md) |
 | changed behaviour (order, timing, scope) | the page that describes it and any recipe that relied on it |
 | new page | the index tables in `docs/guide/README.md` and the navigation lines of the neighbouring pages |
 

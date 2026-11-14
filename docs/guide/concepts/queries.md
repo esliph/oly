@@ -1,6 +1,6 @@
 # 4. Queries
 
-[← World and entities](03-world-and-entities.md) · [Guide index](README.md) · Next: [Engine, loop and systems →](05-engine-and-systems.md)
+[← World and entities](world-and-entities.md) · [Guide index](../README.md) · Next: [Engine, loop and systems →](engine-and-systems.md)
 
 A query visits every entity that has a given set of components. It is the main way to run gameplay over many entities.
 
@@ -166,7 +166,7 @@ context.query({ read: [Position, Chaser], write: [Velocity], with: [Enemy] }).ea
 });
 ```
 
-For "each against each" (bullets × enemies), prefer C++: see [C++ gameplay](10-cpp-gameplay.md#nested-queries).
+For "each against each" (bullets × enemies), prefer C++: see [C++ gameplay](../10-cpp-gameplay.md#nested-queries).
 
 ### Several shapes with one function
 
@@ -243,4 +243,4 @@ C++ `single` returns **references** into the table, valid until the next structu
 
 ## Next
 
-[5. Engine, loop and systems →](05-engine-and-systems.md): run queries every step inside systems.
+[5. Engine, loop and systems →](engine-and-systems.md): run queries every step inside systems.

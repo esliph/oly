@@ -1,6 +1,6 @@
 # 7. Input
 
-[← Events](06-events.md) · [Guide index](README.md) · Next: [Schedule →](08-schedule.md)
+[← Events](events.md) · [Guide index](../README.md) · Next: [Schedule →](schedule.md)
 
 Gameplay never reads keys directly. It reads **actions** ("shoot", "move", "aim"). You **bind** physical buttons to actions, and you can change the bindings at any time. This gives you key rebinding, several keys per action and fake input in tests for free.
 
@@ -188,4 +188,4 @@ engine.actions().bind(jump, MouseButton::Left);
 
 ## Next
 
-[8. Schedule →](08-schedule.md): run code later, on the game clock.
+[8. Schedule →](schedule.md): run code later, on the game clock.

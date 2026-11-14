@@ -42,7 +42,7 @@ Three rules guide the design:
 | [ecs.md](ecs.md) | the archetype ECS: layers, indices, costs, iteration, `CommandBuffer` |
 | [input.md](input.md) | input actions and HID physical buttons |
 | [app.md](app.md) | the `Engine`: loop, systems, pause, events, schedule, states, recovery |
-| [bridge.md](bridge.md) | the C API and the per-engine script invoker |
+| [bridge.md](capi.md) | the C API and the per-engine script invoker |
 | [schema-and-codegen.md](schema-and-codegen.md) | the `.oly` schema, `oly-schema` and each game's WASM module |
 | [ts-packages.md](ts-packages.md) | `@oly/core`, `@oly/web-host`, `@oly/testing` |
 | [games.md](games.md) | the validation game `games/arena` |

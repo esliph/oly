@@ -1,6 +1,6 @@
 # 2. Schema
 
-[← Getting started](01-getting-started.md) · [Guide index](README.md) · Next: [World and entities →](03-world-and-entities.md)
+[← Getting started](../environments/web/getting-started.md) · [Guide index](../README.md) · Next: [World and entities →](world-and-entities.md)
 
 The schema is the **single source** of your game's data. You write it once, in a `<game>.oly` file. The build generates the matching C++ and TS from it, so TS and C++ always agree on the memory layout.
 
@@ -89,7 +89,7 @@ Other rules:
 
 Each entry gets an index inside its group, in the order you write them:
 
-- **Events**: the index is the dispatch order. Earlier events are handled first in each round ([Events](06-events.md#order)).
+- **Events**: the index is the dispatch order. Earlier events are handled first in each round ([Events](events.md#order)).
 - **Actions** and **states**: the index is the id used in C++ (`actions::shoot`, `states::playing`).
 
 Changing the order, adding or removing an entry changes the **schema hash**. The WASM must be rebuilt.
@@ -174,4 +174,4 @@ Import the generated module everywhere: from the game, from the shell and from t
 
 ## Next
 
-[3. World and entities →](03-world-and-entities.md): create entities from these types.
+[3. World and entities →](world-and-entities.md): create entities from these types.

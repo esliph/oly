@@ -183,4 +183,4 @@ C API (valid C11 and C++20): `#include "oly/capi/c_api.h"` and `#include "oly/ca
 
 ## Errors
 
-`ContractError` (wrong use) · `SchemaMismatchError` (rebuild the WASM) · `OLY_ASSERT` in C++ debug builds. See [Troubleshooting](13-troubleshooting.md).
+`ContractError` (wrong use) · `SchemaMismatchError` (rebuild the WASM) · `OLY_ASSERT` in C++ debug builds. See [Troubleshooting](troubleshooting.md).

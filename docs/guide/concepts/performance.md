@@ -1,10 +1,10 @@
 # 12. Performance
 
-[← Testing your game](11-testing.md) · [Guide index](README.md) · Next: [Troubleshooting →](13-troubleshooting.md)
+[← Testing your game](../environments/web/testing.md) · [Guide index](../README.md) · Next: [Troubleshooting →](../troubleshooting.md)
 
 Oly is built around one cost model: **data in WASM memory is cheap to reach from C++, and cheap from TS only in batches**. Each call from TS into WASM (or back) has a fixed cost. Pay it per system, per table or per event batch — never per entity.
 
-The measured numbers are in [performance](../architecture/performance.md) and [benchmarks](../benchmarks/README.md). This page turns them into rules.
+The measured numbers are in [performance](../../architecture/performance.md) and [benchmarks](../../benchmarks/README.md). This page turns them into rules.
 
 ## The rules
 
@@ -30,7 +30,7 @@ world.query({ write: [Position], with: [Enemy] }).eachBlock((block) => {
 
 ### 2. Move per-entity work to C++
 
-A TS system costs at least one crossing per call and runs in the JS engine. A C++ system runs next to the data, can be inlined and vectorized by the compiler. Movement, collision, AI and weapons belong in C++ once the entity count grows ([C++ gameplay](10-cpp-gameplay.md)).
+A TS system costs at least one crossing per call and runs in the JS engine. A C++ system runs next to the data, can be inlined and vectorized by the compiler. Movement, collision, AI and weapons belong in C++ once the entity count grows ([C++ gameplay](../10-cpp-gameplay.md)).
 
 ### 3. In hot TS loops, use `raw()`
 
@@ -82,7 +82,7 @@ Render runs once per display frame, which may be 144 times per second. Draw with
 
 - Compare against a baseline in the **same run**: the environment is noisy (WSL2). The engine's benchmarks report ratios, not absolute times.
 - In the browser, use the Chromium profiler on the running game.
-- For the engine's own benchmarks and the WASM boundary benchmark, see [commands](../development/commands.md#ecs-benchmarks).
+- For the engine's own benchmarks and the WASM boundary benchmark, see [commands](../../development/commands.md#ecs-benchmarks).
 
 ## Debug vs. release
 
@@ -95,4 +95,4 @@ In release, the TS layer still validates everything that goes through it and thr
 
 ## Next
 
-[13. Troubleshooting →](13-troubleshooting.md): what each error means.
+[13. Troubleshooting →](../troubleshooting.md): what each error means.

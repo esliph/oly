@@ -1,6 +1,6 @@
 # 11. Testing your game
 
-[← C++ gameplay](10-cpp-gameplay.md) · [Guide index](README.md) · Next: [Performance →](12-performance.md)
+[← C++ gameplay](../../10-cpp-gameplay.md) · [Guide index](../../README.md) · Next: [Performance →](../../concepts/performance.md)
 
 Because the engine takes time and input from outside, you can run the **real game**, with the **real WASM**, in Node: you choose the time, you press the keys, you read the world. Tests are exact and fast — no browser, no waiting.
 
@@ -270,8 +270,8 @@ Run:
 
 ## Testing C++ systems alone
 
-The engine's own C++ tests use doctest with a bare `World` and `Engine` (see `engine/runtime/app/tests/`). For game code, testing through the WASM in Node is usually enough and covers TS and C++ together. When you add a test inside the engine, follow the `add-test-case` skill described in [build and tests](../architecture/build-and-tests.md).
+The engine's own C++ tests use doctest with a bare `World` and `Engine` (see `engine/runtime/app/tests/`). For game code, testing through the WASM in Node is usually enough and covers TS and C++ together. When you add a test inside the engine, follow the `add-test-case` skill described in [build and tests](../../../architecture/build-and-tests.md).
 
 ## Next
 
-[12. Performance →](12-performance.md): keep the hot path fast.
+[12. Performance →](../../concepts/performance.md): keep the hot path fast.

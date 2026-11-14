@@ -1,6 +1,6 @@
 # 13. Troubleshooting
 
-[← Performance](12-performance.md) · [Guide index](README.md) · References: [Recipes](recipes.md) · [Cheat sheet](cheat-sheet.md)
+[← Performance](concepts/performance.md) · [Guide index](README.md) · References: [Recipes](recipes.md) · [Cheat sheet](cheat-sheet.md)
 
 Oly checks how you use it and fails **at the wrong call**, with a message that names the operation, the entity (`index:generation`) and the type. This page explains the messages you will meet most.
 
@@ -37,8 +37,8 @@ In C++, the same violations stop on `OLY_ASSERT` in debug builds (`wasm-games`, 
 | `button outside the W3C table` | a key name that does not exist (`"W"` instead of `"KeyW"`) | use `KeyboardEvent.code` names; check with `isButtonName` |
 | `does not belong to this runtime's schema` | an entry from another generated schema module | import the entries from the game's `schema.generated.js` |
 | `invalid type name` / `invalid field` | schema naming rules | `PascalCase` types, `camelCase` fields, no C++ keywords |
-| `<game>.oly:<line>:<column>: ...` when building | a schema rule is broken | fix that line; the rules are in [Schema](02-schema.md#naming-rules) |
-| `<game> is a web game, but this build is native` (or the reverse) when configuring | the game's `ENVIRONMENT` is not the environment of the preset | wrap the game's `CMakeLists.txt` in `if(OLY_ENVIRONMENT STREQUAL "...")`, see [Desktop games](native-desktop.md#build-it) |
+| `<game>.oly:<line>:<column>: ...` when building | a schema rule is broken | fix that line; the rules are in [Schema](concepts/schema.md#naming-rules) |
+| `<game> is a web game, but this build is native` (or the reverse) when configuring | the game's `ENVIRONMENT` is not the environment of the preset | wrap the game's `CMakeLists.txt` in `if(OLY_ENVIRONMENT STREQUAL "...")`, see [Desktop games](environments/native/getting-started.md#build-it) |
 | `declareSchema: the Engine already declares events, actions or states` | `declareSchema` called after a manual `declareEvent`, `declareState` or action declaration | call `declareSchema` first and declare nothing by hand |
 | `SDL_InitSubSystem(video): ...` or `SDL window: ...` (`std::runtime_error` from `Window`) | no display or video driver on the machine | run on a desktop session, or set `SDL_VIDEO_DRIVER=dummy` for a headless run |
 | `Engine already disposed` / `World already disposed` | use after `dispose()` | keep the engine alive while the game runs |
@@ -71,6 +71,6 @@ After changing the schema:
 
 ## What Oly does not do
 
-Out of scope by design: rendering, physics, audio, camera, UI, assets, networking, serialization, editor, threads and gamepad. Render and collision belong to the game: draw in a `Render` system ([Engine, loop and systems](05-engine-and-systems.md#phases)) and test overlaps in `UpdateAfter` ([Recipes](recipes.md#pickups)). More in [limits](../architecture/limits.md).
+Out of scope by design: rendering, physics, audio, camera, UI, assets, networking, serialization, editor, threads and gamepad. Render and collision belong to the game: draw in a `Render` system ([Engine, loop and systems](concepts/engine-and-systems.md#phases)) and test overlaps in `UpdateAfter` ([Recipes](recipes.md#pickups)). More in [limits](../architecture/limits.md).
 
 ECS v1 also has no fixed-size chunks, no change detection, no enable/disable flag per component and no sparse storage.

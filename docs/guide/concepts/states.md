@@ -1,6 +1,6 @@
 # 9. States
 
-[← Schedule](08-schedule.md) · [Guide index](README.md) · Next: [C++ gameplay →](10-cpp-gameplay.md)
+[← Schedule](schedule.md) · [Guide index](../README.md) · Next: [C++ gameplay →](../10-cpp-gameplay.md)
 
 States split the game into screens or modes: `menu`, `playing`, `gameOver`. Each state can turn systems and handlers on or off, run code on entry and exit, and — the best part — **clean up after itself**.
 
@@ -194,8 +194,8 @@ engine.addNativeOnEnter(playing, "spawnWalls");
 engine.addNativeOnExit(playing, "spawnWalls");   // the same hook can serve both; context.entering() tells which
 ```
 
-`states::playing` and the other ids come from the generated header. In a C++-only game, declare them with `engine.declareState("playing")` ([C++ gameplay](10-cpp-gameplay.md#a-c-only-game)).
+`states::playing` and the other ids come from the generated header. In a C++-only game, declare them with `engine.declareState("playing")` ([C++ gameplay](../10-cpp-gameplay.md#a-c-only-game)).
 
 ## Next
 
-[10. C++ gameplay →](10-cpp-gameplay.md): move the per-entity work to C++.
+[10. C++ gameplay →](../10-cpp-gameplay.md): move the per-entity work to C++.

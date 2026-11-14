@@ -1,6 +1,6 @@
 # 10. C++ gameplay
 
-[← States](09-states.md) · [Guide index](README.md) · Next: [Testing your game →](11-testing.md)
+[← States](concepts/states.md) · [Guide index](README.md) · Next: [Testing your game →](environments/web/testing.md)
 
 C++ runs inside the WASM module, next to the ECS data. A C++ system touches components with plain references, with no boundary crossing per entity. Put the per-entity, per-step work here: movement, AI, collision, weapons.
 
@@ -60,7 +60,7 @@ The C++ contexts have the same members as the TS ones, with C++ types.
 | state | `context.state() == states::playing`, `context.requestState(states::gameOver)` |
 | pause | `context.pause()`, `context.resume()`, `context.paused()` |
 
-In a `SystemContext`, structural changes are deferred to the end of the phase. In handlers, tasks and hooks they are direct. The rules are the same as in TS ([Engine, loop and systems](05-engine-and-systems.md#structural-changes-in-systems)).
+In a `SystemContext`, structural changes are deferred to the end of the phase. In handlers, tasks and hooks they are direct. The rules are the same as in TS ([Engine, loop and systems](concepts/engine-and-systems.md#structural-changes-in-systems)).
 
 ## Examples
 
@@ -162,7 +162,7 @@ void endDash(oly::app::TaskContext& context) {
 context.schedule().after(dash.duration, endDash, PlayerTarget{player});
 ```
 
-More in [Schedule](08-schedule.md#c-tasks-and-payloads).
+More in [Schedule](concepts/schedule.md#c-tasks-and-payloads).
 
 ## Randomness and shared constants
 
@@ -244,7 +244,7 @@ int main() {
 
 Inside a handler registered with `on<T>`, read the batch with `context.events<T>()`, which returns a `std::span<const T>`. The macros (`OLY_SYSTEM`...) are only needed when TS registers by name.
 
-The loop above is a test, a tool or a benchmark: it calls `frame` itself. For a game in a window, use the native host, which calls `frame`, `setHidden` and the input functions (`buttonDown`, `buttonUp`, `pointerMove`, `releaseAll`) for you: see [Desktop games](native-desktop.md). With a schema, call `oly::app::declareSchema(engine)` instead of declaring each event, action and state by hand.
+The loop above is a test, a tool or a benchmark: it calls `frame` itself. For a game in a window, use the native host, which calls `frame`, `setHidden` and the input functions (`buttonDown`, `buttonUp`, `pointerMove`, `releaseAll`) for you: see [Desktop games](environments/native/getting-started.md). With a schema, call `oly::app::declareSchema(engine)` instead of declaring each event, action and state by hand.
 
 ## Advanced: your own exported C functions
 
@@ -252,4 +252,4 @@ A game can export extra `extern "C"` functions with `OLY_API`. From an `OlyWorld
 
 ## Next
 
-[11. Testing your game →](11-testing.md): run all of this in Node, step by step.
+[11. Testing your game →](environments/web/testing.md): run all of this in Node, step by step.

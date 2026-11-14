@@ -1,6 +1,6 @@
 # 5. Engine, loop and systems
 
-[← Queries](04-queries.md) · [Guide index](README.md) · Next: [Events →](06-events.md)
+[← Queries](queries.md) · [Guide index](../README.md) · Next: [Events →](events.md)
 
 The `Engine` runs your game: a fixed-step clock, phases of systems, pause, events, input, schedule and states. It owns one `World`.
 
@@ -86,7 +86,7 @@ engine.addSystem(Phase.UpdateBefore, "resumeOnPress", resumeOnPress).whilePaused
 | Option | Effect |
 |---|---|
 | `.whilePaused()` | the system runs **only** while the game is paused (not in Render) |
-| `.inState(...states)` | the system runs only in those states ([States](09-states.md)) |
+| `.inState(...states)` | the system runs only in those states ([States](states.md)) |
 
 Systems cannot be registered during `frame` (from inside another system). Register everything at start-up.
 
@@ -102,10 +102,10 @@ A system receives a `SystemContext`. It is valid only during that call.
 | `paused`, `pause()`, `resume()` | game pause |
 | `query(spec)`, `get`, `set`, `has`, `isAlive` | read and write component values |
 | `spawn`, `destroy`, `add`, `remove`, `persist` | **deferred** structural changes |
-| `emit(Event, values)` | send an event ([Events](06-events.md)) |
-| `actions` | input ([Input](07-input.md)) |
-| `schedule` | timers ([Schedule](08-schedule.md)) |
-| `state`, `requestState(state)` | game state ([States](09-states.md)) |
+| `emit(Event, values)` | send an event ([Events](events.md)) |
+| `actions` | input ([Input](input.md)) |
+| `schedule` | timers ([Schedule](schedule.md)) |
+| `state`, `requestState(state)` | game state ([States](states.md)) |
 | `phase`, `name` | where the system is registered |
 
 ## Structural changes in systems
@@ -245,4 +245,4 @@ Until that next `frame`, registering systems, handlers or hooks throws `Contract
 
 ## Next
 
-[6. Events →](06-events.md): let systems react to what other systems did.
+[6. Events →](events.md): let systems react to what other systems did.

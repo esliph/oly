@@ -97,7 +97,7 @@ world.dispose();
 
 The views from `block.read` and `block.write` access WASM memory directly, without copying, and are only valid inside the callback. TypeScript validates usage before calling into C++ and throws `ContractError` when usage is invalid.
 
-A complete example, with C++ systems called from TypeScript, is in [`engine/testing/fixture/`](engine/testing/fixture/) and in the tests under [`engine/testing/tests/wasm/`](engine/testing/tests/wasm/).
+A complete example, with C++ systems called from TypeScript, is in [`engine/testing/fixture/`](engine/testing/fixture) and in the tests under [`engine/testing/tests/wasm/`](engine/testing/tests/wasm).
 
 ## Build and test
 
@@ -139,4 +139,4 @@ The recorded results and the status of each target are in [`docs/benchmarks/READ
 | [`docs/development/commands.md`](docs/development/commands.md) | all commands for build, tests, benchmarks and games |
 | [`docs/development/code-style.md`](docs/development/code-style.md) | code style |
 | [`docs/benchmarks/`](docs/benchmarks/README.md) | benchmark results |
-| [`docs/superpowers/specs/`](docs/superpowers/specs/) | specs (source of truth for the requirements) |
+| [`docs/superpowers/specs/`](docs/superpowers/specs) | specs (source of truth for the requirements) |

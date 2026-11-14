@@ -1,6 +1,6 @@
 # 1. Getting started
 
-[Guide index](README.md) · Next: [Schema →](02-schema.md)
+[Guide index](../../README.md) · Next: [Schema →](../../concepts/schema.md)
 
 This page takes you from a clean clone to your own game running in the browser.
 
@@ -57,7 +57,7 @@ games/hello/
     index.html
 ```
 
-Keeping `game.ts` free of the DOM is what lets you [test the game in Node](11-testing.md). The two `tsconfig` files enforce it: using `document` outside `main.ts` is a compile error.
+Keeping `game.ts` free of the DOM is what lets you [test the game in Node](testing.md). The two `tsconfig` files enforce it: using `document` outside `main.ts` is a compile error.
 
 ### 2. `web/package.json`
 
@@ -274,8 +274,8 @@ Add the two TS projects to the `references` of the root `tsconfig.json`:
 |---|---|---|
 | **TS only** | prototypes, small games, few entities | `hello.oly` and TS systems. The `native/` folder can be empty: the WASM still holds the engine and your structs. |
 | **TS + C++** (recommended) | real games | per-entity work (movement, collision, AI) in C++; render, HUD, waves, score and menus in TS. |
-| **C++ only** | native tools, benchmarks, a desktop game | an `oly::app::Engine` over an `oly::ecs::World`, with no TS at all. See [C++ gameplay](10-cpp-gameplay.md#a-c-only-game). To open a window on Linux or Windows, see [Desktop games](native-desktop.md). |
+| **C++ only** | native tools, benchmarks, a desktop game | an `oly::app::Engine` over an `oly::ecs::World`, with no TS at all. See [C++ gameplay](../../10-cpp-gameplay.md#a-c-only-game). To open a window on Linux or Windows, see [Desktop games](../native/getting-started.md). |
 
 ## Next
 
-[2. Schema →](02-schema.md): every kind of data you can declare.
+[2. Schema →](../../concepts/schema.md): every kind of data you can declare.

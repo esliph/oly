@@ -504,4 +504,4 @@ engine.addSystem(Phase.Render, "debug", (context) => {
 });
 ```
 
-In tests, call `engine.world.checkInvariants()` after each step ([Testing](11-testing.md)).
+In tests, call `engine.world.checkInvariants()` after each step ([Testing](environments/web/testing.md)).

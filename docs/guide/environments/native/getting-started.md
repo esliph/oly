@@ -1,6 +1,6 @@
 # Desktop games
 
-[Guide index](README.md) · [Getting started](01-getting-started.md) · [C++ gameplay](10-cpp-gameplay.md)
+[Guide index](../../README.md) · [Getting started](../web/getting-started.md) · [C++ gameplay](../../10-cpp-gameplay.md)
 
 A desktop game is a C++-only game that runs in a window on Linux and Windows. There is no TypeScript, no WASM and no C API: your `main` creates the `World` and the `Engine`, opens a `Window` and hands the loop to `run`.
 

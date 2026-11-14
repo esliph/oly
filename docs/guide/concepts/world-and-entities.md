@@ -1,6 +1,6 @@
 # 3. World and entities
 
-[← Schema](02-schema.md) · [Guide index](README.md) · Next: [Queries →](04-queries.md)
+[← Schema](schema.md) · [Guide index](../README.md) · Next: [Queries →](queries.md)
 
 The `World` holds all entities and their components. An **entity** is only an id. What it *is* comes from the components it has.
 
@@ -141,7 +141,7 @@ if (const Position* leaderPosition = context.tryGet<Position>(follower.leader)) 
 Only the `Entity` handle is stable. **Any** structural change (spawn, destroy, add, remove) can move rows in memory, so:
 
 - in C++, references and pointers from `get`, `tryGet` and queries become invalid after a structural change;
-- in TS, `get` returns copies, so there is nothing to invalidate; views from queries are only valid inside their callback ([Queries](04-queries.md)).
+- in TS, `get` returns copies, so there is nothing to invalidate; views from queries are only valid inside their callback ([Queries](queries.md)).
 
 ## Structural changes and the loop
 
@@ -154,7 +154,7 @@ Inside the loop the rules depend on **where** your code runs:
 | `engine.world` during `frame` | **refused** (`ContractError`) | use the context instead |
 | any code inside `eachBlock` | direct changes **refused** | the iteration would see moved rows |
 
-Details in [Engine, loop and systems](05-engine-and-systems.md#structural-changes-in-systems).
+Details in [Engine, loop and systems](engine-and-systems.md#structural-changes-in-systems).
 
 ## Without the engine: `CommandBuffer` (C++)
 
@@ -201,8 +201,8 @@ if (!oly::ecs::checkInvariants(world, &why)) {
 oly::ecs::WorldStats statistics = oly::ecs::stats(world);   // archetypes, live entities, memory per archetype
 ```
 
-Call `checkInvariants` in tests after each step. It catches corruption at the step that caused it ([Testing your game](11-testing.md)).
+Call `checkInvariants` in tests after each step. It catches corruption at the step that caused it ([Testing your game](../environments/web/testing.md)).
 
 ## Next
 
-[4. Queries →](04-queries.md): visit many entities at once.
+[4. Queries →](queries.md): visit many entities at once.
