@@ -8,7 +8,22 @@ option(OLY_SANITIZE "ASan + UBSan" OFF)
 option(OLY_WERROR "Warnings become errors" ON)
 option(OLY_VEC_REPORT "Vectorization report in the benchmarks" OFF)
 option(OLY_BUILD_GAMES "Build the games (requires ./spur ts first)" OFF)
+option(OLY_BUILD_NATIVE_HOST "Build the native host (fetches SDL3)" OFF)
 set(OLY_ENABLE_ASSERTS "" CACHE STRING "0/1; empty = 0 with NDEBUG, otherwise 1")
+
+if(EMSCRIPTEN)
+  set(OLY_ENVIRONMENT web)
+else()
+  set(OLY_ENVIRONMENT native)
+endif()
+
+if(OLY_BUILD_NATIVE_HOST AND EMSCRIPTEN)
+  message(FATAL_ERROR "OLY_BUILD_NATIVE_HOST is for native builds, not for Emscripten")
+endif()
+
+if(OLY_BUILD_GAMES AND OLY_ENVIRONMENT STREQUAL "native" AND NOT OLY_BUILD_NATIVE_HOST)
+  message(FATAL_ERROR "OLY_BUILD_GAMES on a native build requires OLY_BUILD_NATIVE_HOST")
+endif()
 
 if(EMSCRIPTEN)
   # ALLOW_MEMORY_GROWTH: the benchmarks create 1M entities. EXIT_RUNTIME=1: without it ctest does not see the exit

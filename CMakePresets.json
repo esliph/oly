@@ -87,6 +87,16 @@
       }
     },
     {
+      "name": "native-games", "inherits": "debug-asan",
+      "cacheVariables": { "OLY_BUILD_NATIVE_HOST": "ON", "OLY_BUILD_GAMES": "ON" }
+    },
+    {
+      "name": "native-games-release", "inherits": "release",
+      "cacheVariables": {
+        "OLY_BUILD_NATIVE_HOST": "ON", "OLY_BUILD_GAMES": "ON", "OLY_BUILD_TESTS": "OFF", "OLY_BUILD_BENCH": "OFF"
+      }
+    },
+    {
       "name": "wasm-games", "inherits": "wasm-debug",
       "cacheVariables": { "OLY_BUILD_GAMES": "ON" }
     },
@@ -109,6 +119,8 @@
     { "name": "wasm-scalar", "configurePreset": "wasm-scalar" },
     { "name": "wasm-simd", "configurePreset": "wasm-simd" },
     { "name": "wasm-debug", "configurePreset": "wasm-debug" },
+    { "name": "native-games", "configurePreset": "native-games" },
+    { "name": "native-games-release", "configurePreset": "native-games-release" },
     { "name": "wasm-games", "configurePreset": "wasm-games" },
     { "name": "wasm-games-release", "configurePreset": "wasm-games-release" }
   ],
@@ -122,6 +134,8 @@
     { "name": "wasm-scalar", "configurePreset": "wasm-scalar", "output": { "outputOnFailure": true } },
     { "name": "wasm-simd", "configurePreset": "wasm-simd", "output": { "outputOnFailure": true } },
     { "name": "wasm-debug", "configurePreset": "wasm-debug", "output": { "outputOnFailure": true } },
+    { "name": "native-games", "configurePreset": "native-games", "output": { "outputOnFailure": true } },
+    { "name": "native-games-release", "configurePreset": "native-games-release", "output": { "outputOnFailure": true } },
     { "name": "wasm-games", "configurePreset": "wasm-games", "output": { "outputOnFailure": true } },
     { "name": "wasm-games-release", "configurePreset": "wasm-games-release", "output": { "outputOnFailure": true } }
   ]
