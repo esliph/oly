@@ -8,7 +8,33 @@
 #include <string>
 #include <vector>
 
+#include "oly/app/engine.hpp"
+#include "oly/ecs/world.hpp"
+#include "oly/input/physical_button.hpp"
+#include "oly/native_host/run.hpp"
+
+using oly::app::Engine;
+using oly::app::Phase;
+using oly::app::SystemContext;
+using oly::native_host::run;
+using oly::native_host::RunOptions;
 using oly::native_host::Window;
+
+namespace {
+  void countCall(SystemContext& context) {
+    ++*static_cast<uint32_t*>(context.userData());
+  }
+
+  struct JumpProbe {
+    oly::input::ButtonAction jump;
+    bool sawPressed = false;
+  };
+
+  void recordJump(SystemContext& context) {
+    JumpProbe& probe = *static_cast<JumpProbe*>(context.userData());
+    probe.sawPressed = probe.sawPressed || context.actions().button(probe.jump).pressed;
+  }
+}
 
 TEST_CASE("a window gives a renderer with the configured logical size") {
   Window window({"test", 320, 200});
@@ -48,4 +74,53 @@ TEST_CASE("a window that SDL cannot open throws with SDL's message") {
   CHECK_THROWS_AS(Window({"test", 320, 200}), std::runtime_error);
 
   SDL_ResetHint(SDL_HINT_VIDEO_DRIVER);
+}
+
+TEST_CASE("run drives frames and draws after each one") {
+  oly::ecs::World world;
+  Engine engine(world);
+  Window window({"test", 320, 200});
+  uint32_t draws = 0;
+  engine.addSystem(Phase::Render, "draw", countCall, &draws);
+
+  int exitCode = run(engine, window, {.maxFrames = 11, .frameSeconds = 1.0 / 60});
+
+  CHECK(exitCode == 0);
+  CHECK(engine.time() == doctest::Approx(10.0 / 60));
+  CHECK(draws == 10);
+}
+
+TEST_CASE("a quit event ends run before the next frame") {
+  oly::ecs::World world;
+  Engine engine(world);
+  Window window({"test", 320, 200});
+  uint32_t draws = 0;
+  engine.addSystem(Phase::Render, "draw", countCall, &draws);
+  SDL_Event quit{};
+  quit.type = SDL_EVENT_QUIT;
+  SDL_PushEvent(&quit);
+
+  int exitCode = run(engine, window, {.maxFrames = 5, .frameSeconds = 1.0 / 60});
+
+  CHECK(exitCode == 0);
+  CHECK(draws == 0);
+}
+
+TEST_CASE("run forwards pending input before the frame") {
+  oly::ecs::World world;
+  Engine engine(world);
+  Window window({"test", 320, 200});
+  JumpProbe probe{engine.actions().declareButton("jump")};
+  engine.actions().bind(probe.jump, oly::input::Key::W);
+  engine.addSystem(Phase::Update, "record", recordJump, &probe);
+  SDL_Event press{};
+  press.type = SDL_EVENT_KEY_DOWN;
+  press.key.windowID = SDL_GetWindowID(window.window());
+  press.key.scancode = SDL_SCANCODE_W;
+  press.key.down = true;
+  SDL_PushEvent(&press);
+
+  run(engine, window, {.maxFrames = 2, .frameSeconds = 1.0 / 60});
+
+  CHECK(probe.sawPressed);
 }
