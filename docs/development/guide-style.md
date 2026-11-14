@@ -23,18 +23,19 @@ What to update:
 
 | The change | Update |
 |---|---|
-| new function, method, option or macro | the page of its topic, the [cheat sheet](../guide/cheat-sheet.md) and, if it enables a new pattern, a [recipe](../guide/recipes.md) |
+| new function, method, option or macro | the concept page and the client page of its topic, the [cheat sheet](../guide/cheat-sheet.md) and, if it enables a new pattern, a [recipe](../guide/recipes.md) |
 | renamed or changed signature | every example that uses it (search the whole `docs/guide/`) and the cheat sheet |
 | removed | every mention; replace examples that depended on it |
 | new or changed error | the table in [Troubleshooting](../guide/troubleshooting.md) |
-| changed behaviour (order, timing, scope) | the page that describes it and any recipe that relied on it |
-| new page | the index tables in `docs/guide/README.md` and the navigation lines of the neighbouring pages |
+| changed behaviour (order, timing, scope) | the concept page that describes it and any recipe that relied on it |
+| a C API change | the cheat sheet and [capi.md](../architecture/capi.md) |
+| new page | the index tables in `docs/guide/README.md` and the navigation lines of the neighbouring pages in its folder |
 
 Before finishing, search `docs/guide/` for the old name and check the links you touched.
 
 ## Audience and tone
 
-- The reader wants to make a game. They know TypeScript; C++ is optional.
+- The reader is a game developer in any supported language. C++ is the language of the concepts; a client page speaks the language of its client.
 - Start each page and each section with what the reader can do, then how.
 - Explain the contract the reader depends on: what is deferred or direct, what stays valid, what throws. Leave internal mechanisms to the architecture docs.
 
@@ -59,22 +60,41 @@ The guide does not reference any specific example game. More games will live in 
 
 ```
 docs/guide/
-  README.md                 index: what you can build, learning path, references, example games, conventions
-  NN-topic.md               learning path, read in order (01-getting-started.md ... 13-troubleshooting.md)
-  recipes.md                ready patterns, one section each
-  cheat-sheet.md            every public name on one page
+  README.md                    the map: core, environments, clients, how to choose, a learning path per environment
+  concepts/                    valid in every environment; examples in C++
+    schema.md  world-and-entities.md  queries.md  engine-and-systems.md
+    events.md  input.md  schedule.md  states.md  performance.md
+  environments/
+    web/
+      getting-started.md  testing.md  boundary.md
+      typescript/
+        README.md  schema.md  world-and-entities.md  queries.md  engine-and-systems.md
+        events.md  input.md  schedule.md  states.md  recipes.md
+    native/
+      getting-started.md
+  recipes.md                   recipes in C++, each linking to its TS version
+  cheat-sheet.md               C++, C API and per-client names
+  troubleshooting.md
 ```
 
-- Numbered pages form the learning path. Each one builds on the previous ones. Unnumbered pages are references.
-- File names are lowercase `kebab-case`.
-- Each numbered page starts with `# N. Title` and a navigation line right under it:
+- Pages are not numbered. File names are lowercase `kebab-case`.
+- **A concept page carries the contract; a client page carries the API.** The rules a game relies on (deferred vs. direct, event rounds, scope, validity) are written only in the concept page. A rule appears in a client page only when it exists only in that client (TS: `raw()` arrays, heap views invalidated by memory growth, `ContractError`).
+- **Client pages mirror the concept pages**: the same file name and the same section headings where the concept has a form in that client. A section with no client form is left out, not stubbed. A concept section links to its client section by anchor.
+- A concept page starts with `# Title` and a navigation line, in the order schema, world-and-entities, queries, engine-and-systems, events, input, schedule, states, performance (the first has no previous link, the last no next):
 
   ```markdown
-  [← Previous title](NN-previous.md) · [Guide index](README.md) · Next: [Next title →](NN-next.md)
+  [← Previous title](previous.md) · [Guide index](../README.md) · Next: [Next title →](next.md)
   ```
 
-- Each numbered page ends with a `## Next` section: one line with the link and what the next page teaches.
-- Links are relative. Anchors follow GitHub's rule: lowercase, punctuation removed, spaces become `-` (`## C++ tasks and payloads` → `#c-tasks-and-payloads`).
+- A TS page starts with `# Title in TypeScript` and its own navigation line, in the same order, then `recipes.md`:
+
+  ```markdown
+  [← Previous title](previous.md) · [TypeScript client](README.md) · Concept: [Title](../../../concepts/concept.md) · Next: [Next title →](next.md)
+  ```
+
+- Environment pages and references use `[Guide index](<relative>/README.md)` only.
+- Concept and TS pages end with a `## Next` section: one line with the link and what the next page teaches. A concept page's last line is `In other clients: [TypeScript](../environments/web/typescript/<concept>.md).`
+- Links are relative. Anchors follow GitHub's rule: lowercase, punctuation removed, spaces become `-` (`## Systems in C++` → `#systems-in-c`).
 
 ## Page structure
 
@@ -87,8 +107,27 @@ docs/guide/
 
 ## Examples
 
-- **TypeScript first**, then C++ when C++ is the better fit or differs in a way that matters.
-- **Real signatures only.** Check each call against the source before writing it. An example that does not compile is worse than none.
+- **C++ first in concept pages**, the client's language in client pages.
+- **The main example of a concept is the function body written against the context**, with `OLY_SYSTEM`, `OLY_HANDLER` and `OLY_STATE_HOOK`: it is valid in every environment. Under it, the registration is short and labelled:
+
+  ````markdown
+  **Where you own the `Engine`** (native):
+
+  ```cpp
+  engine.addSystem(oly::app::Phase::Update, "integrate", integrate);
+  ```
+
+  **On the web**, the client registers it by name: [TypeScript](../environments/web/typescript/engine-and-systems.md#anchor).
+  ````
+
+  Setup-only operations (declaring, binding, pause from outside a system) are shown on `Engine` with the same "Where you own the `Engine`" label. Names are the generated ones: `Position`, `actions::move`, `states::playing`, in a file that includes `"schema.generated.hpp"`.
+- **An `OLY_HANDLER` is registered natively with a captureless lambda**, because the macro's function takes the batch as a span and `on<T>` takes a function of the context alone. The first time a page shows it, one sentence says why:
+
+  ```cpp
+  engine.on<EnemyDied>("onEnemyDied", [](oly::app::HandlerContext& context) { onEnemyDied(context, context.events<EnemyDied>()); });
+  ```
+
+- **Real signatures only.** Check each C++ call against the headers and each TS call against `@oly/core` or `@oly/web-host` before writing it. Compiling the examples is out of scope; an example that does not exist in the API is worse than none.
 - **Complete enough to copy**: imports when they are not obvious, the schema entries an example needs, no `...` inside the logic that matters.
 - **Follow the code style** ([code-style.md](code-style.md)): full names, braces on every `if`/`for`, blank lines between steps.
 - **Comments only for the why**, the same rule as in the code. No comments that narrate the example step by step: put that in the prose before the block.
@@ -97,10 +136,10 @@ docs/guide/
 
 ## Recipes
 
-- One problem per section, named by what the reader wants (`## Ability with a cooldown`), listed in the table at the top.
+- One problem per section, named by what the reader wants (`## Ability with a cooldown`), listed in the table at the top. The recipe is in C++ in `recipes.md` and in TS under the same heading in `environments/web/typescript/recipes.md`; a recipe that only makes sense in the browser lives only in the TS page.
 - Each recipe shows the schema entries it needs, then the code, then one or two lines on why it is built that way or when to choose another tool.
 
 ## Cheat sheet
 
-- Every public name, grouped by topic, with the shortest correct signature.
+- Every public name, grouped by topic (C++, then the C API, then each client), with the shortest correct signature.
 - No explanations beyond a few words: link to the page instead.
