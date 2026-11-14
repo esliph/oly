@@ -1,4 +1,4 @@
-# 7. Input
+# Input
 
 [← Events](events.md) · [Guide index](../README.md) · Next: [Schedule →](schedule.md)
 
@@ -8,9 +8,9 @@ Gameplay never reads keys directly. It reads **actions** ("shoot", "move", "aim"
 
 | Kind | Value | Typical use |
 |---|---|---|
-| `"button"` | `{ pressed, held, released }` | shoot, jump, pause, confirm |
-| `"axis2d"` | `{ x, y }`, each in -1..1 | movement with WASD or arrows |
-| `"pointer"` | `{ x, y, valid }` in canvas pixels | aim, click targets |
+| `button` | `{ pressed, held, released }` | shoot, jump, pause, confirm |
+| `axis2d` | `{ x, y }`, each in -1..1 | movement with WASD or arrows |
+| `pointer` | `{ x, y, valid }` in logical pixels | aim, click targets |
 
 ```
 # game.oly
@@ -23,43 +23,61 @@ action pause: button
 
 ## Bind buttons
 
-Buttons use the W3C `KeyboardEvent.code` names. A code is the **physical position** of the key, so WASD stays under your fingers on AZERTY, Dvorak or any layout.
+Buttons are `oly::input::Key` and `oly::input::MouseButton` values. A key is the **physical position** on the keyboard, so WASD stays under your fingers on AZERTY, Dvorak or any layout.
 
-```ts
-engine.actions.bind(shoot, "MouseLeft");
-engine.actions.bind(jump, "Space");
-engine.actions.bind(jump, "KeyW");              // a second button for the same action
-engine.actions.bind(pause, "Escape");
-engine.actions.bind(move, { up: "KeyW", down: "KeyS", left: "KeyA", right: "KeyD" });
-engine.actions.bind(move, { up: "ArrowUp", down: "ArrowDown", left: "ArrowLeft", right: "ArrowRight" });
+Bindings are set up where you own the `Engine`:
+
+**Where you own the `Engine`** (native):
+
+```cpp
+using oly::input::Key;
+using oly::input::MouseButton;
+
+engine.actions().bind(actions::shoot, MouseButton::Left);
+engine.actions().bind(actions::jump, Key::Space);
+engine.actions().bind(actions::jump, Key::W);              // a second button for the same action
+engine.actions().bind(actions::pause, Key::Escape);
+engine.actions().bind(actions::move, oly::input::Axis2dBinding{Key::W, Key::S, Key::A, Key::D});
+engine.actions().bind(actions::move, oly::input::Axis2dBinding{Key::ArrowUp, Key::ArrowDown, Key::ArrowLeft, Key::ArrowRight});
 ```
 
-Binding the same button again does nothing. Pointer actions need no binding: they follow the mouse.
+**On the web**, the client binds them: [TypeScript](../environments/web/typescript/input.md#bind-buttons).
 
-Available names: `KeyA`..`KeyZ`, `Digit0`..`Digit9`, `F1`..`F12`, `Enter`, `Escape`, `Space`, `Tab`, `Backspace`, arrows (`ArrowUp`...), modifiers (`ShiftLeft`, `ControlLeft`, `AltLeft`, `MetaLeft` and the `Right` versions), punctuation (`Minus`, `Comma`, `Slash`...), the numpad (`Numpad0`..`Numpad9`, `NumpadAdd`...) and the mouse (`MouseLeft`, `MouseRight`, `MouseMiddle`). The full list is the `ButtonName` type; `isButtonName(text)` checks a string at run time.
+Binding the same button again does nothing. Pointer actions need no binding: they follow the mouse. The full list of buttons is `oly/input/physical_button.hpp`.
 
 ## Read actions in systems
 
-```ts
-engine.addSystem(Phase.UpdateBefore, "readInput", (context) => {
-  const jumpButton = context.actions.button(jump);
-  const direction = context.actions.axis2d(move);
-  const pointer = context.actions.pointer(aim);
+```cpp
+OLY_SYSTEM(readInput) {
+  const oly::input::ButtonState jumpButton = context.actions().button(actions::jump);
+  const oly::input::Vector2 direction = context.actions().axis2d(actions::move);
+  const oly::input::PointerState pointer = context.actions().pointer(actions::aim);
 
   if (jumpButton.pressed) {
     // first step of the press
   }
+
   if (jumpButton.held) {
     // every step while it is down
   }
+
   if (jumpButton.released) {
     // the step it went up
   }
+
   if (pointer.valid) {
     // a pointer position has arrived at least once
   }
-});
+}
 ```
+
+**Where you own the `Engine`** (native):
+
+```cpp
+engine.addSystem(oly::app::Phase::UpdateBefore, "readInput", readInput);
+```
+
+**On the web**, the client registers it by name: [TypeScript](../environments/web/typescript/input.md#read-actions-in-systems).
 
 | Flag | True in |
 |---|---|
@@ -73,7 +91,7 @@ A tap shorter than one step still counts: that step shows `pressed` **and** `rel
 
 ### The 2D axis
 
-The axis gives `-1`, `0` or `1` on each side, with `y` pointing **down** like the canvas. The diagonal is normalized, so moving diagonally is not faster:
+The axis gives `-1`, `0` or `1` on each side, with `y` pointing **down** like the screen. The diagonal is normalized, so moving diagonally is not faster:
 
 | Keys down | Value |
 |---|---|
@@ -82,110 +100,66 @@ The axis gives `-1`, `0` or `1` on each side, with `y` pointing **down** like th
 | W + D | `{ x: 0.707, y: -0.707 }` |
 | A + D | `{ x: 0, y: 0 }` |
 
-```ts
-const direction = context.actions.axis2d(move);
-velocity.x.set(row, direction.x * speed);
-velocity.y.set(row, direction.y * speed);
+```cpp
+OLY_SYSTEM(steerPlayer) {
+  auto [player, velocity] = context.query<Velocity>(oly::ecs::With<Player>{}).single();
+  const oly::input::Vector2 direction = context.actions().axis2d(actions::move);
+
+  velocity = Velocity{direction.x * 220.0f, direction.y * 220.0f};
+}
 ```
 
-## Connect the browser
+## Where input comes from
 
-`attachBrowserInput` sends keyboard and mouse events to the engine:
+The engine does not care where input comes from. The **host** of each environment forwards what the player does with `buttonDown`, `buttonUp`, `pointerMove` and `releaseAll` (all on `engine.actions()`):
 
-```ts
-import { attachBrowserInput } from "@oly/web-host";
+- the desktop host, from the window ([What the host does with the window](../environments/native/getting-started.md#what-the-host-does-with-the-window));
+- the web host, from the browser ([Getting started on the web](../environments/web/getting-started.md)).
 
-const input = attachBrowserInput(engine, canvas);
-// input.detach() removes all listeners
-```
-
-What it does:
-
-- keys from `window`, by `code`;
-- mouse presses only **on the canvas**, releases anywhere in the window;
-- pointer position converted to **canvas pixels** (it handles CSS scaling);
-- on `blur` (the window loses focus), releases every button so nothing stays stuck;
-- calls `preventDefault` only for buttons bound to an action: Space does not scroll the page and Tab does not leave the game, but unbound keys keep their browser behaviour.
-
-The right-click menu is prevented only when `MouseRight` is bound. If you do not bind it but still want no menu:
-
-```ts
-canvas.addEventListener("contextmenu", (event) => event.preventDefault());
-```
+Key auto-repeat is ignored: holding a key gives one `pressed`. When the window loses focus the host calls `releaseAll`, so nothing stays stuck. When the game is hidden, the engine releases every button too ([Engine, loop and systems](engine-and-systems.md#hidden)).
 
 ## Rebind at run time
 
 Bindings can change at any time, even inside a system. The change applies from the next capture.
 
-```ts
-function rebind(engine: Engine, action: ButtonAction, button: ButtonName): void {
-  engine.actions.clearBindings(action);
-  engine.actions.bind(action, button);
+```cpp
+OLY_SYSTEM(rebindJump) {
+  oly::input::ActionMap& map = context.actions();
+
+  map.clearBindings(actions::jump.id);
+  map.bind(actions::jump, oly::input::Key::K);
 }
-
-rebind(engine, jump, "KeyK");
 ```
 
-A "press a key to rebind" screen:
+**Where you own the `Engine`** (native):
 
-```ts
-window.addEventListener("keydown", function capture(event) {
-  if (!isButtonName(event.code)) {
-    return;
-  }
-
-  rebind(engine, jump, event.code);
-  window.removeEventListener("keydown", capture);
-});
+```cpp
+engine.addSystem(oly::app::Phase::UpdateBefore, "rebindJump", rebindJump);
 ```
 
-Use `engine.actions.isBound(button)` to warn when a key is already in use.
+**On the web**, the client rebinds: [TypeScript](../environments/web/typescript/input.md#rebind-at-run-time).
+
+Use `map.isBound(button)` to warn when a button is already in use.
 
 ## Deliver input yourself
 
-The engine does not care where input comes from. Call these on `engine.actions` from a test, a replay, a touch overlay or a gamepad poller:
+Call these on `engine.actions()` from a test, a replay, a touch overlay or a gamepad poller:
 
-```ts
-engine.actions.buttonDown("Space");
-engine.actions.buttonUp("Space");
-engine.actions.pointerMove(320, 180);
-engine.actions.releaseAll();
+**Where you own the `Engine`** (native):
+
+```cpp
+engine.actions().buttonDown(oly::input::Key::Space);
+engine.actions().buttonUp(oly::input::Key::Space);
+engine.actions().pointerMove(320.0f, 180.0f);
+engine.actions().releaseAll();
 ```
+
+**On the web**, the client has the same calls: [TypeScript](../environments/web/typescript/input.md#deliver-input-yourself).
 
 A virtual joystick for touch screens can map to the same `move` action by pressing and releasing the four bound keys, or you can bind a dedicated set of keys and press those.
 
-Key auto-repeat is ignored: holding a key gives one `pressed`.
-
-## C++
-
-Native systems read the same actions through the generated handles:
-
-```cpp
-OLY_SYSTEM(fireWeapon) {
-  if (!context.actions().button(actions::shoot).held) {
-    return;
-  }
-
-  const oly::input::PointerState aim = context.actions().pointer(actions::aim);
-  if (aim.valid) {
-    // shoot toward (aim.x, aim.y)
-  }
-}
-```
-
-In a C++-only game you declare and bind actions on the engine's `ActionMap`:
-
-```cpp
-using oly::input::Key;
-using oly::input::MouseButton;
-
-oly::input::ButtonAction jump = engine.actions().declareButton("jump");
-oly::input::Axis2dAction move = engine.actions().declareAxis2d("move");
-engine.actions().bind(jump, Key::Space);
-engine.actions().bind(move, oly::input::Axis2dBinding{Key::W, Key::S, Key::A, Key::D});
-engine.actions().bind(jump, MouseButton::Left);
-```
-
 ## Next
 
-[8. Schedule →](schedule.md): run code later, on the game clock.
+[Schedule →](schedule.md): run code later, on the game clock.
+
+In other clients: [TypeScript](../environments/web/typescript/input.md).
