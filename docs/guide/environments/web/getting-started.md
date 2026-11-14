@@ -1,8 +1,8 @@
-# 1. Getting started
+# Getting started on the web
 
-[Guide index](../../README.md) · Next: [Schema →](../../concepts/schema.md)
+[Guide index](../../README.md)
 
-This page takes you from a clean clone to your own game running in the browser.
+This page takes you from a clean clone to your own game running in the browser. The `web` environment runs the C++ engine as WASM, with the [TypeScript client](typescript/README.md) on top. For a game in a desktop window, see [Getting started on the desktop](../native/getting-started.md).
 
 ## What you need
 
@@ -268,14 +268,31 @@ Add the two TS projects to the `references` of the root `tsconfig.json`:
 ./spur serve hello     # http://localhost:8000
 ```
 
-## Three ways to split the work
+## How to split work between C++ and a client
 
-| Style | When it fits | What you write |
-|---|---|---|
-| **TS only** | prototypes, small games, few entities | `hello.oly` and TS systems. The `native/` folder can be empty: the WASM still holds the engine and your structs. |
-| **TS + C++** (recommended) | real games | per-entity work (movement, collision, AI) in C++; render, HUD, waves, score and menus in TS. |
-| **C++ only** | native tools, benchmarks, a desktop game | an `oly::app::Engine` over an `oly::ecs::World`, with no TS at all. See [C++ gameplay](../../10-cpp-gameplay.md#a-c-only-game). To open a window on Linux or Windows, see [Desktop games](../native/getting-started.md). |
+On the web, a game is C++ systems plus a client (TypeScript today). Both can live in the same phase, in the order you register them.
+
+| Put it in C++ | Put it in the client |
+|---|---|
+| runs for every entity, every step | runs once per step, or rarely |
+| movement, collision, AI, weapons | render, HUD, menus |
+| tight math | score, waves, game rules that change often |
+| | bindings, state hooks that talk to the page |
+
+Why: a call across the WASM boundary has a fixed cost, so per-entity work belongs next to the data ([The WASM↔JS boundary](boundary.md)). A game can also use only TS systems (prototypes, few entities: the `native/` folder can be empty), or only C++ with no client at all: that is a [desktop game](../native/getting-started.md) or a tool, with an `oly::app::Engine` over an `oly::ecs::World`.
+
+### Deterministic randomness
+
+Use `std::minstd_rand` with a fixed seed. Its sequence is the same in every standard library; the `std::*_distribution` classes are not, so use `generator() % 100` or your own mapping.
+
+### Shared constants
+
+Values used by both languages (world size, bullet speed) live in a C++ header (`native/constants.hpp`) and a TS module (`src/constants.ts`). Keep them side by side and say in each file that the other one must change with it.
+
+## Advanced: your own exported C functions
+
+A game can export extra `extern "C"` functions with `OLY_API`. From an `OlyWorld*` (the C API handle), `oly::capi::worldOf(world)` gives the `oly::ecs::World&` behind it, and `oly::capi::engineOf(engine)` gives the `Engine&`. The engine's test fixture (`engine/testing/fixture/systems.cpp`) shows this. Calling such functions from TS needs the module internals (`@oly/core/internal`), which are reserved for the engine; in game code, prefer `OLY_SYSTEM`, `OLY_HANDLER` and `OLY_STATE_HOOK` ([Engine, loop and systems](../../concepts/engine-and-systems.md#systems-in-c-registered-by-name-oly_system-oly_handler-oly_state_hook)).
 
 ## Next
 
-[2. Schema →](../../concepts/schema.md): every kind of data you can declare.
+[TypeScript client](typescript/README.md): the TS API, page by page. [Schema](../../concepts/schema.md): every kind of data you can declare. [Testing a web game](testing.md): run the game in Node.

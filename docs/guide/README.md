@@ -34,7 +34,7 @@ Read in order the first time. Each page builds on the one before.
 | 7 | [Input](concepts/input.md) | bind keys and mouse to actions and read them |
 | 8 | [Schedule](concepts/schedule.md) | run code later or every N seconds on the game clock |
 | 9 | [States](concepts/states.md) | build menu, playing and game over screens that reset cleanly |
-| 10 | [C++ gameplay](10-cpp-gameplay.md) | write systems, handlers and hooks in C++, or a C++-only game |
+| 10 | [C++ gameplay](concepts/engine-and-systems.md#systems-in-c-registered-by-name-oly_system-oly_handler-oly_state_hook) | write systems, handlers and hooks in C++, or a C++-only game |
 | 11 | [Testing your game](environments/web/testing.md) | run the game in Node with fake time and input |
 | 12 | [Performance](concepts/performance.md) | keep the hot path fast across the WASM boundary |
 | 13 | [Troubleshooting](troubleshooting.md) | understand each error and fix the common mistakes |

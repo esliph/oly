@@ -2,7 +2,7 @@
 
 [Guide index](README.md) · [Cheat sheet](cheat-sheet.md)
 
-Ready patterns for common game features. Each recipe shows the schema entries it needs and the code. They use TS unless C++ is the better fit; most can be moved to C++ with the same structure ([C++ gameplay](10-cpp-gameplay.md)).
+Ready patterns for common game features. Each recipe shows the schema entries it needs and the code. They use TS unless C++ is the better fit; most can be moved to C++ with the same structure ([C++ gameplay](concepts/engine-and-systems.md#systems-in-c-registered-by-name-oly_system-oly_handler-oly_state_hook)).
 
 | Recipe | Uses |
 |---|---|
@@ -127,7 +127,7 @@ engine.addSystem(Phase.UpdateBefore, "dash", (context) => {
 });
 ```
 
-In C++, the same logic fits in one `OLY_SYSTEM`, with the timers scheduled through `context.schedule().after(seconds, function, payload)` ([C++ gameplay](10-cpp-gameplay.md#a-timer-with-a-payload)).
+In C++, the same logic fits in one `OLY_SYSTEM`, with the timers scheduled through `context.schedule().after(seconds, function, payload)` ([C++ gameplay](concepts/schedule.md#payloads)).
 
 ## Health, damage and death
 
@@ -489,7 +489,7 @@ function edgePoint(random: () => number): { x: number; y: number } {
 }
 ```
 
-In C++, use `std::minstd_rand` with a fixed seed ([C++ gameplay](10-cpp-gameplay.md#randomness-and-shared-constants)).
+In C++, use `std::minstd_rand` with a fixed seed ([C++ gameplay](environments/web/getting-started.md#deterministic-randomness)).
 
 ## Debug overlay
 

@@ -1,10 +1,10 @@
-# Desktop games
+# Getting started on the desktop
 
-[Guide index](../../README.md) · [Getting started](../web/getting-started.md) · [C++ gameplay](../../10-cpp-gameplay.md)
+[Guide index](../../README.md)
 
-A desktop game is a C++-only game that runs in a window on Linux and Windows. There is no TypeScript, no WASM and no C API: your `main` creates the `World` and the `Engine`, opens a `Window` and hands the loop to `run`.
+A desktop game is a C++ game that runs in a window on Linux and Windows, in the `native` environment. There is no TypeScript, no WASM and no C API: your `main` creates the `World` and the `Engine`, opens a `Window` and hands the loop to `run`.
 
-Choose it when the game does not need a browser. Choose the web (TS + C++) when it does. The engine, the schema and the gameplay code are the same on both; only the shell and the drawing change.
+Choose it when the game does not need a browser. Choose [the web](../web/getting-started.md) (C++ with a TS client) when it does. The engine, the schema and the gameplay code are the same on both; only the shell and the drawing change.
 
 ## The smallest game
 
@@ -58,6 +58,34 @@ int main() {
 - `Window` opens a resizable window and an SDL renderer. Its size is the **logical size** your game draws in: the host scales it to the window and adds bars when the aspect ratio differs. If SDL cannot open the window (no display, no video driver), the constructor throws `std::runtime_error` with SDL's message.
 - `run` returns when the window is closed, and its result is the process exit code.
 
+## Pass data to systems and restrict them to states
+
+A system is a function pointer with an optional `userData` pointer, and `addSystem` returns an id you can restrict to states. Handlers take a `userData` pointer too, and read the batch with `context.events<T>()`:
+
+```cpp
+struct Game {
+  uint32_t hits = 0;
+};
+
+void steer(oly::app::SystemContext& context) {
+  Game& game = *static_cast<Game*>(context.userData());
+  // read context.actions(), use game
+}
+
+void countHits(oly::app::HandlerContext& context) {
+  static_cast<Game*>(context.userData())->hits += context.eventCount();
+}
+
+Game game;
+oly::app::SystemId steerId = engine.addSystem(oly::app::Phase::UpdateBefore, "steer", steer, &game);
+
+engine.setSystemStates(steerId, {states::playing});
+engine.on<Hit>("countHits", countHits, &game);
+engine.requestState(states::playing);
+```
+
+The macros (`OLY_SYSTEM`, `OLY_HANDLER`, `OLY_STATE_HOOK`) are only needed when a client registers by name ([Engine, loop and systems](../../concepts/engine-and-systems.md#systems-in-c-registered-by-name-oly_system-oly_handler-oly_state_hook)). A desktop game with no client can use plain functions, as above, or the macros so that the same code also runs on the web.
+
 ## Drawing
 
 There is no draw hook. Draw in a `Render` system, as on the web: the host clears the renderer to black before the frame and presents it after the `Render` phase. Pass the renderer to the system through `userData` and include `<SDL3/SDL.h>` where you draw. The gameplay code does not need SDL, so keep it in separate files: it stays the same if you add another shell.
@@ -77,7 +105,7 @@ There is no draw hook. Draw in a `Render` system, as on the web: the host clears
 
 While the window is hidden, `run` waits for events instead of spinning.
 
-## Headless and fixed-time runs
+## Test your game
 
 `run` takes `RunOptions`:
 
@@ -86,13 +114,82 @@ While the window is hidden, `run` waits for events instead of spinning.
 | `maxFrames` | stop after this many frames; `0` (default) runs until the window closes |
 | `frameSeconds` | greater than 0: advance the clock by exactly this much per frame instead of reading it |
 
-With `frameSeconds` set, a fixed number of frames covers a known amount of game time, so a test can run a game for ten seconds in a blink. Combine it with `SDL_VIDEO_DRIVER=dummy` to run with no display:
+With `frameSeconds` set, a fixed number of frames covers a known amount of game time. Combine it with `SDL_VIDEO_DRIVER=dummy` to run the whole game, window included, with no display:
 
 ```cpp
 oly::native_host::run(engine, window, {.maxFrames = 600, .frameSeconds = 1.0 / 60});
 ```
 
-The first frame only records the time, so `maxFrames = n` runs `n - 1` simulated frames.
+The first frame only records the time, so `maxFrames = n` runs `n - 1` simulated frames. This checks that the game starts, runs and exits cleanly.
+
+To check what the game *did*, run the gameplay with no window at all. Keep the gameplay in functions that take an `Engine` (as `drift` does with `installGameplay`) and drive `engine.frame` with a time you choose, then read the `World`:
+
+```cpp
+// test/main.cpp
+#include <cstdio>
+#include <string>
+
+#include "gameplay.hpp"
+#include "oly/app/engine.hpp"
+#include "oly/app/schema.hpp"
+#include "oly/ecs/diagnostics.hpp"
+#include "oly/ecs/world.hpp"
+#include "schema.generated.hpp"
+
+int main() {
+  oly::ecs::World world;
+  oly::app::Engine engine(world);
+  oly::app::declareSchema(engine);
+  installGameplay(engine);
+
+  engine.actions().bind(actions::move, oly::input::Axis2dBinding{oly::input::Key::W, oly::input::Key::S, oly::input::Key::A, oly::input::Key::D});
+  oly::ecs::Entity player = world.spawn(Player{}, Position{0.0f, 0.0f}, Velocity{0.0f, 0.0f});
+
+  engine.actions().buttonDown(oly::input::Key::D);
+  engine.frame(0.0);
+
+  for (int step = 1; step <= 60; ++step) {
+    engine.frame(step / 60.0);
+  }
+
+  std::string why;
+  if (!oly::ecs::checkInvariants(world, &why)) {
+    std::fprintf(stderr, "invariants: %s\n", why.c_str());
+    return 1;
+  }
+
+  if (world.get<Position>(player).x <= 0.0f) {
+    std::fprintf(stderr, "the player did not move right\n");
+    return 1;
+  }
+
+  return 0;
+}
+```
+
+The test needs the generated schema header but no window, so build it with `oly_add_game` too, without `native_host`, and register it with ctest next to the game in its `CMakeLists.txt`:
+
+```cmake
+oly_add_game(<game>_test
+  ENVIRONMENT native
+  SCHEMA ${CMAKE_CURRENT_SOURCE_DIR}/<game>.oly
+  SOURCES native/gameplay.cpp test/main.cpp
+  DEPENDS ecs app input)
+target_include_directories(<game>_test PRIVATE native)
+
+if(OLY_BUILD_TESTS)
+  add_test(NAME <game>.gameplay COMMAND <game>_test)
+endif()
+```
+
+Run it:
+
+```sh
+./spur native-games-test                          # everything
+./spur native-games-test -R '^<game>\.'           # only your game
+```
+
+`checkInvariants` after each step catches corruption at the step that caused it ([World and entities](../../concepts/world-and-entities.md#debugging-the-world)). The engine's own C++ tests use doctest with a bare `World` and `Engine` (`engine/runtime/app/tests/`); to add one inside the engine, follow the `add-test-case` skill described in [build and tests](../../../architecture/build-and-tests.md).
 
 ## Build it
 
@@ -119,11 +216,15 @@ A game builds only in its own environment: `oly_add_game` stops the configure wh
 
 On Linux, run the executable on the host: the window needs your display (X11 or Wayland). The Windows `.exe` is static, so a double click runs it on a machine with nothing installed.
 
-Test a desktop game like any other executable:
+The simplest check runs the executable itself, as the example games do:
 
 ```cmake
 add_test(NAME <game>.desktop COMMAND <game>_game --frames 600)
 set_tests_properties(<game>.desktop PROPERTIES ENVIRONMENT SDL_VIDEO_DRIVER=dummy)
 ```
 
-`./spur native-games-test` runs the Linux tests, and `./spur windows-test` runs the same tests under Wine. Each game under `games/` has its own `README.md`.
+`./spur native-games-test` runs the Linux tests, and `./spur windows-test` runs the same tests under Wine ([Test your game](#test-your-game)). Each game under `games/` has its own `README.md`.
+
+## Next
+
+[Schema](../../concepts/schema.md): declare the data of your game. [Engine, loop and systems](../../concepts/engine-and-systems.md): what `run` calls every frame.
