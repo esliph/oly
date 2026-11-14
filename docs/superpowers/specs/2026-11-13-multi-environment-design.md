@@ -353,32 +353,130 @@ then (the `CLAUDE.md` rule); phase 5 moves that text into `environments/native/g
 
 ## 7. The user guide
 
+Revised on 2026-11-14, before phase 5, with the base at `f296ec2` (phases 1–4 done). The first version put the whole
+TS client in one `typescript.md`; it is replaced by one page per concept **[user decision: option B]**.
+
+### 7.1 Where the guide starts from
+
+Phases 3 and 4 already updated the guide for every public API change: `.oly`, `@oly/web-host`, the C headers, the
+native host (`native-desktop.md`), `ENVIRONMENT`, the cheat sheet. What is left is the reorganization itself, and its
+cost is in the examples: the numbered pages teach in TS today (about 70 `ts` blocks against 27 `cpp`;
+`05-engine-and-systems.md`, `11-testing.md` and `12-performance.md` have no C++). Teaching concepts in C++ means about
+50 new C++ examples, and about 1500 lines of TS move to the TS client's pages.
+
+### 7.2 Approaches for the TS client's content
+
+- **A. One page, `environments/web/typescript.md`** (the first version of this section). Fewer files, but a page of
+  about 1500 lines that mirrors every concept section.
+- **B. A folder `environments/web/typescript/` with one page per concept** **[user decision]**. Navigation follows the
+  concepts, and every future client (C#, Rust) repeats the same set of files. Cost: more files to keep in step.
+- **C. C++ and TS side by side in each concept page.** Rejected: it breaks "concepts teach in C++" and does not scale
+  to N clients.
+
+### 7.3 Tree
+
 ```
 docs/guide/
-  README.md               the map: core, environments, how to choose, learning path per environment
-  concepts/               valid in every environment; examples in C++
+  README.md                    the map: core, environments, clients, how to choose, a learning path per environment
+  concepts/                    valid in every environment; examples in C++ (oly::app::Engine directly)
     schema.md  world-and-entities.md  queries.md  engine-and-systems.md
     events.md  input.md  schedule.md  states.md  performance.md
   environments/
     web/
-      getting-started.md  host, WASM build, first game in the browser
-      typescript.md       the TS client: the equivalent of each concept
-      testing.md          Node with a fake clock and fake input
-      boundary.md         the WASM↔JS boundary cost and how to keep the hot path fast
+      getting-started.md       the web host, WASM build, first game in the browser, mixing C++ and a client
+      testing.md               Node with a fake clock and fake input
+      boundary.md              the WASM↔JS boundary cost and how to keep the hot path fast
+      typescript/
+        README.md              what the TS client is, its packages, the page list
+        schema.md  world-and-entities.md  queries.md  engine-and-systems.md
+        events.md  input.md  schedule.md  states.md
+        recipes.md             the TS version of every recipe, plus the browser-only ones
     native/
-      getting-started.md  host, build, first desktop game
-  recipes.md              recipes in C++, with a link to each client's version where it differs
-  cheat-sheet.md          C++, C API and per-client names
+      getting-started.md       the native host, build, first desktop game, test your game (today native-desktop.md)
+  recipes.md                   recipes in C++, each linking to its TS version
+  cheat-sheet.md               C++, C API and per-client names
   troubleshooting.md
 ```
 
-- Every concept page teaches in C++, the engine language. `10-cpp-gameplay.md` disappears: its content is spread over
-  `concepts/` and the environment pages.
-- `docs/development/guide-style.md` changes with it: the reader is a game developer in any supported language, examples
-  are C++ first, each client's page shows the same concept in its language, and the files-and-navigation rules
-  describe the new folders. The game-agnostic rule stays.
-- The numbered learning path is replaced by per-environment paths listed in `README.md` **[author decision]**: with
-  concepts shared and environments separate, a single global number order no longer fits.
+### 7.4 Rules of the new guide
+
+- **Concept pages carry the contract; client pages carry the API.** A concept page explains what the engine does and
+  the rules a game relies on (deferred vs. direct, validity of views, event rounds, scope), with C++ examples. A client
+  page shows the same operations in its language and links back to the concept for the rules. A rule appears in a
+  client page only when it exists only in that client (TS: `raw()` arrays, heap views invalidated by memory growth,
+  `ContractError`) **[author decision]**: the contract written twice would drift, the anti-goal of §2 in prose.
+- **Client pages mirror the concept pages**: the same file name and the same section headings where the concept has a
+  form in that client, so a concept section links to its client section by anchor **[author decision]**. A section
+  with no client form is left out, not stubbed. Each concept page ends with an `In other clients` line that links to
+  each client's page for it.
+- **C++ examples separate the body from the registration** **[user decision: option b]**. Only the body is portable:
+  on `web`, the game's C++ has no `main` and never holds an `Engine&`; it defines functions with `OLY_SYSTEM`,
+  `OLY_HANDLER` and `OLY_STATE_HOOK`, and the client registers them by name and does the setup (states, bindings,
+  `inState`). So the main example of each concept is the function body written against the context (`query`, `spawn`,
+  `emit`, `requestState`...), valid in every environment. Under it, the registration is short and labelled: the
+  `oly::app::Engine` call (`addSystem`, `on`, `onEnter`, `setSystemStates`, `actions().bind`, with
+  `oly::app::declareSchema(engine)`) where the game owns the `Engine` (native), and a link to the client page's section
+  for `web`. Setup-only operations with no context form (declaring, binding, pause from outside a system) are shown on
+  `Engine` with the same "where you own the `Engine`" label. Examples are checked against the headers by reading, as
+  today; compiling the guide's examples is out of scope **[author decision]**.
+  Rejected: (a) `Engine` everywhere with a note, which shows a C++ web developer code they cannot run; (c) a C++ entry
+  point that gets the `Engine&` on `web`, which is new API and not documentation (a possible later project).
+- **Where `10-cpp-gameplay.md` goes** **[author decision]**: the context table and examples go to the concept pages;
+  `OLY_SYSTEM`, `OLY_HANDLER` and `OLY_STATE_HOOK` are a main section of `concepts/engine-and-systems.md`, as the way
+  any client registers a C++ function by name (they back `olyEngineAddNative*` in the C API, not only TS); "how to
+  split work between C++ and a client" and the shared-constants note go to `environments/web/getting-started.md`; the
+  C++-only `main` goes to `environments/native/getting-started.md`, which already has it; "your own exported C
+  functions" goes to `environments/web/getting-started.md` as an advanced section.
+- **The C API in the guide** **[author decision]**: only in the cheat sheet; its full contract (`OlyScriptInvoker`,
+  `olyEngineSetScriptInvoker`, the `kind` contract, pointer validity) lives in `docs/architecture/capi.md`. Its reader
+  writes a client, not a game. `guide-style.md`'s "what to update" table says a C API change updates the cheat sheet
+  and `capi.md`.
+- **Testing a native game** **[author decision]**: `environments/native/getting-started.md` grows its headless section
+  into "Test your game": run a fixed number of frames (`maxFrames`, `dummy` driver, or `engine.frame` with a fake time)
+  and check the `World`, registered with ctest. It is a step of the native learning path. "Testing C++ systems alone"
+  is rewritten there for a game with no WASM, and leaves `environments/web/testing.md`.
+- **Where the other numbered pages go** **[author decision]**: `01-getting-started.md` splits into the two
+  environment getting-started pages; `11-testing.md` becomes `environments/web/testing.md` (its "Testing C++ systems
+  alone" moves to the native page, rule above); `12-performance.md` splits into `concepts/performance.md` (archetype churn, splitting components,
+  fragmentation, queries, debug vs. release) and `environments/web/boundary.md` (`eachBlock` vs. per-entity `get`,
+  `raw()`, moving per-entity work to C++, batching events across the boundary); `13-troubleshooting.md` becomes
+  `troubleshooting.md`, with the messages table shared and one short section per client for its error classes
+  (`ContractError`, `SchemaMismatchError` for TS; `OLY_ASSERT` and debug presets for C++).
+- **Recipes** **[author decision]**: `recipes.md` shows each recipe in C++, with a link to the TS version under the
+  same heading in `environments/web/typescript/recipes.md`. Recipes that only make sense in the browser (high score in
+  the browser, HUD drawn on a canvas, debug overlay) live only in the TS recipes, listed in its table; `recipes.md`
+  lists them with a link.
+- **Learning paths** **[author decision]**: `README.md` lists one path per way of making a game: TS on the web
+  (web getting started → each concept followed by its TS page → testing → boundary), C++ on the desktop (native
+  getting started → concepts → test your game), C++ inside a web game (web getting started → concepts → mixing). Pages are not
+  numbered; each page's navigation line uses the order of its own folder (concepts in the order above, TS pages in the
+  same order).
+- **No old paths kept**: the numbered files, `native-desktop.md` and `10-cpp-gameplay.md` are removed with `git mv`
+  where a page moves whole, and every link in the repository (`docs/`, `README.md`, `CLAUDE.md`, `games/*/README.md`,
+  the specs' "remain valid" notes excluded) points to the new paths. Plans and old specs are history and are not
+  edited.
+- `docs/development/guide-style.md` changes with it: the reader is a game developer in any supported language;
+  examples are C++ first in concepts and in the client's language in client pages; the "what to update" table names
+  the concept page, the client page and the cheat sheet; the files-and-navigation section describes the new folders
+  and the mirroring rule. The game-agnostic rule stays.
+
+### 7.5 Architecture docs and the rest **[author decision]**
+
+- `bridge.md` → `capi.md` (`git mv`), and every link to it.
+- `docs/architecture/README.md`: the overview describes core, environments, hosts and clients (§3.1) instead of "C++
+  core, bridge, thin TS layer"; rule 1 says "a client has API conveniences, never engine behaviour"; rule 2 is about
+  the boundary of each client (crossed per block, batch or system, never per entity); the diagram shows the core, the
+  C API, the `web` environment (WASM, web host, TS client) and the `native` environment (native host); the reference
+  table gains this spec and the spur spec.
+- `decisions.md` gains: C++ first with clients grouped by environment, C++ not a client; the native host as a library
+  the game calls (§6.1); C headers as valid C. The `@oly/core`/`@oly/web-host` row stays.
+- `repository.md`, `modules-and-boundaries.md`, `schema-and-codegen.md`, `ts-packages.md`, `limits.md`,
+  `glossary.md`, `app.md`, `input.md`, `games.md`: checked and corrected for any leftover of the old structure.
+- `docs/benchmarks/bridge/` keeps its name: it holds recorded results, and the suite it names measures the boundary,
+  which still exists.
+- The root `README.md` and `CLAUDE.md` describe Oly as a C++ engine with environments and clients; `commands.md`
+  is checked for paths that moved.
+- Internal TS code names (`Bridge`, `bridgeOf` in `@oly/core/internal`) are code, not docs, and stay out of this phase.
 
 ## 8. Order of work **[author decision]**
 
@@ -393,9 +491,8 @@ Each phase ends with every existing test passing and `arena` running on `web`.
    TS schema API and `@oly/codegen` removed.
 4. **Native.** SDL3 host, `oly_add_game` per environment, C API test as a foreign client, the C++-only example game,
    Linux build with headless tests and the Windows cross-compile preset.
-5. **Docs.** Guide reorganized (§7), guide style, architecture docs (README rules and diagram, `decisions.md`,
-   `repository.md`, `modules-and-boundaries.md`, `schema-and-codegen.md`, `bridge.md` → `capi.md`, `ts-packages.md`,
-   `limits.md`, `glossary.md`), `CLAUDE.md`, `docs/development/commands.md`.
+5. **Docs.** Guide reorganized (§7.3, §7.4), guide style, architecture docs and the rest (§7.5). Ends with no link
+   in the repository pointing to a removed guide or architecture file.
 
 Docs that describe a public API changed in phases 1–4 are updated in the same phase (the `CLAUDE.md` rule); phase 5 is
 the reorganization of the guide itself.
