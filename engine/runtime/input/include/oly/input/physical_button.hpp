@@ -131,4 +131,10 @@ namespace oly::input {
 
     constexpr bool operator==(const PhysicalButton&) const noexcept = default;
   };
+
+  // True if `usage` is one of the Key values (the keyboard page, without the gaps the enum skips).
+  constexpr bool isKey(uint32_t usage) noexcept {
+    auto within = [usage](Key first, Key last) { return usage >= static_cast<uint32_t>(first) && usage <= static_cast<uint32_t>(last); };
+    return within(Key::A, Key::Backslash) || within(Key::Semicolon, Key::ContextMenu) || within(Key::ControlLeft, Key::MetaRight);
+  }
 }

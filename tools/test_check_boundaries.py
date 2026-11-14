@@ -70,6 +70,25 @@ class CheckBoundariesTest(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertEqual(output, "")
 
+    def test_detail_in_environment_module_passes(self):
+        self.write("engine/environments/native/host/src/x.cpp", '#include "oly/native_host/detail/input_translation.hpp"\n')
+        self.write("engine/environments/native/host/tests/t.cpp", '#include "oly/native_host/detail/input_translation.hpp"\n')
+
+        self.write("engine/environments/native/host/include/oly/native_host/detail/input_translation.hpp", "")
+
+        code, output = self.run_check([])
+
+        self.assertEqual(code, 0)
+        self.assertEqual(output, "")
+
+    def test_detail_of_environment_module_from_outside_fails(self):
+        self.write("games/g/x.cpp", '#include "oly/native_host/detail/input_translation.hpp"\n')
+
+        code, output = self.run_check([("native_host", "engine/environments/native/host", [])], games=[("g", "games/g", ["native_host"])])
+
+        self.assertEqual(code, 1)
+        self.assertIn("oly/native_host/detail is internal to module native_host", output)
+
     def test_game_uses_game_depends(self):
         self.write("engine/fixture/systems.cpp", '#include "oly/core/assert.hpp"\n')
 

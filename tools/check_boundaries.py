@@ -15,7 +15,6 @@ CPP_EXTENSIONS = (".hpp", ".cpp", ".h", ".c", ".inl")
 TS_EXTENSION = ".ts"
 
 INCLUDE_PATTERN = re.compile(r'^\s*#\s*include\s+"oly/([a-z_]+)/([^"]*)"')
-RUNTIME_PREFIX = "engine/runtime/"
 # The engine and its schema tooling know no environment; environments depend on them.
 CORE_PREFIXES = ("engine/runtime/", "engine/schema/")
 ENVIRONMENTS_PREFIX = "engine/environments/"
@@ -118,7 +117,8 @@ def check_cpp_file(path, relative_path, owners, module_directories):
             included_module, included_path = match.group(1), match.group(2)
             if owner is not None and included_module != owner and included_module not in depends:
                 violations.append(f"{relative_path}:{line_number}: {owner} includes oly/{included_module} without declaring {included_module} in DEPENDS")
-            inside_included_module = relative_path.startswith(f"{RUNTIME_PREFIX}{included_module}/")
+            included_directory = module_directories.get(included_module)
+            inside_included_module = owner == included_module or (included_directory is not None and relative_path.startswith(included_directory))
             if included_path.startswith("detail/") and not inside_included_module:
                 violations.append(f"{relative_path}:{line_number}: oly/{included_module}/detail is internal to module {included_module}")
             environment_message = environment_violation(relative_path, module_directories.get(included_module), f"oly/{included_module}")

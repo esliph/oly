@@ -49,3 +49,19 @@ TEST_CASE("equality compares the usage") {
   CHECK(PhysicalButton(Key::Space) == PhysicalButton(0x0007'002Cu));
   CHECK_FALSE(PhysicalButton(Key::Space) == PhysicalButton(Key::Enter));
 }
+
+TEST_CASE("isKey accepts every Key and rejects the gaps") {
+  CHECK(oly::input::isKey(static_cast<uint32_t>(Key::A)));
+  CHECK(oly::input::isKey(static_cast<uint32_t>(Key::Backslash)));
+  CHECK(oly::input::isKey(static_cast<uint32_t>(Key::Semicolon)));
+  CHECK(oly::input::isKey(static_cast<uint32_t>(Key::ContextMenu)));
+  CHECK(oly::input::isKey(static_cast<uint32_t>(Key::ControlLeft)));
+  CHECK(oly::input::isKey(static_cast<uint32_t>(Key::MetaRight)));
+
+  CHECK_FALSE(oly::input::isKey(0x0007'0003));
+  CHECK_FALSE(oly::input::isKey(0x0007'0032));
+  CHECK_FALSE(oly::input::isKey(0x0007'0066));
+  CHECK_FALSE(oly::input::isKey(0x0007'00DF));
+  CHECK_FALSE(oly::input::isKey(0x0007'00E8));
+  CHECK_FALSE(oly::input::isKey(static_cast<uint32_t>(MouseButton::Left)));
+}
