@@ -42,4 +42,4 @@ state playing
 - `./spur ts` generates `games/<game>/web/schema.generated.ts` from every game's `.oly` before `tsc`. `*.generated.ts` is never committed and never edited.
 - Link: `-sMODULARIZE=1 -sEXPORT_ES6=1 -sENVIRONMENT=node,web`, growable memory. The output goes to `build/<preset>/games/<game>_game.{mjs,wasm}`.
 
-See also: [bridge.md](capi.md) (how the `OlyEngine` declares the schema on creation) and [ts-packages.md](ts-packages.md) (the TS side: `@oly/core/generated`).
+See also: [capi.md](capi.md) (how the `OlyEngine` declares the schema on creation) and [ts-packages.md](ts-packages.md) (the TS side: `@oly/core/generated`).

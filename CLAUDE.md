@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Oly: 2D game engine in C++20 and TypeScript, on top of a single-threaded archetype ECS (study and benchmark project). C++ core compiled to WASM, C API `oly*`, thin TS layer.
+Oly: 2D game engine in C++20 on top of a single-threaded archetype ECS (study and benchmark project). The C++ core runs in environments (`web`: WASM with a TS client; `native`: a desktop host), with a C API `oly*` for clients in other languages.
 
 ## Documentation
 

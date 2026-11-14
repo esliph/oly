@@ -16,6 +16,9 @@
 | State scope through an internal tag | cleanup by query, cheap `persist` | twin archetypes with and without the tag |
 | Schedule as a min-heap in `app`, not as entities | tasks do not show up in the game's queries | task scope implemented separately |
 | Input in its own module, without a platform interface | edge rules testable without `Engine`; the host only pushes events | — |
+| C++ first, clients grouped by environment, C++ not a client | the engine is complete in C++; a client only adds language conveniences and each environment has one host | a game in another language depends on the C API, and the guide teaches the concepts in C++ |
+| The native host is a library the game calls (`oly::native_host::run`) | `main` is visible, the order is explicit and a headless test needs no second entry point | some repeated code in each game's `main` |
+| C API headers as valid C (`.h`) | a C, C#, Rust or Lua client consumes the real ABI | handles need `typedef`s and `struct` tags |
 | `@oly/core` without DOM, `@oly/web-host` with DOM | the TS core runs in node, browser and worker | two packages |
 
 The details of each decision are in the module files ([README.md](README.md#index)) and in the specs.

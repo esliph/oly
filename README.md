@@ -1,10 +1,10 @@
 # Oly
 
-Oly is a game engine in C++20 and TypeScript. The core is an archetype-based, single-threaded ECS (*Entity Component System*), written in C++ and compiled to WebAssembly. The game uses this core from TypeScript, in the browser or in Node.
+Oly is a 2D game engine in C++20. The core is an archetype-based, single-threaded ECS (*Entity Component System*) with the whole engine on top of it: fixed-step loop, events, input actions, schedule and states. The core runs in **environments**: `web` (compiled to WebAssembly, with a TypeScript **client** and a web host for the browser and Node) and `native` (a desktop host in C++, in a window on Linux and Windows). A C API `oly*` lets a client in another language drive the core.
 
 It is a study project. The goal is to measure how data representation (SoA, archetypes, aligned columns) and architectural decisions affect execution cost. That is why every performance target has a benchmark and a recorded result.
 
-> **Status:** in development. The ECS, the C API for WASM and the base TypeScript packages already work and have tests. There is no rendering, input, audio or example game yet. The packages are not published on npm yet. The API may change.
+> **Status:** in development. The ECS, the `Engine`, the C API, the TypeScript client and the web and native hosts work and have tests, and there is an example game per environment (`arena` on `web`, `drift` on `native`). Oly does not draw, play audio or do physics: the game does. The packages are not published on npm yet. The API may change.
 
 ## What already exists
 
@@ -12,10 +12,13 @@ It is a study project. The goal is to measure how data representation (SoA, arch
 |---|---|---|
 | `oly::core` | `engine/runtime/core` | Base utilities: `OLY_ASSERT`, alignment, `small_map`, type name. |
 | `oly::ecs` | `engine/runtime/ecs` | The ECS: `World`, `Entity`, cached queries, `CommandBuffer`, invariant diagnostics. |
-| `oly::capi` | `engine/runtime/capi` | C API (`oly*`) that exposes the ECS to WebAssembly. |
-| `@oly/core` | `engine/environments/web/clients/typescript/core` | TypeScript API: schema, `World`, `Query`, `Block`. |
-| `@oly/web-host` | `engine/environments/web/host/js` | Loads the WASM module by URL in the browser. |
-| oly-schema | `engine/schema/codegen` | Generates the C++ and the TS of a game's .oly schema. |
+| `oly::input` | `engine/runtime/input` | Input actions (`ActionMap`) over physical buttons. |
+| `oly::app` | `engine/runtime/app` | The `Engine`: loop, phases, systems, events, schedule and states. |
+| `oly::capi` | `engine/runtime/capi` | C API (`oly*`) for clients in other languages. |
+| `oly::native_host` | `engine/environments/native/host` | The `native` environment's host: window, input and the run loop. |
+| `@oly/core` | `engine/environments/web/clients/typescript/core` | The TypeScript client: schema, `World`, `Query`, `Block`, `Engine`. |
+| `@oly/web-host` | `engine/environments/web/host/js` | The `web` environment's host: loads the WASM, drives the loop, forwards input. |
+| oly-schema | `engine/schema/codegen` | Generates the C++ and each client's code from a game's `.oly` schema. |
 
 ## How the ECS works
 
@@ -134,7 +137,7 @@ The recorded results and the status of each target are in [`docs/benchmarks/READ
 | Where | What it has |
 |---|---|
 | [`docs/guide/`](docs/guide/README.md) | user guide: how to make a game, step by step, with examples, recipes and a cheat sheet |
-| [`docs/architecture/`](docs/architecture/README.md) | architecture: overview, modules and boundaries, ECS, `Engine`, bridge, TS packages, games, decisions and limitations |
+| [`docs/architecture/`](docs/architecture/README.md) | architecture: overview, modules and boundaries, ECS, `Engine`, `capi`, TS packages, games, decisions and limitations |
 | [`docs/architecture/repository.md`](docs/architecture/repository.md) | repository structure |
 | [`docs/development/commands.md`](docs/development/commands.md) | all commands for build, tests, benchmarks and games |
 | [`docs/development/code-style.md`](docs/development/code-style.md) | code style |
