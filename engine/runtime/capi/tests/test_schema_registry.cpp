@@ -1,7 +1,19 @@
 #include "components.hpp"
 #include "oly/app/engine.hpp"
+#include "oly/app/schema.hpp"
 #include "oly/capi/schema_registry.hpp"
 #include "test_events.hpp"
+
+namespace oly::app {
+  void declareSchema(Engine& engine) {
+    engine.declareEvent<CapiTestEvent>("CapiTestEvent");
+    engine.actions().declare(oly::input::ActionKind::Button, "capiJump");
+    engine.actions().declare(oly::input::ActionKind::Axis2d, "capiMove");
+    engine.actions().declare(oly::input::ActionKind::Pointer, "capiAim");
+    engine.declareState("capiMenu");
+    engine.declareState("capiPlaying");
+  }
+}
 
 namespace oly::capi {
   uint32_t schemaHash() noexcept {
@@ -15,7 +27,7 @@ namespace oly::capi {
 
   std::span<const SchemaEvent> schemaEvents() {
     static const SchemaEvent events[] = {
-      {"CapiTestEvent", sizeof(CapiTestEvent), alignof(CapiTestEvent), [](oly::app::Engine& engine) { engine.declareEvent<CapiTestEvent>("CapiTestEvent"); }},
+      {"CapiTestEvent", sizeof(CapiTestEvent), alignof(CapiTestEvent)},
     };
     return events;
   }

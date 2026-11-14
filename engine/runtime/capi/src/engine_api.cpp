@@ -4,6 +4,7 @@
 
 #include "handles.hpp"
 #include "oly/app/handler.hpp"
+#include "oly/app/schema.hpp"
 #include "oly/app/state_context.hpp"
 #include "oly/app/system.hpp"
 #include "oly/app/task_context.hpp"
@@ -123,19 +124,7 @@ extern "C" {
 OlyEngine* olyEngineCreate(double fixedHz, uint32_t maxStepsPerFrame, uint32_t maxEventRounds) {
   OlyEngine* engine = new OlyEngine(oly::app::EngineConfig{fixedHz, maxStepsPerFrame, maxEventRounds});
 
-  for (const oly::capi::SchemaEvent& schemaEvent : oly::capi::schemaEvents()) {
-    schemaEvent.declare(engine->engine);
-  }
-
-  for (const oly::capi::SchemaAction& schemaAction : oly::capi::schemaActions()) {
-    [[maybe_unused]] const oly::input::ActionId id = engine->engine.actions().declare(schemaAction.kind, schemaAction.name);
-    OLY_ASSERT(id == engine->engine.actions().actionCount() - 1, "olyEngineCreate: action \"%.*s\" out of order", static_cast<int>(schemaAction.name.size()), schemaAction.name.data());
-  }
-
-  for (const oly::capi::SchemaState& schemaState : oly::capi::schemaStates()) {
-    [[maybe_unused]] const oly::app::StateId id = engine->engine.declareState(schemaState.name);
-    OLY_ASSERT(id == engine->engine.stateCount() - 1, "olyEngineCreate: state \"%.*s\" out of order", static_cast<int>(schemaState.name.size()), schemaState.name.data());
-  }
+  oly::app::declareSchema(engine->engine);
 
   return engine;
 }

@@ -48,10 +48,9 @@ extern "C" {
 // given to olyEngineSetScriptInvoker.
 typedef void (*OlyScriptInvoker)(void* userData, OlyEngine* engine, uint32_t kind, uint32_t id, const void* events, uint32_t eventCount);
 
-// fixedHz, maxStepsPerFrame and maxEventRounds must be positive (OLY_ASSERT). Declares, in schema order, all
-// the events from oly::capi::schemaEvents(): the event's index in the schema is its event type (eventType).
-// After the events and the actions, declares the states from oly::capi::schemaStates(): the state's index in the schema is
-// its StateId.
+// fixedHz, maxStepsPerFrame and maxEventRounds must be positive (OLY_ASSERT). Declares the schema with
+// oly::app::declareSchema: the event's index in the schema is its event type, the action's index its ActionId and
+// the state's index its StateId.
 OLY_API OlyEngine* olyEngineCreate(double fixedHz, uint32_t maxStepsPerFrame, uint32_t maxEventRounds);
 OLY_API void olyEngineDestroy(OlyEngine* engine);
 // Owned by the engine: valid until olyEngineDestroy and never passed to olyWorldDestroy.

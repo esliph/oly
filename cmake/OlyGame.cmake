@@ -12,15 +12,16 @@ function(oly_add_game target)
 
   set(generatedDirectory ${CMAKE_CURRENT_BINARY_DIR}/${target}_generated)
   set(generatedHeader ${generatedDirectory}/schema.generated.hpp)
+  set(generatedDeclaration ${generatedDirectory}/schema_declaration.generated.cpp)
   set(generatedRegistry ${generatedDirectory}/schema_registry.generated.cpp)
   add_custom_command(
-    OUTPUT ${generatedHeader} ${generatedRegistry}
+    OUTPUT ${generatedHeader} ${generatedDeclaration} ${generatedRegistry}
     COMMAND ${OLY_SCHEMA_TOOL} ${GAME_SCHEMA} --emit cpp=${generatedDirectory}
     DEPENDS ${GAME_SCHEMA} ${OLY_SCHEMA_TOOL}
     COMMENT "Generating the C++ schema for ${target}"
     VERBATIM)
 
-  add_executable(${target} ${GAME_SOURCES} ${generatedRegistry} ${generatedHeader})
+  add_executable(${target} ${GAME_SOURCES} ${generatedDeclaration} ${generatedRegistry} ${generatedHeader})
   target_include_directories(${target} PRIVATE ${generatedDirectory})
   foreach(dependency IN LISTS GAME_DEPENDS)
     target_link_libraries(${target} PRIVATE oly::${dependency})

@@ -6,11 +6,20 @@
 #include <span>
 #include <vector>
 
+#include "oly/app/engine.hpp"
+#include "oly/app/schema.hpp"
 #include "oly/capi/c_api.hpp"
 #include "oly/capi/engine_api.hpp"
 #include "oly/capi/schema_registry.hpp"
 #include "oly/core/assert.hpp"
 #include "oly/ecs/component.hpp"
+
+namespace oly::app {
+  void declareSchema(Engine& engine) {
+    engine.actions().declare(oly::input::ActionKind::Button, "jump");
+    engine.actions().declare(oly::input::ActionKind::Axis2d, "move");
+  }
+}
 
 namespace oly::capi {
   uint32_t schemaHash() noexcept {

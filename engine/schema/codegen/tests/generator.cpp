@@ -40,7 +40,7 @@ namespace {
   }
 }
 
-TEST_CASE("--emit cpp writes the header and the registry into the target directory") {
+TEST_CASE("--emit cpp writes the header, the declaration and the registry into the target directory") {
   const std::filesystem::path directory = freshDirectory("emit_cpp");
   writeText(directory / "game.oly", "component P { a: u8 }\n");
   std::ostringstream errors;
@@ -51,6 +51,7 @@ TEST_CASE("--emit cpp writes the header and the registry into the target directo
   CHECK(exitCode == 0);
   CHECK(errors.str().empty());
   CHECK(readText(directory / "out" / "schema.generated.hpp") == oly::schema::emitCppHeader(schema));
+  CHECK(readText(directory / "out" / "schema_declaration.generated.cpp") == oly::schema::emitCppDeclaration(schema));
   CHECK(readText(directory / "out" / "schema_registry.generated.cpp") == oly::schema::emitCppRegistry(schema));
 }
 

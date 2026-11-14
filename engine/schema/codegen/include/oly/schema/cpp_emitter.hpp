@@ -10,8 +10,10 @@
 namespace oly::schema {
   std::string emitCppHeader(const Schema& schema);
 
+  std::string emitCppDeclaration(const Schema& schema);
+
   std::string emitCppRegistry(const Schema& schema);
 
-  // `target` is a directory: schema.generated.hpp and schema_registry.generated.cpp.
+  // `target` is a directory: schema.generated.hpp, schema_declaration.generated.cpp and schema_registry.generated.cpp.
   std::vector<EmittedFile> emitCpp(const Schema& schema, const std::filesystem::path& target);
 }

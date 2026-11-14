@@ -7,16 +7,11 @@
 #include "oly/ecs/component.hpp"
 #include "oly/input/action_map.hpp"
 
-namespace oly::app {
-  class Engine;
-}
-
 namespace oly::capi {
   struct SchemaEvent {
     std::string_view name;
     uint32_t size;
     uint32_t alignment;
-    void (*declare)(oly::app::Engine& engine);
   };
 
   struct SchemaAction {
