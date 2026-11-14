@@ -1,17 +1,21 @@
-# 13. Troubleshooting
+# Troubleshooting
 
-[← Performance](concepts/performance.md) · [Guide index](README.md) · References: [Recipes](recipes.md) · [Cheat sheet](cheat-sheet.md)
+[Guide index](README.md) · References: [Recipes](recipes.md) · [Cheat sheet](cheat-sheet.md)
 
 Oly checks how you use it and fails **at the wrong call**, with a message that names the operation, the entity (`index:generation`) and the type. This page explains the messages you will meet most.
 
-## The two error classes (TS)
+## C++: OLY_ASSERT and debug presets
+
+In C++, a contract violation stops on `OLY_ASSERT` in debug builds (`debug-asan`, `native-games`, `wasm-games`), with a message that names the operation, the entity and the type. In release builds (`release`, `native-games-release`, `wasm-games-release`) it is **not checked** and is undefined behaviour. Develop and test with asserts on: `PRESET=native-games ./spur native-games-test`, or `PRESET=wasm-games ./spur game <game>` for a web game.
+
+## TypeScript: ContractError and SchemaMismatchError
 
 | Error | Meaning | What to do |
 |---|---|---|
 | `ContractError` | you called the API in a way it does not allow | read the message: it says the operation and why |
 | `SchemaMismatchError` | the WASM was built from a different schema | rebuild: `./spur ts` then the game build |
 
-In C++, the same violations stop on `OLY_ASSERT` in debug builds (`wasm-games`, `debug-asan`). In release builds they are **not checked**. Develop and test with asserts on: `PRESET=wasm-games ./spur game <game>`.
+The TS client validates everything that goes through it, in release builds too ([TypeScript client](environments/web/typescript/README.md)).
 
 ## Common messages
 
@@ -38,7 +42,7 @@ In C++, the same violations stop on `OLY_ASSERT` in debug builds (`wasm-games`, 
 | `does not belong to this runtime's schema` | an entry from another generated schema module | import the entries from the game's `schema.generated.js` |
 | `invalid type name` / `invalid field` | schema naming rules | `PascalCase` types, `camelCase` fields, no C++ keywords |
 | `<game>.oly:<line>:<column>: ...` when building | a schema rule is broken | fix that line; the rules are in [Schema](concepts/schema.md#naming-rules) |
-| `<game> is a web game, but this build is native` (or the reverse) when configuring | the game's `ENVIRONMENT` is not the environment of the preset | wrap the game's `CMakeLists.txt` in `if(OLY_ENVIRONMENT STREQUAL "...")`, see [Desktop games](environments/native/getting-started.md#build-it) |
+| `<game> is a web game, but this build is native` (or the reverse) when configuring | the game's `ENVIRONMENT` is not the environment of the preset | wrap the game's `CMakeLists.txt` in `if(OLY_ENVIRONMENT STREQUAL "...")`, see [Getting started on the desktop](environments/native/getting-started.md#build-it) |
 | `declareSchema: the Engine already declares events, actions or states` | `declareSchema` called after a manual `declareEvent`, `declareState` or action declaration | call `declareSchema` first and declare nothing by hand |
 | `SDL_InitSubSystem(video): ...` or `SDL window: ...` (`std::runtime_error` from `Window`) | no display or video driver on the machine | run on a desktop session, or set `SDL_VIDEO_DRIVER=dummy` for a headless run |
 | `Engine already disposed` / `World already disposed` | use after `dispose()` | keep the engine alive while the game runs |
@@ -65,9 +69,16 @@ In C++, the same violations stop on `OLY_ASSERT` in debug builds (`wasm-games`, 
 
 After changing the schema:
 
+**Web**
+
 1. `./spur ts` — builds `oly-schema`, generates the TS schemas and compiles the TS;
 2. build the game (`./spur game <game>` or `./spur games-test`) — regenerates `schema.generated.hpp` and the WASM;
 3. reload the page (or rerun the tests).
+
+**Desktop**
+
+1. build the game (`./spur desktop <game>` or `./spur native-games-test`) — `oly-schema` regenerates `schema.generated.hpp`;
+2. run it again.
 
 ## What Oly does not do
 

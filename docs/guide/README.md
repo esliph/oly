@@ -1,130 +1,142 @@
 # Oly user guide
 
-This guide shows how to **make games with Oly**: what you write, where it goes and what the engine does with it. Every page has short examples you can copy, in TypeScript and, when it matters, in C++.
+This guide shows how to **make games with Oly**: what you write, where it goes and what the engine does with it. The concepts are taught in C++, the language of the engine. Everything that depends on where the game runs, or on the language of a client, is grouped by environment and client.
 
 If you want to know *why* the engine is built this way, read [the architecture docs](../architecture/README.md). This guide only covers *how to use it*.
 
 ## What you can build
 
-Oly is a 2D engine for the browser (and Node), and for C++-only games in a desktop window. With it you can:
+Oly is a 2D engine in C++. It runs in a window on Linux and Windows, and in the browser (and Node) as WebAssembly with a TypeScript client. With it you can:
 
 - keep thousands of entities in an archetype ECS and iterate over them without copies;
-- write gameplay in **TypeScript**, in **C++** (compiled to WebAssembly) or mix both in the same phase;
-- run a **fixed-step loop** with pause, hidden-tab handling and render interpolation;
+- write gameplay in **C++**, and in **TypeScript** on the web, or mix both in the same phase;
+- run a **fixed-step loop** with pause, hidden-window handling and render interpolation;
 - send **events** between systems, in batches;
 - map the keyboard and mouse to **actions** (button, 2D axis, pointer) and rebind them at run time;
 - **schedule** work on the game clock (`after`, `every`) that pauses with the game;
 - organize the game in **states** (menu → playing → game over) that clean up after themselves;
-- **test the game in Node** with a fake clock and fake input.
+- **test the game** with a fake clock and fake input, in Node or in a native test.
 
-Oly does **not** draw, play audio or do physics. You draw with whatever you want (Canvas 2D, WebGL, a test recorder) inside a render system. See [Limits](troubleshooting.md#what-oly-does-not-do).
+Oly does **not** draw, play audio or do physics. You draw with whatever you want (Canvas 2D, SDL, a test recorder) inside a render system. See [Limits](troubleshooting.md#what-oly-does-not-do).
 
-## Learning path
+## The map
+
+- The **core** is the engine in C++: the ECS, the `Engine`, input, schedule and states. It knows nothing about where it runs.
+- An **environment** is a place where the core runs, with a **host** that drives the loop and forwards input.
+- A **client** is a language that talks to the core through the C API `oly*`. C++ is not a client: it is the language of the core.
+
+| Environment | Host | Clients | Start here |
+|---|---|---|---|
+| `web` | the web host: WASM, `runInBrowser`, `attachBrowserInput` | [TypeScript](environments/web/typescript/README.md) | [Getting started on the web](environments/web/getting-started.md) |
+| `native` | the native host: a window, SDL, `oly::native_host::run` | none: the game is C++ | [Getting started on the desktop](environments/native/getting-started.md) |
+
+## Choose your path
+
+Pages are not numbered. Each path lists them in the order to read.
+
+**TypeScript on the web**
+
+1. [Getting started on the web](environments/web/getting-started.md)
+2. Each concept, followed by its TS page: [Schema](concepts/schema.md) and [in TS](environments/web/typescript/schema.md), [World and entities](concepts/world-and-entities.md) and [in TS](environments/web/typescript/world-and-entities.md), [Queries](concepts/queries.md) and [in TS](environments/web/typescript/queries.md), [Engine, loop and systems](concepts/engine-and-systems.md) and [in TS](environments/web/typescript/engine-and-systems.md), [Events](concepts/events.md) and [in TS](environments/web/typescript/events.md), [Input](concepts/input.md) and [in TS](environments/web/typescript/input.md), [Schedule](concepts/schedule.md) and [in TS](environments/web/typescript/schedule.md), [States](concepts/states.md) and [in TS](environments/web/typescript/states.md)
+3. [Testing a web game](environments/web/testing.md)
+4. [The WASM↔JS boundary](environments/web/boundary.md)
+
+**C++ on the desktop**
+
+1. [Getting started on the desktop](environments/native/getting-started.md)
+2. The [concepts](#concepts), in order
+3. [Test your game](environments/native/getting-started.md#test-your-game)
+
+**C++ inside a web game**
+
+1. [Getting started on the web](environments/web/getting-started.md), especially [How to split work between C++ and a client](environments/web/getting-started.md#how-to-split-work-between-c-and-a-client)
+2. The [concepts](#concepts), in order
+3. [Systems in C++, registered by name](concepts/engine-and-systems.md#systems-in-c-registered-by-name-oly_system-oly_handler-oly_state_hook) and [C++ systems, handlers and hooks](environments/web/typescript/engine-and-systems.md#c-systems-handlers-and-hooks)
+
+## Concepts
 
 Read in order the first time. Each page builds on the one before.
 
-| # | Page | You learn to |
-|---|---|---|
-| 1 | [Getting started](environments/web/getting-started.md) | build the engine, run the example game and create your own game folder |
-| 2 | [Schema](concepts/schema.md) | declare components, tags, events, actions and states |
-| 3 | [World and entities](concepts/world-and-entities.md) | create, change, read and destroy entities |
-| 4 | [Queries](concepts/queries.md) | iterate over entities fast, filter them, find "the only one" |
-| 5 | [Engine, loop and systems](concepts/engine-and-systems.md) | run the game loop, register systems, pause, render |
-| 6 | [Events](concepts/events.md) | let systems talk without knowing each other |
-| 7 | [Input](concepts/input.md) | bind keys and mouse to actions and read them |
-| 8 | [Schedule](concepts/schedule.md) | run code later or every N seconds on the game clock |
-| 9 | [States](concepts/states.md) | build menu, playing and game over screens that reset cleanly |
-| 10 | [C++ gameplay](concepts/engine-and-systems.md#systems-in-c-registered-by-name-oly_system-oly_handler-oly_state_hook) | write systems, handlers and hooks in C++, or a C++-only game |
-| 11 | [Testing your game](environments/web/testing.md) | run the game in Node with fake time and input |
-| 12 | [Performance](concepts/performance.md) | keep the hot path fast across the WASM boundary |
-| 13 | [Troubleshooting](troubleshooting.md) | understand each error and fix the common mistakes |
+| Page | You learn to |
+|---|---|
+| [Schema](concepts/schema.md) | declare components, tags, events, actions and states |
+| [World and entities](concepts/world-and-entities.md) | create, change, read and destroy entities |
+| [Queries](concepts/queries.md) | iterate over entities fast, filter them, find "the only one" |
+| [Engine, loop and systems](concepts/engine-and-systems.md) | run the game loop, register systems, pause, render |
+| [Events](concepts/events.md) | let systems talk without knowing each other |
+| [Input](concepts/input.md) | bind keys and mouse to actions and read them |
+| [Schedule](concepts/schedule.md) | run code later or every N seconds on the game clock |
+| [States](concepts/states.md) | build menu, playing and game over screens that reset cleanly |
+| [Performance](concepts/performance.md) | keep the hot path fast |
 
-Then use these as references:
+## References
 
 | Page | Use it when |
 |---|---|
 | [Recipes](recipes.md) | you want a ready pattern: projectile, cooldown, spawner, pickup, health, timer, nearest target, key rebinding and more |
 | [Cheat sheet](cheat-sheet.md) | you remember the idea but not the exact name or signature |
-| [Desktop games](environments/native/getting-started.md) | you want a C++-only game in a window on Linux or Windows |
+| [Troubleshooting](troubleshooting.md) | you need to understand an error or fix a common mistake |
 | [Glossary](../architecture/glossary.md) | you need the same operation in C++, C API and TS |
 
 ## The big picture in one example
 
-A complete game is three things: a **schema** (the data), **systems** (the behaviour) and a **shell** (browser or test) that drives the loop.
+A complete game is three things: a **schema** (the data), **systems** (the behaviour) and a **host** that drives the loop.
 
 ```
-# hello.oly — the data, shared by TS and C++
+# hello.oly — the data, shared by every language
 component Position { x: f32, y: f32 }
 component Velocity { x: f32, y: f32 }
 tag Player
 action move: axis2d
 ```
 
-```ts
-// src/game.ts — the behaviour, with no DOM
-import { Phase } from "@oly/core";
-import type { Engine } from "@oly/core";
+```cpp
+// the behaviour: a body written against the context, valid in every environment
+OLY_SYSTEM(steer) {
+  const oly::input::Vector2 direction = context.actions().axis2d(actions::move);
 
-import { Player, Position, Velocity, move } from "../schema.generated.js";
-
-const PlayerSpeed = 200;
-
-export function installGame(engine: Engine): void {
-  engine.actions.bind(move, { up: "KeyW", down: "KeyS", left: "KeyA", right: "KeyD" });
-  engine.world.spawn([Player, Position, Velocity], { Position: { x: 100, y: 100 } });
-
-  engine.addSystem(Phase.Update, "steer", (context) => {
-    const direction = context.actions.axis2d(move);
-
-    context.query({ write: [Velocity], with: [Player] }).eachBlock((block) => {
-      const velocity = block.write(Velocity);
-      for (let row = 0; row < block.count; ++row) {
-        velocity.x.set(row, direction.x * PlayerSpeed);
-        velocity.y.set(row, direction.y * PlayerSpeed);
-      }
-    });
+  context.query<Velocity>(oly::ecs::With<Player>{}).each([direction](Velocity& velocity) {
+    velocity = Velocity{direction.x * 200.0f, direction.y * 200.0f};
   });
+}
 
-  engine.addSystem(Phase.Update, "integrate", (context) => {
-    const deltaTime = context.fixedDeltaTime;
+OLY_SYSTEM(integrate) {
+  const float deltaTime = context.fixedDeltaTime();
 
-    context.query({ read: [Velocity], write: [Position] }).eachBlock((block) => {
-      const velocity = block.read(Velocity);
-      const position = block.write(Position);
-      for (let row = 0; row < block.count; ++row) {
-        position.x.set(row, position.x.get(row) + velocity.x.get(row) * deltaTime);
-        position.y.set(row, position.y.get(row) + velocity.y.get(row) * deltaTime);
-      }
-    });
+  context.query<Position, const Velocity>().each([deltaTime](Position& position, const Velocity& velocity) {
+    position.x += velocity.x * deltaTime;
+    position.y += velocity.y * deltaTime;
   });
 }
 ```
 
-```ts
-// src/main.ts — the browser shell
-import { loadRuntime } from "@oly/core";
-import { attachBrowserInput, moduleFactoryFromUrl, runInBrowser } from "@oly/web-host";
+**Where you own the `Engine`** (native), the registration is a fragment of `main`:
 
-import schema from "../schema.generated.js";
-import { installGame } from "./game.js";
+```cpp
+oly::ecs::World world;
+oly::app::Engine engine(world);
+oly::app::declareSchema(engine);
 
-const canvas = document.getElementById("game") as HTMLCanvasElement;
-const runtime = await loadRuntime(moduleFactoryFromUrl("./hello_game.mjs"), schema);
-const engine = runtime.createEngine({ fixedHz: 60 });
+engine.actions().bind(actions::move, oly::input::Axis2dBinding{oly::input::Key::W, oly::input::Key::S, oly::input::Key::A, oly::input::Key::D});
+world.spawn(Player{}, Position{100.0f, 100.0f}, Velocity{});
 
-installGame(engine);
-attachBrowserInput(engine, canvas);
-runInBrowser(engine);
+engine.addSystem(oly::app::Phase::UpdateBefore, "steer", steer);
+engine.addSystem(oly::app::Phase::Update, "integrate", integrate);
+
+oly::native_host::Window window({"Hello", 640, 360});
+return oly::native_host::run(engine, window);
 ```
+
+**On the web**, the TS client registers the same functions by name and drives the loop from the browser: see the `game.ts` and `main.ts` of [Create your own game](environments/web/getting-started.md#create-your-own-game).
 
 ## Example games
 
-Complete example games live in [`games/`](../../games), one folder per game, for the web and for the desktop. Each one has its own `README.md` that says what it shows and how to run it. After this guide, they are the best reference: real code that uses every part of the engine together.
+Complete example games live in [`games/`](../../games), one folder per game: `arena` on the web and `drift` on the desktop. Each one has its own `README.md` that says what it shows and how to run it. After this guide, they are the best reference: real code that uses every part of the engine together.
 
-All example games follow the same layout ([Getting started](environments/web/getting-started.md#create-your-own-game)), so once you know one, you can read any of them.
+All web example games follow the same layout ([Getting started on the web](environments/web/getting-started.md#create-your-own-game)), and all desktop ones follow [Getting started on the desktop](environments/native/getting-started.md), so once you know one, you can read any of them.
 
 ## Conventions used in this guide
 
-- `TS` blocks use `@oly/core` and `@oly/web-host`. `C++` blocks use the `oly::ecs`, `oly::app` and `oly::input` namespaces.
+- `cpp` blocks use the `oly::ecs`, `oly::app` and `oly::input` namespaces. `ts` blocks appear only in the client pages (`environments/web/typescript/`) and in the pages of the web environment.
 - Commands are `./spur` tasks, run from Git Bash; each one runs inside Docker ([commands](../development/commands.md)).
-- "Contract error" means the engine refuses the call: TS throws `ContractError`; C++ stops on `OLY_ASSERT` (in debug builds).
+- "Contract error" means the engine refuses the call: C++ stops on `OLY_ASSERT` in debug builds; TS throws `ContractError`.
