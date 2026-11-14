@@ -2,28 +2,28 @@
 
 [Guide index](README.md) · [Cheat sheet](cheat-sheet.md)
 
-Ready patterns for common game features. Each recipe shows the schema entries it needs and the code. They use TS unless C++ is the better fit; most can be moved to C++ with the same structure ([C++ gameplay](concepts/engine-and-systems.md#systems-in-c-registered-by-name-oly_system-oly_handler-oly_state_hook)).
+Ready patterns for common game features, in C++. Each recipe shows the schema entries it needs and the code: the bodies are written against the context, so they run in every environment, and the registration is labelled under them. Every recipe ends with a link to its TypeScript version, which registers the same pieces from the TS client.
 
 | Recipe | Uses |
 |---|---|
 | [Projectile with a lifetime](#projectile-with-a-lifetime) | component timer, deferred destroy |
-| [Spawner every N seconds](#spawner-every-n-seconds) | `schedule.every`, scope |
-| [Difficulty that ramps up](#difficulty-that-ramps-up) | closure counter |
-| [Ability with a cooldown](#ability-with-a-cooldown) | `u8` flags, `schedule.after` |
+| [Spawner every N seconds](#spawner-every-n-seconds) | `schedule().every`, scope |
+| [Difficulty that ramps up](#difficulty-that-ramps-up) | component counter |
+| [Ability with a cooldown](#ability-with-a-cooldown) | `u8` flags, `schedule().after`, payload |
 | [Health, damage and death](#health-damage-and-death) | events, handler order |
 | [Temporary status effect](#temporary-status-effect) | tag + `after` |
 | [Pickups](#pickups) | overlap test, event, `isAlive` |
-| [Homing projectile](#homing-projectile) | `entity` field, `get` on another entity |
+| [Homing projectile](#homing-projectile) | `entity` field, `tryGet` on another entity |
 | [Attach one entity to another](#attach-one-entity-to-another) | parent handle, offset |
 | [Keep inside the screen or wrap around](#keep-inside-the-screen-or-wrap-around) | clamping, modulo |
-| [Score and HUD](#score-and-hud) | TS state, render system, `trySingle` |
-| [Round timer](#round-timer) | `context.time`, `after` |
-| [Pause screen](#pause-screen) | `whilePaused`, `paused` |
+| [Score and HUD](environments/web/typescript/recipes.md#score-and-hud) | browser-only |
+| [Round timer](#round-timer) | `context.time()`, `after` |
+| [Pause screen](#pause-screen) | `setWhilePaused`, `paused` |
 | [Restart the game](#restart-the-game) | states and scope |
-| [High score saved in the browser](#high-score-saved-in-the-browser) | injected storage, `onExit` |
+| [High score saved in the browser](environments/web/typescript/recipes.md#high-score-saved-in-the-browser) | browser-only |
 | [A sequence of timed steps](#a-sequence-of-timed-steps) | chained `after` |
-| [Random spawn positions](#random-spawn-positions) | injected `random` |
-| [Debug overlay](#debug-overlay) | counting with queries |
+| [Random spawn positions](#random-spawn-positions) | `std::minstd_rand` |
+| [Debug overlay](environments/web/typescript/recipes.md#debug-overlay) | browser-only |
 
 ---
 
@@ -32,64 +32,112 @@ Ready patterns for common game features. Each recipe shows the schema entries it
 ```
 # game.oly
 component Lifetime { seconds: f32 }
+component Weapon { interval: f32, cooldown: f32 }
 ```
 
-```ts
-engine.addSystem(Phase.Update, "expire", (context) => {
-  const deltaTime = context.fixedDeltaTime;
+```cpp
+OLY_SYSTEM(expire) {
+  const float deltaTime = context.fixedDeltaTime();
 
-  context.query({ write: [Lifetime] }).eachBlock((block) => {
-    const lifetime = block.write(Lifetime);
-    for (let row = 0; row < block.count; ++row) {
-      const remaining = lifetime.seconds.get(row) - deltaTime;
-      lifetime.seconds.set(row, remaining);
-      if (remaining <= 0) {
-        context.destroy(block.entity(row));
-      }
+  context.query<Lifetime>().each([&](oly::ecs::Entity entity, Lifetime& lifetime) {
+    lifetime.seconds -= deltaTime;
+
+    if (lifetime.seconds <= 0.0f) {
+      context.destroy(entity);
     }
   });
-});
+}
 
-// spawning
-context.spawn([Bullet, Position, Velocity, Lifetime], {
-  Position: { x, y },
-  Velocity: { x: directionX * 600, y: directionY * 600 },
-  Lifetime: { seconds: 1.5 },
-});
+OLY_SYSTEM(fireWeapon) {
+  auto [player, position, weapon] = context.query<const Position, Weapon>(oly::ecs::With<Player>{}).single();
+  weapon.cooldown = std::max(0.0f, weapon.cooldown - context.fixedDeltaTime());
+
+  if (!context.actions().button(actions::shoot).held || weapon.cooldown > 0.0f) {
+    return;
+  }
+
+  const oly::input::PointerState aim = context.actions().pointer(actions::aim);
+  const float deltaX = aim.x - position.x;
+  const float deltaY = aim.y - position.y;
+  const float length = std::sqrt(deltaX * deltaX + deltaY * deltaY);
+
+  if (!aim.valid || length == 0.0f) {
+    return;
+  }
+
+  weapon.cooldown = weapon.interval;
+  context.spawn(Bullet{}, Position{position.x, position.y}, Velocity{deltaX / length * 600.0f, deltaY / length * 600.0f}, Lifetime{1.5f});
+}
 ```
 
-A component timer is cheaper than one scheduled task per bullet when you have hundreds of bullets. For a few long-lived things, `schedule.after` is simpler.
+**Where you own the `Engine`** (native):
+
+```cpp
+engine.addSystem(oly::app::Phase::Update, "expire", expire);
+engine.addSystem(oly::app::Phase::Update, "fireWeapon", fireWeapon);
+```
+
+A component timer is cheaper than one scheduled task per bullet when you have hundreds of bullets. For a few long-lived things, `schedule().after` is simpler.
+
+TypeScript: [Projectile with a lifetime](environments/web/typescript/recipes.md#projectile-with-a-lifetime).
 
 ## Spawner every N seconds
 
-```ts
-engine.onEnter(playing, "startSpawner", (context) => {
-  context.schedule.every(2, (task) => {
-    task.spawn([Enemy, Position, Health], { Position: { x: 0, y: 0 }, Health: { value: 1 } });
-  });
-});
+```cpp
+void spawnEnemy(oly::app::TaskContext& context) {
+  context.spawn(Enemy{}, Position{0.0f, 0.0f}, Health{1});
+}
+
+OLY_STATE_HOOK(startSpawner) {
+  context.schedule().every(2.0, spawnEnemy);
+}
+```
+
+**Where you own the `Engine`** (native):
+
+```cpp
+engine.onEnter(states::playing, "startSpawner", startSpawner);
 ```
 
 The task is created while `playing` is active, so it is cancelled when the round ends. No clean-up code.
 
+TypeScript: [Spawner every N seconds](environments/web/typescript/recipes.md#spawner-every-n-seconds).
+
 ## Difficulty that ramps up
 
-Keep the counter in the closure of the hook. A new round creates a new closure, so the counter restarts.
+Keep the counter in a component on a scoped entity. A new round creates a new entity, so the counter restarts.
 
-```ts
-engine.onEnter(playing, "startWaves", (context) => {
-  let wave = 0;
-
-  context.schedule.every(5, (task) => {
-    wave += 1;
-    const enemyCount = 2 + wave;
-    const speed = 80 + wave * 10;
-    for (let index = 0; index < enemyCount; ++index) {
-      task.spawn([Enemy, Position, Velocity, Chaser], { Position: edgePoint(random), Chaser: { speed } });
-    }
-  });
-});
 ```
+# game.oly
+component Difficulty { wave: u32 }
+```
+
+```cpp
+void spawnWave(oly::app::TaskContext& context) {
+  Difficulty& difficulty = std::get<1>(context.query<Difficulty>().single());
+  difficulty.wave += 1;
+
+  const uint32_t enemyCount = 2 + difficulty.wave;
+  const float speed = 80.0f + static_cast<float>(difficulty.wave) * 10.0f;
+
+  for (uint32_t index = 0; index < enemyCount; ++index) {
+    context.spawn(Enemy{}, Position{static_cast<float>(index) * 40.0f, 0.0f}, Velocity{}, Chaser{speed});
+  }
+}
+
+OLY_STATE_HOOK(startWaves) {
+  context.spawn(Difficulty{0});
+  context.schedule().every(5.0, spawnWave);
+}
+```
+
+**Where you own the `Engine`** (native):
+
+```cpp
+engine.onEnter(states::playing, "startWaves", startWaves);
+```
+
+TypeScript: [Difficulty that ramps up](environments/web/typescript/recipes.md#difficulty-that-ramps-up).
 
 ## Ability with a cooldown
 
@@ -100,34 +148,55 @@ Use `u8` fields for flags that change often; adding and removing tags every use 
 component Dash { ready: u8, active: u8, duration: f32, recharge: f32, speed: f32 }
 ```
 
-```ts
-engine.addSystem(Phase.UpdateBefore, "dash", (context) => {
-  if (!context.actions.button(dash).pressed) {
+```cpp
+struct PlayerTarget {
+  oly::ecs::Entity player;
+};
+
+void endDash(oly::app::TaskContext& context) {
+  const oly::ecs::Entity player = context.payload<PlayerTarget>().player;
+
+  if (context.isAlive(player)) {
+    context.get<Dash>(player).active = 0;
+  }
+}
+
+void rechargeDash(oly::app::TaskContext& context) {
+  const oly::ecs::Entity player = context.payload<PlayerTarget>().player;
+
+  if (context.isAlive(player)) {
+    context.get<Dash>(player).ready = 1;
+  }
+}
+
+OLY_SYSTEM(dash) {
+  if (!context.actions().button(actions::dash).pressed) {
     return;
   }
 
-  const player = context.query({ read: [Dash], with: [Player] }).trySingle();
-  if (player === null || player.get(Dash).ready === 0) {
+  auto player = context.query<Dash>(oly::ecs::With<Player>{}).trySingle();
+  if (!player || std::get<1>(*player).ready == 0) {
     return;
   }
 
-  const entity = player.entity;
-  const { duration, recharge } = player.get(Dash);
-  context.set(entity, Dash, { ready: 0, active: 1 });
-  context.schedule.after(duration, (task) => {
-    if (task.isAlive(entity)) {
-      task.set(entity, Dash, { active: 0 });
-    }
-  });
-  context.schedule.after(recharge, (task) => {
-    if (task.isAlive(entity)) {
-      task.set(entity, Dash, { ready: 1 });
-    }
-  });
-});
+  auto& [entity, dashState] = *player;
+  dashState.ready = 0;
+  dashState.active = 1;
+
+  context.schedule().after(dashState.duration, endDash, PlayerTarget{entity});
+  context.schedule().after(dashState.recharge, rechargeDash, PlayerTarget{entity});
+}
 ```
 
-In C++, the same logic fits in one `OLY_SYSTEM`, with the timers scheduled through `context.schedule().after(seconds, function, payload)` ([C++ gameplay](concepts/schedule.md#payloads)).
+**Where you own the `Engine`** (native):
+
+```cpp
+engine.addSystem(oly::app::Phase::UpdateBefore, "dash", dash);
+```
+
+The payload carries the entity to the task ([Schedule](concepts/schedule.md#payloads)).
+
+TypeScript: [Ability with a cooldown](environments/web/typescript/recipes.md#ability-with-a-cooldown).
 
 ## Health, damage and death
 
@@ -140,53 +209,94 @@ event EnemyDied { entity: entity, x: f32, y: f32 }
 ```
 
 ```cpp
-// in the collision system (C++), for each hit:
+// in the collision system, for each hit:
 health.value -= 1;
+
 if (health.value <= 0) {
   context.emit(EnemyDied{enemy, position.x, position.y});
 }
 ```
 
-```ts
-engine.addNativeHandler(EnemyDied, "dropCoin");                       // reacts: reads the position
-engine.on(EnemyDied, "countKill", (_context, batch) => countKill(score, batch));
-engine.on(EnemyDied, "destroyDead", (context, batch) => {             // destroys: registered last
-  const enemies = batch.read().entity;
-  for (let index = 0; index < batch.count; ++index) {
-    const enemy = enemies.get(index);
-    if (context.isAlive(enemy)) {
-      context.destroy(enemy);
+```cpp
+OLY_HANDLER(dropCoin, EnemyDied) {                       // reacts: reads the position
+  for (const EnemyDied& died : events) {
+    context.spawn(Coin{}, Position{died.x, died.y});
+  }
+}
+
+OLY_HANDLER(countKill, EnemyDied) {
+  std::get<1>(context.query<Score>().single()).kills += static_cast<int32_t>(events.size());
+}
+
+OLY_HANDLER(destroyDead, EnemyDied) {                    // destroys: registered last
+  for (const EnemyDied& died : events) {
+    if (context.isAlive(died.entity)) {
+      context.destroy(died.entity);
     }
   }
-});
+}
 ```
+
+**Where you own the `Engine`** (native):
+
+```cpp
+engine.on<EnemyDied>("dropCoin", [](oly::app::HandlerContext& context) { dropCoin(context, context.events<EnemyDied>()); });
+engine.on<EnemyDied>("countKill", [](oly::app::HandlerContext& context) { countKill(context, context.events<EnemyDied>()); });
+engine.on<EnemyDied>("destroyDead", [](oly::app::HandlerContext& context) { destroyDead(context, context.events<EnemyDied>()); });
+```
+
+The lambda passes the batch the macro's function expects ([Events](concepts/events.md#declare-emit-handle)).
+
+TypeScript: [Health, damage and death](environments/web/typescript/recipes.md#health-damage-and-death).
 
 ## Temporary status effect
 
-A tag that lasts a few seconds. Filtering with `without` makes affected entities skip systems for free.
+A tag that lasts a few seconds. Filtering with `Without` makes affected entities skip systems for free.
 
 ```
 # game.oly
 tag Stunned
 ```
 
-```ts
-function stun(context: HandlerContext, enemy: Entity, seconds: number): void {
-  if (!context.isAlive(enemy) || context.has(enemy, Stunned)) {
+```cpp
+struct StunTarget {
+  oly::ecs::Entity enemy;
+};
+
+void endStun(oly::app::TaskContext& context) {
+  const oly::ecs::Entity enemy = context.payload<StunTarget>().enemy;
+
+  if (context.isAlive(enemy)) {
+    context.remove<Stunned>(enemy);
+  }
+}
+
+void stun(oly::app::HandlerContext& context, oly::ecs::Entity enemy, double seconds) {
+  if (!context.isAlive(enemy) || context.has<Stunned>(enemy)) {
     return;
   }
 
-  context.add(enemy, Stunned);
-  context.schedule.after(seconds, (task) => {
-    if (task.isAlive(enemy)) {
-      task.remove(enemy, Stunned);
-    }
-  });
+  context.add(enemy, Stunned{});
+  context.schedule().after(seconds, endStun, StunTarget{enemy});
 }
 
-// stunned enemies do not chase
-context.query({ read: [Position, Chaser], write: [Velocity], with: [Enemy], without: [Stunned] });
+OLY_SYSTEM(chase) {
+  // stunned enemies do not chase
+  context.query<const Position, const Chaser, Velocity>(oly::ecs::With<Enemy>{}, oly::ecs::Without<Stunned>{}).each([](const Position&, const Chaser&, Velocity&) {
+    // steer toward the target
+  });
+}
 ```
+
+**Where you own the `Engine`** (native):
+
+```cpp
+engine.addSystem(oly::app::Phase::Update, "chase", chase);
+```
+
+`stun` is a helper that a handler calls with its own context.
+
+TypeScript: [Temporary status effect](environments/web/typescript/recipes.md#temporary-status-effect).
 
 ## Pickups
 
@@ -198,41 +308,47 @@ tag Coin
 event CoinCollected { coin: entity }
 ```
 
-```ts
-engine.addSystem(Phase.UpdateAfter, "touchCoins", (context) => {
-  const player = context.query({ read: [Position, Collider], with: [Player] }).trySingle();
-  if (player === null) {
+```cpp
+OLY_SYSTEM(touchCoins) {
+  auto player = context.query<const Position, const Collider>(oly::ecs::With<Player>{}).trySingle();
+  if (!player) {
     return;
   }
 
-  const { x, y } = player.get(Position);
-  const reach = player.get(Collider).radius;
+  const Position origin = std::get<1>(*player);
+  const float reach = std::get<2>(*player).radius;
 
-  context.query({ read: [Position, Collider], with: [Coin] }).eachBlock((block) => {
-    const position = block.read(Position);
-    const collider = block.read(Collider);
-    for (let row = 0; row < block.count; ++row) {
-      const deltaX = position.x.get(row) - x;
-      const deltaY = position.y.get(row) - y;
-      const radii = reach + collider.radius.get(row);
-      if (deltaX * deltaX + deltaY * deltaY <= radii * radii) {
-        context.emit(CoinCollected, { coin: block.entity(row) });
-      }
+  context.query<const Position, const Collider>(oly::ecs::With<Coin>{}).each([&](oly::ecs::Entity coin, const Position& position, const Collider& collider) {
+    const float deltaX = position.x - origin.x;
+    const float deltaY = position.y - origin.y;
+    const float radii = reach + collider.radius;
+
+    if (deltaX * deltaX + deltaY * deltaY <= radii * radii) {
+      context.emit(CoinCollected{coin});
     }
   });
-});
+}
 
-engine.on(CoinCollected, "collect", (context, batch) => {
-  const coins = batch.read().coin;
-  for (let index = 0; index < batch.count; ++index) {
-    const coin = coins.get(index);
-    if (context.isAlive(coin)) {
-      context.destroy(coin);
+OLY_HANDLER(collect, CoinCollected) {
+  Score& score = std::get<1>(context.query<Score>().single());
+
+  for (const CoinCollected& collected : events) {
+    if (context.isAlive(collected.coin)) {
+      context.destroy(collected.coin);
       score.coins += 1;
     }
   }
-});
+}
 ```
+
+**Where you own the `Engine`** (native):
+
+```cpp
+engine.addSystem(oly::app::Phase::UpdateAfter, "touchCoins", touchCoins);
+engine.on<CoinCollected>("collect", [](oly::app::HandlerContext& context) { collect(context, context.events<CoinCollected>()); });
+```
+
+TypeScript: [Pickups](environments/web/typescript/recipes.md#pickups).
 
 ## Homing projectile
 
@@ -241,31 +357,34 @@ engine.on(CoinCollected, "collect", (context, batch) => {
 component Homing { target: entity, speed: f32 }
 ```
 
-```ts
-engine.addSystem(Phase.Update, "home", (context) => {
-  context.query({ read: [Position, Homing], write: [Velocity] }).eachBlock((block) => {
-    const position = block.read(Position);
-    const homing = block.read(Homing);
-    const velocity = block.write(Velocity);
-    for (let row = 0; row < block.count; ++row) {
-      const target = homing.target.get(row);
-      if (!context.isAlive(target)) {
-        context.destroy(block.entity(row));
-        continue;
-      }
+```cpp
+OLY_SYSTEM(home) {
+  context.query<const Position, const Homing, Velocity>().each([&](oly::ecs::Entity entity, const Position& position, const Homing& homing, Velocity& velocity) {
+    const Position* goal = context.tryGet<Position>(homing.target);
 
-      const goal = context.get(target, Position);
-      const deltaX = goal.x - position.x.get(row);
-      const deltaY = goal.y - position.y.get(row);
-      const length = Math.hypot(deltaX, deltaY) || 1;
-      velocity.x.set(row, (deltaX / length) * homing.speed.get(row));
-      velocity.y.set(row, (deltaY / length) * homing.speed.get(row));
+    if (goal == nullptr) {
+      context.destroy(entity);
+      return;
     }
+
+    const float deltaX = goal->x - position.x;
+    const float deltaY = goal->y - position.y;
+    const float length = std::max(std::sqrt(deltaX * deltaX + deltaY * deltaY), 1e-6f);
+
+    velocity = Velocity{deltaX / length * homing.speed, deltaY / length * homing.speed};
   });
-});
+}
 ```
 
-`context.get` crosses into WASM once per missile. For a few dozen missiles this is fine; for thousands, write the system in C++ with `context.tryGet<Position>(homing.target)`.
+**Where you own the `Engine`** (native):
+
+```cpp
+engine.addSystem(oly::app::Phase::Update, "home", home);
+```
+
+`tryGet` is `nullptr` if the target died or lost its `Position`, so one call replaces `isAlive` plus `get`.
+
+TypeScript: [Homing projectile](environments/web/typescript/recipes.md#homing-projectile).
 
 ## Attach one entity to another
 
@@ -276,26 +395,29 @@ A shield, a health bar or a turret that follows its owner.
 component Attached { parent: entity, offsetX: f32, offsetY: f32 }
 ```
 
-```ts
+```cpp
 // in UpdateAfter, after everything moved
-engine.addSystem(Phase.UpdateAfter, "followParent", (context) => {
-  context.query({ read: [Attached], write: [Position] }).eachBlock((block) => {
-    const attached = block.read(Attached);
-    const position = block.write(Position);
-    for (let row = 0; row < block.count; ++row) {
-      const parent = attached.parent.get(row);
-      if (!context.isAlive(parent)) {
-        context.destroy(block.entity(row));     // the owner is gone: so is the attachment
-        continue;
-      }
+OLY_SYSTEM(followParent) {
+  context.query<const Attached, Position>().each([&](oly::ecs::Entity entity, const Attached& attached, Position& position) {
+    const Position* parent = context.tryGet<Position>(attached.parent);
 
-      const parentPosition = context.get(parent, Position);
-      position.x.set(row, parentPosition.x + attached.offsetX.get(row));
-      position.y.set(row, parentPosition.y + attached.offsetY.get(row));
+    if (parent == nullptr) {
+      context.destroy(entity);   // the owner is gone: so is the attachment
+      return;
     }
+
+    position = Position{parent->x + attached.offsetX, parent->y + attached.offsetY};
   });
-});
+}
 ```
+
+**Where you own the `Engine`** (native):
+
+```cpp
+engine.addSystem(oly::app::Phase::UpdateAfter, "followParent", followParent);
+```
+
+TypeScript: [Attach one entity to another](environments/web/typescript/recipes.md#attach-one-entity-to-another).
 
 ## Keep inside the screen or wrap around
 
@@ -314,194 +436,211 @@ OLY_SYSTEM(wrapAsteroids) {
 }
 ```
 
-## Score and HUD
+**Where you own the `Engine`** (native):
 
-Game rules that are not per entity (score, wave number, combo) can live in plain TS objects. The render system reads them.
-
-```ts
-export function installGame(engine: Engine, options: GameOptions): Score {
-  const score = { kills: 0, coins: 0 };
-
-  engine.on(EnemyDied, "countKill", (_context, batch) => {
-    score.kills += batch.count;
-  });
-
-  engine.addSystem(Phase.Render, "hud", (context) => {
-    const player = context.query({ read: [Health], with: [Player] }).trySingle();
-    if (player === null) {
-      return;
-    }
-
-    options.drawer.text(16, 24, `Health ${player.get(Health).value}`);
-    options.drawer.text(16, 48, `Score ${score.kills * 10 + score.coins * 5}`);
-  });
-
-  return score;
-}
+```cpp
+engine.addSystem(oly::app::Phase::UpdateAfter, "confinePlayer", confinePlayer);
+engine.addSystem(oly::app::Phase::UpdateAfter, "wrapAsteroids", wrapAsteroids);
 ```
 
-Returning the score object lets tests read it directly.
+TypeScript: [Keep inside the screen or wrap around](environments/web/typescript/recipes.md#keep-inside-the-screen-or-wrap-around).
 
 ## Round timer
 
-```ts
-const RoundSeconds = 60;
-let roundEnd = 0;
+```
+# game.oly
+component Round { endTime: f64 }
+```
 
-engine.onEnter(playing, "startClock", (context) => {
-  roundEnd = context.time + RoundSeconds;
-  context.schedule.after(RoundSeconds, (task) => task.requestState(gameOver));
-});
+```cpp
+constexpr double RoundSeconds = 60.0;
 
-engine.addSystem(Phase.Render, "drawClock", (context) => {
-  if (context.state !== playing) {
+void endRound(oly::app::TaskContext& context) {
+  context.requestState(states::gameOver);
+}
+
+OLY_STATE_HOOK(startClock) {
+  context.spawn(Round{context.time() + RoundSeconds});
+  context.schedule().after(RoundSeconds, endRound);
+}
+
+OLY_SYSTEM(readClock) {
+  if (context.state() != states::playing) {
     return;
   }
 
-  const remaining = Math.max(0, roundEnd - context.time);
-  drawer.text(900, 24, `${Math.ceil(remaining)}`);
-});
+  const Round& round = std::get<1>(context.query<const Round>().single());
+  const double remaining = std::max(0.0, round.endTime - context.time());
+
+  // draw `remaining` here
+}
+```
+
+**Where you own the `Engine`** (native):
+
+```cpp
+engine.onEnter(states::playing, "startClock", startClock);
+engine.addSystem(oly::app::Phase::Render, "readClock", readClock);
 ```
 
 Both use the game clock, so the timer stops while paused and the task is cancelled if the round ends earlier.
 
+TypeScript: [Round timer](environments/web/typescript/recipes.md#round-timer).
+
 ## Pause screen
 
-```ts
-engine.addSystem(Phase.UpdateBefore, "pauseOnPress", (context) => {
-  if (context.actions.button(pause).pressed) {
+```cpp
+OLY_SYSTEM(pauseOnPress) {
+  if (context.actions().button(actions::pause).pressed) {
     context.pause();
   }
-}).inState(playing);
+}
 
-engine.addSystem(Phase.UpdateBefore, "resumeOnPress", (context) => {
-  if (context.actions.button(pause).pressed) {
+OLY_SYSTEM(resumeOnPress) {
+  if (context.actions().button(actions::pause).pressed) {
     context.resume();
   }
-}).whilePaused().inState(playing);
+}
 
-engine.onExit(playing, "resumeOnExit", (context) => context.resume());
+OLY_STATE_HOOK(resumeOnExit) {
+  context.resume();
+}
 
-engine.addSystem(Phase.Render, "pauseOverlay", (context) => {
-  if (context.paused) {
-    drawer.text(400, 270, "Paused — Esc to continue");
+OLY_SYSTEM(pauseOverlay) {
+  if (context.paused()) {
+    // draw "Paused — Esc to continue"
   }
-});
+}
 ```
+
+**Where you own the `Engine`** (native):
+
+```cpp
+engine.setSystemStates(engine.addSystem(oly::app::Phase::UpdateBefore, "pauseOnPress", pauseOnPress), {states::playing});
+
+oly::app::SystemId resumeId = engine.addSystem(oly::app::Phase::UpdateBefore, "resumeOnPress", resumeOnPress);
+engine.setWhilePaused(resumeId, true);
+engine.setSystemStates(resumeId, {states::playing});
+
+engine.onExit(states::playing, "resumeOnExit", resumeOnExit);
+engine.addSystem(oly::app::Phase::Render, "pauseOverlay", pauseOverlay);
+```
+
+TypeScript: [Pause screen](environments/web/typescript/recipes.md#pause-screen).
 
 ## Restart the game
 
 With states, restarting is only a state change. Everything the round created was scoped to `playing`:
 
-```ts
-engine.addSystem(Phase.UpdateBefore, "playAgain", (context) => {
-  if (context.actions.button(confirm).pressed) {
-    context.requestState(playing);
+```cpp
+OLY_SYSTEM(playAgain) {
+  if (context.actions().button(actions::confirm).pressed) {
+    context.requestState(states::playing);
   }
-}).inState(gameOver);
+}
 
-engine.onEnter(playing, "startRound", (context) => {
-  score.kills = 0;
-  spawnPlayer(context);
-  startWaves(context);
-});
+OLY_STATE_HOOK(startRound) {
+  std::get<1>(context.query<Score>().single()).kills = 0;
+  context.spawn(Player{}, Position{480.0f, 270.0f}, Health{3});
+  context.schedule().every(5.0, spawnWave);
+}
+
+OLY_SYSTEM(retry) {
+  if (context.actions().button(actions::retry).pressed) {
+    context.requestState(states::playing);
+  }
+}
+```
+
+**Where you own the `Engine`** (native):
+
+```cpp
+engine.setSystemStates(engine.addSystem(oly::app::Phase::UpdateBefore, "playAgain", playAgain), {states::gameOver});
+engine.onEnter(states::playing, "startRound", startRound);
+engine.setSystemStates(engine.addSystem(oly::app::Phase::UpdateBefore, "retry", retry), {states::playing});
 ```
 
 To restart from inside `playing` (a "retry" key), request `playing` again. A request for the active state is a full change: `onExit`, scope clean-up, then `onEnter`.
 
-```ts
-engine.addSystem(Phase.UpdateBefore, "retry", (context) => {
-  if (context.actions.button(retry).pressed) {
-    context.requestState(playing);
-  }
-}).inState(playing);
-```
-
-## High score saved in the browser
-
-Keep `localStorage` out of the game logic: inject it.
-
-```ts
-export interface Storage {
-  loadBest(): number;
-  saveBest(value: number): void;
-}
-
-engine.onExit(playing, "saveBest", () => {
-  if (score.total > options.storage.loadBest()) {
-    options.storage.saveBest(score.total);
-  }
-});
-```
-
-```ts
-// main.ts
-const storage = {
-  loadBest: () => Number(localStorage.getItem("best") ?? 0),
-  saveBest: (value: number) => localStorage.setItem("best", String(value)),
-};
-```
-
-In tests, pass an object that keeps the value in memory.
+TypeScript: [Restart the game](environments/web/typescript/recipes.md#restart-the-game).
 
 ## A sequence of timed steps
 
-A countdown "3, 2, 1, go!" before the round:
+A countdown "3, 2, 1, go!" before the round. Each task schedules the next one:
 
-```ts
-engine.onEnter(countdown, "startCountdown", (context) => {
-  banner.text = "3";
-  context.schedule.after(1, (first) => {
-    banner.text = "2";
-    first.schedule.after(1, (second) => {
-      banner.text = "1";
-      second.schedule.after(1, (third) => {
-        banner.text = "";
-        third.requestState(playing);
-      });
-    });
-  });
-});
+```
+# game.oly
+component Banner { number: u8 }
+```
+
+```cpp
+void showGo(oly::app::TaskContext& context) {
+  std::get<1>(context.query<Banner>().single()).number = 0;
+  context.requestState(states::playing);
+}
+
+void showOne(oly::app::TaskContext& context) {
+  std::get<1>(context.query<Banner>().single()).number = 1;
+  context.schedule().after(1.0, showGo);
+}
+
+void showTwo(oly::app::TaskContext& context) {
+  std::get<1>(context.query<Banner>().single()).number = 2;
+  context.schedule().after(1.0, showOne);
+}
+
+OLY_STATE_HOOK(startCountdown) {
+  context.spawn(Banner{3});
+  context.schedule().after(1.0, showTwo);
+}
+```
+
+**Where you own the `Engine`** (native):
+
+```cpp
+engine.onEnter(states::countdown, "startCountdown", startCountdown);
 ```
 
 A task created inside another task runs from the next step on, so the chain cannot loop within one step.
 
+TypeScript: [A sequence of timed steps](environments/web/typescript/recipes.md#a-sequence-of-timed-steps).
+
 ## Random spawn positions
 
-Inject the random source so tests can fix it:
+Keep one `std::minstd_rand` with a fixed seed where tests can set it, and pass it to the code that needs it:
 
-```ts
-function edgePoint(random: () => number): { x: number; y: number } {
-  const side = Math.floor(random() * 4);
-  const along = random();
+```cpp
+oly::ecs::Entity spawnAtEdge(oly::app::SystemContext& context, std::minstd_rand& random) {
+  const uint32_t side = random() % 4;
+  const float along = static_cast<float>(random() % 10000) / 10000.0f;
 
-  if (side === 0) {
-    return { x: along * Width, y: 0 };
+  switch (side) {
+    case 0:
+      return context.spawn(Enemy{}, Position{along * Width, 0.0f});
+    case 1:
+      return context.spawn(Enemy{}, Position{Width, along * Height});
+    case 2:
+      return context.spawn(Enemy{}, Position{along * Width, Height});
+    default:
+      return context.spawn(Enemy{}, Position{0.0f, along * Height});
   }
-  if (side === 1) {
-    return { x: Width, y: along * Height };
-  }
-  if (side === 2) {
-    return { x: along * Width, y: Height };
-  }
+}
 
-  return { x: 0, y: along * Height };
+OLY_SYSTEM(spawnEnemies) {
+  std::minstd_rand& random = *static_cast<std::minstd_rand*>(context.userData());
+
+  spawnAtEdge(context, random);
 }
 ```
 
-In C++, use `std::minstd_rand` with a fixed seed ([C++ gameplay](environments/web/getting-started.md#deterministic-randomness)).
+**Where you own the `Engine`** (native):
 
-## Debug overlay
+```cpp
+std::minstd_rand random(42);
 
-```ts
-engine.addSystem(Phase.Render, "debug", (context) => {
-  let enemies = 0;
-  context.query({ with: [Enemy] }).eachBlock((block) => {
-    enemies += block.count;
-  });
-
-  drawer.text(16, 520, `enemies ${enemies}  time ${context.time.toFixed(1)}s  ${context.paused ? "paused" : ""}`);
-});
+engine.addSystem(oly::app::Phase::Update, "spawnEnemies", spawnEnemies, &random);
 ```
 
-In tests, call `engine.world.checkInvariants()` after each step ([Testing](environments/web/testing.md)).
+Its sequence is the same in every standard library; the `std::*_distribution` classes are not, so use `random() % n` or your own mapping ([Deterministic randomness](environments/web/getting-started.md#deterministic-randomness)).
+
+TypeScript: [Random spawn positions](environments/web/typescript/recipes.md#random-spawn-positions).
