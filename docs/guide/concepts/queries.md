@@ -1,4 +1,4 @@
-# 4. Queries
+# Queries
 
 [← World and entities](world-and-entities.md) · [Guide index](../README.md) · Next: [Engine, loop and systems →](engine-and-systems.md)
 
@@ -6,70 +6,74 @@ A query visits every entity that has a given set of components. It is the main w
 
 ## The query spec
 
-```ts
-world.query({
-  read: [Velocity],          // components you read
-  write: [Position],         // components you read and write
-  with: [Enemy],             // must have (data not needed: tags or components)
-  without: [Frozen],         // must not have
-});
+The component types are template parameters. `const T` is read-only, `T` is read and write. `With` and `Without` filter without giving you data, so they accept tags.
+
+```cpp
+OLY_SYSTEM(integrate) {
+  const float deltaTime = context.fixedDeltaTime();
+
+  context.query<Position, const Velocity>(oly::ecs::With<Enemy>{}, oly::ecs::Without<Frozen>{}).each([deltaTime](Position& position, const Velocity& velocity) {
+    position.x += velocity.x * deltaTime;
+    position.y += velocity.y * deltaTime;
+  });
+}
 ```
 
-| Key | Gives you | Accepts tags? |
+**Where you own the `Engine`** (native):
+
+```cpp
+engine.addSystem(oly::app::Phase::Update, "integrate", integrate);
+```
+
+**On the web**, the client registers it by name: [TypeScript](../environments/web/typescript/engine-and-systems.md#c-systems-handlers-and-hooks).
+
+| Parameter | Gives you | Accepts tags? |
 |---|---|---|
-| `read` | read-only views | no |
-| `write` | read-write views | no |
-| `with` | only filtering | yes |
-| `without` | only filtering | yes |
+| `const T` in the template list | a read-only reference | no |
+| `T` in the template list | a read-write reference | no |
+| `With<T...>{}` | only filtering | yes |
+| `Without<T...>{}` | only filtering | yes |
 
-All keys are optional. `world.query({ with: [Enemy] })` visits every enemy without reading any data.
+Both filters are optional. `With<Enemy>{}` visits every enemy and `Without<Frozen>{}` skips the frozen ones, whatever data you read.
 
-Queries are **cached**. Calling `world.query` with the same spec returns the same `Query` object, and the engine keeps its list of matching tables up to date as new archetypes appear. Calling it inside a system every step is cheap.
+Queries are **cached**. Asking for the same shape returns the same `Query` object, and the engine keeps its list of matching tables up to date as new archetypes appear. Calling `context.query` in a system every step is cheap.
 
-## Iterate with `eachBlock`
+## Iterate
 
-Entities with the same components live together in a **table** (one per archetype). `eachBlock` calls your function once per table, with all its rows.
+Entities with the same components live together in a **table** (one per archetype). `each` calls your function once per entity. Add `oly::ecs::Entity` as the first parameter when you need the handle:
 
-```ts
-world.query({ read: [Velocity], write: [Position] }).eachBlock((block) => {
-  const velocity = block.read(Velocity);
-  const position = block.write(Position);
-
-  for (let row = 0; row < block.count; ++row) {
-    position.x.set(row, position.x.get(row) + velocity.x.get(row));
-    position.y.set(row, position.y.get(row) + velocity.y.get(row));
+```cpp
+context.query<const Health>().each([&](oly::ecs::Entity entity, const Health& health) {
+  if (health.value <= 0) {
+    context.destroy(entity);
   }
 });
 ```
 
-| Block member | What it is |
-|---|---|
-| `block.count` | number of rows in this table |
-| `block.entity(row)` | the entity of that row |
-| `block.read(Type)` | view with `field.get(row)` |
-| `block.write(Type)` | view with `field.get(row)` and `field.set(row, value)`; only for types in `write` |
+`eachBlock` calls your function once per table, with a `std::span` per component. Use it for whole-column loops the compiler can vectorize:
 
-The views read and write the WASM memory directly. There is **no copy** and no boundary crossing per entity.
-
-### Rules inside `eachBlock`
-
-- The block and its views are valid **only inside the callback**. Do not keep them for later.
-- A direct structural change on the world (`world.spawn/destroy/add/remove`) throws `ContractError`. Inside a system, use `context.spawn/destroy/add/remove`: they are deferred and safe. Outside the loop, collect the entities first and change them after the loop.
-
-```ts
-const dead: Entity[] = [];
-
-world.query({ read: [Health] }).eachBlock((block) => {
-  const health = block.read(Health);
-  for (let row = 0; row < block.count; ++row) {
-    if (health.value.get(row) <= 0) {
-      dead.push(block.entity(row));
-    }
+```cpp
+context.query<Position, const Velocity>().eachBlock([](std::span<Position> positions, std::span<const Velocity> velocities) {
+  for (size_t row = 0; row < positions.size(); ++row) {
+    positions[row].x += velocities[row].x;
   }
 });
+```
 
-for (const entity of dead) {
-  world.destroy(entity);
+Both read and write the stored columns directly: there is no copy.
+
+## Rules while iterating
+
+- References and spans are valid **only inside the callback**. Do not keep them for later.
+- A direct structural change on the `World` (`spawn`, `destroy`, `add`, `remove`) while a query iterates is a contract violation (`OLY_ASSERT`). Inside a system, use `context.spawn/destroy/add/remove`: they are deferred to the end of the phase and safe. Outside the loop, collect the entities first and change them after the iteration, or use a `CommandBuffer` ([World and entities](world-and-entities.md#without-the-engine-commandbuffer)).
+
+```cpp
+OLY_SYSTEM(removeDead) {
+  context.query<const Health>().each([&](oly::ecs::Entity entity, const Health& health) {
+    if (health.value <= 0) {
+      context.destroy(entity);
+    }
+  });
 }
 ```
 
@@ -77,67 +81,72 @@ for (const entity of dead) {
 
 Many games have one player, one camera or one boss. `single` reads it without a loop.
 
-```ts
-const player = world.query({ read: [Position, Health], with: [Player] }).single();
+```cpp
+OLY_SYSTEM(steerPlayer) {
+  auto [player, velocity] = context.query<Velocity>(oly::ecs::With<Player>{}).single();
+  const oly::input::Vector2 direction = context.actions().axis2d(actions::move);
 
-player.entity;                  // the Entity
-player.get(Position);           // a copy: { x, y }
-player.get(Health).value;
+  velocity = Velocity{direction.x * 220.0f, direction.y * 220.0f};
+}
 ```
 
 | Method | 0 rows | 1 row | 2+ rows |
 |---|---|---|---|
-| `single()` | `ContractError` | the row | `ContractError` |
-| `trySingle()` | `null` | the row | `ContractError` |
+| `single()` | contract violation | the row | contract violation |
+| `trySingle()` | `std::nullopt` | the row | contract violation |
 
-The row is a **copy** taken at the moment of the call. To change it, write through the world or the context: `context.set(player.entity, Health, { value: 0 })`.
+The row is a tuple `(Entity, Ts&...)` of **references**, valid until the next structural change. Copy the value when you only need it for reading:
+
+```cpp
+const Position target = std::get<1>(context.query<const Position>(oly::ecs::With<Player>{}).single());
+```
 
 Use `trySingle` where the entity may not exist yet, for example in a HUD drawn while in the menu:
 
-```ts
-const player = context.query({ read: [Health], with: [Player] }).trySingle();
-if (player === null) {
-  return;
-}
+```cpp
+OLY_SYSTEM(drawHealth) {
+  auto player = context.query<const Health>(oly::ecs::With<Player>{}).trySingle();
+  if (!player) {
+    return;
+  }
 
-drawer.text(16, 16, `Health ${player.get(Health).value}`);
+  const int32_t value = std::get<1>(*player).value;
+}
 ```
 
 ## Common query patterns
 
 ### Count entities
 
-```ts
-function count(world: World, spec: QuerySpec): number {
-  let total = 0;
-  world.query(spec).eachBlock((block) => {
-    total += block.count;
+Count rows per table, not entity by entity:
+
+```cpp
+size_t countEnemies(oly::app::SystemContext& context) {
+  size_t total = 0;
+
+  context.query<const Health>(oly::ecs::With<Enemy>{}).eachBlock([&total](std::span<const Health> healths) {
+    total += healths.size();
   });
 
   return total;
 }
-
-count(world, { with: [Enemy] });
-count(world, { with: [Enemy], without: [Frozen] });
 ```
 
 ### Find the nearest entity
 
-```ts
-function nearestEnemy(context: SystemContext, x: number, y: number): Entity | null {
-  let nearest: Entity | null = null;
-  let nearestDistance = Infinity;
+```cpp
+oly::ecs::Entity nearestEnemy(oly::app::SystemContext& context, float x, float y) {
+  oly::ecs::Entity nearest = oly::ecs::NullEntity;
+  float nearestDistance = std::numeric_limits<float>::infinity();
 
-  context.query({ read: [Position], with: [Enemy] }).eachBlock((block) => {
-    const position = block.read(Position);
-    for (let row = 0; row < block.count; ++row) {
-      const deltaX = position.x.get(row) - x;
-      const deltaY = position.y.get(row) - y;
-      const distance = deltaX * deltaX + deltaY * deltaY;
-      if (distance < nearestDistance) {
-        nearestDistance = distance;
-        nearest = block.entity(row);
-      }
+  context.query<const Position>(oly::ecs::With<Enemy>{}).each([&](oly::ecs::Entity entity, const Position& position) {
+    const float deltaX = position.x - x;
+    const float deltaY = position.y - y;
+    const float distance = deltaX * deltaX + deltaY * deltaY;
+
+    if (distance < nearestDistance) {
+      nearestDistance = distance;
+      nearest = entity;
     }
   });
 
@@ -147,100 +156,68 @@ function nearestEnemy(context: SystemContext, x: number, y: number): Entity | nu
 
 ### Two queries together (pairs)
 
-Read the small set into local values first, then iterate the large set. Here, enemies chase the player:
+Read the small set into a local value first, then iterate the large set. Here, enemies chase the player:
 
-```ts
-const target = context.query({ read: [Position], with: [Player] }).single().get(Position);
+```cpp
+OLY_SYSTEM(chasePlayer) {
+  const Position target = std::get<1>(context.query<const Position>(oly::ecs::With<Player>{}).single());
 
-context.query({ read: [Position, Chaser], write: [Velocity], with: [Enemy] }).eachBlock((block) => {
-  const position = block.read(Position);
-  const chaser = block.read(Chaser);
-  const velocity = block.write(Velocity);
-  for (let row = 0; row < block.count; ++row) {
-    const deltaX = target.x - position.x.get(row);
-    const deltaY = target.y - position.y.get(row);
-    const length = Math.hypot(deltaX, deltaY) || 1;
-    velocity.x.set(row, (deltaX / length) * chaser.speed.get(row));
-    velocity.y.set(row, (deltaY / length) * chaser.speed.get(row));
-  }
-});
+  context.query<const Position, const Chaser, Velocity>(oly::ecs::With<Enemy>{}).each([target](const Position& position, const Chaser& chaser, Velocity& velocity) {
+    const float deltaX = target.x - position.x;
+    const float deltaY = target.y - position.y;
+    const float length = std::max(std::sqrt(deltaX * deltaX + deltaY * deltaY), 1e-6f);
+
+    velocity = Velocity{deltaX / length * chaser.speed, deltaY / length * chaser.speed};
+  });
+}
 ```
 
-For "each against each" (bullets × enemies), prefer C++: see [C++ gameplay](../10-cpp-gameplay.md#nested-queries).
+For "each against each" (bullets × enemies), take the inner query reference once, then nest the loops. Changes go through the context, so they are safe inside both loops.
+
+```cpp
+OLY_SYSTEM(hitEnemies) {
+  auto& enemies = context.query<const Position, const Collider, Health>(oly::ecs::With<Enemy>{});
+
+  context.query<const Position, const Collider>(oly::ecs::With<Bullet>{}).each([&](oly::ecs::Entity bullet, const Position& bulletPosition, const Collider& bulletCollider) {
+    bool hit = false;
+
+    enemies.each([&](oly::ecs::Entity enemy, const Position& enemyPosition, const Collider& enemyCollider, Health& health) {
+      if (hit || !touches(bulletPosition, bulletCollider, enemyPosition, enemyCollider)) {
+        return;
+      }
+
+      hit = true;
+      health.value -= 1;
+      context.destroy(bullet);
+
+      if (health.value <= 0) {
+        context.emit(EnemyDied{enemy, enemyPosition.x, enemyPosition.y});
+      }
+    });
+  });
+}
+```
+
+This is a brute-force O(bullets × enemies) check. It is fine for hundreds of entities. For thousands, add a spatial grid.
 
 ### Several shapes with one function
 
 Pass the filter as a parameter. One function draws coins, bullets, enemies and the player:
 
-```ts
-type Filter = Pick<QuerySpec, "with" | "without">;
-
-function drawCircles(context: SystemContext, drawer: Drawer, filter: Filter, color: string): void {
-  context.query({ read: [Position, Collider], ...filter }).eachBlock((block) => {
-    const position = block.read(Position);
-    const collider = block.read(Collider);
-    for (let row = 0; row < block.count; ++row) {
-      drawer.circle(position.x.get(row), position.y.get(row), collider.radius.get(row), color);
-    }
+```cpp
+template <class... Filters>
+void drawCircles(oly::app::SystemContext& context, Drawer& drawer, Color color, Filters... filters) {
+  context.query<const Position, const Collider>(filters...).each([&](const Position& position, const Collider& collider) {
+    drawer.circle(position.x, position.y, collider.radius, color);
   });
 }
 
-drawCircles(context, drawer, { with: [Enemy] }, "red");
-drawCircles(context, drawer, { with: [Player], without: [Invulnerable] }, "blue");
+drawCircles(context, drawer, red, oly::ecs::With<Enemy>{});
+drawCircles(context, drawer, blue, oly::ecs::With<Player>{}, oly::ecs::Without<Invulnerable>{});
 ```
-
-## Raw arrays: the fastest TS path
-
-`field.raw()` returns the typed array under a field, plus the base index and stride. Use it in tight loops to avoid one method call per element.
-
-```ts
-world.query({ read: [Velocity], write: [Position] }).eachBlock((block) => {
-  const positionX = block.write(Position).x.raw();
-  const velocityX = block.read(Velocity).x.raw();
-
-  for (let row = 0; row < block.count; ++row) {
-    positionX.array[positionX.base + row * positionX.stride] += velocityX.array[velocityX.base + row * velocityX.stride];
-  }
-});
-```
-
-A raw array is valid only until the next call that can allocate in the WASM (any spawn, add or engine call can grow the memory). Take it inside the block and use it right away. For `entity` fields, the array is `u32`: `base` points to the index and `base + 1` to the generation.
-
-## C++ queries
-
-C++ queries take the component types as template parameters. `const` means read-only.
-
-```cpp
-world.query<Position, const Velocity>(oly::ecs::With<Enemy>{}, oly::ecs::Without<Frozen>{})
-    .each([](Position& position, const Velocity& velocity) {
-      position.x += velocity.x;
-      position.y += velocity.y;
-    });
-
-// with the entity
-world.query<const Health>().each([](oly::ecs::Entity entity, const Health& health) {
-  // ...
-});
-
-// one call per table, with spans: good for SIMD-friendly loops
-world.query<Position, const Velocity>().eachBlock([](std::span<Position> positions, std::span<const Velocity> velocities) {
-  for (size_t row = 0; row < positions.size(); ++row) {
-    positions[row].x += velocities[row].x;
-  }
-});
-
-// exactly one
-auto [player, position, health] = world.query<const Position, Health>(oly::ecs::With<Player>{}).single();
-health.value -= 1;
-
-// zero or one
-if (auto row = world.query<const Position>(oly::ecs::With<Boss>{}).trySingle()) {
-  const Position& bossPosition = std::get<1>(*row);
-}
-```
-
-C++ `single` returns **references** into the table, valid until the next structural change.
 
 ## Next
 
-[5. Engine, loop and systems →](engine-and-systems.md): run queries every step inside systems.
+[Engine, loop and systems →](engine-and-systems.md): run queries every step inside systems.
+
+In other clients: [TypeScript](../environments/web/typescript/queries.md).
