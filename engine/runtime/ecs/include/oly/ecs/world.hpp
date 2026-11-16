@@ -188,7 +188,8 @@ namespace oly::ecs {
     void flushWithoutDeferred(CommandBuffer& commandBuffer);
     // Flushes what observers recorded until nothing is pending. Never called while it runs: the paths it reaches
     // (flushWithoutDeferred and the helpers below) leave the commands their observers record in deferred_.
-    void applyDeferred();
+    // Out of line: inlined, the CommandBuffer temporary of its swap gave every addById a 200-byte frame.
+    [[gnu::noinline]] void applyDeferred();
 
     // The caller holds no IterationGuard; these take one for the whole batch.
     void notifyAll(ObserverKind kind, Entity entity, const detail::Signature& signature);
@@ -199,9 +200,18 @@ namespace oly::ecs {
     void runPendingOnAdd();
     // Returns whether an observer ran (the caller then owes applyDeferred).
     bool destroyNotifying(Entity entity);
+    // add of a component the entity has, and the cached-edge add and remove, when observers or implied columns are
+    // involved. Kept out of line so the plain path keeps the base cost: inlined, they made addById spill its
+    // arguments around moveEntity and lose its tail call (perf review of 2026-11-16).
+    [[gnu::noinline]] void replaceNotifying(Entity entity, ComponentId componentId, void* value);
+    [[gnu::noinline]] void addWithEdgeWork(Entity entity, detail::EntityRecord& record, const detail::Archetype& source, const detail::Edge& edge, ComponentId componentId, void* value);
+    [[gnu::noinline]] void removeNotifying(Entity entity, const detail::Archetype& source, const detail::Edge& edge, ComponentId componentId);
     void refreshObservedFlags();
 
     detail::Archetype* findOrCreate(detail::Signature signature);
+    // Out of line on purpose: inlined into spawn<Ts...>, the signature copy trips a false -Warray-bounds in GCC release
+    // builds.
+    detail::Archetype* findOrCreateClosure(const detail::Signature& signature);
     uint32_t moveEntity(Entity entity, detail::EntityRecord& record, detail::Archetype& destination, const detail::Edge& edge);
 
     detail::QueryCacheBase* registerQuery(QueryKey key, std::unique_ptr<detail::QueryCacheBase> query);
@@ -210,9 +220,9 @@ namespace oly::ecs {
     // When removing, `componentId` must be in source.signature (the caller checks). `entity` only names the
     // entity in the R-IM-4 assert.
     const detail::Edge& edgeFor(detail::Archetype& source, ComponentId componentId, bool adding, Entity entity);
-    // The destination of `source` after `changed`, closed under implication; asserts R-IM-4 for each component of
-    // `source` that `changed` lacks.
-    detail::Signature resolveSignature(const detail::Signature& source, detail::Signature changed, Entity entity) const;
+    // The destination of `source` after `changed`, closed under implication (`added` as in ImplicationTable::resolve);
+    // asserts R-IM-4 for each component of `source` that `changed` lacks while one of its impliers stays (in `source` and in the result).
+    detail::Signature resolveSignature(const detail::Signature& source, detail::Signature changed, Entity entity, std::span<const ComponentId> added = {}) const;
     void initializeImplied(detail::Archetype& archetype, uint32_t row, const detail::Signature& constructed);
     const detail::Edge& jumpEdge(detail::Archetype& source, detail::Archetype& destination);
 
@@ -246,7 +256,7 @@ namespace oly::ecs {
     detail::Signature signature{componentId<Ts>()...};
     std::sort(signature.begin(), signature.end());
     const bool hasImplications = !implications_.empty();
-    detail::Archetype* archetype = findOrCreate(hasImplications ? implications_.resolve({}, signature) : std::move(signature));
+    detail::Archetype* archetype = hasImplications ? findOrCreateClosure(signature) : findOrCreate(std::move(signature));
     Entity entity = place(*archetype);
 
     const uint32_t row = store_.record(entity.index).row;

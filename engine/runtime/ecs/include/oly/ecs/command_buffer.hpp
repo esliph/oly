@@ -34,6 +34,9 @@ namespace oly::ecs {
     size_t size_ = 0, capacity_ = 0;
     size_t count_ = 0;
     bool hasNonTrivialPayload_ = false;
+    // Set on the World's observer buffers: observers of independent plugins cannot see each other's commands, so a
+    // command after a destroy there is ignored without the R-CB-4 assert.
+    bool recordedByObservers_ = false;
     std::vector<Entity> spawned_;
 
     // While each entity occupies a consecutive run (the common batch case), the runs are

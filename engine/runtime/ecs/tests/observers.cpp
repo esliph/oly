@@ -26,6 +26,9 @@ namespace {
   struct Link {
     oly::ecs::Entity next;
   };
+  struct Owner {
+    oly::ecs::Entity owned;
+  };
 
   std::string line(const char* kind, const char* label, oly::ecs::Entity entity, const std::string& value) {
     return std::string(kind) + ":" + label + ":" + std::to_string(entity.index) + ":" + value;
@@ -53,6 +56,14 @@ namespace {
 
   void destroyNext(oly::ecs::ObserverContext& context) {
     context.commands().destroy(context.world().get<Link>(context.entity()).next);
+  }
+
+  void destroyOwned(oly::ecs::ObserverContext& context) {
+    context.commands().destroy(context.world().get<Owner>(context.entity()).owned);
+  }
+
+  void freezeNext(oly::ecs::ObserverContext& context) {
+    context.commands().add(context.world().get<Link>(context.entity()).next, Frozen{});
   }
 
   void logAlpha(oly::ecs::ObserverContext& context) {
@@ -210,6 +221,51 @@ TEST_CASE("R-OB-6: a recorded command for an entity that died meanwhile is ignor
 
   CHECK_FALSE(world.isAlive(first));
   CHECK_FALSE(world.isAlive(target));
+}
+
+TEST_CASE("R-OB-6: two observers that record the destroy of the same entity destroy it once") {
+  oly::ecs::World world;
+  world.onRemove<Link>(&destroyNext);
+  world.onRemove<Owner>(&destroyOwned);
+  auto child = world.spawn(Health{1});
+  auto parent = world.spawn(Link{child}, Owner{child});
+
+  world.destroy(parent);
+  CHECK_INVARIANTS(world);
+
+  CHECK_FALSE(world.isAlive(parent));
+  CHECK_FALSE(world.isAlive(child));
+}
+
+TEST_CASE("R-OB-6: two flushed destroys whose observers both destroy the same entity destroy it once") {
+  oly::ecs::World world;
+  world.onRemove<Link>(&destroyNext);
+  auto follower = world.spawn(Health{1});
+  auto first = world.spawn(Link{follower});
+  auto second = world.spawn(Link{follower});
+  auto commandBuffer = world.commands();
+  commandBuffer.destroy(first);
+  commandBuffer.destroy(second);
+
+  world.flush(commandBuffer);
+  CHECK_INVARIANTS(world);
+
+  CHECK_FALSE(world.isAlive(first));
+  CHECK_FALSE(world.isAlive(second));
+  CHECK_FALSE(world.isAlive(follower));
+}
+
+TEST_CASE("R-OB-6: a command an observer records after another observer's destroy of the same entity is ignored") {
+  oly::ecs::World world;
+  world.onRemove<Link>(&destroyNext);
+  world.onRemove<Link>(&freezeNext);
+  auto child = world.spawn(Health{1});
+  auto parent = world.spawn(Link{child});
+
+  world.destroy(parent);
+  CHECK_INVARIANTS(world);
+
+  CHECK_FALSE(world.isAlive(child));
 }
 
 TEST_CASE("R-OB-8: observers of the same component and kind run in registration order") {

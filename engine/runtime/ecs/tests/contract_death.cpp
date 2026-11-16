@@ -151,6 +151,32 @@ namespace {
     world.removeObserver(12345);
   }
 
+  void removeSelfInObserver(oly::ecs::ObserverContext& context) {
+    context.world().removeObserver(*static_cast<oly::ecs::ObserverId*>(context.userData()));
+  }
+
+  void removeObserverInObserver() {
+    oly::ecs::World world;
+    oly::ecs::ObserverId observer = 0;
+    observer = world.onAdd<A>(&removeSelfInObserver, &observer);
+    world.spawn(A{1});
+  }
+
+  void observeBByIdInObserver(oly::ecs::ObserverContext& context) {
+    context.world().observeById(oly::ecs::ObserverKind::OnAdd, oly::ecs::componentId<B>(), &ignoreChange);
+  }
+
+  void observeByIdInObserver() {
+    oly::ecs::World world;
+    world.onAdd<A>(&observeBByIdInObserver);
+    world.spawn(A{1});
+  }
+
+  void observeByIdUnknownComponent() {
+    oly::ecs::World world;
+    world.observeById(oly::ecs::ObserverKind::OnAdd, oly::ecs::registeredTypeCount() + 5, &ignoreChange);
+  }
+
   struct Mark {
     uint32_t value = 0;
   };
@@ -218,6 +244,9 @@ int main(int argumentCount, char** arguments) {
     {"observe_during_each", observeDuringEach, {"onAdd", "iteration"}},
     {"observe_in_observer", observeInObserver, {"onAdd", "iteration"}},
     {"remove_unknown_observer", removeUnknownObserver, {"removeObserver", "12345"}},
+    {"remove_observer_in_observer", removeObserverInObserver, {"removeObserver", "iteration"}},
+    {"observe_by_id_in_observer", observeByIdInObserver, {"observeById", "iteration"}},
+    {"observe_by_id_unknown_component", observeByIdUnknownComponent, {"observeById", "unknown"}},
     {"imply_after_archetype", implyAfterArchetype, {"imply", "Mark"}},
     {"remove_implied_component", removeImpliedComponent, {"remove e=", "Derived", "implied by"}},
   };

@@ -31,7 +31,9 @@ namespace oly::ecs::detail {
     // `changed` is `source` after the raw operations (both sorted). Removes, transitively, each implied component
     // none of whose impliers is left in `changed` while one was in `source` (R-IM-3), then adds the closure of
     // what is left (R-IM-2). Returns `changed` untouched when empty().
-    Signature resolve(const Signature& source, Signature changed) const;
+    // `added` (sorted) is what a flush adds explicitly: it always stays, since a net change cannot order it against
+    // the removal of its last implier.
+    Signature resolve(const Signature& source, Signature changed, std::span<const ComponentId> added = {}) const;
 
    private:
     bool leavesWithImpliers(const Signature& source, const Signature& changed, ComponentId componentId) const noexcept;

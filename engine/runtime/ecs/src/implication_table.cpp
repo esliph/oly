@@ -50,7 +50,7 @@ namespace oly::ecs::detail {
     return implied < initializers_.size() ? initializers_[implied] : nullptr;
   }
 
-  Signature ImplicationTable::resolve(const Signature& source, Signature changed) const {
+  Signature ImplicationTable::resolve(const Signature& source, Signature changed, std::span<const ComponentId> added) const {
     if (empty_) {
       return changed;
     }
@@ -58,7 +58,7 @@ namespace oly::ecs::detail {
     for (bool removed = true; removed;) {
       removed = false;
       for (auto it = changed.begin(); it != changed.end();) {
-        if (leavesWithImpliers(source, changed, *it)) {
+        if (!std::binary_search(added.begin(), added.end(), *it) && leavesWithImpliers(source, changed, *it)) {
           it = changed.erase(it);
           removed = true;
         } else {

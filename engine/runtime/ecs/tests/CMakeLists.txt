@@ -18,4 +18,5 @@ oly_add_contract_death(MODULE ecs SOURCE contract_death.cpp
         query_by_id_tag_in_read query_by_id_repeated_component query_by_id_unknown_component
         query_by_id_iteration_out_of_order add_during_query_by_id_iteration get_by_id_missing spawn_during_each
         single_empty single_many try_single_many structural_change_in_observer observe_during_each observe_in_observer
-        remove_unknown_observer imply_after_archetype remove_implied_component)
+        remove_unknown_observer remove_observer_in_observer observe_by_id_in_observer observe_by_id_unknown_component
+        imply_after_archetype remove_implied_component)

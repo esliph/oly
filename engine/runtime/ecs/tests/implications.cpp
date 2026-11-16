@@ -29,6 +29,10 @@ namespace {
     static_cast<Log*>(context.userData())->push_back("add Mark");
   }
 
+  void logDerived(oly::ecs::ObserverContext& context) {
+    static_cast<Log*>(context.userData())->push_back("Derived");
+  }
+
   void logMarkSeenByDerived(oly::ecs::ObserverContext& context) {
     const uint32_t mark = context.world().get<Mark>(context.entity()).value;
     static_cast<Log*>(context.userData())->push_back("Derived sees mark=" + std::to_string(mark));
@@ -195,6 +199,82 @@ TEST_CASE("R-IM-3: an explicitly added implied component leaves with its last im
   CHECK_INVARIANTS(world);
 
   CHECK_FALSE(world.has<Derived>(entity));
+}
+
+TEST_CASE("R-IM-2: a flush constructs and destroys a non-trivial implied component once") {
+  LifeCounter::alive = 0;
+  {
+    oly::ecs::World world;
+    world.imply<Mark, LifeCounter>();
+    auto entity = world.spawn(A{1});
+    auto commandBuffer = world.commands();
+    commandBuffer.add(entity, Mark{1});
+
+    world.flush(commandBuffer);
+    CHECK_INVARIANTS(world);
+    CHECK(LifeCounter::alive == 1);
+
+    commandBuffer.remove<Mark>(entity);
+    world.flush(commandBuffer);
+    CHECK_INVARIANTS(world);
+    CHECK(LifeCounter::alive == 0);
+  }
+  CHECK(LifeCounter::alive == 0);
+}
+
+TEST_CASE("R-IM-3: a component a buffer adds stays when the buffer also removes its last implier") {
+  LifeCounter::alive = 0;
+  {
+    oly::ecs::World world;
+    world.imply<Mark, LifeCounter>();
+    auto entity = world.spawn(Mark{1}, A{2});
+    auto commandBuffer = world.commands();
+    commandBuffer.remove<Mark>(entity);
+    commandBuffer.add(entity, LifeCounter{7});
+
+    world.flush(commandBuffer);
+    CHECK_INVARIANTS(world);
+
+    CHECK_FALSE(world.has<Mark>(entity));
+    CHECK(world.get<LifeCounter>(entity).value == 7);
+    CHECK(LifeCounter::alive == 1);
+  }
+  CHECK(LifeCounter::alive == 0);
+}
+
+TEST_CASE("R-IM-4: a flush removes an implied component whose first implier the same buffer adds") {
+  oly::ecs::World world;
+  world.imply<Mark, Derived>();
+  auto entity = world.spawn(Derived{7.f});
+  auto commandBuffer = world.commands();
+  commandBuffer.remove<Derived>(entity);
+  commandBuffer.add(entity, Mark{1});
+
+  world.flush(commandBuffer);
+  CHECK_INVARIANTS(world);
+
+  CHECK(world.get<Mark>(entity).value == 1);
+  CHECK(world.get<Derived>(entity).value == 7.f);
+}
+
+TEST_CASE("R-OB-7: in a flush, an implied component present before and after keeps its value and runs no observer") {
+  oly::ecs::World world;
+  Log log;
+  world.imply<Mark, Derived>();
+  world.imply<Other, Derived>();
+  auto entity = world.spawn(Mark{1});
+  world.get<Derived>(entity).value = 42.f;
+  world.onAdd<Derived>(&logDerived, &log);
+  world.onRemove<Derived>(&logDerived, &log);
+  auto commandBuffer = world.commands();
+  commandBuffer.remove<Mark>(entity);
+  commandBuffer.add(entity, Other{2});
+
+  world.flush(commandBuffer);
+  CHECK_INVARIANTS(world);
+
+  CHECK(world.get<Derived>(entity).value == 42.f);
+  CHECK(log.empty());
 }
 
 TEST_CASE("R-IM-1: a cycle of implications closes to the same set") {

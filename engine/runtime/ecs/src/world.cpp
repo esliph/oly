@@ -141,6 +141,7 @@ namespace oly::ecs {
       // assigns again (on remove with the old value, then on add with the new one). In ComponentId order.
       uint8_t observed = 0;
       std::vector<ComponentId> onRemove, onAdd;
+      bool work = false; // observers to run or implied columns to value-initialize
 
       bool matches(const detail::Archetype* candidateSource, std::span<const detail::NetComponentOperation> operations) const {
         if (!valid || source != candidateSource || key.size() != operations.size()) {
@@ -268,9 +269,9 @@ namespace oly::ecs {
     }
 
     // The first direct implier of `implied` present in `signature`; NoComponent if none.
-    ComponentId implierIn(const detail::ImplicationTable& implications, const detail::Signature& signature, ComponentId implied) {
+    ComponentId implierStaying(const detail::ImplicationTable& implications, const detail::Signature& source, const detail::Signature& resolved, ComponentId implied) {
       for (ComponentId implier : implications.impliersOf(implied)) {
-        if (std::binary_search(signature.begin(), signature.end(), implier)) {
+        if (std::binary_search(source.begin(), source.end(), implier) && std::binary_search(resolved.begin(), resolved.end(), implier)) {
           return implier;
         }
       }
@@ -296,6 +297,7 @@ namespace oly::ecs {
   World::World()
     : deferred_(store_),
       applying_(store_) {
+    deferred_.recordedByObservers_ = applying_.recordedByObservers_ = true;
     findOrCreate({}); // the first archetype gets id 0: it is what root() returns (R-AR-3)
   }
 
@@ -404,34 +406,61 @@ namespace oly::ecs {
       if (info.tag) {
         return;
       }
-
-      const uint8_t observed = source.observed ? observers_.mask(componentId) : 0;
-      if (observed & detail::ObservedOnRemove) {
-        detail::IterationGuard guard(&iterating_);
-        runObservers(ObserverKind::OnRemove, entity, componentId);
+      if (source.observed) [[unlikely]] {
+        replaceNotifying(entity, componentId, value);
+        return;
       }
 
-      void* slot = source.table.column(detail::columnOf(source, componentId)).at(store_.record(entity.index).row);
+      void* slot = source.table.column(detail::columnOf(source, componentId)).at(record.row);
       detail::destroyValue(info, slot);
       constructValue(info, slot, value);
-
-      if (observed & detail::ObservedOnAdd) {
-        detail::IterationGuard guard(&iterating_);
-        runObservers(ObserverKind::OnAdd, entity, componentId);
-      }
-      if (observed) {
-        applyDeferred();
-      }
       return;
     }
 
     const detail::Edge& edge = edgeFor(source, componentId, true, entity);
+    if ((edge.observed & detail::ObservedOnAdd) || !edge.initializedColumns.empty()) [[unlikely]] {
+      addWithEdgeWork(entity, record, source, edge, componentId, value);
+      return;
+    }
+
     detail::Archetype& destination = *edge.target;
     const uint32_t destinationRow = moveEntity(entity, record, destination, edge);
 
     if (edge.addedColumn >= 0) {
       void* slot = destination.table.column(static_cast<uint16_t>(edge.addedColumn)).at(destinationRow);
       constructValue(info, slot, value);
+    }
+  }
+
+  void World::replaceNotifying(Entity entity, ComponentId componentId, void* value) {
+    const TypeInfo& info = typeInfo(componentId);
+    detail::Archetype& source = *store_.record(entity.index).archetype;
+    const uint8_t observed = observers_.mask(componentId);
+    if (observed & detail::ObservedOnRemove) {
+      detail::IterationGuard guard(&iterating_);
+      runObservers(ObserverKind::OnRemove, entity, componentId);
+    }
+
+    void* slot = source.table.column(detail::columnOf(source, componentId)).at(store_.record(entity.index).row);
+    detail::destroyValue(info, slot);
+    constructValue(info, slot, value);
+
+    if (observed & detail::ObservedOnAdd) {
+      detail::IterationGuard guard(&iterating_);
+      runObservers(ObserverKind::OnAdd, entity, componentId);
+    }
+    if (observed) {
+      applyDeferred();
+    }
+  }
+
+  void World::addWithEdgeWork(Entity entity, detail::EntityRecord& record, const detail::Archetype& source, const detail::Edge& edge, ComponentId componentId, void* value) {
+    detail::Archetype& destination = *edge.target;
+    const uint32_t destinationRow = moveEntity(entity, record, destination, edge);
+
+    if (edge.addedColumn >= 0) {
+      void* slot = destination.table.column(static_cast<uint16_t>(edge.addedColumn)).at(destinationRow);
+      constructValue(typeInfo(componentId), slot, value);
     }
     for (uint16_t column : edge.initializedColumns) {
       implications_.initializerOf(destination.columnTypes[column])(destination.table.column(column).at(destinationRow));
@@ -462,11 +491,15 @@ namespace oly::ecs {
     }
 
     const detail::Edge& edge = edgeFor(source, componentId, false, entity);
-    if (!(edge.observed & detail::ObservedOnRemove)) {
-      moveEntity(entity, record, *edge.target, edge);
+    if (edge.observed & detail::ObservedOnRemove) [[unlikely]] {
+      removeNotifying(entity, source, edge, componentId);
       return;
     }
 
+    moveEntity(entity, record, *edge.target, edge);
+  }
+
+  void World::removeNotifying(Entity entity, const detail::Archetype& source, const detail::Edge& edge, ComponentId componentId) {
     notifyDifference(ObserverKind::OnRemove, entity, source.signature, edge.target->signature, componentId);
     // Read again: an observer's commands().spawn() reserves an index and may reallocate the records.
     moveEntity(entity, store_.record(entity.index), *edge.target, edge);
@@ -493,18 +526,18 @@ namespace oly::ecs {
     return edges.insert(componentId, std::move(edge));
   }
 
-  detail::Signature World::resolveSignature(const detail::Signature& source, detail::Signature changed, Entity entity) const {
+  detail::Signature World::resolveSignature(const detail::Signature& source, detail::Signature changed, [[maybe_unused]] Entity entity, std::span<const ComponentId> added) const {
     if (implications_.empty()) {
       return changed;
     }
 
-    detail::Signature resolved = implications_.resolve(source, changed);
+    detail::Signature resolved = implications_.resolve(source, changed, added);
     for (ComponentId componentId : source) {
       if (std::binary_search(changed.begin(), changed.end(), componentId)) {
         continue;
       }
 
-      const ComponentId implier = implierIn(implications_, resolved, componentId);
+      const ComponentId implier = implierStaying(implications_, source, resolved, componentId);
       OLY_ASSERT(implier == detail::NoComponent, "remove e=%u:%u type=%.*s implied by %.*s", entity.index, entity.generation,
                  int(typeInfo(componentId).name.size()), typeInfo(componentId).name.data(), int(typeInfo(implier).name.size()), typeInfo(implier).name.data());
       if (implier != detail::NoComponent) {
@@ -513,6 +546,10 @@ namespace oly::ecs {
     }
 
     return resolved;
+  }
+
+  detail::Archetype* World::findOrCreateClosure(const detail::Signature& signature) {
+    return findOrCreate(implications_.resolve({}, signature));
   }
 
   void World::initializeImplied(detail::Archetype& archetype, uint32_t row, const detail::Signature& constructed) {
@@ -905,32 +942,28 @@ namespace oly::ecs {
     const detail::CommandPlan plan = commandBuffer.plan();
     detail::NetEffect net;
     FlushMemo memo;
+    std::vector<ComponentId> added;
 
-    for (const detail::EntityPlan& entityPlan : plan.entities) {
-      const Entity entity = entityPlan.entity;
-      commandBuffer.netEffect(plan, entityPlan, net);
-
-      const bool alive = store_.isAlive(entity);
-      const bool reserved = net.spawned && store_.isReserved(entity);
-      if (!alive && !reserved) {
-        continue; // stale handle: ignored instead of cancelling the commands on destroy (spec §10, question 3)
+    // Both kept out of line: inlined, they made GCC spill the writeValues counters of every entity and cost
+    // +6-10% on BM_FlushCoalesced/1000 (perf review of 2026-11-16).
+    auto refreshMemo = [&](detail::Archetype* source, std::span<const detail::NetComponentOperation> operations, Entity entity) __attribute__((noinline)) {
+      static const detail::Signature noComponents;
+      const detail::Signature& sourceSignature = source ? source->signature : noComponents;
+      added.clear();
+      if (!implications_.empty()) {
+        for (const detail::NetComponentOperation& operation : operations) {
+          if (operation.present) {
+            added.push_back(operation.componentId);
+          }
+        }
       }
 
-      if (net.destroyed) {
-        destroyOrRelease(entity, alive);
-        continue;
-      }
-
-      const std::span<const detail::NetComponentOperation> operations = net.operations;
-      detail::Archetype* source = store_.record(entity.index).archetype; // nullptr if reserved
-      if (!memo.matches(source, operations)) {
-        static const detail::Signature noComponents;
-        const detail::Signature& sourceSignature = source ? source->signature : noComponents;
-        detail::Archetype* destination = findOrCreate(resolveSignature(sourceSignature, applyOperations(sourceSignature, operations), entity));
-        memo.assign(source, operations, destination, (source && destination != source) ? &jumpEdge(*source, *destination) : nullptr, implications_);
-        memo.assignObservers(observers_, operations);
-      }
-
+      detail::Archetype* destination = findOrCreate(resolveSignature(sourceSignature, applyOperations(sourceSignature, operations), entity, added));
+      memo.assign(source, operations, destination, (source && destination != source) ? &jumpEdge(*source, *destination) : nullptr, implications_);
+      memo.assignObservers(observers_, operations);
+      memo.work = memo.observed != 0 || !memo.initialized.empty();
+    };
+    auto transitionWithWork = [&](Entity entity, std::span<const detail::NetComponentOperation> operations) __attribute__((noinline)) {
       if (memo.observed & detail::ObservedOnRemove) {
         detail::IterationGuard guard(&iterating_);
         for (ComponentId componentId : memo.onRemove) {
@@ -950,6 +983,38 @@ namespace oly::ecs {
           pendingOnAdd_.emplace_back(entity, componentId);
         }
       }
+    };
+
+    for (const detail::EntityPlan& entityPlan : plan.entities) {
+      const Entity entity = entityPlan.entity;
+      commandBuffer.netEffect(plan, entityPlan, net);
+
+      const bool alive = store_.isAlive(entity);
+      const bool reserved = net.spawned && store_.isReserved(entity);
+      if (!alive && !reserved) {
+        continue; // stale handle: ignored instead of cancelling the commands on destroy (spec §10, question 3)
+      }
+
+      if (net.destroyed) {
+        destroyOrRelease(entity, alive);
+        continue;
+      }
+
+      const std::span<const detail::NetComponentOperation> operations = net.operations;
+      // refreshMemo only creates archetypes and edges, so the record stays valid until an observer runs.
+      detail::EntityRecord& record = store_.record(entity.index);
+      detail::Archetype* source = record.archetype; // nullptr if reserved
+      if (!memo.matches(source, operations)) {
+        refreshMemo(source, operations, entity);
+      }
+
+      if (memo.work) [[unlikely]] {
+        transitionWithWork(entity, operations);
+        continue;
+      }
+
+      const uint32_t row = transitionTo(entity, record, *memo.destination, memo.edge);
+      writeValues(memo, operations, row);
     }
 
     commandBuffer.clear();

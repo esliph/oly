@@ -40,6 +40,7 @@ namespace oly::ecs {
       capacity_(other.capacity_),
       count_(other.count_),
       hasNonTrivialPayload_(other.hasNonTrivialPayload_),
+      recordedByObservers_(other.recordedByObservers_),
       spawned_(std::move(other.spawned_)),
       grouped_(other.grouped_),
       runs_(std::move(other.runs_)),
@@ -68,6 +69,7 @@ namespace oly::ecs {
       capacity_ = other.capacity_;
       count_ = other.count_;
       hasNonTrivialPayload_ = other.hasNonTrivialPayload_;
+      recordedByObservers_ = other.recordedByObservers_;
       spawned_ = std::move(other.spawned_);
       grouped_ = other.grouped_;
       runs_ = std::move(other.runs_);
@@ -328,7 +330,7 @@ namespace oly::ecs {
         continue;
       }
       if (out.destroyed) {
-        OLY_ASSERT(false, "command after destroy e=%u:%u", command.entity.index, command.entity.generation);
+        OLY_ASSERT(recordedByObservers_, "command after destroy e=%u:%u", command.entity.index, command.entity.generation);
         continue; // without asserts: ignored (R-CB-4)
       }
       if (command.operation == detail::CommandOperation::Destroy) {
