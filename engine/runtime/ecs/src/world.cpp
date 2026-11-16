@@ -6,6 +6,13 @@
 
 namespace oly::ecs {
   namespace {
+    constexpr uint8_t ObservedBits = detail::ObservedOnAdd | detail::ObservedOnRemove;
+    static_assert((ObservedBits & detail::InitializesImplied) == 0, "Edge::work bits overlap");
+
+    uint8_t edgeWork(const detail::ObserverRegistry& observers, const detail::Signature& source, const detail::Edge& edge) {
+      return observers.transitionMask(source, edge.target->signature) | (edge.initializedColumns.empty() ? 0 : detail::InitializesImplied);
+    }
+
     bool checkEdgeMapping(const detail::Archetype& source, const detail::Archetype& destination, const detail::Edge& edge) {
       if (edge.sourceToDestination.size() != source.columnTypes.size()) {
         return false;
@@ -111,6 +118,9 @@ namespace oly::ecs {
           }
           if (edge.initializedColumns != expectedInitializedColumns(archetype, target, adding ? componentId : detail::NoComponent)) {
             return fail(why, "I-9", where + " initializedColumns");
+          }
+          if (bool(edge.work & detail::InitializesImplied) == edge.initializedColumns.empty()) {
+            return fail(why, "I-9", where + " InitializesImplied");
           }
 
           const int16_t expectedAddedColumn = adding && !typeInfo(componentId).tag ? static_cast<int16_t>(detail::columnOf(target, componentId)) : int16_t(-1);
@@ -419,7 +429,7 @@ namespace oly::ecs {
     }
 
     const detail::Edge& edge = edgeFor(source, componentId, true, entity);
-    if ((edge.observed & detail::ObservedOnAdd) || !edge.initializedColumns.empty()) [[unlikely]] {
+    if (edge.work & (detail::ObservedOnAdd | detail::InitializesImplied)) [[unlikely]] {
       addWithEdgeWork(entity, record, source, edge, componentId, value);
       return;
     }
@@ -467,7 +477,7 @@ namespace oly::ecs {
       implications_.initializerOf(destination.columnTypes[column])(destination.table.column(column).at(destinationRow));
     }
 
-    if (edge.observed & detail::ObservedOnAdd) {
+    if (edge.work & detail::ObservedOnAdd) {
       notifyDifference(ObserverKind::OnAdd, entity, destination.signature, source.signature, componentId);
       applyDeferred();
     }
@@ -492,7 +502,7 @@ namespace oly::ecs {
     }
 
     const detail::Edge& edge = edgeFor(source, componentId, false, entity);
-    if (edge.observed & detail::ObservedOnRemove) [[unlikely]] {
+    if (edge.work & detail::ObservedOnRemove) [[unlikely]] {
       removeNotifying(entity, source, edge, componentId);
       return;
     }
@@ -523,7 +533,7 @@ namespace oly::ecs {
 
     detail::Archetype* destination = findOrCreate(resolveSignature(source.signature, std::move(signature), entity));
     detail::Edge edge = detail::buildEdge(source, *destination, adding ? componentId : detail::NoComponent);
-    edge.observed = observers_.transitionMask(source.signature, destination->signature);
+    edge.work = edgeWork(observers_, source.signature, edge);
     return edges.insert(componentId, std::move(edge));
   }
 
@@ -585,7 +595,7 @@ namespace oly::ecs {
       archetype.observed = observers_.signatureMask(archetype.signature);
       for (auto* edges : {&archetype.addEdges, &archetype.removeEdges}) {
         for (auto& [componentId, edge] : *edges) {
-          edge.observed = observers_.transitionMask(archetype.signature, edge.target->signature);
+          edge.work = edgeWork(observers_, archetype.signature, edge);
         }
       }
     }
@@ -631,6 +641,8 @@ namespace oly::ecs {
   }
 
   void World::applyDeferred() {
+    OLY_ASSERT(applying_.empty(), "applyDeferred is not reentrant: %zu observer commands still applying", applying_.commandCount());
+
     while (!deferred_.empty()) {
       std::swap(deferred_, applying_);
       flushWithoutDeferred(applying_);
@@ -670,10 +682,16 @@ namespace oly::ecs {
 
       for (int adding = 1; adding >= 0; --adding) {
         for (const auto& [componentId, edge] : adding ? archetype.addEdges : archetype.removeEdges) {
-          if (edge.observed != observers_.transitionMask(archetype.signature, edge.target->signature)) {
+          if ((edge.work & ObservedBits) != observers_.transitionMask(archetype.signature, edge.target->signature)) {
             return fail(why, "I-12", std::string(adding ? "add" : "remove") + " cid=" + std::to_string(componentId) + " " + archetypeLabel(archetype));
           }
         }
+      }
+    }
+
+    for (const auto& [key, edge] : jumpEdges_) {
+      if (edge.work != 0) {
+        return fail(why, "I-12", "jump " + std::to_string(key >> 32) + "->" + std::to_string(static_cast<uint32_t>(key)));
       }
     }
 
@@ -810,7 +828,7 @@ namespace oly::ecs {
       if (edge.addedColumn != -1) {
         return fail(why, "I-9", where + " addedColumn");
       }
-      if (edge.initializedColumns != expectedInitializedColumns(*archetypes_[sourceId], *archetypes_[destinationId], detail::NoComponent)) {
+      if (!edge.initializedColumns.empty()) {
         return fail(why, "I-9", where + " initializedColumns");
       }
     }

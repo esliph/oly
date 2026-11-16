@@ -140,6 +140,7 @@ namespace {
     Entity parent;
     Entity child;
     int observerRuns = 0;
+    bool childAliveWhenObserverRan = false; // the cleanup destroyed the parent first, so the child skip is exercised
   };
 
   void spawnParentAndChild(StateContext& context) {
@@ -149,8 +150,11 @@ namespace {
   }
 
   void destroyLinked(oly::ecs::ObserverContext& context) {
-    ++static_cast<Cascade*>(context.userData())->observerRuns;
-    context.commands().destroy(context.world().get<Link>(context.entity()).next);
+    Cascade& cascade = *static_cast<Cascade*>(context.userData());
+    const Entity next = context.world().get<Link>(context.entity()).next;
+    ++cascade.observerRuns;
+    cascade.childAliveWhenObserverRan = context.world().isAlive(next);
+    context.commands().destroy(next);
   }
 
   struct ExitEnter {
@@ -405,5 +409,6 @@ TEST_CASE("the scope cleanup runs on remove observers and tolerates a cascade") 
   CHECK(!fixture.world.isAlive(cascade.parent));
   CHECK(!fixture.world.isAlive(cascade.child));
   CHECK(cascade.observerRuns == 1);
+  CHECK(cascade.childAliveWhenObserverRan);
   CHECK_INVARIANTS(fixture.world);
 }

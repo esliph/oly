@@ -228,6 +228,41 @@ TEST_CASE("NF-P4: add/remove with a cached edge stays free with observers on oth
   CHECK(world.get<C3>(entity).value == 3);
 }
 
+TEST_CASE("NF-P4: add/remove with a cached edge stays free with observers on a component the entity keeps") {
+  struct C1 {
+    uint64_t value;
+  };
+  struct C2 {
+    uint64_t value;
+  };
+  struct C3 {
+    uint64_t value;
+  };
+  struct C4 {
+    uint64_t value;
+  };
+
+  oly::ecs::World world;
+  world.onAdd<C1>(&ignoreChange);
+  world.onRemove<C1>(&ignoreChange);
+  auto entity = world.spawn(C1{1}, C2{2}, C3{3});
+  world.add(entity, C4{4});
+  world.remove<C4>(entity); // warms up edges and capacity (64 rows)
+  auto allocationsBefore = allocationCount();
+  auto lookupsBefore = oly::ecs::signatureLookupCount(world);
+
+  for (int i = 0; i < 1000; ++i) {
+    world.add(entity, C4{uint64_t(i)});
+    world.remove<C4>(entity);
+  }
+
+  auto allocationsAfter = allocationCount();
+  auto lookupsAfter = oly::ecs::signatureLookupCount(world);
+  CHECK(allocationsAfter == allocationsBefore);
+  CHECK(lookupsAfter == lookupsBefore);
+  CHECK(world.get<C3>(entity).value == 3);
+}
+
 TEST_CASE("NF-P4: add/remove with a cached edge stays free with an implication") {
   struct C1 {
     uint64_t value;

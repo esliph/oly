@@ -311,9 +311,9 @@ A component may **imply** others: adding it adds them in the same transition.
 - **R-IM-4.** Removing a component while a component that implies it stays is a contract error. An implier that the
   same flush adds does not stay: it brings the component back, value-initialized only if the entity lacked it.
 
-The cost stays off the hot path: an `observed` byte is cached in each `Edge` and `Archetype` when they are created
-(and recomputed for all of them when an observer is registered or removed), and an edge carries the list of implied
-columns to value-initialize. The closure is computed when an edge, an archetype or a flush memo is built.
+The cost stays off the hot path: a byte is cached in each `Edge` (`work`: observer bits and `InitializesImplied`) and
+`Archetype` (`observed`) when they are created (observer bits recomputed for all of them when an observer is registered
+or removed), and an add edge carries the list of implied columns to value-initialize. The closure is computed when an edge, an archetype or a flush memo is built.
 
 ## 5. Public `World` API
 
@@ -378,10 +378,10 @@ The invariants below must hold **between** any two public calls. `checkInvariant
 | I-6 | `bySignature_` is bijective with `archetypes_` | Duplicate archetype |
 | I-7 | `componentIndex_[c]` contains `a` if and only if `c ∈ a.signature`, and the stored column index is correct | `get` reading the wrong column |
 | I-8 | For every query `q` and every archetype `a`, `a ∈ q.matched` if and only if `q.matches(a)` | New archetype not registered in the queries |
-| I-9 | Every edge `a --±c--> b` satisfies `b.signature == resolve(a.signature ± c)` (the closure rules R-IM-2 and R-IM-3), its `sourceToDestination` is consistent and its `initializedColumns` are exactly the destination columns of the components `a` lacks, minus `c` | Stale edge, wrong mapping or implied value left unconstructed |
+| I-9 | Every edge `a --±c--> b` satisfies `b.signature == resolve(a.signature ± c)` (the closure rules R-IM-2 and R-IM-3), its `sourceToDestination` is consistent and its `initializedColumns` are exactly the destination columns of the components `a` lacks, minus `c`, with `InitializesImplied` in its `work` byte exactly when that list is not empty. A jump edge has no `initializedColumns` | Stale edge, wrong mapping or implied value left unconstructed |
 | I-10 | Indices in the `freeList` have `arch == nullptr`, and there are no repeated indices | Double reuse of a slot |
 | I-11 | Outside `each` and outside an observer, `iterating_ == 0` | Counter leaked by early return or exception |
-| I-12 | The `observed` byte of every archetype and cached edge matches the registered observers | Observer skipped after a registration, or cost paid with none registered |
+| I-12 | The `observed` byte of every archetype and the observer bits of every cached edge's `work` byte match the registered observers; a jump edge's `work` is 0 | Observer skipped after a registration, or cost paid with none registered |
 | I-13 | Every archetype signature is closed under implication | Implied component missing after a transition |
 
 I-2 requires instrumentation: in debug, a `LifeCounter` test component increments and decrements a global counter in its constructor and destructor. The total must match the number of alive rows that contain that component.

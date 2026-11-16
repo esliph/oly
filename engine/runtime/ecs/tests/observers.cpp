@@ -446,6 +446,43 @@ TEST_CASE("R-OB-7: an on add observer sees the world after the whole buffer") {
   CHECK(log == Log{"armor=4"});
 }
 
+TEST_CASE("R-OB-7: an on add observer sees an entity the buffer spawns after it") {
+  oly::ecs::World world;
+  Log log;
+  world.onAdd<Link>(&logArmorOfNext, &log);
+  auto first = world.spawn(Health{1});
+  auto commandBuffer = world.commands();
+  auto second = commandBuffer.spawn();
+  commandBuffer.add(first, Link{second});
+  commandBuffer.add(second, Armor{4});
+
+  world.flush(commandBuffer);
+  CHECK_INVARIANTS(world);
+
+  CHECK(log == Log{"armor=4"});
+}
+
+TEST_CASE("R-OB-7: on add runs in the order of each entity's first command, then in ComponentId order") {
+  oly::ecs::World world;
+  Log log;
+  world.onAdd<Health>(&recordOnAdd<Health>, &log);
+  world.onAdd<Armor>(&recordOnAdd<Armor>, &log);
+  auto first = world.spawn(A{1});
+  auto second = world.spawn(A{2});
+  auto commandBuffer = world.commands();
+  commandBuffer.add(first, Health{1});
+  commandBuffer.add(second, Health{2});
+  commandBuffer.add(first, Armor{3});
+
+  world.flush(commandBuffer);
+  CHECK_INVARIANTS(world);
+
+  const std::string firstHealth = line("add", "Health", first, "1"), firstArmor = line("add", "Armor", first, "3");
+  const bool healthFirst = oly::ecs::componentId<Health>() < oly::ecs::componentId<Armor>();
+  const Log firstEntity = healthFirst ? Log{firstHealth, firstArmor} : Log{firstArmor, firstHealth};
+  CHECK(log == Log{firstEntity[0], firstEntity[1], line("add", "Health", second, "2")});
+}
+
 TEST_CASE("R-OB-7: commands for a stale handle run nothing") {
   oly::ecs::World world;
   Log log;

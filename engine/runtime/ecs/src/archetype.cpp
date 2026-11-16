@@ -50,6 +50,10 @@ namespace oly::ecs::detail {
       edge.addedColumn = static_cast<int16_t>(columnOf(destination, added));
     }
 
+    if (added == NoComponent) {
+      return edge;
+    }
+
     for (uint16_t column = 0; column < destination.columnTypes.size(); ++column) {
       const ComponentId componentId = destination.columnTypes[column];
       if (componentId != added && columnOf(source, componentId) == NoColumn) {

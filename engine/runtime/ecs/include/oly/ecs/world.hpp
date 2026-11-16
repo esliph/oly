@@ -186,16 +186,17 @@ namespace oly::ecs {
     // Oracle without coalescing: applies each command in recording order and clears the buffer.
     void flushSequential(CommandBuffer& commandBuffer);
     void flushWithoutDeferred(CommandBuffer& commandBuffer);
-    // Flushes what observers recorded until nothing is pending. Never called while it runs: the paths it reaches
-    // (flushWithoutDeferred and the helpers below) leave the commands their observers record in deferred_.
+    // Flushes what observers recorded until nothing is pending. Not reentrant (asserted): flushWithoutDeferred, the one
+    // path it runs, leaves the commands its observers record in deferred_ for the next turn of the loop.
     // Out of line: inlined, the CommandBuffer temporary of its swap gave every addById a 200-byte frame.
     [[gnu::noinline]] void applyDeferred();
 
-    // The caller holds no IterationGuard; these take one for the whole batch.
+    // notifyAll and notifyDifference take one IterationGuard for the whole batch; the caller holds none.
     void notifyAll(ObserverKind kind, Entity entity, const detail::Signature& signature);
     // Runs `kind` for each component of `having` absent from `lacking`: `first` before the others, which follow in
     // ComponentId order.
     void notifyDifference(ObserverKind kind, Entity entity, const detail::Signature& having, const detail::Signature& lacking, ComponentId first);
+    // The caller holds an IterationGuard.
     void runObservers(ObserverKind kind, Entity entity, ComponentId componentId);
     void runPendingOnAdd();
     // Returns whether an observer ran (the caller then owes applyDeferred).
