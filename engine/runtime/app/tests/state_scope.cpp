@@ -132,6 +132,27 @@ namespace {
     context.requestState(state.target);
   }
 
+  struct Link {
+    Entity next;
+  };
+
+  struct Cascade {
+    Entity parent;
+    Entity child;
+    int observerRuns = 0;
+  };
+
+  void spawnParentAndChild(StateContext& context) {
+    Cascade& cascade = *static_cast<Cascade*>(context.userData());
+    cascade.parent = context.spawn(Link{});
+    cascade.child = context.spawn(Position{});
+  }
+
+  void destroyLinked(oly::ecs::ObserverContext& context) {
+    ++static_cast<Cascade*>(context.userData())->observerRuns;
+    context.commands().destroy(context.world().get<Link>(context.entity()).next);
+  }
+
   struct ExitEnter {
     Entity fromExit;
     Entity fromEnter;
@@ -368,5 +389,21 @@ TEST_CASE("playing → gameOver → playing with no leftovers in the World") {
 
   CHECK(oly::ecs::stats(fixture.world).liveEntities == 3 + 2);
   CHECK(fixture.engine.schedule().pendingCount() == 1);
+  CHECK_INVARIANTS(fixture.world);
+}
+
+TEST_CASE("the scope cleanup runs on remove observers and tolerates a cascade") {
+  Fixture fixture;
+  Cascade cascade;
+  fixture.world.onRemove<Link>(&destroyLinked, &cascade);
+  fixture.engine.onEnter(fixture.menu, "spawner", spawnParentAndChild, &cascade);
+  fixture.switchTo(fixture.menu);
+  fixture.world.get<Link>(cascade.parent).next = cascade.child;
+
+  fixture.switchTo(fixture.playing);
+
+  CHECK(!fixture.world.isAlive(cascade.parent));
+  CHECK(!fixture.world.isAlive(cascade.child));
+  CHECK(cascade.observerRuns == 1);
   CHECK_INVARIANTS(fixture.world);
 }

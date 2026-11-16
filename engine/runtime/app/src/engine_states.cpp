@@ -90,7 +90,10 @@ namespace oly::app {
     });
 
     for (const ecs::Entity entity : scopedEntities_) {
-      world_.destroy(entity);
+      // An on remove observer of an earlier entity may already have destroyed this one.
+      if (world_.isAlive(entity)) {
+        world_.destroy(entity);
+      }
     }
 
     scheduler_.queue_.cancelScoped();
