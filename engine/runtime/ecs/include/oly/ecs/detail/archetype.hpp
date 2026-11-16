@@ -38,10 +38,12 @@ namespace oly::ecs::detail {
     Archetype* target = nullptr;
     std::vector<int16_t> sourceToDestination; // per source column: column in the destination, or -1
     int16_t addedColumn = -1; // column of the added component, or -1 if the edge builds no value (removal, tag, jump)
+    uint8_t observed = 0; // ObservedOnAdd/ObservedOnRemove for the components the edge adds/removes; 0 on jump edges
   };
 
   struct Archetype {
     ArchetypeId id;
+    uint8_t observed = 0; // ObservedOnAdd/ObservedOnRemove over the whole signature (destroy, spawn<Ts...>)
     Signature signature; // sorted, includes tags
     std::vector<ComponentId> columnTypes; // sorted, data only
     Table table;

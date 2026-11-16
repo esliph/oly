@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <utility>
 
 namespace oly::ecs {
   namespace {
@@ -213,7 +214,9 @@ namespace oly::ecs {
     }
   }
 
-  World::World() {
+  World::World()
+    : deferred_(store_),
+      applying_(store_) {
     findOrCreate({}); // the first archetype gets id 0: it is what root() returns (R-AR-3)
   }
 
@@ -228,6 +231,7 @@ namespace oly::ecs {
     const auto id = static_cast<detail::ArchetypeId>(archetypes_.size());
     archetypes_.push_back(std::make_unique<detail::Archetype>(id, signature));
     detail::Archetype* archetype = archetypes_.back().get();
+    archetype->observed = observers_.signatureMask(archetype->signature);
     bySignature_.emplace(std::move(signature), archetype);
 
     for (ComponentId componentId : archetype->signature) {
@@ -262,16 +266,26 @@ namespace oly::ecs {
   void World::destroy(Entity entity) {
     OLY_ASSERT(isAlive(entity) && iterating_ == 0, "destroy e=%u:%u during iteration=%u", entity.index, entity.generation, iterating_);
 
-    detail::EntityRecord& record = store_.record(entity.index);
-    detail::Table& table = record.archetype->table;
-    const uint32_t row = record.row;
+    if (destroyNotifying(entity)) {
+      applyDeferred();
+    }
+  }
 
-    table.destroyRow(row);
-    if (auto moved = table.fillHole(row)) {
+  bool World::destroyNotifying(Entity entity) {
+    detail::Archetype& archetype = *store_.record(entity.index).archetype;
+    const bool observed = archetype.observed & detail::ObservedOnRemove;
+    if (observed) {
+      notifyAll(ObserverKind::OnRemove, entity, archetype.signature);
+    }
+
+    const uint32_t row = store_.record(entity.index).row;
+    archetype.table.destroyRow(row);
+    if (auto moved = archetype.table.fillHole(row)) {
       store_.record(moved->index).row = row;
     }
 
     store_.release(entity.index);
+    return observed;
   }
 
   uint32_t World::moveEntity(Entity entity, detail::EntityRecord& record, detail::Archetype& destination, const detail::Edge& edge) {
@@ -312,9 +326,23 @@ namespace oly::ecs {
         return;
       }
 
-      void* slot = source.table.column(detail::columnOf(source, componentId)).at(record.row);
+      const uint8_t observed = source.observed ? observers_.mask(componentId) : 0;
+      if (observed & detail::ObservedOnRemove) {
+        detail::IterationGuard guard(&iterating_);
+        runObservers(ObserverKind::OnRemove, entity, componentId);
+      }
+
+      void* slot = source.table.column(detail::columnOf(source, componentId)).at(store_.record(entity.index).row);
       detail::destroyValue(info, slot);
       constructValue(info, slot, value);
+
+      if (observed & detail::ObservedOnAdd) {
+        detail::IterationGuard guard(&iterating_);
+        runObservers(ObserverKind::OnAdd, entity, componentId);
+      }
+      if (observed) {
+        applyDeferred();
+      }
       return;
     }
 
@@ -325,6 +353,11 @@ namespace oly::ecs {
     if (edge.addedColumn >= 0) {
       void* slot = destination.table.column(static_cast<uint16_t>(edge.addedColumn)).at(destinationRow);
       constructValue(info, slot, value);
+    }
+
+    if (edge.observed & detail::ObservedOnAdd) {
+      notifyDifference(ObserverKind::OnAdd, entity, destination.signature, source.signature, componentId);
+      applyDeferred();
     }
   }
 
@@ -347,7 +380,15 @@ namespace oly::ecs {
     }
 
     const detail::Edge& edge = edgeFor(source, componentId, false);
-    moveEntity(entity, record, *edge.target, edge);
+    if (!(edge.observed & detail::ObservedOnRemove)) {
+      moveEntity(entity, record, *edge.target, edge);
+      return;
+    }
+
+    notifyDifference(ObserverKind::OnRemove, entity, source.signature, edge.target->signature, componentId);
+    // Read again: an observer's commands().spawn() reserves an index and may reallocate the records.
+    moveEntity(entity, store_.record(entity.index), *edge.target, edge);
+    applyDeferred();
   }
 
   const detail::Edge& World::edgeFor(detail::Archetype& source, ComponentId componentId, bool adding) {
@@ -365,7 +406,75 @@ namespace oly::ecs {
     }
 
     detail::Archetype* destination = findOrCreate(std::move(signature));
-    return edges.insert(componentId, detail::buildEdge(source, *destination, adding ? componentId : detail::NoComponent));
+    detail::Edge edge = detail::buildEdge(source, *destination, adding ? componentId : detail::NoComponent);
+    edge.observed = observers_.transitionMask(source.signature, destination->signature);
+    return edges.insert(componentId, std::move(edge));
+  }
+
+  ObserverId World::observeById(ObserverKind kind, ComponentId componentId, ObserverFunction function, void* userData) {
+    OLY_ASSERT(componentId < registeredTypeCount(), "observeById: unknown component id=%u", componentId);
+    OLY_ASSERT(iterating_ == 0, "observeById type=%.*s during iteration=%u", int(typeInfo(componentId).name.size()), typeInfo(componentId).name.data(),
+               iterating_);
+
+    const ObserverId observer = observers_.add(kind, componentId, function, userData);
+    refreshObservedFlags();
+    return observer;
+  }
+
+  void World::removeObserver(ObserverId observer) {
+    OLY_ASSERT(iterating_ == 0, "removeObserver id=%u during iteration=%u", observer, iterating_);
+
+    observers_.remove(observer);
+    refreshObservedFlags();
+  }
+
+  void World::refreshObservedFlags() {
+    for (const auto& owned : archetypes_) {
+      detail::Archetype& archetype = *owned;
+      archetype.observed = observers_.signatureMask(archetype.signature);
+      for (auto* edges : {&archetype.addEdges, &archetype.removeEdges}) {
+        for (auto& [componentId, edge] : *edges) {
+          edge.observed = observers_.transitionMask(archetype.signature, edge.target->signature);
+        }
+      }
+    }
+  }
+
+  void World::runObservers(ObserverKind kind, Entity entity, ComponentId componentId) {
+    for (const detail::ObserverEntry& entry : observers_.observers(kind, componentId)) {
+      ObserverContext context(*this, entity, componentId, entry.userData, deferred_);
+      entry.function(context);
+    }
+  }
+
+  void World::notifyAll(ObserverKind kind, Entity entity, const detail::Signature& signature) {
+    detail::IterationGuard guard(&iterating_);
+    for (ComponentId componentId : signature) {
+      if (observers_.mask(componentId) & detail::observedBit(kind)) {
+        runObservers(kind, entity, componentId);
+      }
+    }
+  }
+
+  void World::notifyDifference(ObserverKind kind, Entity entity, const detail::Signature& having, const detail::Signature& lacking, ComponentId first) {
+    detail::IterationGuard guard(&iterating_);
+    const uint8_t bit = detail::observedBit(kind);
+    if (observers_.mask(first) & bit) {
+      runObservers(kind, entity, first);
+    }
+
+    for (ComponentId componentId : having) {
+      if (componentId != first && (observers_.mask(componentId) & bit) && !std::binary_search(lacking.begin(), lacking.end(), componentId)) {
+        runObservers(kind, entity, componentId);
+      }
+    }
+  }
+
+  void World::applyDeferred() {
+    while (!deferred_.empty()) {
+      std::swap(deferred_, applying_);
+      flushWithoutDeferred(applying_);
+    }
   }
 
   bool World::checkInvariants(std::string* why) const {
@@ -374,7 +483,26 @@ namespace oly::ecs {
     }
 
     return checkArchetypes(why) && checkRecords(why) && checkFreeList(why) && checkComponentIndex(why) && checkQueries(why)
-      && checkEdges(why);
+      && checkEdges(why) && checkObservedFlags(why);
+  }
+
+  bool World::checkObservedFlags(std::string* why) const {
+    for (const auto& owned : archetypes_) {
+      const detail::Archetype& archetype = *owned;
+      if (archetype.observed != observers_.signatureMask(archetype.signature)) {
+        return fail(why, "I-12", archetypeLabel(archetype));
+      }
+
+      for (int adding = 1; adding >= 0; --adding) {
+        for (const auto& [componentId, edge] : adding ? archetype.addEdges : archetype.removeEdges) {
+          if (edge.observed != observers_.transitionMask(archetype.signature, edge.target->signature)) {
+            return fail(why, "I-12", std::string(adding ? "add" : "remove") + " cid=" + std::to_string(componentId) + " " + archetypeLabel(archetype));
+          }
+        }
+      }
+    }
+
+    return true;
   }
 
   bool World::checkArchetypes(std::string* why) const {
@@ -574,7 +702,7 @@ namespace oly::ecs {
 
   void World::destroyOrRelease(Entity entity, bool alive) {
     if (alive) {
-      destroy(entity);
+      destroyNotifying(entity);
     } else {
       store_.release(entity.index);
     }
@@ -638,6 +766,11 @@ namespace oly::ecs {
     OLY_ASSERT(iterating_ == 0, "flush during iteration=%u", iterating_);
     OLY_ASSERT(commandBuffer.store() == &store_, "flush of a buffer created by another World");
 
+    flushWithoutDeferred(commandBuffer);
+    applyDeferred();
+  }
+
+  void World::flushWithoutDeferred(CommandBuffer& commandBuffer) {
     const detail::CommandPlan plan = commandBuffer.plan();
     detail::NetEffect net;
     FlushMemo memo;

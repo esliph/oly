@@ -114,6 +114,43 @@ namespace {
     world.query<A>().each([&](A&) { world.spawn(); });
   }
 
+  struct Velocity {
+    float x;
+  };
+
+  void ignoreChange(oly::ecs::ObserverContext&) {}
+
+  void addVelocityToEntity(oly::ecs::ObserverContext& context) {
+    context.world().add(context.entity(), Velocity{1.f});
+  }
+
+  void observeBInObserver(oly::ecs::ObserverContext& context) {
+    context.world().onAdd<B>(&ignoreChange);
+  }
+
+  void structuralChangeInObserver() {
+    oly::ecs::World world;
+    world.onAdd<A>(&addVelocityToEntity);
+    world.spawn(A{1});
+  }
+
+  void observeDuringEach() {
+    oly::ecs::World world;
+    world.spawn(A{1});
+    world.query<A>().each([&](A&) { world.onAdd<A>(&ignoreChange); });
+  }
+
+  void observeInObserver() {
+    oly::ecs::World world;
+    world.onAdd<A>(&observeBInObserver);
+    world.spawn(A{1});
+  }
+
+  void removeUnknownObserver() {
+    oly::ecs::World world;
+    world.removeObserver(12345);
+  }
+
   void singleEmpty() {
     oly::ecs::World world;
     world.query<A>().single();
@@ -157,6 +194,10 @@ int main(int argumentCount, char** arguments) {
     {"single_empty", singleEmpty, {"single:", "0 rows"}},
     {"single_many", singleMany, {"single:", "2 rows"}},
     {"try_single_many", trySingleMany, {"trySingle:", "2 rows"}},
+    {"structural_change_in_observer", structuralChangeInObserver, {"add e=", "Velocity"}},
+    {"observe_during_each", observeDuringEach, {"onAdd", "iteration"}},
+    {"observe_in_observer", observeInObserver, {"onAdd", "iteration"}},
+    {"remove_unknown_observer", removeUnknownObserver, {"removeObserver", "12345"}},
   };
 
   if (argumentCount != 2) {

@@ -18,10 +18,12 @@
 #include "oly/ecs/component.hpp"
 #include "oly/ecs/detail/archetype.hpp"
 #include "oly/ecs/detail/entity_store.hpp"
+#include "oly/ecs/detail/observer_registry.hpp"
 #include "oly/ecs/detail/query_cache.hpp"
 #include "oly/ecs/detail/table.hpp"
 #include "oly/ecs/diagnostics.hpp"
 #include "oly/ecs/entity.hpp"
+#include "oly/ecs/observer.hpp"
 #include "oly/ecs/query.hpp"
 #include "oly/ecs/query_by_id.hpp"
 
@@ -77,6 +79,10 @@ namespace oly::ecs {
 
     std::unordered_map<uint64_t, detail::Edge> jumpEdges_; // (source.id << 32) | destination.id
 
+    detail::ObserverRegistry observers_;
+    CommandBuffer deferred_; // what observers record into
+    CommandBuffer applying_; // what applyDeferred is flushing, so observers of that flush record into deferred_
+
    public:
     World();
     ~World();
@@ -120,6 +126,18 @@ namespace oly::ecs {
     // Commands for stale handles are ignored; the buffer ends up empty.
     void flush(CommandBuffer& commandBuffer);
 
+    // Lifecycle observers (R-OB-1..8). On add runs after the component is in place; on remove runs before it
+    // leaves, and destroy runs it for every observed component. Assigning an existing data component through add
+    // runs on remove (old value) then on add (new value); direct writes through get or a query are not observed.
+    // Observers of one component and kind run in registration order. Registering or removing an observer during
+    // an iteration or inside an observer is a contract error (OLY_ASSERT), and so is removing an unknown id.
+    template <class T>
+    ObserverId onAdd(ObserverFunction function, void* userData = nullptr);
+    template <class T>
+    ObserverId onRemove(ObserverFunction function, void* userData = nullptr);
+    ObserverId observeById(ObserverKind kind, ComponentId componentId, ObserverFunction function, void* userData = nullptr);
+    void removeObserver(ObserverId observer);
+
     // Cached by (Ts..., filters): same instance for the same combination, valid while the World exists.
     template <class... Ts, class... Filters>
     Query<Ts...>& query(Filters... filters);
@@ -158,6 +176,20 @@ namespace oly::ecs {
    private:
     // Oracle without coalescing: applies each command in recording order and clears the buffer.
     void flushSequential(CommandBuffer& commandBuffer);
+    void flushWithoutDeferred(CommandBuffer& commandBuffer);
+    // Flushes what observers recorded until nothing is pending. Never called while it runs: the paths it reaches
+    // (flushWithoutDeferred and the helpers below) leave the commands their observers record in deferred_.
+    void applyDeferred();
+
+    // The caller holds no IterationGuard; these take one for the whole batch.
+    void notifyAll(ObserverKind kind, Entity entity, const detail::Signature& signature);
+    // Runs `kind` for each component of `having` absent from `lacking`: `first` before the others, which follow in
+    // ComponentId order.
+    void notifyDifference(ObserverKind kind, Entity entity, const detail::Signature& having, const detail::Signature& lacking, ComponentId first);
+    void runObservers(ObserverKind kind, Entity entity, ComponentId componentId);
+    // Returns whether an observer ran (the caller then owes applyDeferred).
+    bool destroyNotifying(Entity entity);
+    void refreshObservedFlags();
 
     detail::Archetype* findOrCreate(detail::Signature signature);
     uint32_t moveEntity(Entity entity, detail::EntityRecord& record, detail::Archetype& destination, const detail::Edge& edge);
@@ -187,6 +219,7 @@ namespace oly::ecs {
     bool checkComponentIndex(std::string* why) const;
     bool checkQueries(std::string* why) const;
     bool checkEdges(std::string* why) const;
+    bool checkObservedFlags(std::string* why) const;
   };
 
   template <class... Ts>
@@ -209,6 +242,11 @@ namespace oly::ecs {
         }
       }(),
       ...);
+
+    if (archetype->observed & detail::ObservedOnAdd) {
+      notifyAll(ObserverKind::OnAdd, entity, archetype->signature);
+      applyDeferred();
+    }
 
     return entity;
   }
@@ -237,6 +275,24 @@ namespace oly::ecs {
                typeInfo(componentId).name.data());
 
     removeById(entity, componentId);
+  }
+
+  template <class T>
+  ObserverId World::onAdd(ObserverFunction function, void* userData) {
+    const ComponentId componentId = oly::ecs::componentId<T>();
+    OLY_ASSERT(iterating_ == 0, "onAdd type=%.*s during iteration=%u", int(typeInfo(componentId).name.size()), typeInfo(componentId).name.data(),
+               iterating_);
+
+    return observeById(ObserverKind::OnAdd, componentId, function, userData);
+  }
+
+  template <class T>
+  ObserverId World::onRemove(ObserverFunction function, void* userData) {
+    const ComponentId componentId = oly::ecs::componentId<T>();
+    OLY_ASSERT(iterating_ == 0, "onRemove type=%.*s during iteration=%u", int(typeInfo(componentId).name.size()), typeInfo(componentId).name.data(),
+               iterating_);
+
+    return observeById(ObserverKind::OnRemove, componentId, function, userData);
   }
 
   template <class T>
