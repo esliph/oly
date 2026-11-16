@@ -10,7 +10,7 @@
 #include "oly/ecs/observer.hpp"
 
 namespace oly::ecs::detail {
-  // Bits of the `observed` byte cached in Edge and Archetype (I-12).
+  // Bits of Archetype::observed and of Edge::work (I-12).
   inline constexpr uint8_t ObservedOnAdd = 1;
   inline constexpr uint8_t ObservedOnRemove = 2;
 

@@ -25,6 +25,8 @@ namespace {
     uint32_t value = 0;
   };
 
+  void ignoreChange(oly::ecs::ObserverContext&) {}
+
   void logMarkAdded(oly::ecs::ObserverContext& context) {
     static_cast<Log*>(context.userData())->push_back("add Mark");
   }
@@ -199,6 +201,25 @@ TEST_CASE("R-IM-3: an explicitly added implied component leaves with its last im
   CHECK_INVARIANTS(world);
 
   CHECK_FALSE(world.has<Derived>(entity));
+}
+
+TEST_CASE("R-IM-2: a cached add edge still initializes the implied component after an observer is registered") {
+  LifeCounter::alive = 0;
+  {
+    oly::ecs::World world;
+    world.imply<Mark, LifeCounter>();
+    auto entity = world.spawn(A{1});
+    world.add(entity, Mark{1});
+    world.remove<Mark>(entity);
+    world.onAdd<Other>(&ignoreChange);
+    CHECK_INVARIANTS(world);
+
+    world.add(entity, Mark{2});
+    CHECK_INVARIANTS(world);
+
+    CHECK(LifeCounter::alive == 1);
+  }
+  CHECK(LifeCounter::alive == 0);
 }
 
 TEST_CASE("R-IM-2: a flush constructs and destroys a non-trivial implied component once") {

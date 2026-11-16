@@ -452,6 +452,7 @@ TEST_CASE("R-OB-7: an on add observer sees an entity the buffer spawns after it"
   world.onAdd<Link>(&logArmorOfNext, &log);
   auto first = world.spawn(Health{1});
   auto commandBuffer = world.commands();
+  commandBuffer.add(first, A{0}); // first's commands come before second's spawn in the plan
   auto second = commandBuffer.spawn();
   commandBuffer.add(first, Link{second});
   commandBuffer.add(second, Armor{4});
@@ -467,18 +468,26 @@ TEST_CASE("R-OB-7: on add runs in the order of each entity's first command, then
   Log log;
   world.onAdd<Health>(&recordOnAdd<Health>, &log);
   world.onAdd<Armor>(&recordOnAdd<Armor>, &log);
-  auto first = world.spawn(A{1});
+  // second gets the lower index and first records its components against ComponentId order, so neither the entity
+  // index nor the recording order gives the expected log.
   auto second = world.spawn(A{2});
+  auto first = world.spawn(A{1});
+  const bool healthFirst = oly::ecs::componentId<Health>() < oly::ecs::componentId<Armor>();
   auto commandBuffer = world.commands();
-  commandBuffer.add(first, Health{1});
-  commandBuffer.add(second, Health{2});
-  commandBuffer.add(first, Armor{3});
+  if (healthFirst) {
+    commandBuffer.add(first, Armor{3});
+    commandBuffer.add(second, Health{2});
+    commandBuffer.add(first, Health{1});
+  } else {
+    commandBuffer.add(first, Health{1});
+    commandBuffer.add(second, Health{2});
+    commandBuffer.add(first, Armor{3});
+  }
 
   world.flush(commandBuffer);
   CHECK_INVARIANTS(world);
 
   const std::string firstHealth = line("add", "Health", first, "1"), firstArmor = line("add", "Armor", first, "3");
-  const bool healthFirst = oly::ecs::componentId<Health>() < oly::ecs::componentId<Armor>();
   const Log firstEntity = healthFirst ? Log{firstHealth, firstArmor} : Log{firstArmor, firstHealth};
   CHECK(log == Log{firstEntity[0], firstEntity[1], line("add", "Health", second, "2")});
 }

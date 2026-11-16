@@ -186,6 +186,7 @@ TEST_CASE("NF-P4: add/remove with a cached edge neither allocates nor queries a 
   auto lookupsAfter = oly::ecs::signatureLookupCount(world);
   CHECK(allocationsAfter == allocationsBefore);
   CHECK(lookupsAfter == lookupsBefore);
+  CHECK_INVARIANTS(world);
   CHECK(world.get<C3>(entity).value == 3);
 }
 
@@ -225,6 +226,7 @@ TEST_CASE("NF-P4: add/remove with a cached edge stays free with observers on oth
   auto lookupsAfter = oly::ecs::signatureLookupCount(world);
   CHECK(allocationsAfter == allocationsBefore);
   CHECK(lookupsAfter == lookupsBefore);
+  CHECK_INVARIANTS(world);
   CHECK(world.get<C3>(entity).value == 3);
 }
 
@@ -260,6 +262,7 @@ TEST_CASE("NF-P4: add/remove with a cached edge stays free with observers on a c
   auto lookupsAfter = oly::ecs::signatureLookupCount(world);
   CHECK(allocationsAfter == allocationsBefore);
   CHECK(lookupsAfter == lookupsBefore);
+  CHECK_INVARIANTS(world);
   CHECK(world.get<C3>(entity).value == 3);
 }
 
@@ -299,6 +302,7 @@ TEST_CASE("NF-P4: add/remove with a cached edge stays free with an implication")
   auto lookupsAfter = oly::ecs::signatureLookupCount(world);
   CHECK(allocationsAfter == allocationsBefore);
   CHECK(lookupsAfter == lookupsBefore);
+  CHECK_INVARIANTS(world);
   CHECK(impliedAfterEachAdd);
   CHECK_FALSE(world.has<C5>(entity));
 }
