@@ -17,24 +17,29 @@ namespace oly::app {
     OLY_ASSERT(config.maxEventRounds > 0, "Engine: maxEventRounds must be positive");
   }
 
-  SystemId Engine::addSystem(Phase phase, std::string_view name, SystemFunction function, void* userData) {
+  SystemId Engine::addSystem(Phase phase, std::string_view name, SystemFunction function, void* userData, OrderBand band) {
     OLY_ASSERT(!inFrame_, "addSystem: system \"%.*s\" registered during frame", static_cast<int>(name.size()), name.data());
 
     const SystemId id = static_cast<SystemId>(systemLocations_.size());
-    std::vector<SystemEntry>& entries = phases_[static_cast<uint32_t>(phase)];
+    std::vector<SystemEntry>& entries = phases_[static_cast<uint32_t>(phase)][static_cast<uint32_t>(band)];
 
-    systemLocations_.emplace_back(phase, static_cast<uint32_t>(entries.size()));
+    systemLocations_.push_back(SystemLocation{phase, band, static_cast<uint32_t>(entries.size())});
     entries.push_back(SystemEntry{function, userData, std::string(name), id, false, 0});
 
     return id;
   }
 
   void Engine::setWhilePaused(SystemId system, bool whilePaused) {
-    const auto [phase, position] = systemLocations_[system];
-    SystemEntry& entry = phases_[static_cast<uint32_t>(phase)][position];
-    OLY_ASSERT(isGameplayPhase(phase), "setWhilePaused: render system \"%s\" cannot be whilePaused", entry.name.c_str());
+    SystemEntry& entry = systemEntry(system);
+    OLY_ASSERT(isGameplayPhase(systemLocations_[system].phase), "setWhilePaused: render system \"%s\" cannot be whilePaused", entry.name.c_str());
 
     entry.whilePaused = whilePaused;
+  }
+
+  Engine::SystemEntry& Engine::systemEntry(SystemId system) {
+    const SystemLocation location = systemLocations_[system];
+
+    return phases_[static_cast<uint32_t>(location.phase)][static_cast<uint32_t>(location.band)][location.position];
   }
 
   EventTypeId Engine::declareEventType(EventKey key, std::string_view name, uint32_t size) {
@@ -203,17 +208,19 @@ namespace oly::app {
   }
 
   void Engine::runPhase(Phase phase) {
-    for (SystemEntry& entry : phases_[static_cast<uint32_t>(phase)]) {
-      if (isGameplayPhase(phase) && entry.whilePaused != pausedThisStep_) {
-        continue;
-      }
+    for (std::vector<SystemEntry>& band : phases_[static_cast<uint32_t>(phase)]) {
+      for (SystemEntry& entry : band) {
+        if (isGameplayPhase(phase) && entry.whilePaused != pausedThisStep_) {
+          continue;
+        }
 
-      if (!runsInState(entry.states)) {
-        continue;
-      }
+        if (!runsInState(entry.states)) {
+          continue;
+        }
 
-      SystemContext context(*this, world_, commands_, phase, entry.id, entry.name, entry.userData);
-      entry.function(context);
+        SystemContext context(*this, world_, commands_, phase, entry.id, entry.name, entry.userData);
+        entry.function(context);
+      }
     }
 
     world_.flush(commands_);

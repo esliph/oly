@@ -40,8 +40,7 @@ namespace oly::app {
     OLY_ASSERT(system < systemLocations_.size(), "setSystemStates: system=%u out of range (%zu systems)", system, systemLocations_.size());
     checkStateMask("setSystemStates", mask);
 
-    const auto [phase, position] = systemLocations_[system];
-    phases_[static_cast<uint32_t>(phase)][position].states = mask;
+    systemEntry(system).states = mask;
   }
 
   void Engine::setHandlerStates(HandlerId handler, std::initializer_list<StateId> states) {

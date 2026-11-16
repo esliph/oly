@@ -54,8 +54,15 @@ namespace oly::app {
     EngineConfig config_;
     double fixedDeltaTime_;
 
-    std::array<std::vector<SystemEntry>, PhaseCount> phases_;
-    std::vector<std::pair<Phase, uint32_t>> systemLocations_; // [SystemId]: (phase, position in the phase)
+    struct SystemLocation {
+      Phase phase;
+      OrderBand band;
+      uint32_t position; // in the band
+    };
+
+    // One vector per band, so runPhase walks the bands in order with no branch per system.
+    std::array<std::array<std::vector<SystemEntry>, OrderBandCount>, PhaseCount> phases_;
+    std::vector<SystemLocation> systemLocations_; // [SystemId]
     ecs::CommandBuffer commands_;
 
     detail::EventQueues queues_;
@@ -108,8 +115,9 @@ namespace oly::app {
       return world_;
     }
 
-    // Cannot be called during frame (OLY_ASSERT). Within a phase, systems run in registration order.
-    SystemId addSystem(Phase phase, std::string_view name, SystemFunction function, void* userData = nullptr);
+    // Cannot be called during frame (OLY_ASSERT). Within a phase, the Default band runs before the Last band, and
+    // within a band systems run in registration order. The phase applies its commands once, after the Last band.
+    SystemId addSystem(Phase phase, std::string_view name, SystemFunction function, void* userData = nullptr, OrderBand band = OrderBand::Default);
     // In the gameplay phases, a whilePaused system runs only in paused steps and the others only in unpaused ones.
     // Render does not accept whilePaused (OLY_ASSERT).
     void setWhilePaused(SystemId system, bool whilePaused);
@@ -232,6 +240,7 @@ namespace oly::app {
 
    private:
     EventTypeId declareEventType(EventKey key, std::string_view name, uint32_t size);
+    SystemEntry& systemEntry(SystemId system);
     void restartClock();
     void recoverFromInterruptedFrame();
     void runFixedStep();
