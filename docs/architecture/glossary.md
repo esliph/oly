@@ -15,6 +15,8 @@ The same verb stands for the same concept in C++, in the C API and in TS.
 | register system | `Engine::addSystem(phase, name, function)`, `OLY_SYSTEM(name)` (by name) | `olyEngineAddNativeSystem` (by name), `olyEngineAddScriptSystem` | `addSystem`, `addNativeSystem` |
 | system runs while paused | `Engine::setWhilePaused` | `olyEngineSetWhilePaused` | `SystemRegistration.whilePaused()` |
 | deferred structural change (inside a system) | `SystemContext::spawn/destroy/add/remove` | `olySystemSpawn/Destroy/Add/Remove` | `context.spawn/destroy/add/remove` |
+| observer: run code when an entity gains (**on add**) or loses (**on remove**) a component | `World::onAdd<T>`, `onRemove<T>`, `observeById(kind, componentId, ...)`, `removeObserver`; `ObserverContext` | — | — |
+| implied component: added with the component that implies it, removed with its last implier | `World::imply<T, Implied>()` | — | — |
 | declare component / tag (order = ComponentId) | the generated `struct Name { ... }` / `struct Name {}` | (schema types, when the `OlyEngine` is created) | `component Name { ... }` / `tag Name` in the `.oly` schema |
 | declare event (order = dispatch order) | `Engine::declareEvent<T>(name)` | (schema events, when the `OlyEngine` is created) | `event Name { ... }` in the `.oly` schema |
 | emit event | `Engine::emit`, `SystemContext/HandlerContext::emit` | `olyEngineEmit` | `context.emit` |

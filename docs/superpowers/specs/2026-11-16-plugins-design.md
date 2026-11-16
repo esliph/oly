@@ -193,7 +193,8 @@ entity with `Position` has `WorldTransform` without a second transition.
   write its value (no structural change), which is how `essentials` fills `WorldTransform` at once (§8.3).
 - Removing the implying component removes the components it implied, in the same transition. Removing an implied
   component while its implying one stays is an `OLY_ASSERT`.
-- Invariant I-9 changes: an edge `a --±c--> b` satisfies `b.signature == a.signature ± closure(c)`.
+- Invariant I-9 changes: an edge `a --±c--> b` satisfies `b.signature == resolve(a.signature ± c)`, where `resolve`
+  applies the closure on add and the removal of what no remaining component implies (ECS spec I-9).
 
 **Cost target** (written into the ECS spec): with no hierarchy in use, spawn and flush make the same number of
 transitions as today, and NF-P4 stays met; the per-step cost of `essentials` is one copy per root, per block. Both are

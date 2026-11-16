@@ -39,6 +39,10 @@ context.add(entity, A{...});   context.remove<A>(entity);   context.destroy(enti
 oly::ecs::NullEntity;
 oly::ecs::checkInvariants(world, &why);   oly::ecs::stats(world);    // oly/ecs/diagnostics.hpp
 auto commands = world.commands();   world.flush(commands);          // CommandBuffer, bare World
+oly::ecs::ObserverId id = world.onAdd<A>(function, userData);   world.onRemove<A>(function);   world.removeObserver(id);
+world.observeById(oly::ecs::ObserverKind::OnAdd, componentId, function, userData);
+void function(oly::ecs::ObserverContext& context);   // world(), entity(), componentId(), userData(), commands()
+world.imply<A, B>();                                              // adding A adds B; before any entity has A
 ```
 
 ## Queries

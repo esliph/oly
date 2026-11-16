@@ -61,8 +61,15 @@ Validity rules:
 - Conflict rules (R-CB-4): `add` followed by `remove` of the same type cancel out; a repeated `add` keeps the last value; `destroy` discards the entity's earlier commands; a command after `destroy` is a contract violation.
 - A direct `destroy` of an entity with pending commands is resolved by the generation: flush sees the stale handle and ignores the commands.
 
+## Observers and implied components
+
+- **Observers** (`onAdd<T>`, `onRemove<T>`, `observeById`, `removeObserver`) live in a cold `detail::ObserverRegistry` in the `World`: lists per `ComponentId` and kind, and a mask per component. The hot path reads only an `observed` byte cached in each `Edge` (bits for what the edge adds or removes) and each `Archetype` (bits over its whole signature, for `destroy` and `spawn<Ts...>`). The bytes are set when the edge or archetype is created and recomputed over all of them when an observer is registered or removed. Jump edges carry no byte: the flush memo computes the lists of components to notify once per (source, operations).
+- Observers run under the iteration lock (`IterationGuard` on `iterating_`), so a direct structural change inside one fails the same assert as inside `each`. They record structure in a `World`-owned `CommandBuffer`; the triggering operation applies it before it returns (`applyDeferred`, which swaps two buffers until nothing is pending).
+- The flush runs on remove before each entity's transition and queues on add until after the last transition (R-OB-7), so an on add observer sees the world as the whole buffer left it.
+- **Implied components** (`imply<T, Implied>`) live in `detail::ImplicationTable`. `resolve(source, changed)` is the one signature resolver: `edgeFor`, `spawn<Ts...>` and the flush memo call it, so the three paths cannot disagree. An edge stores the destination columns to value-initialize (`initializedColumns`), so a cached transition with an implication still does no lookup. R-IM-4 is asserted where the edge is built, once per (archetype, component).
+
 ## Correctness
 
-- Invariants I-1 to I-11, the fuzz against a model and `LifeCounter` are in [build-and-tests.md](build-and-tests.md#tests).
+- Invariants I-1 to I-13, the fuzz against a model and `LifeCounter` are in [build-and-tests.md](build-and-tests.md#tests).
 - When changing structural logic, keep `checkInvariants` covering what changed, including the `QueryById` caches (which go into `checkQueries`).
 - Test-only hooks (`flushSequential`, `setGeneration`, `CommandBuffer::forEach`) live in `detail/test_access.hpp` (`WorldTestAccess`, `EntityStoreTestAccess`, `CommandBufferTestAccess`). The public classes have nothing "for testing".

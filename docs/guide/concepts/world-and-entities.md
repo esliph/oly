@@ -129,6 +129,7 @@ Inside the loop the rules depend on **where** your code runs:
 | a system (`SystemContext`) | **deferred** to the end of the phase | a system may be iterating a query |
 | a handler, task or state hook | **direct** | they run outside any iteration |
 | any code inside `each` or `eachBlock` | direct changes **refused** (`OLY_ASSERT`) | the iteration would see moved rows |
+| an observer (`ObserverContext`) | through `context.commands()`, applied before the triggering call returns | the observer runs in the middle of a change ([observers](#react-to-changes-observers)) |
 
 Details in [Engine, loop and systems](engine-and-systems.md#structural-changes-in-systems).
 
@@ -157,6 +158,66 @@ commands.add(bullet, Bullet{});
 ```
 
 The engine uses one `CommandBuffer` per phase for you, so in game code you rarely need your own.
+
+## React to changes: observers
+
+An observer runs your code when an entity gains (**on add**) or loses (**on remove**) a component, in every path that changes the `World`: direct calls, the flush of a system's changes and the state scope cleanup. Use it to keep two things in step, for example to destroy the followers of a leader that dies.
+
+```
+# game.oly
+component Leader { follower: entity }
+```
+
+```cpp
+void destroyFollower(oly::ecs::ObserverContext& context) {
+  const Leader& leader = context.world().get<Leader>(context.entity());
+  if (context.world().isAlive(leader.follower)) {
+    context.commands().destroy(leader.follower);
+  }
+}
+```
+
+**Where you own the `Engine`** (native), register it once at start-up:
+
+```cpp
+engine.world().onRemove<Leader>(destroyFollower);
+```
+
+The observer is a plain function of an `ObserverContext`: `world()`, `entity()`, `componentId()`, `userData()` (the second argument of `onAdd`/`onRemove`) and `commands()`. `onAdd` and `onRemove` return an `ObserverId`; `world.removeObserver(id)` stops it. `observeById(kind, componentId, function, userData)` is the variant by `ComponentId`.
+
+When each kind runs:
+
+| Change | What runs |
+|---|---|
+| `add` of a component the entity lacked, `spawn(components...)` | on add, after the value is in place: read the new value with `get` |
+| `remove` | on remove, before the component leaves: read the old value with `get` |
+| `destroy` | on remove for every observed component, before the entity dies |
+| `add` of a component the entity already has | on remove with the old value, then on add with the new one (a tag runs nothing) |
+| a write through `get`, `tryGet` or a query | nothing: field writes are not observed |
+
+Inside a flush (the end of a phase, or `world.flush`) observers see the **net change** of each entity: an `add` followed by a `remove` runs nothing, and repeated `add`s run one on add with the last value. On remove runs before each entity's change; on add runs after every entity of the flush changed, so an on add observer sees the world as the whole flush left it.
+
+Rules:
+
+- An observer changes structure **only** through `context.commands()`. The `World` applies those commands right after the change that triggered the observer, before that call returns, until nothing is pending. Two observers may record the same `destroy`, or a change for an entity another observer destroyed: the extra commands are ignored. A direct `spawn`, `destroy`, `add` or `remove` inside an observer stops on `OLY_ASSERT`, the same as inside `each`.
+- Observers that always record more changes never stop: avoid a cycle where each observer triggers the other.
+- Register and remove observers at start-up, never inside an observer or a query loop (`OLY_ASSERT`).
+- Observers of the same component and kind run in registration order.
+
+## Implied components
+
+A component can **imply** others: adding it adds them in the same change, so the entity never exists without them.
+
+```cpp
+world.imply<Position, WorldTransform>();   // before any entity has a Position
+```
+
+- The implied component starts value-initialized (the default member values of the struct) and runs its on add observers like any other, so an observer can fill it at once. In a direct `add`, the observers of the component you added run first.
+- If the entity already has the implied component, it keeps its value.
+- Removing `Position` removes `WorldTransform` too, unless another component that implies it stays. An implied component leaves with its last implier, even if you added it yourself.
+- Implications are transitive, and a cycle is valid: both components always come together.
+- Inside a flush the net change decides here too: an implied component the entity has before and after the flush keeps its value and runs no observer, and a component the flush adds stays even if the same flush removes its implier.
+- Register an implication **before** any entity has the implying component, and never remove an implied component while its implier stays: both stop on `OLY_ASSERT`. `Implied` must be default constructible without throwing.
 
 ## Debugging the world
 

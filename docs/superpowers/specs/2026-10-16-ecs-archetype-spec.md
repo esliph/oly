@@ -266,8 +266,52 @@ op ∈ { Spawn, Destroy, Add, Remove }
 - **R-CB-1.** `spawn()` reserves an index immediately, per R-EN-3, and returns an `Entity` that can be used in later commands of the same buffer.
 - **R-CB-2.** `add<T>(e, v)` move-constructs `T` inside the payload. If the buffer is discarded without a flush, the non-trivial payloads are destroyed.
 - **R-CB-3.** The flush runs in two passes. The first groups the commands by entity, preserving order, and computes each entity's final signature. The second performs **a single transition per entity**, straight to the final archetype.
-- **R-CB-4.** Conflict semantics, applied in recording order: `add` followed by `remove` of the same `T` leaves nothing; repeated `add` keeps the last value; `destroy` discards the entity's earlier commands; commands after `destroy` are ignored (with `assert` in debug).
+- **R-CB-4.** Conflict semantics, applied in recording order: `add` followed by `remove` of the same `T` leaves nothing; repeated `add` keeps the last value; `destroy` discards the entity's earlier commands; commands after `destroy` are ignored (with `assert` in debug, except in the buffer observers record into: observers of
+  independent plugins cannot see each other's commands, so two of them may destroy the same entity, R-OB-6).
 - **R-CB-5.** Calling `flush` with `iterating_ > 0` is a contract error.
+
+### 4.8 Observers and implications
+
+An observer is a function pointer plus `userData`, registered on the `World` per `ComponentId` and kind (**on add**,
+**on remove**). Tags can be observed. Observers run in every structural path: direct calls, the flush and, through
+`destroy`, the state scope cleanup. While they run, the `World` is locked for structure with the iteration counter, so
+an observer reads and writes values and changes structure only through `context.commands()`.
+
+- **R-OB-1.** On add runs after the component is in place: the observer reads the new value.
+- **R-OB-2.** On remove runs before the component leaves: the observer reads the old value.
+- **R-OB-3.** `destroy` runs on remove for every observed component of the entity, in `ComponentId` order, before the
+  entity dies.
+- **R-OB-4.** `add` of a data component the entity already has runs on remove (old value) and then on add (new value).
+  `add` of a tag the entity already has runs nothing.
+- **R-OB-5.** Direct field writes (through `get`, `tryGet` or a query) are not observed.
+- **R-OB-6.** An observer changes structure only through `context.commands()`. Those commands are applied right after
+  the operation that triggered the observer, before it returns, until nothing is pending. A direct structural change
+  or an observer registration inside an observer is a contract error, the same one as inside `each`. A cycle of
+  observers that always records more commands never ends; that is the contract, not a guarded case.
+- **R-OB-7.** Inside a flush, observers see the net change per entity (R-CB-3, R-CB-4). On remove observers (destroy
+  included) run before each entity's transition; on add observers run after every transition of the flush, in the order
+  of each entity's first command, and within one entity in `ComponentId` order. Stale handles run nothing. The net
+  change compares the signatures before and after: an implied component present in both keeps its value and runs no
+  observer, even if the buffer removed and added its impliers in between.
+- **R-OB-8.** Observers of the same component and kind run in registration order. Registering or removing an observer
+  during an iteration or inside an observer is a contract error; removing an unknown or removed `ObserverId` too.
+
+A component may **imply** others: adding it adds them in the same transition.
+
+- **R-IM-1.** `imply<T, Implied>()` is registered before any archetype contains `T`; later is a contract error, and
+  `T == Implied` does not compile. Implications are transitive; a cycle is valid and closes to one set.
+- **R-IM-2.** Adding `T` (direct `add`, `addById`, `spawn<Ts...>`, flush) adds the closure of `T` in the same
+  transition. A component of the closure that the entity lacked is value-initialized and runs its on add observers
+  like any other; in a direct `add`, the added component's observers run first.
+- **R-IM-3.** Removing `T` also removes each component of its closure that no component left in the entity implies.
+  An implied component leaves with its last implier, even if it was added explicitly. In a flush, a component the
+  buffer adds stays even if the same buffer removes its last implier: a net change cannot order the two.
+- **R-IM-4.** Removing a component while a component that implies it stays is a contract error. An implier that the
+  same flush adds does not stay: it brings the component back, value-initialized only if the entity lacked it.
+
+The cost stays off the hot path: an `observed` byte is cached in each `Edge` and `Archetype` when they are created
+(and recomputed for all of them when an observer is registered or removed), and an edge carries the list of implied
+columns to value-initialize. The closure is computed when an edge, an archetype or a flush memo is built.
 
 ## 5. Public `World` API
 
@@ -307,7 +351,10 @@ public:
 | `get<T>(e)` | `isAlive(e) && has<T>(e)`; `T` is not a tag | Reference valid until the next structural change on any entity | O(1), 3 indirections |
 | `tryGet<T>(e)` | — | `nullptr` if the entity is dead or lacks `T` | O(1) |
 | `query<Ts...>()` | — | Same instance for the same combination | O(A\_c\*) the 1st time; O(1) afterwards |
-| `flush(cb)` | `iterating_ == 0` | One transition per affected entity | O(Σk) |
+| `flush(cb)` | `iterating_ == 0` | One transition per affected entity; observers per R-OB-7 | O(Σk) |
+| `onAdd<T>(f, data)`, `onRemove<T>(f, data)`, `observeById(kind, c, f, data)` | `iterating_ == 0` | Returns an `ObserverId`; flags of every archetype and cached edge recomputed (I-12) | O(A + E), cold |
+| `removeObserver(id)` | `iterating_ == 0`, `id` registered and not removed | The observer no longer runs | O(A + E), cold |
+| `imply<T, Implied>()` | `iterating_ == 0`, no archetype contains `T`, `Implied` nothrow default constructible | Later transitions that add `T` add the closure (R-IM-2) | O(1) |
 
 ### Reference validity rules
 
@@ -329,9 +376,11 @@ The invariants below must hold **between** any two public calls. `checkInvariant
 | I-6 | `bySignature_` is bijective with `archetypes_` | Duplicate archetype |
 | I-7 | `componentIndex_[c]` contains `a` if and only if `c ∈ a.signature`, and the stored column index is correct | `get` reading the wrong column |
 | I-8 | For every query `q` and every archetype `a`, `a ∈ q.matched` if and only if `q.matches(a)` | New archetype not registered in the queries |
-| I-9 | Every edge `a --±c--> b` satisfies `b.signature == a.signature ± c`, and its `srcToDst` is consistent | Stale edge or wrong mapping |
+| I-9 | Every edge `a --±c--> b` satisfies `b.signature == resolve(a.signature ± c)` (the closure rules R-IM-2 and R-IM-3), its `sourceToDestination` is consistent and its `initializedColumns` are exactly the destination columns of the components `a` lacks, minus `c` | Stale edge, wrong mapping or implied value left unconstructed |
 | I-10 | Indices in the `freeList` have `arch == nullptr`, and there are no repeated indices | Double reuse of a slot |
-| I-11 | Outside `each`, `iterating_ == 0` | Counter leaked by early return or exception |
+| I-11 | Outside `each` and outside an observer, `iterating_ == 0` | Counter leaked by early return or exception |
+| I-12 | The `observed` byte of every archetype and cached edge matches the registered observers | Observer skipped after a registration, or cost paid with none registered |
+| I-13 | Every archetype signature is closed under implication | Implied component missing after a transition |
 
 I-2 requires instrumentation: in debug, a `LifeCounter` test component increments and decrements a global counter in its constructor and destructor. The total must match the number of alive rows that contain that component.
 
@@ -349,6 +398,7 @@ Performance targets are relative to a baseline measured on the same machine, not
 | NF-P4 | `add`/`remove` with a cached edge, entity with 4 trivial components | Zero allocations (with reserved capacity) and zero hash lookups |
 | NF-P5 | Flush of N coalesced adds (3 per entity) | At least 2× faster than 3N direct `add` calls |
 | NF-P6 | `get<T>(e)` with random access | Measured and reported; no target in v1 |
+| NF-P7 | Observers and implications with none in use for the components of the change (plugins spec §5.3) | `spawn` and `flush` make the same number of transitions as without them, NF-P4 stays met, and `add`/`remove`/`flush` stay within noise of the version without observers. Status (2026-11-16, base `d39063e`): met; BM_DirectAdds, BM_FlushCoalesced and BM_RecordAndFlush at head/base 0.97–1.06 over three alternating rounds of 20 repetitions, no benchmark above 1.05 in all three; transitions within the base spread |
 
 ### Memory
 

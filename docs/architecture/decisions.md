@@ -8,6 +8,8 @@
 | `detail/` + lint instead of pimpl | hot templates inline | boundary enforced by the lint, not by the compiler |
 | Separate template API and `ById` API | the hot path pays no indirection | two implementations to maintain |
 | `CommandBuffer` with one transition per entity | cheap batched flush | coalescing complexity (covered by fuzz) |
+| Observers run under the iteration lock and change structure through a `World`-owned buffer applied before the operation returns | no observer re-enters a transition in progress; the existing asserts catch a direct change at no new cost | a cascade costs one extra flush per round |
+| Observer flags cached in edges and archetypes; implied columns stored in edges | with no observer on a transition the cost stays within noise of none (NF-P4); an implication costs no lookup | all flags recomputed when an observer is registered or removed; `Edge` grows by one vector |
 | Loop and every engine rule in C++ | a C++-only game does not end up with an incomplete engine | TS needs the callback |
 | A per-engine script invoker set through the C API; the web host installs the JS one | the core knows no environment; a managed client passes its own handle in `userData` | one function pointer and one `userData` per engine; dispatch by `kind` in each client |
 | `.oly` as the single source + C++ generator + hash; each client gets generated code | one schema for every environment and language; layout and hash computed once | the TS schema API and the TS generator are gone; `./spur ts` builds `oly-schema` first |

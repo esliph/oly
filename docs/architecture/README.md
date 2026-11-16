@@ -66,7 +66,7 @@ The specs are the source of truth. The plans record, phase by phase, how each pa
 
 | Document | Contents |
 |---|---|
-| `docs/superpowers/specs/2026-10-16-ecs-archetype-spec.md` | ECS: requirements `R-*`, invariants `I-1..I-11`, targets `NF-*` |
+| `docs/superpowers/specs/2026-10-16-ecs-archetype-spec.md` | ECS: requirements `R-*`, invariants `I-1..I-13`, targets `NF-*` |
 | `docs/superpowers/specs/2026-11-06-wasm-cost-study-design.md` | native × WASM cost study |
 | `docs/superpowers/specs/2026-11-09-game-engine-design.md` | the engine: loop, events, input, schedule, states, validation game |
 | `docs/superpowers/specs/2026-11-09-oly-modularization-design.md` | modules, boundaries, names and public surfaces |

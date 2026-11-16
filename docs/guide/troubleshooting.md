@@ -31,6 +31,11 @@ The TS client validates everything that goes through it, in release builds too (
 | `query with N rows; expected 1` | `single()` found 0 or several entities | use `trySingle()` where 0 is valid; check you did not spawn two players |
 | `a tag cannot go in read or write; use with/without` | `read: [Enemy]` with a tag | move it to `with` |
 | `type is not in the query's write` | `block.write(T)` for a type in `read` | put the type in `write` |
+| `add e=...`, `remove e=...`, `destroy e=...` or `spawn during iteration` from inside an observer | a direct structural change in an observer | record it with `context.commands()` |
+| `onAdd type=... during iteration` / `onRemove ...` / `observeById ...` / `removeObserver id=... during iteration` | an observer registered or removed inside a query loop or another observer | register observers at start-up |
+| `removeObserver id=...: unknown or already removed` | the `ObserverId` was removed before, or never returned by this `World` | keep each id once; remove it once |
+| `imply type=... after an archetype contains it` | `imply<T, Implied>` called after an entity already had `T` | register implications at start-up, before spawning |
+| `remove e=... type=... implied by ...` | removing an implied component while its implier stays | remove the implying component instead |
 | `registration during frame` | `addSystem`/`on`/`onEnter` called from inside a system or handler | register everything at start-up |
 | `the last frame was interrupted by an exception; call frame before registering` | a system threw; the engine has not recovered yet | call `frame` once, then register |
 | `frame is not reentrant` | `engine.frame` called from inside a system | never call `frame` from game code |
