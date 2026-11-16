@@ -189,6 +189,85 @@ TEST_CASE("NF-P4: add/remove with a cached edge neither allocates nor queries a 
   CHECK(world.get<C3>(entity).value == 3);
 }
 
+namespace {
+  void ignoreChange(oly::ecs::ObserverContext&) {}
+}
+
+TEST_CASE("NF-P4: add/remove with a cached edge stays free with observers on other components") {
+  struct C1 {
+    uint64_t value;
+  };
+  struct C2 {
+    uint64_t value;
+  };
+  struct C3 {
+    uint64_t value;
+  };
+  struct C4 {
+    uint64_t value;
+  };
+
+  oly::ecs::World world;
+  world.onAdd<A>(&ignoreChange);
+  world.onRemove<B>(&ignoreChange);
+  auto entity = world.spawn(C1{1}, C2{2}, C3{3});
+  world.add(entity, C4{4});
+  world.remove<C4>(entity); // warms up edges and capacity (64 rows)
+  auto allocationsBefore = allocationCount();
+  auto lookupsBefore = oly::ecs::signatureLookupCount(world);
+
+  for (int i = 0; i < 1000; ++i) {
+    world.add(entity, C4{uint64_t(i)});
+    world.remove<C4>(entity);
+  }
+
+  auto allocationsAfter = allocationCount();
+  auto lookupsAfter = oly::ecs::signatureLookupCount(world);
+  CHECK(allocationsAfter == allocationsBefore);
+  CHECK(lookupsAfter == lookupsBefore);
+  CHECK(world.get<C3>(entity).value == 3);
+}
+
+TEST_CASE("NF-P4: add/remove with a cached edge stays free with an implication") {
+  struct C1 {
+    uint64_t value;
+  };
+  struct C2 {
+    uint64_t value;
+  };
+  struct C3 {
+    uint64_t value;
+  };
+  struct C4 {
+    uint64_t value;
+  };
+  struct C5 {
+    uint64_t value = 5;
+  };
+
+  oly::ecs::World world;
+  world.imply<C4, C5>();
+  auto entity = world.spawn(C1{1}, C2{2}, C3{3});
+  world.add(entity, C4{4});
+  world.remove<C4>(entity); // warms up edges and capacity (64 rows)
+  auto allocationsBefore = allocationCount();
+  auto lookupsBefore = oly::ecs::signatureLookupCount(world);
+
+  bool impliedAfterEachAdd = true;
+  for (int i = 0; i < 1000; ++i) {
+    world.add(entity, C4{uint64_t(i)});
+    impliedAfterEachAdd = impliedAfterEachAdd && world.has<C5>(entity);
+    world.remove<C4>(entity);
+  }
+
+  auto allocationsAfter = allocationCount();
+  auto lookupsAfter = oly::ecs::signatureLookupCount(world);
+  CHECK(allocationsAfter == allocationsBefore);
+  CHECK(lookupsAfter == lookupsBefore);
+  CHECK(impliedAfterEachAdd);
+  CHECK_FALSE(world.has<C5>(entity));
+}
+
 TEST_CASE("archetypeCount counts the root and the created archetypes") {
   oly::ecs::World world;
   CHECK(oly::ecs::archetypeCount(world) == 1);

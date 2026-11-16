@@ -17,7 +17,12 @@ namespace {
     std::unique_ptr<World> world = std::make_unique<World>();
     std::vector<oly::ecs::Entity> entities;
 
-    explicit Setup(int64_t entityCount, bool coalesced) {
+    // `implied`: Component<2> implies Component<3>, so each entity gains a fourth, value-initialized component.
+    explicit Setup(int64_t entityCount, bool coalesced, bool implied = false) {
+      if (implied) {
+        world->imply<Component<2>, Component<3>>();
+      }
+
       auto warmupEntity = world->spawn();
       if (coalesced) {
         auto commandBuffer = world->commands();
@@ -72,6 +77,32 @@ namespace {
                                                          benchmark::Counter::kIsIterationInvariantRate | benchmark::Counter::kInvert);
   }
   BENCHMARK(BM_FlushCoalesced)->Arg(1000)->Arg(100000);
+
+  // The cost of an implication in the flush, against BM_FlushCoalesced: no target.
+  void BM_FlushImplied(benchmark::State& state) {
+    const int64_t entityCount = state.range(0);
+
+    for (auto _ : state) {
+      state.PauseTiming();
+      Setup setup(entityCount, true, true);
+      std::optional<oly::ecs::CommandBuffer> commandBuffer;
+      commandBuffer.emplace(setup.world->commands());
+      record(*commandBuffer, setup.entities);
+      state.ResumeTiming();
+
+      setup.world->flush(*commandBuffer);
+
+      state.PauseTiming();
+      commandBuffer.reset();
+      auto* worldPointer = setup.world.get();
+      benchmark::DoNotOptimize(worldPointer);
+      state.ResumeTiming();
+    }
+
+    state.counters["ns_per_entity"] = benchmark::Counter(static_cast<double>(entityCount),
+                                                         benchmark::Counter::kIsIterationInvariantRate | benchmark::Counter::kInvert);
+  }
+  BENCHMARK(BM_FlushImplied)->Arg(1000)->Arg(100000);
 
   void BM_RecordAndFlush(benchmark::State& state) {
     const int64_t entityCount = state.range(0);

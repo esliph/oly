@@ -63,6 +63,34 @@ namespace {
   BENCHMARK_TEMPLATE2(BM_Transition, true, 8)->Name("BM_Transition_NonTrivial/8");
   BENCHMARK_TEMPLATE2(BM_Transition, true, 16)->Name("BM_Transition_NonTrivial/16");
 
+  // BM_Transition_Trivial/4 with the toggled component implying another: the cost of an implication per
+  // add/remove pair. No target.
+  void BM_TransitionImplied(benchmark::State& state) {
+    constexpr int kEntityCount = 1024;
+    using ToggledComponent = Component<kToggledComponentIndex>;
+    oly::ecs::World world;
+    world.imply<ToggledComponent, Component<kToggledComponentIndex - 1>>();
+    std::vector<oly::ecs::Entity> entities;
+    for (int i = 0; i < kEntityCount; ++i) {
+      entities.push_back(spawnWithComponents<false>(world, i, std::make_index_sequence<4>{}));
+    }
+
+    for (auto entity : entities) { // warms up edges and capacities
+      world.add(entity, ToggledComponent{1});
+      world.remove<ToggledComponent>(entity);
+    }
+
+    for (auto _ : state) {
+      for (auto entity : entities) {
+        world.add(entity, ToggledComponent{2});
+        world.remove<ToggledComponent>(entity);
+      }
+    }
+
+    state.counters["ns_per_op"] = benchmark::Counter(2.0 * kEntityCount, benchmark::Counter::kIsIterationInvariantRate | benchmark::Counter::kInvert);
+  }
+  BENCHMARK(BM_TransitionImplied);
+
   // First transition to a never-seen archetype (includes creating the archetype and the edge).
   void BM_TransitionCold(benchmark::State& state) {
     for (auto _ : state) {
