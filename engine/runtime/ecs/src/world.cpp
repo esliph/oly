@@ -120,6 +120,11 @@ namespace oly::ecs {
       std::vector<detail::Column*> columns; // per operation: column in the destination (nullptr: no value to construct)
       std::vector<uint8_t> existed; // per operation: the component already existed in the source
 
+      // Net change seen by observers (R-OB-7): what the transition removes or adds, plus the data components it
+      // assigns again (on remove with the old value, then on add with the new one). In ComponentId order.
+      uint8_t observed = 0;
+      std::vector<ComponentId> onRemove, onAdd;
+
       bool matches(const detail::Archetype* candidateSource, std::span<const detail::NetComponentOperation> operations) const {
         if (!valid || source != candidateSource || key.size() != operations.size()) {
           return false;
@@ -149,6 +154,40 @@ namespace oly::ecs {
         }
 
         valid = true;
+      }
+
+      void assignObservers(const detail::ObserverRegistry& observers, std::span<const detail::NetComponentOperation> operations) {
+        onRemove.clear();
+        onAdd.clear();
+        observed = 0;
+        if (!((source ? source->observed : 0) | destination->observed)) {
+          return;
+        }
+
+        static const detail::Signature noComponents;
+        const detail::Signature& sourceSignature = source ? source->signature : noComponents;
+        const detail::Signature& destinationSignature = destination->signature;
+
+        auto assignedAgain = [&](ComponentId componentId) {
+          auto operation = std::lower_bound(operations.begin(), operations.end(), componentId,
+                                            [](const detail::NetComponentOperation& candidate, ComponentId target) { return candidate.componentId < target; });
+          return operation != operations.end() && operation->componentId == componentId && operation->present && !typeInfo(componentId).tag;
+        };
+
+        for (ComponentId componentId : sourceSignature) {
+          const bool leaves = !std::binary_search(destinationSignature.begin(), destinationSignature.end(), componentId);
+          if ((observers.mask(componentId) & detail::ObservedOnRemove) && (leaves || assignedAgain(componentId))) {
+            onRemove.push_back(componentId);
+          }
+        }
+        for (ComponentId componentId : destinationSignature) {
+          const bool arrives = !std::binary_search(sourceSignature.begin(), sourceSignature.end(), componentId);
+          if ((observers.mask(componentId) & detail::ObservedOnAdd) && (arrives || assignedAgain(componentId))) {
+            onAdd.push_back(componentId);
+          }
+        }
+
+        observed = uint8_t((onRemove.empty() ? 0 : detail::ObservedOnRemove) | (onAdd.empty() ? 0 : detail::ObservedOnAdd));
       }
     };
 
@@ -791,17 +830,46 @@ namespace oly::ecs {
       }
 
       const std::span<const detail::NetComponentOperation> operations = net.operations;
-      detail::EntityRecord& record = store_.record(entity.index);
-      detail::Archetype* source = record.archetype; // nullptr if reserved
+      detail::Archetype* source = store_.record(entity.index).archetype; // nullptr if reserved
       if (!memo.matches(source, operations)) {
         detail::Archetype* destination = findOrCreate(applyOperations(source ? source->signature : detail::Signature{}, operations));
         memo.assign(source, operations, destination, (source && destination != source) ? &jumpEdge(*source, *destination) : nullptr);
+        memo.assignObservers(observers_, operations);
       }
 
-      const uint32_t row = transitionTo(entity, record, *memo.destination, memo.edge);
+      if (memo.observed & detail::ObservedOnRemove) {
+        detail::IterationGuard guard(&iterating_);
+        for (ComponentId componentId : memo.onRemove) {
+          runObservers(ObserverKind::OnRemove, entity, componentId);
+        }
+      }
+
+      // Read after the observers: their commands().spawn() reserves an index and may reallocate the records.
+      const uint32_t row = transitionTo(entity, store_.record(entity.index), *memo.destination, memo.edge);
       writeValues(memo, operations, row);
+
+      if (memo.observed & detail::ObservedOnAdd) {
+        for (ComponentId componentId : memo.onAdd) {
+          pendingOnAdd_.emplace_back(entity, componentId);
+        }
+      }
     }
 
     commandBuffer.clear();
+    runPendingOnAdd();
+  }
+
+  void World::runPendingOnAdd() {
+    if (pendingOnAdd_.empty()) {
+      return;
+    }
+
+    {
+      detail::IterationGuard guard(&iterating_);
+      for (const auto& [entity, componentId] : pendingOnAdd_) {
+        runObservers(ObserverKind::OnAdd, entity, componentId);
+      }
+    }
+    pendingOnAdd_.clear();
   }
 }

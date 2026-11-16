@@ -82,6 +82,7 @@ namespace oly::ecs {
     detail::ObserverRegistry observers_;
     CommandBuffer deferred_; // what observers record into
     CommandBuffer applying_; // what applyDeferred is flushing, so observers of that flush record into deferred_
+    std::vector<std::pair<Entity, ComponentId>> pendingOnAdd_; // a flush runs on add after its last transition (R-OB-7)
 
    public:
     World();
@@ -187,6 +188,7 @@ namespace oly::ecs {
     // ComponentId order.
     void notifyDifference(ObserverKind kind, Entity entity, const detail::Signature& having, const detail::Signature& lacking, ComponentId first);
     void runObservers(ObserverKind kind, Entity entity, ComponentId componentId);
+    void runPendingOnAdd();
     // Returns whether an observer ran (the caller then owes applyDeferred).
     bool destroyNotifying(Entity entity);
     void refreshObservedFlags();

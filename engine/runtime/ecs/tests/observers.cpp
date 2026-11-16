@@ -67,6 +67,12 @@ namespace {
     const uint64_t armor = context.world().get<Armor>(context.entity()).value;
     static_cast<Log*>(context.userData())->push_back("armor=" + std::to_string(armor));
   }
+
+  void logArmorOfNext(oly::ecs::ObserverContext& context) {
+    const oly::ecs::Entity next = context.world().get<Link>(context.entity()).next;
+    const uint64_t armor = context.world().get<Armor>(next).value;
+    static_cast<Log*>(context.userData())->push_back("armor=" + std::to_string(armor));
+  }
 }
 
 TEST_CASE("R-OB-1: on add reads the new value") {
@@ -247,4 +253,150 @@ TEST_CASE("an observer registered after the edge was cached still runs") {
   CHECK_INVARIANTS(world);
 
   CHECK(log == Log{line("add", "Health", entity, "2")});
+}
+
+TEST_CASE("R-OB-7: an add followed by a remove in one buffer runs no observer") {
+  oly::ecs::World world;
+  Log log;
+  world.onAdd<Health>(&recordOnAdd<Health>, &log);
+  world.onRemove<Health>(&recordOnRemove<Health>, &log);
+  auto entity = world.spawn(A{1});
+  auto commandBuffer = world.commands();
+  commandBuffer.add(entity, Health{1});
+  commandBuffer.remove<Health>(entity);
+
+  world.flush(commandBuffer);
+  CHECK_INVARIANTS(world);
+
+  CHECK(log.empty());
+}
+
+TEST_CASE("R-OB-7: repeated adds in one buffer run one on add with the last value") {
+  oly::ecs::World world;
+  Log log;
+  world.onAdd<Health>(&recordOnAdd<Health>, &log);
+  world.onRemove<Health>(&recordOnRemove<Health>, &log);
+  auto entity = world.spawn(A{1});
+  auto commandBuffer = world.commands();
+  commandBuffer.add(entity, Health{1});
+  commandBuffer.add(entity, Health{2});
+  commandBuffer.add(entity, Health{3});
+
+  world.flush(commandBuffer);
+  CHECK_INVARIANTS(world);
+
+  CHECK(log == Log{line("add", "Health", entity, "3")});
+}
+
+TEST_CASE("R-OB-7: an existing component added again in a buffer runs on remove (old) then on add (new)") {
+  oly::ecs::World world;
+  Log log;
+  world.onAdd<Health>(&recordOnAdd<Health>, &log);
+  world.onRemove<Health>(&recordOnRemove<Health>, &log);
+  auto entity = world.spawn(Health{1});
+  log.clear();
+  auto commandBuffer = world.commands();
+  commandBuffer.add(entity, Health{2});
+
+  world.flush(commandBuffer);
+  CHECK_INVARIANTS(world);
+
+  CHECK(log == Log{line("remove", "Health", entity, "1"), line("add", "Health", entity, "2")});
+}
+
+TEST_CASE("R-OB-7: destroy in a buffer runs on remove with the entity still complete") {
+  oly::ecs::World world;
+  Log log;
+  world.onRemove<Armor>(&recordOnRemove<Armor>, &log);
+  auto entity = world.spawn(Health{1}, Armor{2});
+  auto commandBuffer = world.commands();
+  commandBuffer.remove<Armor>(entity);
+  commandBuffer.destroy(entity);
+
+  world.flush(commandBuffer);
+  CHECK_INVARIANTS(world);
+
+  CHECK(log == Log{line("remove", "Armor", entity, "2")});
+  CHECK_FALSE(world.isAlive(entity));
+}
+
+TEST_CASE("R-OB-7: spawn and destroy in the same buffer run nothing") {
+  oly::ecs::World world;
+  Log log;
+  world.onAdd<Health>(&recordOnAdd<Health>, &log);
+  world.onRemove<Health>(&recordOnRemove<Health>, &log);
+  auto commandBuffer = world.commands();
+  auto entity = commandBuffer.spawn();
+  commandBuffer.add(entity, Health{1});
+  commandBuffer.destroy(entity);
+
+  world.flush(commandBuffer);
+  CHECK_INVARIANTS(world);
+
+  CHECK(log.empty());
+  CHECK_FALSE(world.isAlive(entity));
+}
+
+TEST_CASE("R-OB-7: on remove runs before each transition, on add after the last one") {
+  oly::ecs::World world;
+  Log log;
+  world.onAdd<Health>(&recordOnAdd<Health>, &log);
+  world.onRemove<Health>(&recordOnRemove<Health>, &log);
+  auto first = world.spawn(Health{1});
+  auto second = world.spawn(Health{2});
+  log.clear();
+  auto commandBuffer = world.commands();
+  commandBuffer.add(first, Health{10});
+  commandBuffer.add(second, Health{20});
+
+  world.flush(commandBuffer);
+  CHECK_INVARIANTS(world);
+
+  CHECK(log == Log{line("remove", "Health", first, "1"), line("remove", "Health", second, "2"), line("add", "Health", first, "10"), line("add", "Health", second, "20")});
+}
+
+TEST_CASE("R-OB-7: an on add observer sees the world after the whole buffer") {
+  oly::ecs::World world;
+  Log log;
+  world.onAdd<Link>(&logArmorOfNext, &log);
+  auto first = world.spawn(Health{1});
+  auto second = world.spawn(Health{2});
+  auto commandBuffer = world.commands();
+  commandBuffer.add(first, Link{second});
+  commandBuffer.add(second, Armor{4});
+
+  world.flush(commandBuffer);
+  CHECK_INVARIANTS(world);
+
+  CHECK(log == Log{"armor=4"});
+}
+
+TEST_CASE("R-OB-7: commands for a stale handle run nothing") {
+  oly::ecs::World world;
+  Log log;
+  world.onAdd<Health>(&recordOnAdd<Health>, &log);
+  auto entity = world.spawn(A{1});
+  auto commandBuffer = world.commands();
+  commandBuffer.add(entity, Health{1});
+  world.destroy(entity);
+
+  world.flush(commandBuffer);
+  CHECK_INVARIANTS(world);
+
+  CHECK(log.empty());
+}
+
+TEST_CASE("R-OB-6: commands an observer records during a flush are applied before flush returns") {
+  oly::ecs::World world;
+  world.onAdd<Link>(&destroyNext);
+  auto target = world.spawn(Health{1});
+  auto entity = world.spawn(A{1});
+  auto commandBuffer = world.commands();
+  commandBuffer.add(entity, Link{target});
+
+  world.flush(commandBuffer);
+  CHECK_INVARIANTS(world);
+
+  CHECK(world.isAlive(entity));
+  CHECK_FALSE(world.isAlive(target));
 }
