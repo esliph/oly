@@ -17,6 +17,30 @@ namespace oly::app {
     OLY_ASSERT(config.maxEventRounds > 0, "Engine: maxEventRounds must be positive");
   }
 
+  Engine::~Engine() {
+    while (!plugins_.empty()) {
+      plugins_.pop_back();
+    }
+  }
+
+  Plugin* Engine::findPlugin(PluginKey key) noexcept {
+    for (const auto& [installedKey, plugin] : plugins_) {
+      if (installedKey == key) {
+        return plugin.get();
+      }
+    }
+
+    return nullptr;
+  }
+
+  Plugin& Engine::addPlugin(PluginKey key, std::unique_ptr<Plugin> plugin) {
+    Plugin& installed = *plugin;
+    plugins_.emplace_back(key, std::move(plugin));
+    installed.install(*this);
+
+    return installed;
+  }
+
   SystemId Engine::addSystem(Phase phase, std::string_view name, SystemFunction function, void* userData, OrderBand band) {
     OLY_ASSERT(!inFrame_, "addSystem: system \"%.*s\" registered during frame", static_cast<int>(name.size()), name.data());
 
@@ -98,6 +122,7 @@ namespace oly::app {
     if (inFrame_) {
       recoverFromInterruptedFrame();
     }
+    started_ = true;
 
     if (hidden_) {
       return;

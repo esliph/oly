@@ -3,6 +3,7 @@
 #include <array>
 #include <cstdint>
 #include <initializer_list>
+#include <memory>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -13,6 +14,7 @@
 #include "oly/app/event.hpp"
 #include "oly/app/handler.hpp"
 #include "oly/app/phase.hpp"
+#include "oly/app/plugin.hpp"
 #include "oly/app/scheduler.hpp"
 #include "oly/app/state.hpp"
 #include "oly/app/system.hpp"
@@ -99,9 +101,12 @@ namespace oly::app {
     uint64_t steps_ = 0;
     double interpolation_ = 0.0;
 
+    std::vector<std::pair<PluginKey, std::unique_ptr<Plugin>>> plugins_; // install order
+
     bool pauseRequested_ = false;
     bool pausedThisStep_ = false;
     bool inFrame_ = false;
+    bool started_ = false; // set by the first frame call
     bool hidden_ = false;
 
    public:
@@ -110,9 +115,33 @@ namespace oly::app {
     explicit Engine(ecs::World& world, EngineConfig config = {});
     Engine(const Engine&) = delete;
     Engine& operator=(const Engine&) = delete;
+    // Destroys the plugins in reverse install order, while the World and the registrations still exist.
+    ~Engine();
 
     ecs::World& world() noexcept {
       return world_;
+    }
+
+    // Constructs P, keeps it and runs its install once. Only before the first frame call, and once per type
+    // (OLY_ASSERT). Plugins installed earlier are reachable from install through plugin<Q>().
+    template <class P>
+    P& installPlugin() {
+      static_assert(std::is_base_of_v<Plugin, P>, "installPlugin: the plugin must derive from oly::app::Plugin");
+      static_assert(std::is_default_constructible_v<P>, "installPlugin: the plugin must be default constructible");
+      [[maybe_unused]] constexpr std::string_view typeName = oly::core::typeName<P>();
+      OLY_ASSERT(!inFrame_ && !started_, "installPlugin: plugin \"%.*s\" installed after the first frame call", static_cast<int>(typeName.size()), typeName.data());
+      OLY_ASSERT(findPlugin(pluginKey<P>()) == nullptr, "installPlugin: plugin \"%.*s\" already installed", static_cast<int>(typeName.size()), typeName.data());
+
+      return static_cast<P&>(addPlugin(pluginKey<P>(), std::make_unique<P>()));
+    }
+    // The plugin must be installed (OLY_ASSERT).
+    template <class P>
+    P& plugin() {
+      Plugin* found = findPlugin(pluginKey<P>());
+      [[maybe_unused]] constexpr std::string_view typeName = oly::core::typeName<P>();
+      OLY_ASSERT(found != nullptr, "plugin: plugin \"%.*s\" not installed", static_cast<int>(typeName.size()), typeName.data());
+
+      return static_cast<P&>(*found);
     }
 
     // Cannot be called during frame (OLY_ASSERT). Within a phase, the Default band runs before the Last band, and
@@ -241,6 +270,8 @@ namespace oly::app {
    private:
     EventTypeId declareEventType(EventKey key, std::string_view name, uint32_t size);
     SystemEntry& systemEntry(SystemId system);
+    Plugin* findPlugin(PluginKey key) noexcept;
+    Plugin& addPlugin(PluginKey key, std::unique_ptr<Plugin> plugin);
     void restartClock();
     void recoverFromInterruptedFrame();
     void runFixedStep();

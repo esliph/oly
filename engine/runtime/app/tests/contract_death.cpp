@@ -9,6 +9,7 @@
 
 #include "oly/app/engine.hpp"
 #include "oly/app/handler.hpp"
+#include "oly/app/plugin.hpp"
 #include "oly/app/state_context.hpp"
 #include "oly/app/task_context.hpp"
 #include "oly/core/assert.hpp"
@@ -342,6 +343,38 @@ namespace {
     engine.setHandlerStateMask(7, 0b1);
   }
 
+  struct ProbePlugin : oly::app::Plugin {
+    void install(Engine&) override {}
+  };
+
+  struct MissingPlugin : oly::app::Plugin {
+    void install(Engine&) override {}
+  };
+
+  void installPluginTwice() {
+    oly::ecs::World world;
+    Engine engine(world);
+    engine.installPlugin<ProbePlugin>();
+
+    engine.installPlugin<ProbePlugin>();
+  }
+
+  void installPluginAfterFirstFrame() {
+    oly::ecs::World world;
+    Engine engine(world);
+    engine.frame(0.0);
+
+    engine.installPlugin<ProbePlugin>();
+  }
+
+  void pluginNotInstalled() {
+    oly::ecs::World world;
+    Engine engine(world);
+    engine.installPlugin<ProbePlugin>();
+
+    engine.plugin<MissingPlugin>();
+  }
+
   struct Case {
     const char* name;
     void (*run)();
@@ -378,6 +411,9 @@ int main(int argumentCount, char** arguments) {
     {"system_states_unknown_system", systemStatesUnknownSystem, {"setSystemStates", "out of range"}},
     {"handler_states_unknown_handler", handlerStatesUnknownHandler, {"setHandlerStates", "out of range"}},
     {"persist_dead_entity", persistDeadEntity, {"remove", "StateScoped"}},
+    {"install_plugin_twice", installPluginTwice, {"installPlugin", "ProbePlugin", "already installed"}},
+    {"install_plugin_after_first_frame", installPluginAfterFirstFrame, {"installPlugin", "ProbePlugin", "frame"}},
+    {"plugin_not_installed", pluginNotInstalled, {"plugin", "MissingPlugin", "not installed"}},
   };
 
   if (argumentCount != 2) {
