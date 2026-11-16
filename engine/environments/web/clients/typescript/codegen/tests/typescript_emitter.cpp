@@ -66,11 +66,11 @@ TEST_CASE("an action or state that cannot be a TypeScript constant is an error a
                        oly::schema::SchemaError);
 }
 
-TEST_CASE("oly-schema lists ts after cpp when this module is linked") {
+TEST_CASE("oly-schema lists ts after the C++ emitters when this module is linked") {
   std::vector<std::string_view> names;
   for (const oly::schema::Emitter& emitter : oly::schema::emitters()) {
     names.push_back(emitter.name);
   }
 
-  CHECK(names == std::vector<std::string_view>{"cpp", "ts"});
+  CHECK(names == std::vector<std::string_view>{"cpp", "cpp-plugin", "ts"});
 }

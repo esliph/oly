@@ -1,0 +1,2 @@
+component Counter { value: u32 }
+event Counted { value: u32 }

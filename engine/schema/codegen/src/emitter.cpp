@@ -7,7 +7,7 @@ namespace oly::schema {
     // Function-local, so a client's initializer can register before main regardless of the order of static
     // initialization across translation units.
     std::vector<Emitter>& registry() {
-      static std::vector<Emitter> registered{Emitter{"cpp", &emitCpp}};
+      static std::vector<Emitter> registered{Emitter{"cpp", &emitCpp}, Emitter{"cpp-plugin", &emitCppPlugin}};
       return registered;
     }
   }

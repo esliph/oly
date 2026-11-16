@@ -1,0 +1,3 @@
+# expect: game.oly:3:7: repeated name "Counted"; first declared at 1-counting.oly:1:7
+tag Player
+event Counted { value: u32 }

@@ -27,6 +27,6 @@ namespace oly::schema {
   // linker keeps it. Returns true so that the call can initialize a constant.
   bool registerEmitter(Emitter emitter);
 
-  // The C++ emitter first (C++ is the engine language, not a client), then the registered ones in registration order.
+  // The C++ emitters first (C++ is the engine language, not a client), then the registered ones in registration order.
   std::span<const Emitter> emitters();
 }

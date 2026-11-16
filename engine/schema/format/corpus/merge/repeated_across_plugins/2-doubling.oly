@@ -1,0 +1,2 @@
+tag Marker
+component Counter { value: u32 }

@@ -1,0 +1,4 @@
+# expect: ok
+component Position { x: f32, y: f32 }
+action jump: button
+state menu

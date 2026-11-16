@@ -76,7 +76,7 @@ TEST_CASE("an unknown emitter names the available ones and nothing is written") 
   const int exitCode = run({(directory / "game.oly").string(), "--emit", "cpp=" + (directory / "out").string(), "--emit", "nope=x"}, errors);
 
   CHECK(exitCode == 1);
-  CHECK(errors.str() == "unknown emitter \"nope\"; available: cpp\n");
+  CHECK(errors.str() == "unknown emitter \"nope\"; available: cpp, cpp-plugin\n");
   CHECK(!std::filesystem::exists(directory / "out"));
 }
 
@@ -85,7 +85,7 @@ TEST_CASE("usage errors: no input, no --emit, --emit without a value or without 
     std::ostringstream errors;
 
     CHECK(run(arguments, errors) == 1);
-    CHECK(errors.str().rfind("usage: oly-schema <file.oly> --emit <emitter>=<target>", 0) == 0);
+    CHECK(errors.str().rfind("usage: oly-schema <file.oly> [--plugin <name>=<file.oly> ...] --emit <emitter>=<target>", 0) == 0);
   }
 }
 
@@ -94,4 +94,72 @@ TEST_CASE("an unreadable input is reported") {
 
   CHECK(run({"missing.oly", "--emit", "cpp=out"}, errors) == 1);
   CHECK(errors.str() == "cannot read missing.oly\n");
+}
+
+TEST_CASE("cpp-plugin writes only the plugin types") {
+  const std::filesystem::path directory = freshDirectory("emit_cpp_plugin");
+  writeText(directory / "counting.oly", "component Counter { value: u32 }\n");
+  std::ostringstream errors;
+
+  const int exitCode = run({(directory / "counting.oly").string(), "--emit", "cpp-plugin=" + (directory / "oly" / "counting").string()}, errors);
+
+  CHECK(exitCode == 0);
+  CHECK(errors.str().empty());
+  CHECK(readText(directory / "oly" / "counting" / "schema.generated.hpp") == oly::schema::emitCppPluginHeader(oly::schema::parseSchema("component Counter { value: u32 }\n", "counting.oly")));
+  CHECK(!std::filesystem::exists(directory / "oly" / "counting" / "schema_declaration.generated.cpp"));
+  CHECK(!std::filesystem::exists(directory / "oly" / "counting" / "schema_registry.generated.cpp"));
+}
+
+TEST_CASE("cpp-plugin rejects an action in the plugin file and writes nothing") {
+  const std::filesystem::path directory = freshDirectory("emit_cpp_plugin_action");
+  const std::string input = (directory / "input.oly").string();
+  writeText(directory / "input.oly", "action jump: button\n");
+  std::ostringstream errors;
+
+  const int exitCode = run({input, "--emit", "cpp-plugin=" + (directory / "out").string()}, errors);
+
+  CHECK(exitCode == 1);
+  CHECK(errors.str() == input + ":1:8: a plugin declares only components, tags and events; action \"jump\" is not allowed\n");
+  CHECK(!std::filesystem::exists(directory / "out"));
+}
+
+TEST_CASE("--plugin is accepted before and after --emit, and a malformed --plugin prints the usage") {
+  const std::filesystem::path directory = freshDirectory("plugin_argument");
+  writeText(directory / "counting.oly", "component Counter { value: u32 }\n");
+  writeText(directory / "game.oly", "component Position { x: f32 }\n");
+  const std::string game = (directory / "game.oly").string();
+  const std::string plugin = "counting=" + (directory / "counting.oly").string();
+  const oly::schema::PluginSource counting{"counting", (directory / "counting.oly").string(), "component Counter { value: u32 }\n"};
+  const std::string expected = oly::schema::emitCppRegistry(oly::schema::mergeSchemas({&counting, 1}, "component Position { x: f32 }\n", game));
+
+  for (const std::vector<std::string>& arguments : std::vector<std::vector<std::string>>{
+         {game, "--plugin", plugin, "--emit", "cpp=" + (directory / "before").string()},
+         {game, "--emit", "cpp=" + (directory / "after").string(), "--plugin", plugin}}) {
+    std::ostringstream errors;
+
+    CHECK(run(arguments, errors) == 0);
+    CHECK(errors.str().empty());
+  }
+  CHECK(readText(directory / "before" / "schema_registry.generated.cpp") == expected);
+  CHECK(readText(directory / "after" / "schema_registry.generated.cpp") == expected);
+
+  for (const std::vector<std::string>& arguments : std::vector<std::vector<std::string>>{
+         {game, "--plugin", "--emit", "cpp=out"}, {game, "--plugin", "counting", "--emit", "cpp=out"}, {game, "--plugin", "=x.oly", "--emit", "cpp=out"}, {game, "--emit", "cpp=out", "--plugin"}}) {
+    std::ostringstream errors;
+
+    CHECK(run(arguments, errors) == 1);
+    CHECK(errors.str().rfind("usage: oly-schema <file.oly> [--plugin <name>=<file.oly> ...] --emit <emitter>=<target>", 0) == 0);
+  }
+}
+
+TEST_CASE("an unreadable plugin file is reported and nothing is written") {
+  const std::filesystem::path directory = freshDirectory("plugin_unreadable");
+  writeText(directory / "game.oly", "tag Player\n");
+  std::ostringstream errors;
+
+  const int exitCode = run({(directory / "game.oly").string(), "--plugin", "counting=missing.oly", "--emit", "cpp=" + (directory / "out").string()}, errors);
+
+  CHECK(exitCode == 1);
+  CHECK(errors.str() == "cannot read missing.oly\n");
+  CHECK(!std::filesystem::exists(directory / "out"));
 }

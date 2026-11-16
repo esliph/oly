@@ -1,0 +1,2 @@
+# expect: game.oly:2:11: repeated name "Counter"; first declared at 1-counting.oly:1:11
+component Counter { value: u32 }

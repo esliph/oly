@@ -129,4 +129,24 @@ namespace oly::schema {
       }
     }
   }
+
+  void validatePluginSchema(const Schema& schema) {
+    for (const Declaration& declaration : inSourceOrder(schema)) {
+      if (declaration.kind != DeclarationKind::Action && declaration.kind != DeclarationKind::State) {
+        continue;
+      }
+
+      const std::string_view what = declaration.kind == DeclarationKind::Action ? "action" : "state";
+      throw SchemaError(schema.fileName, declaration.location, "a plugin declares only components, tags and events; " + std::string(what) + " \"" + *declaration.name + "\" is not allowed");
+    }
+  }
+
+  std::vector<DeclaredName> namesInSourceOrder(const Schema& schema) {
+    std::vector<DeclaredName> names;
+    for (const Declaration& declaration : inSourceOrder(schema)) {
+      names.push_back({*declaration.name, declaration.location});
+    }
+
+    return names;
+  }
 }

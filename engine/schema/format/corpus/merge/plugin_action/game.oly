@@ -1,0 +1,2 @@
+# expect: 1-input.oly:2:8: a plugin declares only components, tags and events; action "jump" is not allowed
+tag Player

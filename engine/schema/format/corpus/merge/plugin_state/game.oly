@@ -1,0 +1,2 @@
+# expect: 1-modes.oly:1:7: a plugin declares only components, tags and events; state "menu" is not allowed
+tag Player

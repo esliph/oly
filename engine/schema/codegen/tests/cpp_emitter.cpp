@@ -220,3 +220,36 @@ TEST_CASE("registry: exact text for a schema without events, actions or states")
 TEST_CASE("schema without components or tags generates an empty schemaComponentIds") {
   CHECK(contains(oly::schema::emitCppRegistry(schemaOf("action go: button\n")), "schemaComponentIds() {\n    return {};\n  }"));
 }
+
+TEST_CASE("the game header includes the plugin headers and defines only the game types") {
+  const oly::schema::PluginSource counting{"counting", "counting.oly", "component Counter { value: u32 }\nevent Counted { value: u32 }\n"};
+  const oly::schema::Schema schema = oly::schema::mergeSchemas({&counting, 1}, "component Position { x: f32 }\n", "game.oly");
+
+  const std::string header = oly::schema::emitCppHeader(schema);
+
+  CHECK(contains(header, "#include \"oly/counting/schema.generated.hpp\"\n"));
+  CHECK(!contains(header, "struct Counter"));
+  CHECK(!contains(header, "struct Counted"));
+  CHECK(contains(header, "struct Position {"));
+}
+
+TEST_CASE("the declaration and the registry cover the merged set") {
+  const oly::schema::PluginSource counting{"counting", "counting.oly", "component Counter { value: u32 }\nevent Counted { value: u32 }\n"};
+  const oly::schema::Schema schema = oly::schema::mergeSchemas({&counting, 1}, "component Position { x: f32 }\nevent Hit { amount: f32 }\n", "game.oly");
+
+  const std::string declaration = oly::schema::emitCppDeclaration(schema);
+  const std::string registry = oly::schema::emitCppRegistry(schema);
+
+  CHECK(contains(declaration, "    engine.declareEvent<Counted>(\"Counted\");\n    engine.declareEvent<Hit>(\"Hit\");\n"));
+  CHECK(contains(registry, "oly::ecs::componentId<Counter>(),\n      oly::ecs::componentId<Position>()"));
+  CHECK(contains(registry, "{\"Counted\", sizeof(Counted), alignof(Counted)},\n      {\"Hit\", sizeof(Hit), alignof(Hit)}"));
+}
+
+TEST_CASE("the plugin header defines the plugin types and includes no other plugin") {
+  const std::string header = oly::schema::emitCppPluginHeader(schemaOf("component Counter { value: u32 }\nevent Counted { value: u32 }\n"));
+
+  CHECK(contains(header, "#pragma once"));
+  CHECK(contains(header, "struct Counter {\n  uint32_t value;\n};"));
+  CHECK(contains(header, "struct Counted {\n  uint32_t value;\n};"));
+  CHECK(!contains(header, "schema.generated.hpp\""));
+}

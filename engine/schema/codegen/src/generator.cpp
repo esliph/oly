@@ -12,30 +12,51 @@
 
 namespace oly::schema {
   namespace {
-    constexpr std::string_view usage = "usage: oly-schema <file.oly> --emit <emitter>=<target> [--emit <emitter>=<target> ...]\n";
+    constexpr std::string_view usage = "usage: oly-schema <file.oly> [--plugin <name>=<file.oly> ...] --emit <emitter>=<target> [--emit <emitter>=<target> ...]\n";
 
-    struct EmitRequest {
+    // `--emit <name>=<target>` or `--plugin <name>=<file.oly>`.
+    struct NamedValue {
       std::string name;
-      std::string target;
+      std::string value;
     };
 
-    std::optional<std::vector<EmitRequest>> parseEmitRequests(std::span<const std::string_view> arguments) {
-      std::vector<EmitRequest> requests;
-      for (std::size_t index = 1; index < arguments.size(); index += 2) {
-        if (arguments[index] != "--emit" || index + 1 >= arguments.size()) {
-          return std::nullopt;
-        }
+    struct Requests {
+      std::vector<NamedValue> plugins;
+      std::vector<NamedValue> emits;
+    };
 
-        const std::string_view value = arguments[index + 1];
-        const std::size_t separator = value.find('=');
-        if (separator == std::string_view::npos || separator == 0) {
-          return std::nullopt;
-        }
-
-        requests.push_back({std::string(value.substr(0, separator)), std::string(value.substr(separator + 1))});
+    std::optional<NamedValue> splitNamedValue(std::string_view text) {
+      const std::size_t separator = text.find('=');
+      if (separator == std::string_view::npos || separator == 0) {
+        return std::nullopt;
       }
 
-      if (requests.empty()) {
+      return NamedValue{std::string(text.substr(0, separator)), std::string(text.substr(separator + 1))};
+    }
+
+    // The order of the --plugin arguments is the install order.
+    std::optional<Requests> parseRequests(std::span<const std::string_view> arguments) {
+      Requests requests;
+      for (std::size_t index = 1; index < arguments.size(); index += 2) {
+        if (index + 1 >= arguments.size()) {
+          return std::nullopt;
+        }
+
+        std::optional<NamedValue> request = splitNamedValue(arguments[index + 1]);
+        if (!request) {
+          return std::nullopt;
+        }
+
+        if (arguments[index] == "--emit") {
+          requests.emits.push_back(std::move(*request));
+        } else if (arguments[index] == "--plugin" && !request->value.empty()) {
+          requests.plugins.push_back(std::move(*request));
+        } else {
+          return std::nullopt;
+        }
+      }
+
+      if (requests.emits.empty()) {
         return std::nullopt;
       }
 
@@ -95,13 +116,13 @@ namespace oly::schema {
   }
 
   int runGenerator(std::span<const std::string_view> arguments, std::ostream& errors) {
-    const std::optional<std::vector<EmitRequest>> requests = arguments.empty() ? std::nullopt : parseEmitRequests(arguments);
+    const std::optional<Requests> requests = arguments.empty() ? std::nullopt : parseRequests(arguments);
     if (!requests) {
       errors << usage;
       return 1;
     }
 
-    for (const EmitRequest& request : *requests) {
+    for (const NamedValue& request : requests->emits) {
       if (findEmitter(request.name) == nullptr) {
         errors << "unknown emitter \"" << request.name << "\"; available: " << availableEmitters() << "\n";
         return 1;
@@ -115,11 +136,22 @@ namespace oly::schema {
       return 1;
     }
 
+    std::vector<PluginSource> plugins;
+    for (const NamedValue& request : requests->plugins) {
+      std::optional<std::string> pluginText = readText(request.value);
+      if (!pluginText) {
+        errors << "cannot read " << request.value << "\n";
+        return 1;
+      }
+
+      plugins.push_back({request.name, request.value, std::move(*pluginText)});
+    }
+
     std::vector<EmittedFile> files;
     try {
-      const Schema schema = parseSchema(*text, input);
-      for (const EmitRequest& request : *requests) {
-        for (EmittedFile& file : findEmitter(request.name)->emit(schema, request.target)) {
+      const Schema schema = mergeSchemas(plugins, *text, input);
+      for (const NamedValue& request : requests->emits) {
+        for (EmittedFile& file : findEmitter(request.name)->emit(schema, request.value)) {
           files.push_back(std::move(file));
         }
       }
