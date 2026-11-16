@@ -18,6 +18,7 @@
 #include "oly/ecs/component.hpp"
 #include "oly/ecs/detail/archetype.hpp"
 #include "oly/ecs/detail/entity_store.hpp"
+#include "oly/ecs/detail/implication_table.hpp"
 #include "oly/ecs/detail/observer_registry.hpp"
 #include "oly/ecs/detail/query_cache.hpp"
 #include "oly/ecs/detail/table.hpp"
@@ -79,6 +80,7 @@ namespace oly::ecs {
 
     std::unordered_map<uint64_t, detail::Edge> jumpEdges_; // (source.id << 32) | destination.id
 
+    detail::ImplicationTable implications_;
     detail::ObserverRegistry observers_;
     CommandBuffer deferred_; // what observers record into
     CommandBuffer applying_; // what applyDeferred is flushing, so observers of that flush record into deferred_
@@ -138,6 +140,12 @@ namespace oly::ecs {
     ObserverId onRemove(ObserverFunction function, void* userData = nullptr);
     ObserverId observeById(ObserverKind kind, ComponentId componentId, ObserverFunction function, void* userData = nullptr);
     void removeObserver(ObserverId observer);
+
+    // Adding T also adds Implied, value-initialized, in the same transition (R-IM-2); removing T removes it again
+    // once no component left implies it (R-IM-3). Transitive; a cycle closes to one set. Registered before any
+    // archetype contains T (R-IM-1). Removing Implied while T stays is a contract error (R-IM-4).
+    template <class T, class Implied>
+    void imply();
 
     // Cached by (Ts..., filters): same instance for the same combination, valid while the World exists.
     template <class... Ts, class... Filters>
@@ -199,8 +207,13 @@ namespace oly::ecs {
     detail::QueryCacheBase* registerQuery(QueryKey key, std::unique_ptr<detail::QueryCacheBase> query);
     const core::SmallMap<detail::ArchetypeId, uint16_t>* smallestIndex(const detail::Signature& with) const;
 
-    // When removing, `componentId` must be in source.signature (the caller checks).
-    const detail::Edge& edgeFor(detail::Archetype& source, ComponentId componentId, bool adding);
+    // When removing, `componentId` must be in source.signature (the caller checks). `entity` only names the
+    // entity in the R-IM-4 assert.
+    const detail::Edge& edgeFor(detail::Archetype& source, ComponentId componentId, bool adding, Entity entity);
+    // The destination of `source` after `changed`, closed under implication; asserts R-IM-4 for each component of
+    // `source` that `changed` lacks.
+    detail::Signature resolveSignature(const detail::Signature& source, detail::Signature changed, Entity entity) const;
+    void initializeImplied(detail::Archetype& archetype, uint32_t row, const detail::Signature& constructed);
     const detail::Edge& jumpEdge(detail::Archetype& source, detail::Archetype& destination);
 
     void materialize(Entity reserved);
@@ -222,6 +235,7 @@ namespace oly::ecs {
     bool checkQueries(std::string* why) const;
     bool checkEdges(std::string* why) const;
     bool checkObservedFlags(std::string* why) const;
+    bool checkImplications(std::string* why) const;
   };
 
   template <class... Ts>
@@ -231,7 +245,8 @@ namespace oly::ecs {
 
     detail::Signature signature{componentId<Ts>()...};
     std::sort(signature.begin(), signature.end());
-    detail::Archetype* archetype = findOrCreate(std::move(signature));
+    const bool hasImplications = !implications_.empty();
+    detail::Archetype* archetype = findOrCreate(hasImplications ? implications_.resolve({}, signature) : std::move(signature));
     Entity entity = place(*archetype);
 
     const uint32_t row = store_.record(entity.index).row;
@@ -244,6 +259,9 @@ namespace oly::ecs {
         }
       }(),
       ...);
+    if (hasImplications) {
+      initializeImplied(*archetype, row, signature);
+    }
 
     if (archetype->observed & detail::ObservedOnAdd) {
       notifyAll(ObserverKind::OnAdd, entity, archetype->signature);
@@ -295,6 +313,19 @@ namespace oly::ecs {
                iterating_);
 
     return observeById(ObserverKind::OnRemove, componentId, function, userData);
+  }
+
+  template <class T, class Implied>
+  void World::imply() {
+    static_assert(!std::is_same_v<std::remove_cvref_t<T>, std::remove_cvref_t<Implied>>, "imply<T, T>: a component cannot imply itself");
+    static_assert(std::is_nothrow_default_constructible_v<std::remove_cvref_t<Implied>>, "imply<T, Implied>: Implied must be nothrow default constructible");
+    using U = std::remove_cvref_t<Implied>;
+    const ComponentId implying = componentId<T>(), implied = componentId<U>();
+    OLY_ASSERT(iterating_ == 0, "imply type=%.*s during iteration=%u", int(typeInfo(implying).name.size()), typeInfo(implying).name.data(), iterating_);
+    OLY_ASSERT(implying >= componentIndex_.size() || componentIndex_[implying].size() == 0, "imply type=%.*s after an archetype contains it",
+               int(typeInfo(implying).name.size()), typeInfo(implying).name.data());
+
+    implications_.add(implying, implied, [](void* slot) noexcept { ::new (slot) U(); });
   }
 
   template <class T>

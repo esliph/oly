@@ -38,11 +38,10 @@ namespace oly::ecs {
       archetypeStats.signatureBytes = (archetype.signature.capacity() + archetype.columnTypes.capacity()) * sizeof(ComponentId);
 
       archetypeStats.edgeBytes = archetype.addEdges.capacityBytes() + archetype.removeEdges.capacityBytes();
-      for (const auto& [componentId, edge] : archetype.addEdges) {
-        archetypeStats.edgeBytes += edge.sourceToDestination.capacity() * sizeof(int16_t);
-      }
-      for (const auto& [componentId, edge] : archetype.removeEdges) {
-        archetypeStats.edgeBytes += edge.sourceToDestination.capacity() * sizeof(int16_t);
+      for (const auto* edges : {&archetype.addEdges, &archetype.removeEdges}) {
+        for (const auto& [componentId, edge] : *edges) {
+          archetypeStats.edgeBytes += edge.sourceToDestination.capacity() * sizeof(int16_t) + edge.initializedColumns.capacity() * sizeof(uint16_t);
+        }
       }
 
       worldStats.liveEntities += archetypeStats.count;

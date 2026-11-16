@@ -37,6 +37,7 @@ namespace oly::ecs::detail {
   struct Edge {
     Archetype* target = nullptr;
     std::vector<int16_t> sourceToDestination; // per source column: column in the destination, or -1
+    std::vector<uint16_t> initializedColumns; // destination columns of the implied components the source lacks: value-initialized
     int16_t addedColumn = -1; // column of the added component, or -1 if the edge builds no value (removal, tag, jump)
     uint8_t observed = 0; // ObservedOnAdd/ObservedOnRemove for the components the edge adds/removes; 0 on jump edges
   };
@@ -55,6 +56,7 @@ namespace oly::ecs::detail {
   // NoColumn if `componentId` is absent or is a tag.
   uint16_t columnOf(const Archetype& archetype, ComponentId componentId) noexcept;
 
-  // `added` = the newly added component; NoComponent for a removal or an arbitrary jump.
+  // `added` = the newly added component; NoComponent for a removal or an arbitrary jump. initializedColumns gets every
+  // destination column the source lacks except `added`'s.
   Edge buildEdge(const Archetype& source, Archetype& destination, ComponentId added);
 }

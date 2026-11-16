@@ -18,7 +18,7 @@ namespace oly::ecs {
     size_t columnBytes; // capacity × Σ size of the columns + capacity × sizeof(Entity)
     size_t idleBytes; // (capacity − count) × (Σ size + sizeof(Entity))
     size_t signatureBytes; // capacity() of signature + columnTypes, in bytes
-    size_t edgeBytes; // capacityBytes() of addEdges/removeEdges + sourceToDestination
+    size_t edgeBytes; // capacityBytes() of addEdges/removeEdges + sourceToDestination + initializedColumns
   };
 
   struct WorldStats {
@@ -29,7 +29,7 @@ namespace oly::ecs {
     uint64_t signatureLookups;
   };
 
-  // Checks invariants I-1 and I-3..I-11 (compiled in every build); I-2 depends on the
+  // Checks invariants I-1 and I-3..I-13 (compiled in every build); I-2 depends on the
   // tests' LifeCounter.
   // On failure writes the ID and the object to *why (e.g. "I-3 e=4:1") and returns false.
   bool checkInvariants(const World& world, std::string* why = nullptr);

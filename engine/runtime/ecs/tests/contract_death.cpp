@@ -151,6 +151,26 @@ namespace {
     world.removeObserver(12345);
   }
 
+  struct Mark {
+    uint32_t value = 0;
+  };
+  struct Derived {
+    float value = 0.f;
+  };
+
+  void implyAfterArchetype() {
+    oly::ecs::World world;
+    world.spawn(Mark{1});
+    world.imply<Mark, Derived>();
+  }
+
+  void removeImpliedComponent() {
+    oly::ecs::World world;
+    world.imply<Mark, Derived>();
+    auto entity = world.spawn(Mark{1});
+    world.remove<Derived>(entity);
+  }
+
   void singleEmpty() {
     oly::ecs::World world;
     world.query<A>().single();
@@ -198,6 +218,8 @@ int main(int argumentCount, char** arguments) {
     {"observe_during_each", observeDuringEach, {"onAdd", "iteration"}},
     {"observe_in_observer", observeInObserver, {"onAdd", "iteration"}},
     {"remove_unknown_observer", removeUnknownObserver, {"removeObserver", "12345"}},
+    {"imply_after_archetype", implyAfterArchetype, {"imply", "Mark"}},
+    {"remove_implied_component", removeImpliedComponent, {"remove e=", "Derived", "implied by"}},
   };
 
   if (argumentCount != 2) {
