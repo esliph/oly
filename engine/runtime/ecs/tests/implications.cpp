@@ -302,3 +302,36 @@ TEST_CASE("with no implication registered, resolve returns the signature untouch
   CHECK(table.empty());
   CHECK(resolved == oly::ecs::detail::Signature{2, 5});
 }
+
+TEST_CASE("R-IM-4: a flush that removes an implier and its implied component, then adds the implier back, is valid") {
+  oly::ecs::World world;
+  world.imply<Mark, Derived>();
+  auto entity = world.spawn(Mark{1});
+  auto commandBuffer = world.commands();
+  commandBuffer.remove<Mark>(entity);
+  commandBuffer.remove<Derived>(entity);
+  commandBuffer.add(entity, Mark{2});
+
+  world.flush(commandBuffer);
+  CHECK_INVARIANTS(world);
+
+  CHECK(world.get<Mark>(entity).value == 2);
+  CHECK(world.get<Derived>(entity).value == 5.f);
+}
+
+TEST_CASE("R-IM-4: in a cycle, a flush that removes both components and adds one back keeps both") {
+  oly::ecs::World world;
+  world.imply<Mark, Derived>();
+  world.imply<Derived, Mark>();
+  auto entity = world.spawn(Mark{1});
+  auto commandBuffer = world.commands();
+  commandBuffer.remove<Mark>(entity);
+  commandBuffer.remove<Derived>(entity);
+  commandBuffer.add(entity, Derived{2.f});
+
+  world.flush(commandBuffer);
+  CHECK_INVARIANTS(world);
+
+  CHECK(world.get<Mark>(entity).value == 1);
+  CHECK(world.get<Derived>(entity).value == 2.f);
+}

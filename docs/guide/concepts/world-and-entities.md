@@ -199,7 +199,7 @@ Inside a flush (the end of a phase, or `world.flush`) observers see the **net ch
 
 Rules:
 
-- An observer changes structure **only** through `context.commands()`. The `World` applies those commands right after the change that triggered the observer, before that call returns, until nothing is pending. Two observers may record the same `destroy`, or a change for an entity another observer destroyed: the extra commands are ignored. A direct `spawn`, `destroy`, `add` or `remove` inside an observer stops on `OLY_ASSERT`, the same as inside `each`.
+- An observer changes structure **only** through `context.commands()`. The `World` applies those commands right after the change that triggered the observer, before that call returns, until nothing is pending. Two observers may record the same `destroy`, or a change for an entity another observer destroyed: the extra commands are ignored. A direct `spawn`, `destroy`, `add` or `remove` inside an observer stops on `OLY_ASSERT`, the same as inside `each`. If an observer throws, the change stops where it was and the `World` drops the commands its observers recorded, so nothing from that change runs later.
 - Observers that always record more changes never stop: avoid a cycle where each observer triggers the other.
 - Register and remove observers at start-up, never inside an observer or a query loop (`OLY_ASSERT`).
 - Observers of the same component and kind run in registration order.

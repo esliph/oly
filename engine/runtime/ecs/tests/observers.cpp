@@ -62,6 +62,25 @@ namespace {
     context.commands().destroy(context.world().get<Owner>(context.entity()).owned);
   }
 
+  struct ObserverFailure {};
+
+  void throwOnFirstCall(oly::ecs::ObserverContext& context) {
+    int& calls = *static_cast<int*>(context.userData());
+    ++calls;
+    if (calls == 1) {
+      throw ObserverFailure{};
+    }
+  }
+
+  void throwAlways(oly::ecs::ObserverContext&) {
+    throw ObserverFailure{};
+  }
+
+  void destroyOwnedThenThrow(oly::ecs::ObserverContext& context) {
+    destroyOwned(context);
+    throw ObserverFailure{};
+  }
+
   void freezeNext(oly::ecs::ObserverContext& context) {
     context.commands().add(context.world().get<Link>(context.entity()).next, Frozen{});
   }
@@ -455,4 +474,51 @@ TEST_CASE("R-OB-6: commands an observer records during a flush are applied befor
 
   CHECK(world.isAlive(entity));
   CHECK_FALSE(world.isAlive(target));
+}
+
+TEST_CASE("R-OB-6: an observer that throws in a flush leaves no on add pending") {
+  oly::ecs::World world;
+  int calls = 0;
+  world.onAdd<Health>(&throwOnFirstCall, &calls);
+  auto entity = world.spawn();
+  auto commandBuffer = world.commands();
+  commandBuffer.add(entity, Health{1});
+  CHECK_THROWS_AS(world.flush(commandBuffer), ObserverFailure);
+
+  auto emptyBuffer = world.commands();
+  world.flush(emptyBuffer);
+  CHECK_INVARIANTS(world);
+
+  CHECK(calls == 1);
+}
+
+TEST_CASE("R-OB-6: commands recorded by the observers of an operation that throws are discarded") {
+  oly::ecs::World world;
+  world.onAdd<Health>(&destroyOwnedThenThrow);
+  auto owned = world.spawn(A{1});
+  auto entity = world.spawn(Owner{owned});
+  CHECK_THROWS_AS(world.add(entity, Health{1}), ObserverFailure);
+
+  auto emptyBuffer = world.commands();
+  world.flush(emptyBuffer);
+  CHECK_INVARIANTS(world);
+
+  CHECK(world.isAlive(owned));
+}
+
+TEST_CASE("R-OB-6: a cascade interrupted by a throwing observer is not resumed by a later operation") {
+  oly::ecs::World world;
+  world.onRemove<Owner>(&destroyOwned);
+  const oly::ecs::ObserverId failing = world.onRemove<Health>(&throwAlways);
+  auto owned = world.spawn(Health{1});
+  auto entity = world.spawn(Owner{owned});
+  CHECK_THROWS_AS(world.destroy(entity), ObserverFailure);
+  world.removeObserver(failing);
+  auto otherOwned = world.spawn(A{1});
+
+  world.destroy(world.spawn(Owner{otherOwned}));
+  CHECK_INVARIANTS(world);
+
+  CHECK(world.isAlive(owned));
+  CHECK_FALSE(world.isAlive(otherOwned));
 }

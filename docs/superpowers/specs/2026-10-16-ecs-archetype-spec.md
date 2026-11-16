@@ -287,7 +287,9 @@ an observer reads and writes values and changes structure only through `context.
 - **R-OB-6.** An observer changes structure only through `context.commands()`. Those commands are applied right after
   the operation that triggered the observer, before it returns, until nothing is pending. A direct structural change
   or an observer registration inside an observer is a contract error, the same one as inside `each`. A cycle of
-  observers that always records more commands never ends; that is the contract, not a guarded case.
+  observers that always records more commands never ends; that is the contract, not a guarded case. If an observer
+  throws, the exception leaves the operation where it stopped (what was already applied stays, as in `each`) and the
+  `World` discards every command its observers recorded and every on add not yet run, so no later operation applies them.
 - **R-OB-7.** Inside a flush, observers see the net change per entity (R-CB-3, R-CB-4). On remove observers (destroy
   included) run before each entity's transition; on add observers run after every transition of the flush, in the order
   of each entity's first command, and within one entity in `ComponentId` order. Stale handles run nothing. The net

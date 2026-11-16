@@ -268,10 +268,11 @@ namespace oly::ecs {
       }
     }
 
-    // The first direct implier of `implied` present in `signature`; NoComponent if none.
-    ComponentId implierStaying(const detail::ImplicationTable& implications, const detail::Signature& source, const detail::Signature& resolved, ComponentId implied) {
+    // The first direct implier of `implied` that stays (in the source and the destination, not added by the same flush:
+    // R-IM-4); NoComponent if none.
+    ComponentId implierStaying(const detail::ImplicationTable& implications, const detail::Signature& source, const detail::Signature& resolved, std::span<const ComponentId> added, ComponentId implied) {
       for (ComponentId implier : implications.impliersOf(implied)) {
-        if (std::binary_search(source.begin(), source.end(), implier) && std::binary_search(resolved.begin(), resolved.end(), implier)) {
+        if (std::binary_search(source.begin(), source.end(), implier) && std::binary_search(resolved.begin(), resolved.end(), implier) && std::find(added.begin(), added.end(), implier) == added.end()) {
           return implier;
         }
       }
@@ -537,7 +538,7 @@ namespace oly::ecs {
         continue;
       }
 
-      const ComponentId implier = implierStaying(implications_, source, resolved, componentId);
+      const ComponentId implier = implierStaying(implications_, source, resolved, added, componentId);
       OLY_ASSERT(implier == detail::NoComponent, "remove e=%u:%u type=%.*s implied by %.*s", entity.index, entity.generation,
                  int(typeInfo(componentId).name.size()), typeInfo(componentId).name.data(), int(typeInfo(implier).name.size()), typeInfo(implier).name.data());
       if (implier != detail::NoComponent) {
@@ -591,9 +592,18 @@ namespace oly::ecs {
   }
 
   void World::runObservers(ObserverKind kind, Entity entity, ComponentId componentId) {
-    for (const detail::ObserverEntry& entry : observers_.observers(kind, componentId)) {
-      ObserverContext context(*this, entity, componentId, entry.userData, deferred_);
-      entry.function(context);
+    try {
+      for (const detail::ObserverEntry& entry : observers_.observers(kind, componentId)) {
+        ObserverContext context(*this, entity, componentId, entry.userData, deferred_);
+        entry.function(context);
+      }
+    } catch (...) {
+      // The operation stops halfway: what its observers queued must not run later, inside an unrelated operation. Every
+      // caller, runPendingOnAdd and the flush of applying_ included, unwinds without reading these again.
+      pendingOnAdd_.clear();
+      deferred_.clear();
+      applying_.clear();
+      throw;
     }
   }
 
