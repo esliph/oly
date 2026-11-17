@@ -11,9 +11,11 @@ graph BT
   capi --> app
   webHost_native["web_host (C++, web only)"] --> capi
   nativeHost["native_host (C++, native only, SDL3)"] --> app
+  plugins["plugins (oly_add_plugin)"] --> app
   games["games (oly_add_game)"] --> capi
   games --> webHost_native
   games --> nativeHost
+  games --> plugins
   schema_typescript["schema_typescript (C++, native only)"] --> schema["schema (C++, native only)"]
   webHost["@oly/web-host"] --> tscore
   testing["@oly/testing"] --> tscore
@@ -33,6 +35,13 @@ graph BT
 | `schema` | `oly::schema` | — | `STATIC`, native builds only |
 | `schema_typescript` | `oly::schema_typescript` | `schema` | `OBJECT`, native builds only |
 
+A **plugin** (`oly_add_plugin`, [plugins.md](plugins.md)) is a `STATIC` target `oly::<name>` that links the modules of its `DEPENDS` and the plugins of its `PLUGINS`. A game links the plugins it turns on and their dependencies. Plugins depend on the core; nothing in `engine/` depends on a plugin under `plugins/`. Today the only plugins are the engine's test plugins:
+
+| Plugin | CMake target | `DEPENDS` | `PLUGINS` |
+|---|---|---|---|
+| `counting` | `oly::counting` | `ecs app` | — |
+| `doubling` | `oly::doubling` | `ecs app` | `counting` |
+
 `capi` and `web_host` are `OBJECT` because, in a static library, the linker would discard the unreferenced members and take the `EMSCRIPTEN_KEEPALIVE` functions with them.
 
 `native_host` depends on `app`, never on `capi`: a C++ game and a C++ host use `oly::app::Engine` directly. It links SDL3 statically and `PUBLIC`, so a game's drawing code can include `<SDL3/SDL.h>`.
@@ -43,10 +52,13 @@ The C API headers, `oly/capi/c_api.h` and `oly/capi/engine_api.h`, are valid C11
 
 The boundaries do not hold by convention alone. Three mechanisms enforce them:
 
-1. **The build.** `oly_add_module(NAME <m> DEPENDS <...>)` links only the declared modules. `ecs` does not link `capi`, so an include of `capi` inside the ECS does not compile.
-2. **The `oly.lint.boundaries` lint** (`tools/check_boundaries.py`, runs in ctest, with a self-test in `oly.lint.boundaries_selftest`). It rejects:
-   - `#include "oly/<x>/..."` in a module or game that did not declare `<x>` in `DEPENDS` (dependencies are `PUBLIC` and transitive, so only the lint catches the undeclared direct include);
-   - `oly/<x>/detail/` included outside module `<x>`'s own directory (its tests and benchmarks may);
+1. **The build.** `oly_add_module(NAME <m> DEPENDS <...>)` links only the declared modules. `ecs` does not link `capi`, so an include of `capi` inside the ECS does not compile. `oly_add_plugin` does the same with `DEPENDS` and `PLUGINS`.
+2. **The `oly.lint.boundaries` lint** (`tools/check_boundaries.py`, runs in ctest, with a self-test in `oly.lint.boundaries_selftest`). Its manifest lists modules, plugins and games with their dependencies. Module and plugin names may contain digits (`oly/<x>/` with `<x>` in `[a-z0-9_]+`). It rejects:
+   - `#include "oly/<x>/..."` in a module, plugin or game that did not declare `<x>` in `DEPENDS` (or `PLUGINS`) (dependencies are `PUBLIC` and transitive, so only the lint catches the undeclared direct include);
+   - `oly/<x>/detail/` included outside module or plugin `<x>`'s own directory (its tests and benchmarks may);
+   - a file in `engine/` that includes a plugin whose directory is under `plugins/` ("engine cannot depend on plugin"); the test plugins in `engine/testing/fixture/plugins/` are engine code;
+   - a game name (a folder name under `games/`, as a whole word) in the contents or the path of any file under `plugins/`;
+   - `oly_add_engine_test_game` in a `CMakeLists.txt` outside `engine/`;
    - `@oly/core/internal` imported outside `engine/`;
    - `@oly/core/generated` imported outside `*.generated.ts` and `@oly/core`;
    - `@oly/web-host` imported in `@oly/core`;
@@ -61,7 +73,7 @@ Why `detail/` and a lint, and not pimpl: the hot-path templates (`Query<Ts...>::
 
 ## Vocabulary rules
 
-- Game concepts (enemy, coin, dash) never enter `engine/`. Game names only appear in `engine/testing/fixture/` and in `games/`.
+- Game concepts (enemy, coin, dash) never enter `engine/`. Game names only appear in `engine/testing/fixture/` and in `games/`, never in `plugins/`.
 - The same verb holds across the three surfaces (C++, C API, TS): `spawn`, `destroy`, `add`, `remove`, `has`, `get`, `query`, `eachBlock`. The full glossary is in [glossary.md](glossary.md).
 - The `oly` prefix appears only in the C API (`oly*`, `OlyWorld`, `OLY_API`) and in what is internal to `capi`. `extern "C"` symbols live in a single global namespace of the WASM module, together with libc and the game's exports; the prefix avoids collisions. The C++ (`oly::ecs::World`) and TS (`World`) APIs do not repeat `oly`.
 - The `ById` suffix marks the variant by `ComponentId` at run time: `addById`, `removeById`, `hasById`, `getById`, `tryGetById`, `queryById`.

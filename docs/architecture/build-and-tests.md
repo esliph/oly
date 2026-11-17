@@ -46,13 +46,18 @@ The native builds (Linux and Windows) run the in-tree `oly-schema` target. The W
 | `oly_add_test` | registers a doctest suite as an executable and a ctest test |
 | `oly_add_contract_death` | registers a module's death cases |
 | `oly_add_bench` | registers a benchmark executable |
-| `oly_add_game` | `ENVIRONMENT web`: runs `oly-schema` and links a game's `.mjs`/`.wasm` module, with `oly::web_host`. `ENVIRONMENT native`: runs `oly-schema` and builds an executable. The environment must be the build's `OLY_ENVIRONMENT` |
+| `oly_add_plugin` (`OlyPlugin.cmake`) | creates the plugin `oly_<p>` (alias `oly::<p>`) from `src/*.cpp`, links its `DEPENDS` and `PLUGINS` and, with `SCHEMA`, generates `oly/<p>/schema.generated.hpp` ([plugins.md](plugins.md#build)) |
+| `oly_plugin_order` (`OlyPlugin.cmake`) | the install order of a plugin list: dependencies first, each plugin once, list order among independent ones |
+| `oly_schema_tool` (`OlyPlugin.cmake`) | picks the `oly-schema` a custom command runs: the in-tree target, or `OLY_SCHEMA_TOOL` |
+| `oly_add_game` | `ENVIRONMENT web`: runs `oly-schema` and links a game's `.mjs`/`.wasm` module, with `oly::web_host`. `ENVIRONMENT native`: runs `oly-schema` and builds an executable. The environment must be the build's `OLY_ENVIRONMENT`. `PLUGINS`: merges the plugins' `.oly`, links them and generates `game_setup.generated.cpp` (`setUpGame`). `TYPESCRIPT <file.ts>`: also writes the merged schema as TS, through the target `oly_typescript_schemas` |
+| `oly_add_engine_test_game` | the same as `oly_add_game`, for the engine's own test games; the lint rejects it outside `engine/` |
 | `oly_warnings`, `oly_wasm_exceptions`, `oly_wasm_node_env` | warnings and Emscripten settings |
 
 ## Tests
 
 - **One doctest suite = one executable**, registered with `oly_add_test(MODULE <m> NAME <suite> SOURCES ... [SUPPORT <dirs>])` in the module's `tests/CMakeLists.txt`. A new test file must be added there; the sources in `src/*.cpp` come in by glob.
-- **Names in ctest** carry the module prefix: `core.*`, `ecs.*`, `input.*`, `app.*`, `capi.*`, `schema.*`, `schema_typescript.*`, `<module>.contract_death.<case>`, `native_host.*`, `drift.desktop`, `ts.<package>.<suite>` (`ts.core.unit`, `ts.web_host.unit`, `ts.testing.wasm`, `ts.arena.smoke`) and `oly.lint.boundaries` / `oly.lint.boundaries_selftest`.
+- **Names in ctest** carry the module prefix: `core.*`, `ecs.*`, `input.*`, `app.*`, `capi.*`, `schema.*`, `schema_typescript.*`, `<module>.contract_death.<case>`, `native_host.*`, `drift.desktop`, `ts.<package>.<suite>` (`ts.core.unit`, `ts.web_host.unit`, `ts.testing.wasm`, `ts.arena.smoke`), `fixture.plugins`, `oly.cmake.plugin_order.<case>` and `oly.lint.boundaries` / `oly.lint.boundaries_selftest`.
+- **Plugin tests.** `engine/testing/` is added on `web` with the games and on `native` with the tests, so every native preset with tests builds the test plugins ([plugins.md](plugins.md#test-plugins)). `fixture.plugins` (native) runs `plugin_fixture_game`, an engine test game with `PLUGINS doubling`; `ts.testing.wasm` checks the same plugins in the web fixture. `oly.cmake.plugin_order.<case>` runs `cmake/tests/plugin_order.cmake` in script mode, one case per test (order, shared dependency, cycle, unknown plugin).
 - **Death tests**: registered with `oly_add_contract_death(MODULE <m> SOURCE <file> CASES ...)`. Each case is a command-line argument. An assert handler checks substrings of the message and exits with 0; if the case does not fire the assert, it fails. New case = function in the file + name in the `CASES` list. They exist in `ecs`, `input`, `app` and `capi`, only with asserts enabled.
 - **Invariants**: `checkInvariants(const World&, std::string* why)` checks I-1 to I-13 (records, columns, indices, edges, queries, free list, iterating mode, observer flags, closure under implication). Tests call it after every structural operation.
 - **Fuzz against a model**: `fuzz_vs_model` compares the `World` with a trivial map. Values derive from the `Entity`, so swapped rows show up as a wrong value. Seed and number of operations via `OLY_FUZZ_SEED`/`OLY_FUZZ_OPS`.

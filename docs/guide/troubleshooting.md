@@ -39,6 +39,9 @@ The TS client validates everything that goes through it, in release builds too (
 | `imply type=... after an archetype contains it` | `imply<T, Implied>` called after an entity already had `T` | register implications at start-up, before spawning |
 | `remove e=... type=... implied by ...` | removing an implied component while its implier stays | remove the implying component instead |
 | `registration during frame` | `addSystem`/`on`/`onEnter` called from inside a system or handler | register everything at start-up |
+| `installPlugin: plugin "..." installed after the first frame call` | `installPlugin` after `frame` ran once | turn the plugin on with `PLUGINS` in CMake; `setUpGame` installs it before the first `frame` |
+| `installPlugin: plugin "..." already installed` | the plugin was installed by hand and by `setUpGame`, or twice | install it once; with `PLUGINS`, never by hand |
+| `plugin: plugin "..." not installed` | `engine.plugin<P>()` for a plugin the game does not turn on, or before `setUpGame` | add it to `PLUGINS`; call `setUpGame` first |
 | `the last frame was interrupted by an exception; call frame before registering` | a system threw; the engine has not recovered yet | call `frame` once, then register |
 | `frame is not reentrant` | `engine.frame` called from inside a system | never call `frame` from game code |
 | `time=... less than the previous frame's` | the time passed to `frame` went backwards | use a monotonic clock (`performance.now()`, rAF timestamps) |
@@ -50,7 +53,11 @@ The TS client validates everything that goes through it, in release builds too (
 | `invalid type name` / `invalid field` | schema naming rules | `PascalCase` types, `camelCase` fields, no C++ keywords |
 | `<game>.oly:<line>:<column>: ...` when building | a schema rule is broken | fix that line; the rules are in [Schema](concepts/schema.md#naming-rules) |
 | `<game> is a web game, but this build is native` (or the reverse) when configuring | the game's `ENVIRONMENT` is not the environment of the preset | wrap the game's `CMakeLists.txt` in `if(OLY_ENVIRONMENT STREQUAL "...")`, see [Getting started on the desktop](environments/native/getting-started.md#build-it) |
-| `declareSchema: the Engine already declares events, actions or states` | `declareSchema` called after a manual `declareEvent`, `declareState` or action declaration | call `declareSchema` first and declare nothing by hand |
+| `declareSchema: the Engine already declares events, actions or states` | `setUpGame` called after a manual `declareEvent`, `declareState` or action declaration, or called twice | call `setUpGame` once, first, and declare nothing by hand |
+| `<file>.oly:<line>:<column>: repeated name "X"; first declared at <file>.oly:<line>:<column>` when building | the game and a plugin it turns on (or two plugins) declare the same name | rename the game's type; names are flat across the merged schema ([Types that come from plugins](concepts/schema.md#types-that-come-from-plugins)) |
+| `a plugin declares only components, tags and events; action "x" is not allowed` (or `state "x"`) when building | an action or a state in a plugin's `.oly` | declare actions and states in the game's `.oly` |
+| `unknown plugin <name>` when configuring | a name in `PLUGINS` with no `oly_add_plugin` | check the name; add the plugin's folder to the build before the games |
+| `plugin cycle: a -> b -> a` when configuring | two plugins list each other in `PLUGINS` | remove one of the dependencies |
 | `SDL_InitSubSystem(video): ...` or `SDL window: ...` (`std::runtime_error` from `Window`) | no display or video driver on the machine | run on a desktop session, or set `SDL_VIDEO_DRIVER=dummy` for a headless run |
 | `Engine already disposed` / `World already disposed` | use after `dispose()` | keep the engine alive while the game runs |
 | `World belongs to the Engine; use engine.dispose()` | `engine.world.dispose()` | dispose the engine instead |

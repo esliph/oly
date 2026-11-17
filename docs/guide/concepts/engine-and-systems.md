@@ -16,10 +16,10 @@ oly::app::Engine engine(world, oly::app::EngineConfig{
   .maxEventRounds = 16,     // event round limit per step (default 16)
 });
 
-oly::app::declareSchema(engine);
+oly::app::setUpGame(engine);
 ```
 
-All three values must be positive (`OLY_ASSERT`). Register systems, handlers and hooks next, before the first `frame`.
+All three values must be positive (`OLY_ASSERT`). `setUpGame` comes from the build: it declares the schema, then installs the game's [plugins](plugins.md). Call it once, first. Register systems, handlers and hooks next, before the first `frame`.
 
 **On the web**, the host creates the engine: [TypeScript](../environments/web/typescript/engine-and-systems.md#create-the-engine).
 
@@ -58,6 +58,21 @@ If the game falls far behind (a debugger pause, a slow device), the steps above 
 
 Inside a phase, systems run in **registration order**. There is no dependency graph: the order you write is the order that runs. Systems written in different languages mix freely in one phase.
 
+### Order bands
+
+A system can ask to run at the **end** of its phase, after every system of the default band, whatever the registration order. Pass `oly::app::OrderBand::Last` as the last argument of `addSystem`:
+
+```cpp
+engine.addSystem(oly::app::Phase::Update, "followTargets", followTargets, nullptr, oly::app::OrderBand::Last);
+```
+
+| Band | Runs |
+|---|---|
+| `OrderBand::Default` | first, in registration order (the default) |
+| `OrderBand::Last` | after the whole `Default` band of the phase, in registration order |
+
+The band is fixed at registration. The phase still applies its deferred changes once, after the `Last` band, so a `Last` system sees the direct writes of the `Default` band but not its spawns, adds or removes. `setWhilePaused` and `setSystemStates` work the same in both bands. Plugins use `Last` for work that must follow the game's systems; the clients register in `Default`.
+
 ## Register systems
 
 A system is a function of the context. Write it with `OLY_SYSTEM`:
@@ -83,7 +98,7 @@ engine.setWhilePaused(engine.addSystem(oly::app::Phase::UpdateBefore, "resumeOnP
 
 **On the web**, the client registers it by name: [TypeScript](../environments/web/typescript/engine-and-systems.md#register-systems).
 
-`addSystem` takes a phase, a name for the error messages, the function and an optional `userData` pointer that the system reads with `context.userData()`. It returns a `SystemId`:
+`addSystem` takes a phase, a name for the error messages, the function, an optional `userData` pointer that the system reads with `context.userData()` and an optional [order band](#order-bands). It returns a `SystemId`:
 
 | Call | Effect |
 |---|---|
@@ -263,7 +278,7 @@ You can call `frame` from anything: a test or a tool.
 ```cpp
 oly::ecs::World world;
 oly::app::Engine engine(world);
-oly::app::declareSchema(engine);
+oly::app::setUpGame(engine);
 
 engine.frame(0.0);                    // the first frame only records the time
 

@@ -16,7 +16,7 @@ The public API is:
 | registration macros | `OLY_SYSTEM`, `OLY_HANDLER`, `OLY_STATE_HOOK` |
 | the C API | `engine/runtime/capi/include/oly/capi/c_api.h` and `engine_api.h` |
 | the schema language and the generated code | `engine/schema/format/`, `engine/schema/codegen/`, `engine/environments/web/clients/typescript/codegen/`, `@oly/core/generated` |
-| how a game is built | `cmake/OlyGame.cmake` (`oly_add_game`, with `ENVIRONMENT`), the `schema-tool`, `game`, `serve`, `games-test`, `desktop`, `native-games-test` and `windows-test` tasks of the `Spurfile` |
+| how a game is built | `cmake/OlyGame.cmake` (`oly_add_game`, with `ENVIRONMENT`, `PLUGINS` and `TYPESCRIPT`), `cmake/OlyPlugin.cmake` (`oly_add_plugin`), the `schema-tool`, `ts`, `game`, `serve`, `games-test`, `desktop`, `native-games-test` and `windows-test` tasks of the `Spurfile` |
 | behaviour a game relies on | loop order, deferred vs. direct changes, event rounds, scope rules, validity of views, error messages |
 
 What to update:
@@ -63,7 +63,7 @@ docs/guide/
   README.md                    the map: core, environments, clients, how to choose, a learning path per environment
   concepts/                    valid in every environment; examples in C++
     schema.md  world-and-entities.md  queries.md  engine-and-systems.md
-    events.md  input.md  schedule.md  states.md  performance.md
+    events.md  input.md  schedule.md  states.md  performance.md  plugins.md
   environments/
     web/
       getting-started.md  testing.md  boundary.md
@@ -80,7 +80,7 @@ docs/guide/
 - Pages are not numbered. File names are lowercase `kebab-case`.
 - **A concept page carries the contract; a client page carries the API.** The rules a game relies on (deferred vs. direct, event rounds, scope, validity) are written only in the concept page. A rule appears in a client page only when it exists only in that client (TS: `raw()` arrays, heap views invalidated by memory growth, `ContractError`).
 - **Client pages mirror the concept pages**: the same file name and the same section headings where the concept has a form in that client. A section with no client form is left out, not stubbed. A concept section links to its client section by anchor.
-- A concept page starts with `# Title` and a navigation line, in the order schema, world-and-entities, queries, engine-and-systems, events, input, schedule, states, performance (the first has no previous link, the last no next):
+- A concept page starts with `# Title` and a navigation line, in the order schema, world-and-entities, queries, engine-and-systems, events, input, schedule, states, performance, plugins (the first has no previous link, the last no next):
 
   ```markdown
   [← Previous title](previous.md) · [Guide index](../README.md) · Next: [Next title →](next.md)

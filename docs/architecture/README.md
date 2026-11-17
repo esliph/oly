@@ -14,12 +14,13 @@ The pieces:
   - `native`: the core compiled for the machine, in a native process. Host in C++ (`oly::native_host`: window, loop, input). No client: the game is C++.
 - **Host**: loads the core, drives `frame`, forwards time, visibility and input. It has no engine rules.
 - **Client**: the API of one language over the C API, with that language's idioms. **C++ is not a client**: a game's C++ systems, handlers and hooks are compiled together with the core in every environment. A C++ game and a C++ host use `oly::app::Engine` directly, never the C API.
+- **Plugin**: engine-level functionality compiled together with the core, that a game turns on in its build (`oly_add_game(... PLUGINS ...)`). The `Engine` installs and owns it. Plugins depend on the core, never the reverse.
 
 Three rules guide the design:
 
 1. **The engine is complete in C++.** A client has API conveniences, never engine behaviour.
 2. **Each client crosses its boundary per block, per batch or per system, never per entity**, on hot paths.
-3. **There is a single source for the data layout**: the game's `.oly` file. `oly-schema`, a C++ generator, produces the C++ and each client's code from it.
+3. **There is a single source for the data layout**: the game's `.oly` file, merged with the `.oly` of each plugin it turns on. `oly-schema`, a C++ generator, produces the C++ and each client's code from it.
 
 ```
  web environment                          native environment
@@ -45,7 +46,8 @@ Three rules guide the design:
 | [core.md](core.md) | base utilities (`OLY_ASSERT` and others) |
 | [ecs.md](ecs.md) | the archetype ECS: layers, indices, costs, iteration, `CommandBuffer` |
 | [input.md](input.md) | input actions and HID physical buttons |
-| [app.md](app.md) | the `Engine`: loop, systems, pause, events, schedule, states, recovery |
+| [app.md](app.md) | the `Engine`: loop, systems, order bands, pause, events, schedule, states, plugins, recovery |
+| [plugins.md](plugins.md) | plugins: parts, install and ownership, order bands, schema merge, build, boundaries |
 | [capi.md](capi.md) | the C API and the per-engine script invoker |
 | [schema-and-codegen.md](schema-and-codegen.md) | the `.oly` schema, `oly-schema` and each game's WASM module |
 | [ts-packages.md](ts-packages.md) | `@oly/core`, `@oly/web-host`, `@oly/testing` |
@@ -72,6 +74,7 @@ The specs are the source of truth. The plans record, phase by phase, how each pa
 | `docs/superpowers/specs/2026-11-09-oly-modularization-design.md` | modules, boundaries, names and public surfaces |
 | `docs/superpowers/specs/2026-11-13-multi-environment-design.md` | C++ first, environments and clients, `.oly`, native |
 | `docs/superpowers/specs/2026-11-13-spur-task-runner-design.md` | the `./spur` task runner |
+| `docs/superpowers/specs/2026-11-16-plugins-design.md` | plugins, order bands, schema merge, observers, `essentials` |
 | `docs/superpowers/plans/` | implementation plans per phase |
 | `CLAUDE.md` | index for Claude Code and rules that always apply |
 | `docs/benchmarks/` | results and status of the targets |

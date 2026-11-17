@@ -2,7 +2,7 @@
 
 [Guide index](README.md) · [Cheat sheet](cheat-sheet.md)
 
-Ready patterns for common game features, in C++. Each recipe shows the schema entries it needs and the code: the bodies are written against the context, so they run in every environment, and the registration is labelled under them. Every recipe ends with a link to its TypeScript version, which registers the same pieces from the TS client.
+Ready patterns for common game features, in C++. Each recipe shows the schema entries it needs and the code: the bodies are written against the context, so they run in every environment, and the registration is labelled under them. Every recipe with a TS form ends with a link to its TypeScript version, which registers the same pieces from the TS client; order bands and plugins are C++ only.
 
 | Recipe | Uses |
 |---|---|
@@ -24,6 +24,8 @@ Ready patterns for common game features, in C++. Each recipe shows the schema en
 | [A sequence of timed steps](#a-sequence-of-timed-steps) | chained `after` |
 | [Random spawn positions](#random-spawn-positions) | `std::minstd_rand` |
 | [Debug overlay](environments/web/typescript/recipes.md#debug-overlay) | browser-only |
+| [Camera that follows after movement](#camera-that-follows-after-movement) | `OrderBand::Last` |
+| [Share systems between games](#share-systems-between-games) | plugin, `PLUGINS` |
 
 ---
 
@@ -644,3 +646,51 @@ engine.addSystem(oly::app::Phase::Update, "spawnEnemies", spawnEnemies, &random)
 Its sequence is the same in every standard library; the `std::*_distribution` classes are not, so use `random() % n` or your own mapping ([Deterministic randomness](environments/web/getting-started.md#deterministic-randomness)).
 
 TypeScript: [Random spawn positions](environments/web/typescript/recipes.md#random-spawn-positions).
+
+## Camera that follows after movement
+
+The camera must read the player's position of this step, after every system that moves the player, whatever order the systems were registered in.
+
+```
+# game.oly
+component Position { x: f32, y: f32 }
+component Camera { x: f32, y: f32 }
+tag Player
+```
+
+```cpp
+OLY_SYSTEM(followPlayer) {
+  auto player = context.query<const Position>(oly::ecs::With<Player>{}).trySingle();
+  if (!player) {
+    return;
+  }
+
+  const Position target = std::get<1>(*player);
+  context.query<Camera>().each([&target](Camera& camera) {
+    camera.x = target.x;
+    camera.y = target.y;
+  });
+}
+```
+
+**Where you own the `Engine`** (native):
+
+```cpp
+engine.addSystem(oly::app::Phase::Update, "followPlayer", followPlayer, nullptr, oly::app::OrderBand::Last);
+```
+
+The `Last` band runs after the whole default band of `Update`, so movement registered later still runs first ([Order bands](concepts/engine-and-systems.md#order-bands)). The clients register in the default band: in TS, register the camera system after the movement systems.
+
+## Share systems between games
+
+Two games need the same components and systems. Move them into a plugin: the `.oly` entries go into the plugin's `.oly`, the systems into its `install`, and each game lists the plugin in `PLUGINS`.
+
+```cmake
+oly_add_plugin(NAME lifetime SCHEMA lifetime.oly DEPENDS ecs app)
+```
+
+```cmake
+oly_add_game(<game>_game ENVIRONMENT web SCHEMA ${CMAKE_CURRENT_SOURCE_DIR}/<game>.oly SOURCES ${nativeSources} DEPENDS ecs app capi PLUGINS lifetime)
+```
+
+The game's code changes in one place: the types come from the plugin's header, which the game's `schema.generated.hpp` includes. The full walk-through is in [Plugins](concepts/plugins.md#write-a-plugin). A TS game uses the plugin's components through its generated schema and writes no install code.

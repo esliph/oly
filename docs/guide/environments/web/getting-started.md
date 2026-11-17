@@ -106,11 +106,14 @@ if(OLY_ENVIRONMENT STREQUAL "web")
     ENVIRONMENT web
     SCHEMA ${CMAKE_CURRENT_SOURCE_DIR}/hello.oly
     SOURCES ${nativeSources}
-    DEPENDS ecs app capi)
+    DEPENDS ecs app capi
+    TYPESCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/web/schema.generated.ts)
 endif()
 ```
 
 `ENVIRONMENT` says where the game runs (`web` or `native`), and a game builds only in its own environment: the `if` keeps the folder out of the other builds. The target name must be `<folder>_game`: `./spur game hello` looks for `hello_game.mjs`.
+
+`TYPESCRIPT` names the TS schema file the build writes; `./spur ts` writes it before it compiles the TS. An optional `PLUGINS <plugin>...` turns [plugins](../../concepts/plugins.md) on: their types reach `schema.generated.ts` and their systems run in the WASM module, with no TS code.
 
 ### 5. `hello.oly`
 

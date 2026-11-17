@@ -9,6 +9,10 @@
 - **A cycle of observers can loop forever.** Commands an observer records are applied until nothing is pending; observers that always record more commands never stop. Nothing guards it.
 - **An implied component leaves with its last implier**, even when the game added it explicitly before.
 - **With implications, a flush can differ from applying its commands one by one.** The flush works on the net change, which keeps no order between components: an implied component present before and after keeps its value (one by one, losing its last implier and getting a new one value-initializes it), and a component the buffer adds stays even when the buffer removes its implier after it.
+- **The 32-state limit counts the merged schema** (the game's `.oly` and its plugins'). Today only the game declares states, so the limit is the game's.
+- **A plugin `.oly` cannot declare actions or states** ([plugins.md](plugins.md#schema-merge)). Their ids are `constexpr` in a header generated once per plugin; the fix, when a plugin needs one, is runtime-resolved handles.
+- **A plugin with no `install` is not supported yet.** `oly_add_plugin` requires `src/*.cpp` and the generated `setUpGame` installs `oly::<name>::Plugin`, so a pure function library (a math plugin) cannot be a plugin until one exists.
+- **The C API and TS parts of a plugin have no build support yet.** Their shape is defined ([plugins.md](plugins.md#parts)); the support comes with the first plugin that needs it.
 - **NF-P5** is not met at N = 100000 ([performance.md](performance.md)).
 - **Two `Engine`s on the same `World`** share the scope tag: a state change in one cleans up the scoped entities of the other. `capi` avoids this by creating one `World` per `OlyEngine`.
 - **Arena workarounds** (recorded in `games/arena/README.md`): the right-click menu is prevented by `main.ts` itself, because `attachBrowserInput` only prevents it when `MouseRight` is bound to an action.

@@ -15,7 +15,7 @@ One page with every public name: C++ first, then the C API, then the TypeScript 
 
 oly::ecs::World world;                                    // before the Engine
 oly::app::Engine engine(world, oly::app::EngineConfig{.fixedHz = 60.0, .maxStepsPerFrame = 5, .maxEventRounds = 16});
-oly::app::declareSchema(engine);                          // events, actions and states of the schema, in schema order; once, on a fresh Engine
+oly::app::setUpGame(engine);                              // "oly/app/game.hpp": declares the schema, then installs the plugins; once, on a fresh Engine
 ```
 
 ## Schema names
@@ -68,7 +68,8 @@ auto row = context.query<A>().trySingle();               // std::optional<std::t
 | `pause()`, `resume()`, `paused()` | effect from the next step |
 | `time()`, `fixedDeltaTime()`, `interpolation()` | seconds |
 | `world()`, `actions()`, `schedule()` | |
-| `addSystem(phase, name, function, userData)` | returns `SystemId`; `setWhilePaused(id, true)`, `setSystemStates(id, {states::a})` |
+| `addSystem(phase, name, function, userData, band)` | returns `SystemId`; `band`: `OrderBand::Default` (default) or `OrderBand::Last` ([Order bands](concepts/engine-and-systems.md#order-bands)); `setWhilePaused(id, true)`, `setSystemStates(id, {states::a})` |
+| `installPlugin<P>()`, `plugin<P>()` | returns `P&`; install before the first `frame`, once ([Plugins](concepts/plugins.md)) |
 | `declareEvent<T>(name)`, `on<T>(name, function, userData)` | `on` returns `HandlerId`; `setHandlerStates(id, {...})` |
 | `requestState(state)`, `state()` | `oly::app::NoState` until the first change |
 | `onEnter(state, name, function)`, `onExit(state, name, function)` | |
@@ -162,7 +163,14 @@ oly::native_host::keyButtonOf(SDL_SCANCODE_W);            // std::optional<Physi
 ```
 
 ```cmake
-oly_add_game(<game>_game ENVIRONMENT web|native SCHEMA <game>.oly SOURCES <files> DEPENDS <modules>)
+oly_add_game(<game>_game ENVIRONMENT web|native SCHEMA <game>.oly SOURCES <files> DEPENDS <modules> [PLUGINS <plugins>] [TYPESCRIPT <file.ts>])
+oly_add_plugin(NAME <plugin> [SCHEMA <plugin>.oly] DEPENDS <modules> [PLUGINS <plugins>])   # class oly::<plugin>::Plugin, sources src/*.cpp
+```
+
+```cpp
+class Plugin : public oly::app::Plugin {                  // "oly/app/plugin.hpp"; default constructible
+  void install(oly::app::Engine& engine) override;        // register systems, handlers, hooks, observers
+};                                                        // the destructor removes the observers install registered
 ```
 
 # C API

@@ -68,6 +68,7 @@ Read in order the first time. Each page builds on the one before.
 | [Schedule](concepts/schedule.md) | run code later or every N seconds on the game clock |
 | [States](concepts/states.md) | build menu, playing and game over screens that reset cleanly |
 | [Performance](concepts/performance.md) | keep the hot path fast |
+| [Plugins](concepts/plugins.md) | turn reusable engine functionality on, and write your own |
 
 ## References
 
@@ -115,7 +116,7 @@ OLY_SYSTEM(integrate) {
 ```cpp
 oly::ecs::World world;
 oly::app::Engine engine(world);
-oly::app::declareSchema(engine);
+oly::app::setUpGame(engine);
 
 engine.actions().bind(actions::move, oly::input::Axis2dBinding{oly::input::Key::W, oly::input::Key::S, oly::input::Key::A, oly::input::Key::D});
 world.spawn(Player{}, Position{100.0f, 100.0f}, Velocity{});

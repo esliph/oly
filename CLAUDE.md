@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Oly: 2D game engine in C++20 on top of a single-threaded archetype ECS (study and benchmark project). The C++ core runs in environments (`web`: WASM with a TS client; `native`: a desktop host), with a C API `oly*` for clients in other languages.
+Oly: 2D game engine in C++20 on top of a single-threaded archetype ECS (study and benchmark project). The C++ core runs in environments (`web`: WASM with a TS client; `native`: a desktop host), with a C API `oly*` for clients in other languages. Plugins (`oly_add_plugin`) add engine-level features that a game turns on with `oly_add_game(... PLUGINS ...)`; the generated `setUpGame` installs them. Today only test plugins exist (`engine/testing/fixture/plugins/`); `plugins/` arrives with `essentials`.
 
 ## Documentation
 
@@ -12,6 +12,7 @@ Start with `docs/architecture/README.md`. It has the overview and the index of a
 - Commits, comments and assert messages in English.
 - Do not format `.cpp`/`.hpp` by hand: the `.claude/hooks/clang-format.sh` hook formats after each edit (it fails if Docker is stopped).
 - Use the glossary names. No aliases or compatibility `using` with old names. Game concepts never in `engine/`; game names only in `engine/testing/fixture/` and `games/`.
+- Plugins (`docs/architecture/plugins.md`): `engine/` never depends on `plugins/`; a plugin includes only public headers of the modules and plugins it declares, is its own CMake target with no path relative to the repository root, and its `.oly` reaches `oly-schema` as an argument. Game names never in `plugins/`.
 - When changing `table`, `archetype`, `query*`, `command_buffer` or `world`: keep `checkInvariants` covering the change and run the `spec-conformance-reviewer` and `perf-reviewer` agents.
 - New test: use the `add-test-case` skill.
 - Any change that adds, changes or removes public API (the surfaces listed in `docs/development/guide-style.md`) updates the user guide `docs/guide/` in the same change, following that style.

@@ -11,7 +11,7 @@ games/arena/
   arena.oly              the game's components, tags, events, actions and states
   native/                per-entity C++ gameplay: control, shooting, chasing, movement, collision
   web/                   the game's npm package, and the page that serves it
-    schema.generated.ts  generated from arena.oly by ./spur ts (not committed)
+    schema.generated.ts  generated from arena.oly by the arena_game target (TYPESCRIPT), which ./spur ts builds (not committed)
     src/game.ts          installGame(engine, { drawer, random }): registers everything, no DOM
     src/render.ts        render through a Drawer interface
     src/main.ts          browser shell: canvas, Drawer over Canvas 2D, runInBrowser, attachBrowserInput
@@ -42,7 +42,7 @@ Drift is the desktop example: the player steers a square, rocks fall, touching o
 games/drift/
   drift.oly        components, tags, the PlayerHit event, move and restart actions, playing and gameOver states
   native/          the gameplay in C++, with no SDL: systems in three phases, a handler, state hooks, a repeating task
-  desktop/         main.cpp (World, Engine, declareSchema, Window, run) and render.cpp (the Render system, SDL drawing)
+  desktop/         main.cpp (World, Engine, setUpGame, Window, run) and render.cpp (the Render system, SDL drawing)
   README.md        controls and how to run
 ```
 
@@ -56,7 +56,7 @@ Drift is the desktop example: the player steers a square, rocks fall, touching o
 games/drift/
   drift.oly        components, tags, the PlayerHit event, move and restart actions, playing and gameOver states
   native/          the gameplay in C++, with no SDL: systems in three phases, a handler, state hooks, a repeating task
-  desktop/         main.cpp (World, Engine, declareSchema, Window, run) and render.cpp (the Render system, SDL drawing)
+  desktop/         main.cpp (World, Engine, setUpGame, Window, run) and render.cpp (the Render system, SDL drawing)
   README.md        controls and how to run
 ```
 

@@ -121,6 +121,7 @@ On every build, `oly-schema` reads the `.oly` file and writes the generated file
 | `schema.generated.hpp` | the structs, `actions::` and `states::` |
 | `schema_registry.generated.cpp` | the schema hash and the component ids, which the C API reads |
 | `schema_declaration.generated.cpp` | `oly::app::declareSchema(Engine&)` |
+| `game_setup.generated.cpp` | `oly::app::setUpGame(Engine&)`: `declareSchema`, then the install of each plugin |
 
 From the schema above, `schema.generated.hpp` contains:
 
@@ -143,13 +144,23 @@ namespace states {
 }
 ```
 
-`oly::app::declareSchema(engine)` declares the events, actions and states in schema order, so the index in the schema is the id. Call it once, on an `Engine` that declares nothing yet (`OLY_ASSERT` otherwise):
+`oly::app::setUpGame(engine)` declares the events, actions and states in schema order, so the index in the schema is the id, and then installs the game's [plugins](plugins.md). Call it once, on an `Engine` that declares nothing yet (`OLY_ASSERT` otherwise):
 
 ```cpp
-oly::app::declareSchema(engine);
+oly::app::setUpGame(engine);
 ```
 
 Where you do not own the `Engine`, the host does this for you ([the web host](../environments/web/getting-started.md), [the desktop host](../environments/native/getting-started.md)).
+
+## Types that come from plugins
+
+A plugin can bring its own `.oly` with components, tags and events. When a game turns the plugin on (`PLUGINS` in its CMake, [Plugins](plugins.md)), the build merges the plugin's types into the game's schema:
+
+- the plugins' types come first, in install order, then the game's. That order gives the component ids and the event order;
+- names are flat: a name that a plugin and the game both declare stops the build, and the error names both places (`game.oly:3:11: repeated name "Counter"; first declared at counting.oly:1:11`);
+- the hash covers the merged schema, so a client built with another set of plugins fails to load with a schema mismatch.
+
+The game uses a plugin's types like its own: the game's `schema.generated.hpp` includes the plugin's header (`oly/<plugin>/schema.generated.hpp`), and the TS schema lists them.
 
 ## Using the schema in several places
 

@@ -12,7 +12,8 @@ The same verb stands for the same concept in C++, in the C API and in TS.
 | read the only row of a query (exactly one / at most one) | `Query::single()` -> `tuple<Entity, Ts&...>` / `trySingle()` -> `optional` | (`olyQueryBegin/End`) | `query.single()` / `trySingle()` -> `SingleRow` (copy) |
 | game (fixed) step / hidden tab | `Engine::frame(nowSeconds)`, `setHidden` | `olyEngineFrame`, `olyEngineSetHidden` | `Engine.frame`, `setHidden` |
 | pause / resume | `Engine::pause`, `resume`, `paused`; `SystemContext::pause/resume` | `olyEnginePause/Resume/IsPaused` | `pause`, `resume`, `paused` |
-| register system | `Engine::addSystem(phase, name, function)`, `OLY_SYSTEM(name)` (by name) | `olyEngineAddNativeSystem` (by name), `olyEngineAddScriptSystem` | `addSystem`, `addNativeSystem` |
+| register system | `Engine::addSystem(phase, name, function, userData, band)`, `OLY_SYSTEM(name)` (by name) | `olyEngineAddNativeSystem` (by name), `olyEngineAddScriptSystem` | `addSystem`, `addNativeSystem` |
+| order band: where a system runs inside its phase (`Default` first, then `Last`; registration order inside a band) | `OrderBand::Default`, `OrderBand::Last` (last parameter of `addSystem`) | — (always `Default`) | — (always `Default`) |
 | system runs while paused | `Engine::setWhilePaused` | `olyEngineSetWhilePaused` | `SystemRegistration.whilePaused()` |
 | deferred structural change (inside a system) | `SystemContext::spawn/destroy/add/remove` | `olySystemSpawn/Destroy/Add/Remove` | `context.spawn/destroy/add/remove` |
 | observer: run code when an entity gains (**on add**) or loses (**on remove**) a component | `World::onAdd<T>`, `onRemove<T>`, `observeById(kind, componentId, ...)`, `removeObserver`; `ObserverContext` | — | — |
@@ -34,7 +35,9 @@ The same verb stands for the same concept in C++, in the C API and in TS.
 | call script code | — (C++ code is called directly) | `olyEngineSetScriptInvoker` (per engine, dispatch by `kind`) | installed by `Runtime.createEngine` |
 | restrict to states | `Engine::setSystemStates/setHandlerStates` (and `*StateMask`) | `olyEngineSetSystemStates/SetHandlerStates` | `registration.inState(...states)` |
 | persist (remove the state scope) | `SystemContext/DirectContext::persist`, `Scheduler::persist` | `olyContextPersist`, `olyEnginePersistTask` | `context.persist`, `schedule.persist` |
-| declare the schema (events, actions, states) | `oly::app::declareSchema(engine)` (generated, in `schema_declaration.generated.cpp`) | (done by `olyEngineCreate`) | (done by `Runtime.createEngine`) |
+| set up the game: declare the schema (events, actions, states), then install the plugins | `oly::app::setUpGame(engine)` (generated, in `game_setup.generated.cpp`); it calls `oly::app::declareSchema(engine)` (generated, in `schema_declaration.generated.cpp`) | (done by `olyEngineCreate`) | (done by `Runtime.createEngine`) |
+| plugin: engine-level functionality a game turns on in its build | `oly::app::Plugin` (`install(engine)`); `oly_add_plugin(NAME <p> ...)` in CMake, turned on with `oly_add_game(... PLUGINS ...)` | — | — |
+| install a plugin / reach an installed plugin | `Engine::installPlugin<P>()` / `Engine::plugin<P>()` | — | — |
 | desktop window and loop | `oly::native_host::Window`, `oly::native_host::run(engine, window, options)` | — | — |
 | variant by ID | `ById` suffix: `addById`, `removeById`, `hasById`, `getById`, `tryGetById`, `queryById` | (all by ID) | — |
 

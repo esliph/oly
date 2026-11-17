@@ -20,7 +20,7 @@ action move: axis2d
 #include <SDL3/SDL.h>
 
 #include "oly/app/engine.hpp"
-#include "oly/app/schema.hpp"
+#include "oly/app/game.hpp"
 #include "oly/ecs/query.hpp"
 #include "oly/ecs/world.hpp"
 #include "oly/native_host/run.hpp"
@@ -42,7 +42,7 @@ namespace {
 int main() {
   oly::ecs::World world;
   oly::app::Engine engine(world);
-  oly::app::declareSchema(engine);
+  oly::app::setUpGame(engine);
 
   engine.actions().bind(actions::move, {oly::input::Key::W, oly::input::Key::S, oly::input::Key::A, oly::input::Key::D});
   world.spawn(Player{}, Position{320.0f, 240.0f});
@@ -54,7 +54,7 @@ int main() {
 }
 ```
 
-- `oly::app::declareSchema(engine)` declares the schema's events, actions and states in schema order, so `actions::move` and the other generated ids are valid. Call it first, on an `Engine` that has declared nothing yet (`OLY_ASSERT`).
+- `oly::app::setUpGame(engine)` declares the schema's events, actions and states in schema order, so `actions::move` and the other generated ids are valid, then installs the game's [plugins](../../concepts/plugins.md). The build generates it. Call it first, on an `Engine` that has declared nothing yet (`OLY_ASSERT`).
 - `Window` opens a resizable window and an SDL renderer. Its size is the **logical size** your game draws in: the host scales it to the window and adds bars when the aspect ratio differs. If SDL cannot open the window (no display, no video driver), the constructor throws `std::runtime_error` with SDL's message.
 - `run` returns when the window is closed, and its result is the process exit code.
 
@@ -131,7 +131,7 @@ To check what the game *did*, run the gameplay with no window at all. Keep the g
 
 #include "gameplay.hpp"
 #include "oly/app/engine.hpp"
-#include "oly/app/schema.hpp"
+#include "oly/app/game.hpp"
 #include "oly/ecs/diagnostics.hpp"
 #include "oly/ecs/world.hpp"
 #include "schema.generated.hpp"
@@ -139,7 +139,7 @@ To check what the game *did*, run the gameplay with no window at all. Keep the g
 int main() {
   oly::ecs::World world;
   oly::app::Engine engine(world);
-  oly::app::declareSchema(engine);
+  oly::app::setUpGame(engine);
   installGameplay(engine);
 
   engine.actions().bind(actions::move, oly::input::Axis2dBinding{oly::input::Key::W, oly::input::Key::S, oly::input::Key::A, oly::input::Key::D});
@@ -202,8 +202,11 @@ oly_add_game(<game>_game
   ENVIRONMENT native
   SCHEMA ${CMAKE_CURRENT_SOURCE_DIR}/<game>.oly
   SOURCES ${gameSources}
-  DEPENDS ecs app input native_host)
+  DEPENDS ecs app input native_host
+  PLUGINS <plugin>)
 ```
+
+`PLUGINS` is optional: it lists the [plugins](../../concepts/plugins.md) the game turns on. The test target above lists the same plugins, so its `setUpGame` installs them too.
 
 A game builds only in its own environment: `oly_add_game` stops the configure when `ENVIRONMENT` is not the one of the build (`native` for the `native-games*` and `windows*` presets, `web` for the WASM ones), so wrap the game's `CMakeLists.txt` in `if(OLY_ENVIRONMENT STREQUAL "native")`. A native game has no registry and no `.mjs`: the target is a plain executable in `build/<preset>/games/`.
 
