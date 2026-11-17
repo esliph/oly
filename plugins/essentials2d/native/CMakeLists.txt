@@ -3,3 +3,7 @@ oly_add_plugin(NAME essentials2d SCHEMA ${CMAKE_CURRENT_SOURCE_DIR}/../essential
 if(OLY_BUILD_TESTS)
   add_subdirectory(tests)
 endif()
+
+if(OLY_BUILD_BENCH)
+  add_subdirectory(bench)
+endif()
