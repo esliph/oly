@@ -23,9 +23,10 @@ class CheckBoundariesTest(unittest.TestCase):
         with open(path, "w", encoding="utf-8") as handle:
             handle.write(content)
 
-    def run_check(self, modules, games=()):
+    def run_check(self, modules, games=(), plugins=()):
         manifest = {
             "modules": [{"name": name, "directory": directory, "depends": depends} for name, directory, depends in modules],
+            "plugins": [{"name": name, "directory": directory, "depends": depends} for name, directory, depends in plugins],
             "games": [{"name": name, "directory": directory, "depends": depends} for name, directory, depends in games],
         }
         manifestPath = os.path.join(self.root, "manifest.json")
@@ -253,6 +254,71 @@ class CheckBoundariesTest(unittest.TestCase):
 
         self.assertEqual(code, 1)
         self.assertIn("engine/schema/codegen/src/x.cpp:1: engine/schema cannot depend on environment web (oly/schema_typescript)", output)
+
+    def test_engine_includes_plugin_fails(self):
+        self.write("plugins/counting/include/oly/counting/plugin.hpp", "#pragma once\n")
+        self.write("engine/runtime/app/src/x.cpp", '#include "oly/counting/plugin.hpp"\n')
+
+        code, output = self.run_check([("app", "engine/runtime/app", ["counting"])], plugins=[("counting", "plugins/counting", ["app"])])
+
+        self.assertEqual(code, 1)
+        self.assertIn("engine/runtime/app/src/x.cpp:1: engine cannot depend on plugin counting", output)
+
+    def test_plugin_includes_undeclared_fails(self):
+        self.write("plugins/counting/src/plugin.cpp", '#include "oly/capi/c_api.h"\n')
+
+        code, output = self.run_check([("app", "engine/runtime/app", []), ("capi", "engine/runtime/capi", [])], plugins=[("counting", "plugins/counting", ["app"])])
+
+        self.assertEqual(code, 1)
+        self.assertIn("plugins/counting/src/plugin.cpp:1: counting includes oly/capi without declaring capi in DEPENDS", output)
+
+    def test_plugin_includes_other_detail_fails(self):
+        self.write("plugins/counting/src/plugin.cpp", '#include "oly/ecs/detail/table.hpp"\n')
+
+        code, output = self.run_check([("ecs", "engine/runtime/ecs", [])], plugins=[("counting", "plugins/counting", ["ecs"])])
+
+        self.assertEqual(code, 1)
+        self.assertIn("plugins/counting/src/plugin.cpp:1: oly/ecs/detail is internal to module ecs", output)
+
+    def test_game_name_in_plugin_fails(self):
+        self.write("games/arena/arena.oly", "")
+        self.write("plugins/counting/src/plugin.cpp", "// tuned for arena_game\n")
+        self.write("plugins/counting/arena/notes.cpp", "")
+
+        code, output = self.run_check([], plugins=[("counting", "plugins/counting", [])])
+
+        self.assertEqual(code, 1)
+        self.assertIn("plugins/counting/src/plugin.cpp:1: game name arena in plugins/", output)
+        self.assertIn("plugins/counting/arena/notes.cpp: game name arena in plugins/", output)
+
+    def test_game_name_inside_another_word_in_plugin_passes(self):
+        self.write("games/arena/arena.oly", "")
+        self.write("plugins/counting/src/plugin.cpp", "// an arenas pool; see Arena\n")
+
+        code, output = self.run_check([], plugins=[("counting", "plugins/counting", [])])
+
+        self.assertEqual(code, 0)
+        self.assertEqual(output, "")
+
+    def test_engine_test_game_outside_engine_fails(self):
+        self.write("games/g/CMakeLists.txt", "oly_add_engine_test_game(g_game ENVIRONMENT web)\n")
+        self.write("engine/testing/CMakeLists.txt", "oly_add_engine_test_game(fixture_game ENVIRONMENT web)\n")
+
+        code, output = self.run_check([])
+
+        self.assertEqual(code, 1)
+        self.assertEqual(output, "games/g/CMakeLists.txt:1: oly_add_engine_test_game is only for engine/\n")
+
+    def test_digit_in_module_name_resolves_its_owner(self):
+        self.write("plugins/essentials2d/include/oly/essentials2d/transform.hpp", "#pragma once\n")
+        self.write("games/g/x.cpp", '#include "oly/essentials2d/transform.hpp"\n')
+        self.write("engine/runtime/app/src/x.cpp", '#include "oly/essentials2d/transform.hpp"\n')
+
+        code, output = self.run_check([("app", "engine/runtime/app", ["essentials2d"])], games=[("g", "games/g", [])], plugins=[("essentials2d", "plugins/essentials2d", [])])
+
+        self.assertEqual(code, 1)
+        self.assertIn("games/g/x.cpp:1: g includes oly/essentials2d without declaring essentials2d in DEPENDS", output)
+        self.assertIn("engine/runtime/app/src/x.cpp:1: engine cannot depend on plugin essentials2d", output)
 
 
 if __name__ == "__main__":

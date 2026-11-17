@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Rejects includes that cross the boundaries between Oly modules and environment boundaries, and Emscripten outside the web environment, generated-code imports and the core's independence from environments.
+"""Rejects includes that cross the boundaries between Oly modules, plugins and environments, Emscripten outside the web environment, generated-code imports, the core's independence from environments and plugins, game names in plugins and engine test games outside engine/.
 
 Usage: python3 -I tools/check_boundaries.py --root <repo> --manifest <json>
 Exits 0 with no violations; exits 1 printing "<file>:<line>: <reason>" per violation.
@@ -14,11 +14,17 @@ IGNORED_DIRECTORIES = {"build", "node_modules", ".git", ".superpowers", "dist", 
 CPP_EXTENSIONS = (".hpp", ".cpp", ".h", ".c", ".inl")
 TS_EXTENSION = ".ts"
 
-INCLUDE_PATTERN = re.compile(r'^\s*#\s*include\s+"oly/([a-z_]+)/([^"]*)"')
+INCLUDE_PATTERN = re.compile(r'^\s*#\s*include\s+"oly/([a-z0-9_]+)/([^"]*)"')
 # The engine and its schema tooling know no environment; environments depend on them.
 CORE_PREFIXES = ("engine/runtime/", "engine/schema/")
 ENVIRONMENTS_PREFIX = "engine/environments/"
-MODULE_INCLUDE_DIRECTORY = re.compile(r"^(.+)/include/oly/([a-z_]+)$")
+MODULE_INCLUDE_DIRECTORY = re.compile(r"^(.+)/include/oly/([a-z0-9_]+)$")
+
+# Plugins depend on the engine, never the reverse; the engine's own test plugins live under engine/testing/fixture/.
+ENGINE_PREFIX = "engine/"
+PLUGINS_PREFIX = "plugins/"
+GAMES_DIRECTORY = "games"
+ENGINE_TEST_GAME_PATTERN = re.compile(r"\boly_add_engine_test_game\s*\(")
 
 EMSCRIPTEN_PATTERN = re.compile(r"__EMSCRIPTEN(?:_[a-z]+)?__|\bEM_[A-Z_]+|\bEMSCRIPTEN_[A-Z_]+|<emscripten[./]")
 EMSCRIPTEN_ALLOWED_PREFIX = "engine/environments/web/"
@@ -29,7 +35,8 @@ TS_IMPORT_PATTERN = re.compile(r"""(?:\bfrom\s+|\bimport\s*\(?\s*)["'](\.{1,2}/[
 
 
 def load_owners(manifest):
-    owners = [(entry["directory"].rstrip("/") + "/", entry["name"], set(entry["depends"])) for entry in manifest["modules"] + manifest["games"]]
+    entries = manifest["modules"] + manifest.get("plugins", []) + manifest["games"]
+    owners = [(entry["directory"].rstrip("/") + "/", entry["name"], set(entry["depends"])) for entry in entries]
     # Longest prefix first: owner_of keeps the first match, which is therefore the most specific directory.
     return sorted(owners, key=lambda owner: len(owner[0]), reverse=True)
 
@@ -83,6 +90,45 @@ def environment_violation(relative_path, target_directory, target_name):
     return None
 
 
+def plugin_violation(relative_path, target_directory, target_name):
+    if target_directory is None or not target_directory.startswith(PLUGINS_PREFIX):
+        return None
+    if relative_path.startswith(ENGINE_PREFIX):
+        return f"engine cannot depend on plugin {target_name}"
+    return None
+
+
+def game_names_pattern(root):
+    games_directory = os.path.join(root, GAMES_DIRECTORY)
+    if not os.path.isdir(games_directory):
+        return None
+    names = sorted(name for name in os.listdir(games_directory) if os.path.isdir(os.path.join(games_directory, name)))
+    if not names:
+        return None
+    # Whole words in any identifier style: "arena_game" names the game, "arenas" does not.
+    return re.compile(r"(?<![A-Za-z0-9])(" + "|".join(re.escape(name) for name in names) + r")(?![A-Za-z0-9])")
+
+
+def check_game_names(path, relative_path, pattern):
+    violations = [f"{relative_path}: game name {name} in plugins/" for name in sorted(set(pattern.findall(relative_path)))]
+    with open(path, encoding="utf-8", errors="replace") as handle:
+        for line_number, line in enumerate(handle, start=1):
+            for name in sorted(set(pattern.findall(line))):
+                violations.append(f"{relative_path}:{line_number}: game name {name} in plugins/")
+
+    return violations
+
+
+def check_engine_test_game(path, relative_path):
+    violations = []
+    with open(path, encoding="utf-8", errors="replace") as handle:
+        for line_number, line in enumerate(handle, start=1):
+            if ENGINE_TEST_GAME_PATTERN.search(line):
+                violations.append(f"{relative_path}:{line_number}: oly_add_engine_test_game is only for engine/")
+
+    return violations
+
+
 def emscripten_violation(relative_path, line):
     if relative_path.startswith(EMSCRIPTEN_ALLOWED_PREFIX) or relative_path == OLY_API_HEADER:
         return None
@@ -95,12 +141,11 @@ def emscripten_violation(relative_path, line):
     return f"Emscripten ({matches[0]}) is allowed only in engine/environments/web/ and OLY_API"
 
 
-def source_files(root):
+def repository_files(root):
     for current, directories, files in os.walk(root):
         directories[:] = [directory for directory in directories if directory not in IGNORED_DIRECTORIES]
         for file_name in files:
-            if file_name.endswith(CPP_EXTENSIONS) or file_name.endswith(TS_EXTENSION):
-                yield os.path.join(current, file_name)
+            yield os.path.join(current, file_name)
 
 
 def check_cpp_file(path, relative_path, owners, module_directories):
@@ -124,6 +169,9 @@ def check_cpp_file(path, relative_path, owners, module_directories):
             environment_message = environment_violation(relative_path, module_directories.get(included_module), f"oly/{included_module}")
             if environment_message is not None:
                 violations.append(f"{relative_path}:{line_number}: {environment_message}")
+            plugin_message = plugin_violation(relative_path, included_directory, included_module)
+            if plugin_message is not None:
+                violations.append(f"{relative_path}:{line_number}: {plugin_message}")
 
     return violations
 
@@ -168,13 +216,19 @@ def check_ts_file(path, relative_path, root, package_directories):
 def check(root, manifest):
     owners = load_owners(manifest)
     module_directories, package_directories = repository_layout(root)
+    game_names = game_names_pattern(root)
     violations = []
-    for path in source_files(root):
+    for path in repository_files(root):
         relative_path = os.path.relpath(path, root).replace(os.sep, "/")
         if path.endswith(TS_EXTENSION):
             violations.extend(check_ts_file(path, relative_path, root, package_directories))
-        else:
+        elif path.endswith(CPP_EXTENSIONS):
             violations.extend(check_cpp_file(path, relative_path, owners, module_directories))
+        elif os.path.basename(path) == "CMakeLists.txt" and not relative_path.startswith(ENGINE_PREFIX):
+            violations.extend(check_engine_test_game(path, relative_path))
+
+        if game_names is not None and relative_path.startswith(PLUGINS_PREFIX):
+            violations.extend(check_game_names(path, relative_path, game_names))
 
     return sorted(violations)
 
