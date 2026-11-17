@@ -1,11 +1,11 @@
 #include "components.hpp"
 #include "oly/app/engine.hpp"
-#include "oly/app/schema.hpp"
+#include "oly/app/game.hpp"
 #include "oly/capi/schema_registry.hpp"
 #include "test_events.hpp"
 
 namespace oly::app {
-  void declareSchema(Engine& engine) {
+  void setUpGame(Engine& engine) {
     engine.declareEvent<CapiTestEvent>("CapiTestEvent");
     engine.actions().declare(oly::input::ActionKind::Button, "capiJump");
     engine.actions().declare(oly::input::ActionKind::Axis2d, "capiMove");

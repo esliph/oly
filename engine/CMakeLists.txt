@@ -19,4 +19,6 @@ if(OLY_BUILD_GAMES AND OLY_ENVIRONMENT STREQUAL "web")
   endif()
 
   add_subdirectory(testing)
+elseif(OLY_BUILD_TESTS AND OLY_ENVIRONMENT STREQUAL "native")
+  add_subdirectory(testing)
 endif()

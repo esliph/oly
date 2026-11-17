@@ -3,8 +3,8 @@
 #include <cstddef>
 
 #include "handles.hpp"
+#include "oly/app/game.hpp"
 #include "oly/app/handler.hpp"
-#include "oly/app/schema.hpp"
 #include "oly/app/state_context.hpp"
 #include "oly/app/system.hpp"
 #include "oly/app/task_context.hpp"
@@ -124,7 +124,7 @@ extern "C" {
 OlyEngine* olyEngineCreate(double fixedHz, uint32_t maxStepsPerFrame, uint32_t maxEventRounds) {
   OlyEngine* engine = new OlyEngine(oly::app::EngineConfig{fixedHz, maxStepsPerFrame, maxEventRounds});
 
-  oly::app::declareSchema(engine->engine);
+  oly::app::setUpGame(engine->engine);
 
   return engine;
 }

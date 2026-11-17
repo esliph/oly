@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "oly/app/engine.hpp"
-#include "oly/app/schema.hpp"
+#include "oly/app/game.hpp"
 #include "oly/capi/c_api.h"
 #include "oly/capi/engine_api.h"
 #include "oly/capi/schema_registry.hpp"
@@ -15,7 +15,7 @@
 #include "oly/ecs/component.hpp"
 
 namespace oly::app {
-  void declareSchema(Engine& engine) {
+  void setUpGame(Engine& engine) {
     engine.actions().declare(oly::input::ActionKind::Button, "jump");
     engine.actions().declare(oly::input::ActionKind::Axis2d, "move");
   }

@@ -6,7 +6,7 @@
 
 #include "drift.hpp"
 #include "oly/app/engine.hpp"
-#include "oly/app/schema.hpp"
+#include "oly/app/game.hpp"
 #include "oly/ecs/world.hpp"
 #include "oly/native_host/run.hpp"
 #include "oly/native_host/window.hpp"
@@ -46,7 +46,7 @@ int main(int argumentCount, char** arguments) {
   try {
     oly::ecs::World world;
     oly::app::Engine engine(world);
-    oly::app::declareSchema(engine);
+    oly::app::setUpGame(engine);
 
     drift::Run run{.random = std::minstd_rand(std::random_device{}())};
     drift::installGameplay(engine, run);
