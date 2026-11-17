@@ -53,7 +53,7 @@ PRESET=release ./spur build
 
 ```sh
 ./spur schema-tool        # builds oly-schema for the machine (preset schema-tool)
-./spur ts                 # builds oly-schema, generates every TS schema and compiles the TS
+./spur ts                 # builds oly-schema, configures $PRESET (default wasm-games), writes each game's TS schema from its CMake target (oly_typescript_schemas) and the test-only schemas, and compiles the TS
 ./spur games-test         # ts + ctest in the wasm-games preset (ECS in WASM, capi, TS tests)
 ./spur game arena         # assembles build/wasm-games-release/web/arena/ (index.html, esbuild's main.js, arena_game.mjs/.wasm)
 PRESET=wasm-games-release ./spur games-test -R '^ts\.'   # Release: only the TS validations catch the errors

@@ -6,7 +6,9 @@ if(OLY_ENVIRONMENT STREQUAL "web")
     ENVIRONMENT web
     SCHEMA ${CMAKE_CURRENT_SOURCE_DIR}/fixture/fixture.oly
     SOURCES fixture/systems.cpp
-    DEPENDS ecs app capi)
+    DEPENDS ecs app capi
+    PLUGINS doubling
+    TYPESCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/fixture/fixture.generated.ts)
 
   if(OLY_BUILD_TESTS)
     add_test(NAME ts.testing.wasm COMMAND ${OLY_NODE} --test ${PROJECT_SOURCE_DIR}/engine/testing/dist/tests/wasm/)

@@ -9,7 +9,7 @@ import extraEventSchema from "../../fixture/schemas/extra_event.generated.js";
 import fireAxis2dSchema from "../../fixture/schemas/fire_axis2d.generated.js";
 import positionF64Schema from "../../fixture/schemas/position_f64.generated.js";
 import widerPingSchema from "../../fixture/schemas/wider_ping.generated.js";
-import { fixtureFactory, loadFixture, schema } from "./fixture.js";
+import { Counter, Doubled, Position, fixtureFactory, loadFixture, schema } from "./fixture.js";
 
 test("loads with the fixture schema", async () => {
   const { runtime } = await loadFixture();
@@ -18,6 +18,25 @@ test("loads with the fixture schema", async () => {
   assert.ok(world);
   assert.equal(world.checkInvariants(), null);
   world.dispose();
+});
+
+test("the fixture schema carries its plugins' components first", () => {
+  assert.equal(Counter.schemaIndex, 0);
+  assert.equal(Doubled.schemaIndex, 1);
+  assert.equal(Position.schemaIndex, 2);
+});
+
+test("the plugins' systems run inside the fixture module", async () => {
+  const { runtime } = await loadFixture();
+  const engine = runtime.createEngine({ fixedHz: 60 });
+  engine.frame(0);
+  const entity = engine.world.spawn([Counter, Doubled], { Counter: { value: 0 }, Doubled: { value: 0 } });
+
+  engine.frame(1 / 60);
+
+  assert.equal(engine.world.get(entity, Counter).value, 1);
+  assert.equal(engine.world.get(entity, Doubled).value, 2);
+  engine.dispose();
 });
 
 test("mismatched schema is rejected", async () => {
@@ -46,14 +65,14 @@ test("a module without the web host's invoker is rejected at load", async () => 
 test("TS schema with one more event than the WASM is rejected with the event count", async () => {
   await assert.rejects(
     loadRuntime(fixtureFactory(), extraEventSchema),
-    (error: unknown) => error instanceof SchemaMismatchError && /events in WASM: 2, in TS: 3/.test(error.message),
+    (error: unknown) => error instanceof SchemaMismatchError && /events in WASM: 3, in TS: 4/.test(error.message),
   );
 });
 
 test("event with a size different from the WASM is rejected with the event name", async () => {
   await assert.rejects(
     loadRuntime(fixtureFactory(), widerPingSchema),
-    (error: unknown) => error instanceof SchemaMismatchError && /events in WASM: 2, in TS: 2/.test(error.message) && /divergent type, event or action: Ping/.test(error.message),
+    (error: unknown) => error instanceof SchemaMismatchError && /events in WASM: 3, in TS: 3/.test(error.message) && /divergent type, event or action: Ping/.test(error.message),
   );
 });
 
