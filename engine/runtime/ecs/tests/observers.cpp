@@ -62,6 +62,7 @@ namespace {
     context.commands().destroy(context.world().get<Owner>(context.entity()).owned);
   }
 
+#if !defined(__EMSCRIPTEN__)
   struct ObserverFailure {};
 
   void throwOnFirstCall(oly::ecs::ObserverContext& context) {
@@ -80,6 +81,7 @@ namespace {
     destroyOwned(context);
     throw ObserverFailure{};
   }
+#endif
 
   void freezeNext(oly::ecs::ObserverContext& context) {
     context.commands().add(context.world().get<Link>(context.entity()).next, Frozen{});
@@ -522,6 +524,9 @@ TEST_CASE("R-OB-6: commands an observer records during a flush are applied befor
   CHECK_FALSE(world.isAlive(target));
 }
 
+// The exception crosses World, which oly_ecs compiles without -fwasm-exceptions: under Emscripten its frames unwind
+// with no cleanup, so the World's guards stay set. Only the test targets get -fwasm-exceptions (oly_wasm_exceptions).
+#if !defined(__EMSCRIPTEN__)
 TEST_CASE("R-OB-6: an observer that throws in a flush leaves no on add pending") {
   oly::ecs::World world;
   int calls = 0;
@@ -568,3 +573,4 @@ TEST_CASE("R-OB-6: a cascade interrupted by a throwing observer is not resumed b
   CHECK(world.isAlive(owned));
   CHECK_FALSE(world.isAlive(otherOwned));
 }
+#endif
