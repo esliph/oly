@@ -1,0 +1,5 @@
+component Position { x: f32, y: f32 }
+component Rotation { angle: f32 }
+component Scale { x: f32, y: f32 }
+component Parent { entity: entity }
+component WorldTransform { x: f32, y: f32, angle: f32, scaleX: f32, scaleY: f32 }
