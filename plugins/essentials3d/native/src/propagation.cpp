@@ -42,8 +42,9 @@ namespace oly::essentials3d {
 
     for (const ecs::Entity child : order_) {
       WorldTransform* destination = world.tryGet<WorldTransform>(child);
+      const Position* position = world.tryGet<Position>(child);
 
-      if (destination == nullptr) {
+      if (destination == nullptr || position == nullptr) {
         continue;
       }
 
@@ -51,7 +52,7 @@ namespace oly::essentials3d {
       const Rotation* rotation = world.tryGet<Rotation>(child);
       const Scale* scale = world.tryGet<Scale>(child);
 
-      *destination = compose(parentWorld != nullptr ? *parentWorld : IdentityWorld, world.get<Position>(child), rotation != nullptr ? *rotation : IdentityRotation,
+      *destination = compose(parentWorld != nullptr ? *parentWorld : IdentityWorld, *position, rotation != nullptr ? *rotation : IdentityRotation,
                              scale != nullptr ? *scale : UnitScale);
     }
   }

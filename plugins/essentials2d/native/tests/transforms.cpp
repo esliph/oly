@@ -179,3 +179,14 @@ TEST_CASE("non-uniform scale under rotation keeps no shear") {
   CHECK(world.angle == doctest::Approx(HalfTurn));
   CHECK_INVARIANTS(fixture.world);
 }
+
+TEST_CASE("a child with WorldTransform and no Position is skipped by propagation") {
+  Fixture fixture;
+  const Entity parent = fixture.world.spawn(Position{1, 2});
+  const Entity child = fixture.world.spawn(WorldTransform{}, Parent{parent});
+
+  fixture.step();
+
+  CHECK(fixture.world.isAlive(child));
+  CHECK_INVARIANTS(fixture.world);
+}

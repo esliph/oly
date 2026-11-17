@@ -106,3 +106,14 @@ TEST_CASE("a missing Rotation is the identity quaternion") {
   CHECK(world.rotationW == doctest::Approx(1));
   CHECK_INVARIANTS(fixture.world);
 }
+
+TEST_CASE("a child with WorldTransform and no Position is skipped by propagation") {
+  Fixture fixture;
+  const Entity parent = fixture.world.spawn(Position{1, 2, 3});
+  const Entity child = fixture.world.spawn(WorldTransform{}, Parent{parent});
+
+  fixture.step();
+
+  CHECK(fixture.world.isAlive(child));
+  CHECK_INVARIANTS(fixture.world);
+}
