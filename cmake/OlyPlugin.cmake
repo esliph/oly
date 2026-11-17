@@ -101,3 +101,14 @@ function(oly_plugin_order outputVariable)
 
   set(${outputVariable} "${_olyPluginOrder}" PARENT_SCOPE)
 endfunction()
+
+# oly_dimension_plugin(<outputVariable> <dimension>): the essentials plugin of a game's DIMENSION.
+function(oly_dimension_plugin outputVariable dimension)
+  if(dimension STREQUAL "2d")
+    set(${outputVariable} essentials2d PARENT_SCOPE)
+  elseif(dimension STREQUAL "3d")
+    set(${outputVariable} essentials3d PARENT_SCOPE)
+  else()
+    message(FATAL_ERROR "${dimension}: DIMENSION is 2d or 3d")
+  endif()
+endfunction()

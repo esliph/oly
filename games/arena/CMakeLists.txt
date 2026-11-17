@@ -3,6 +3,7 @@ if(OLY_ENVIRONMENT STREQUAL "web")
 
   oly_add_game(arena_game
     ENVIRONMENT web
+    DIMENSION 2d
     SCHEMA ${CMAKE_CURRENT_SOURCE_DIR}/arena.oly
     SOURCES ${nativeSources}
     DEPENDS ecs app capi

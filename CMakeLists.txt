@@ -30,6 +30,19 @@ if(OLY_BUILD_TESTS)
       COMMAND ${CMAKE_COMMAND} -DCASE=${caseName} -P ${PROJECT_SOURCE_DIR}/cmake/tests/plugin_order.cmake)
     set_tests_properties(oly.cmake.plugin_order.${caseName} PROPERTIES PASS_REGULAR_EXPRESSION "${expected}")
   endforeach()
+
+  set(dimensionCases
+    "two_d|plugin=essentials2d"
+    "three_d|plugin=essentials3d"
+    "invalid|DIMENSION is 2d or 3d")
+  foreach(dimensionCase IN LISTS dimensionCases)
+    string(REPLACE "|" ";" fields "${dimensionCase}")
+    list(GET fields 0 caseName)
+    list(GET fields 1 expected)
+    add_test(NAME oly.cmake.dimension.${caseName}
+      COMMAND ${CMAKE_COMMAND} -DCASE=${caseName} -P ${PROJECT_SOURCE_DIR}/cmake/tests/dimension.cmake)
+    set_tests_properties(oly.cmake.dimension.${caseName} PROPERTIES PASS_REGULAR_EXPRESSION "${expected}")
+  endforeach()
 endif()
 add_subdirectory(engine)
 if(NOT EMSCRIPTEN OR OLY_BUILD_GAMES)

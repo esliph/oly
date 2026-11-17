@@ -1,4 +1,3 @@
-component Position { x: f32, y: f32 }
 component Velocity { x: f32, y: f32 }
 component Collider { radius: f32 }
 component Health { value: i32 }

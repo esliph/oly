@@ -3,6 +3,7 @@ if(OLY_ENVIRONMENT STREQUAL "native")
 
   oly_add_game(drift_game
     ENVIRONMENT native
+    DIMENSION 2d
     SCHEMA ${CMAKE_CURRENT_SOURCE_DIR}/drift.oly
     SOURCES ${gameSources}
     DEPENDS ecs app input native_host)

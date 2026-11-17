@@ -4,8 +4,9 @@ set(OLY_SCHEMA_TOOL ${PROJECT_SOURCE_DIR}/build/schema-tool/bin/oly-schema CACHE
 # Writes the TS schema of every game declared with TYPESCRIPT; ./spur ts builds it before tsc.
 add_custom_target(oly_typescript_schemas)
 
-# oly_add_game(<target> ENVIRONMENT web|native SCHEMA <file.oly> SOURCES <cpp...> DEPENDS <m...> [PLUGINS <p...>]
-#              [TYPESCRIPT <file.ts>])
+# oly_add_game(<target> ENVIRONMENT web|native DIMENSION 2d|3d SCHEMA <file.oly> SOURCES <cpp...> DEPENDS <m...>
+#              [PLUGINS <p...>] [TYPESCRIPT <file.ts>])
+# DIMENSION turns the matching essentials plugin on, installed before the ones in PLUGINS; listing it there is an error.
 # Generates the schema structs and declaration with oly-schema, merging the .oly of every plugin turned on, and
 # game_setup.generated.cpp, which defines oly::app::setUpGame: declare the schema, then install the plugins in dependency
 # order. Compiles the game with the modules and plugins. On web it also generates the registry and links the WASM module
@@ -13,7 +14,31 @@ add_custom_target(oly_typescript_schemas)
 # link the native host through DEPENDS. With TYPESCRIPT, oly_typescript_schemas writes the same merged schema as TS to
 # that file, so the TS client hashes what the WASM module hashes.
 function(oly_add_game target)
-  _oly_add_game_target(${target} ${ARGN})
+  cmake_parse_arguments(GAME "" "ENVIRONMENT;DIMENSION;SCHEMA;TYPESCRIPT" "SOURCES;DEPENDS;PLUGINS" ${ARGN})
+
+  if(NOT GAME_DIMENSION)
+    message(FATAL_ERROR "${target}: oly_add_game needs DIMENSION 2d|3d")
+  endif()
+
+  oly_dimension_plugin(dimensionPlugin ${GAME_DIMENSION})
+  foreach(listed essentials2d essentials3d)
+    if(listed IN_LIST GAME_PLUGINS)
+      message(FATAL_ERROR "${target}: ${listed} comes from DIMENSION; do not list it in PLUGINS")
+    endif()
+  endforeach()
+
+  set(typescript "")
+  if(GAME_TYPESCRIPT)
+    set(typescript TYPESCRIPT ${GAME_TYPESCRIPT})
+  endif()
+
+  _oly_add_game_target(${target}
+    ENVIRONMENT ${GAME_ENVIRONMENT}
+    SCHEMA ${GAME_SCHEMA}
+    SOURCES ${GAME_SOURCES}
+    DEPENDS ${GAME_DEPENDS}
+    PLUGINS ${dimensionPlugin} ${GAME_PLUGINS}
+    ${typescript})
 endfunction()
 
 # oly_add_engine_test_game(...): the same arguments, for the engine's own test games only (the lint rejects it outside
