@@ -6,7 +6,7 @@ A **plugin** is a unit of engine-level functionality, compiled together with the
 
 Plugins depend on the core; the core never depends on a plugin. The core stays complete without them.
 
-The mechanism exists today. The only plugins are the engine's test plugins `counting` and `doubling` ([Test plugins](#test-plugins)). The first real plugin, `essentials` (transforms and a parent-child hierarchy), and the top-level `plugins/` folder arrive in phase 3 of the spec.
+The mechanism serves two kinds of plugin: `essentials2d` and `essentials3d`, under `plugins/` ([essentials](#essentials)), and the engine's test plugins `counting` and `doubling` ([Test plugins](#test-plugins)).
 
 ## Parts
 
@@ -87,12 +87,13 @@ It records the plugin's `.oly` and its plugin dependencies (global properties `O
 
 ### The game: `oly_add_game` and `setUpGame`
 
-`oly_add_game(<target> ENVIRONMENT web|native SCHEMA <file.oly> SOURCES ... DEPENDS ... [PLUGINS <plugins...>] [TYPESCRIPT <file.ts>])`:
+`oly_add_game(<target> ENVIRONMENT web|native DIMENSION 2d|3d SCHEMA <file.oly> SOURCES ... DEPENDS ... [PLUGINS <plugins...>] [TYPESCRIPT <file.ts>])`:
 
-1. sorts `PLUGINS` with `oly_plugin_order`;
-2. runs `oly-schema` with one `--plugin` per plugin that has a schema;
-3. links the plugin targets;
-4. writes `game_setup.generated.cpp` (with `file(GENERATE)`), which defines `oly::app::setUpGame`.
+1. maps `DIMENSION` with `oly_dimension_plugin` (`2d` to `essentials2d`, `3d` to `essentials3d`; anything else stops the configure with `<value>: DIMENSION is 2d or 3d`, a missing one with `<target>: oly_add_game needs DIMENSION 2d|3d`) and puts the result first in the list; listing `essentials2d` or `essentials3d` in `PLUGINS` is a configure error;
+2. sorts the list with `oly_plugin_order`;
+3. runs `oly-schema` with one `--plugin` per plugin that has a schema;
+4. links the plugin targets;
+5. writes `game_setup.generated.cpp` (with `file(GENERATE)`), which defines `oly::app::setUpGame`.
 
 For `PLUGINS doubling`, the generated function is:
 
@@ -114,7 +115,42 @@ namespace oly::app {
 
 ### Engine test games
 
-`oly_add_engine_test_game(...)` takes the same arguments as `oly_add_game` and shares its body. It is only for `engine/` (the lint rejects it elsewhere), and its games turn on only the test plugins of `engine/testing/fixture/plugins/`, because `engine/` never depends on `plugins/`. Today the two functions build the same thing; phase 3 adds `DIMENSION` and `essentials` to `oly_add_game` alone.
+`oly_add_engine_test_game(...)` takes the same arguments as `oly_add_game` and shares its body. It is only for `engine/` (the lint rejects it elsewhere), and its games turn on only the test plugins of `engine/testing/fixture/plugins/`, because `engine/` never depends on `plugins/`. `DIMENSION` and the `essentials` plugins belong to `oly_add_game` alone.
+
+## essentials
+
+`plugins/essentials2d/` and `plugins/essentials3d/` give a game, by its `DIMENSION`, `Position`, `Rotation`, `Scale`, `Parent` and `WorldTransform`, a parent-child hierarchy with cascade destroy, and the derivation of `WorldTransform` ([the user view](../guide/concepts/transforms.md)). Each is a plugin with its own `.oly` and a C++ part (`oly::essentials2d::Plugin`, `oly::essentials3d::Plugin`). `essentials2d` has no quaternion code; the 3D one keeps `multiply` and `rotate` in `include/oly/essentials3d/detail/quaternion.hpp`. The engine's test games get no `essentials`, and `fixture.oly` keeps its own `Position`.
+
+At install the plugin:
+
+- registers `imply<Position, WorldTransform>()` on the `World`; the implication cannot be undone, so it outlives the plugin's destructor;
+- registers four observers (`onAdd<Parent>`, `onRemove<Parent>`, `onAdd<WorldTransform>`, `onRemove<detail::HasChildren>`), which its destructor removes;
+- adds the system `propagateTransforms` to `Update`, in the `Last` band.
+
+| Part | What it does |
+|---|---|
+| children index | `unordered_map` keyed by `(index << 32) \| generation` of the parent, with the list of its children; it changes only in observers |
+| `detail::HasChildren` | a tag, C++ only, recorded on a parent with its first child and removed with its last; parents and non-parents live in different archetypes |
+| `onAdd<Parent>` | asserts the parent is alive, not the entity and not a descendant; adds the child to the index; records the tag on the parent; recomputes the child's `WorldTransform` |
+| `onRemove<Parent>` | removes the child from the index (linear in its siblings); removes the tag from a parent left with no children |
+| `onRemove<HasChildren>` | if the index still lists children, the parent is being destroyed: records `destroy` for each. When the plugin removes the tag itself, the list is already empty |
+| `onAdd<WorldTransform>` | computes the value at once from the locals and the parent's `WorldTransform`, so a child spawned by a command buffer is right in `UpdateAfter` |
+| `propagateTransforms` | roots: three block passes over entities without `Parent` (`Position`, then `Rotation`, then `Scale`, each writing its part of `WorldTransform`); children: a cached vector in parent-before-child order, rebuilt by a breadth-first walk of the index when a `Parent` was added or removed |
+
+A parent without `WorldTransform` counts as the identity: a child's chain stops at it. A child without `Position` has no `WorldTransform` and propagation skips it.
+
+`checkHierarchy(world, &why)` on the plugin compares the index and the tags with the `Parent` components of the world; the tests call it after each operation. Writing `Parent::entity` through `get` is not observed and `checkHierarchy` reports it.
+
+### Known costs
+
+Measured with `essentials2d_bench_propagation` (release, Docker, 8 CPUs at 3.1 GHz, 2026-11-17, medians of 10 repetitions, one fixed step with only this system):
+
+| Benchmark | N = 1000 | N = 100000 |
+|---|---|---|
+| `BM_PropagateRoots` (`Position`, `Rotation`, `Scale`) | 1.4 ns per entity | 3.1 ns per entity |
+| `BM_PropagateChildren` (8 children per parent) | 26.6 ns per entity | 36.2 ns per entity |
+
+There is no target. What the perf review found and left as is: each child pays six component lookups by entity and a `sincosf` of its parent's angle (2D); the three root queries are looked up each step; removing a child scans its siblings; any `Parent` change rebuilds the whole child order the next step.
 
 ## Boundaries
 

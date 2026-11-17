@@ -6,7 +6,7 @@ The game declares everything in a `<game>.oly` file, the single source of the da
 
 ```
 # game.oly
-component Position { x: f32, y: f32 }
+component Health { value: i32 }
 tag Enemy
 event EnemyDied { entity: entity, x: f32, y: f32 }
 action move: axis2d

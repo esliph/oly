@@ -23,7 +23,7 @@ engine/
     codegen/      oly-schema: parser, validation, layout, hash, emitters, C++ emitter
   testing/        @oly/testing (private): fixture game, WASM tests, boundary benchmarks
     fixture/plugins/  the engine's test plugins (counting, doubling) and the native plugin fixture
-plugins/          planned (phase 3 of the plugins spec): one folder per plugin, beside engine/ and games/
+plugins/          one folder per plugin, beside engine/ and games/ (essentials2d, essentials3d)
 games/
   arena/          validation game (arena.oly, C++ in native/, TS package in web/ (src/, tests/))
   drift/          desktop example, C++ only (drift.oly, gameplay in native/, SDL shell in desktop/)

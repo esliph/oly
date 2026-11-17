@@ -10,7 +10,6 @@ Choose it when the game does not need a browser. Choose [the web](../web/getting
 
 ```
 # game.oly
-component Position { x: f32, y: f32 }
 tag Player
 action move: axis2d
 ```
@@ -172,6 +171,7 @@ The test needs the generated schema header but no window, so build it with `oly_
 ```cmake
 oly_add_game(<game>_test
   ENVIRONMENT native
+  DIMENSION 2d
   SCHEMA ${CMAKE_CURRENT_SOURCE_DIR}/<game>.oly
   SOURCES native/gameplay.cpp test/main.cpp
   DEPENDS ecs app input)
@@ -200,13 +200,14 @@ file(GLOB gameSources CONFIGURE_DEPENDS native/*.cpp desktop/*.cpp)
 
 oly_add_game(<game>_game
   ENVIRONMENT native
+  DIMENSION 2d
   SCHEMA ${CMAKE_CURRENT_SOURCE_DIR}/<game>.oly
   SOURCES ${gameSources}
   DEPENDS ecs app input native_host
   PLUGINS <plugin>)
 ```
 
-`PLUGINS` is optional: it lists the [plugins](../../concepts/plugins.md) the game turns on. The test target above lists the same plugins, so its `setUpGame` installs them too.
+`DIMENSION` is required: `2d` or `3d` turns the matching `essentials` plugin on, which brings `Position` and the other [transform](../../concepts/transforms.md) components, so the game's `.oly` does not declare them. `PLUGINS` is optional: it lists the [plugins](../../concepts/plugins.md) the game turns on. The test target above lists the same plugins, so its `setUpGame` installs them too.
 
 A game builds only in its own environment: `oly_add_game` stops the configure when `ENVIRONMENT` is not the one of the build (`native` for the `native-games*` and `windows*` presets, `web` for the WASM ones), so wrap the game's `CMakeLists.txt` in `if(OLY_ENVIRONMENT STREQUAL "native")`. A native game has no registry and no `.mjs`: the target is a plain executable in `build/<preset>/games/`.
 

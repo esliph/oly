@@ -37,6 +37,7 @@ The same verb stands for the same concept in C++, in the C API and in TS.
 | persist (remove the state scope) | `SystemContext/DirectContext::persist`, `Scheduler::persist` | `olyContextPersist`, `olyEnginePersistTask` | `context.persist`, `schedule.persist` |
 | set up the game: declare the schema (events, actions, states), then install the plugins | `oly::app::setUpGame(engine)` (generated, in `game_setup.generated.cpp`); it calls `oly::app::declareSchema(engine)` (generated, in `schema_declaration.generated.cpp`) | (done by `olyEngineCreate`) | (done by `Runtime.createEngine`) |
 | plugin: engine-level functionality a game turns on in its build | `oly::app::Plugin` (`install(engine)`); `oly_add_plugin(NAME <p> ...)` in CMake, turned on with `oly_add_game(... PLUGINS ...)` | — | — |
+| place an entity and nest it | `Position`, `Rotation`, `Scale`, `Parent`, `WorldTransform` (`essentials2d` or `essentials3d`, turned on by `oly_add_game(... DIMENSION 2d\|3d ...)`) | the same names, in the generated schema | the same names |
 | install a plugin / reach an installed plugin | `Engine::installPlugin<P>()` / `Engine::plugin<P>()` | — | — |
 | desktop window and loop | `oly::native_host::Window`, `oly::native_host::run(engine, window, options)` | — | — |
 | variant by ID | `ById` suffix: `addById`, `removeById`, `hasById`, `getById`, `tryGetById`, `queryById` | (all by ID) | — |

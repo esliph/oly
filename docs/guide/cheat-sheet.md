@@ -163,7 +163,7 @@ oly::native_host::keyButtonOf(SDL_SCANCODE_W);            // std::optional<Physi
 ```
 
 ```cmake
-oly_add_game(<game>_game ENVIRONMENT web|native SCHEMA <game>.oly SOURCES <files> DEPENDS <modules> [PLUGINS <plugins>] [TYPESCRIPT <file.ts>])
+oly_add_game(<game>_game ENVIRONMENT web|native DIMENSION 2d|3d SCHEMA <game>.oly SOURCES <files> DEPENDS <modules> [PLUGINS <plugins>] [TYPESCRIPT <file.ts>])
 oly_add_plugin(NAME <plugin> [SCHEMA <plugin>.oly] DEPENDS <modules> [PLUGINS <plugins>])   # class oly::<plugin>::Plugin, sources src/*.cpp
 ```
 

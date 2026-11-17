@@ -69,6 +69,7 @@ Read in order the first time. Each page builds on the one before.
 | [States](concepts/states.md) | build menu, playing and game over screens that reset cleanly |
 | [Performance](concepts/performance.md) | keep the hot path fast |
 | [Plugins](concepts/plugins.md) | turn reusable engine functionality on, and write your own |
+| [Transforms](concepts/transforms.md) | place entities with `Position`, nest them with `Parent` and read `WorldTransform` |
 
 ## References
 
@@ -85,7 +86,6 @@ A complete game is three things: a **schema** (the data), **systems** (the behav
 
 ```
 # hello.oly — the data, shared by every language
-component Position { x: f32, y: f32 }
 component Velocity { x: f32, y: f32 }
 tag Player
 action move: axis2d

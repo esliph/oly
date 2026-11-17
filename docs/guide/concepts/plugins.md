@@ -11,11 +11,14 @@ List the plugin in `PLUGINS` of the game's `oly_add_game`:
 ```cmake
 oly_add_game(<game>_game
   ENVIRONMENT native
+  DIMENSION 2d
   SCHEMA ${CMAKE_CURRENT_SOURCE_DIR}/<game>.oly
   SOURCES ${gameSources}
   DEPENDS ecs app native_host
   PLUGINS lifetime)
 ```
+
+`DIMENSION` is not a plugin you list: it turns the `essentials` plugin of that dimension on, installed before the ones in `PLUGINS` ([Transforms](transforms.md)). Listing `essentials2d` or `essentials3d` in `PLUGINS` is a configure error.
 
 The build then:
 

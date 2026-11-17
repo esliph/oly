@@ -209,7 +209,7 @@ Rules:
 A component can **imply** others: adding it adds them in the same change, so the entity never exists without them.
 
 ```cpp
-world.imply<Position, WorldTransform>();   // before any entity has a Position
+world.imply<Position, WorldTransform>();   // before any entity has a Position (the essentials plugin does this for you)
 ```
 
 - The implied component starts value-initialized (the default member values of the struct) and runs its on add observers like any other, so an observer can fill it at once. In a direct `add`, the observers of the component you added run first.

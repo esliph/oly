@@ -16,7 +16,6 @@ The schema is the **single source** of your game's data. You write it once, in a
 
 ```
 # game.oly
-component Position { x: f32, y: f32 }
 component Health { value: i32 }
 component Weapon { interval: f32, cooldown: f32 }
 component Target { entity: entity }
@@ -159,6 +158,8 @@ A plugin can bring its own `.oly` with components, tags and events. When a game 
 - the plugins' types come first, in install order, then the game's. That order gives the component ids and the event order;
 - names are flat: a name that a plugin and the game both declare stops the build, and the error names both places (`game.oly:3:11: repeated name "Counter"; first declared at counting.oly:1:11`);
 - the hash covers the merged schema, so a client built with another set of plugins fails to load with a schema mismatch.
+
+`DIMENSION` is the one plugin you never list: it brings `Position`, `Rotation`, `Scale`, `Parent` and `WorldTransform` ([Transforms](transforms.md)), and the game's `.oly` does not declare them.
 
 The game uses a plugin's types like its own: the game's `schema.generated.hpp` includes the plugin's header (`oly/<plugin>/schema.generated.hpp`), and the TS schema lists them.
 

@@ -16,7 +16,7 @@ The public API is:
 | registration macros | `OLY_SYSTEM`, `OLY_HANDLER`, `OLY_STATE_HOOK` |
 | the C API | `engine/runtime/capi/include/oly/capi/c_api.h` and `engine_api.h` |
 | the schema language and the generated code | `engine/schema/format/`, `engine/schema/codegen/`, `engine/environments/web/clients/typescript/codegen/`, `@oly/core/generated` |
-| how a game is built | `cmake/OlyGame.cmake` (`oly_add_game`, with `ENVIRONMENT`, `PLUGINS` and `TYPESCRIPT`), `cmake/OlyPlugin.cmake` (`oly_add_plugin`), the `schema-tool`, `ts`, `game`, `serve`, `games-test`, `desktop`, `native-games-test` and `windows-test` tasks of the `Spurfile` |
+| how a game is built | `cmake/OlyGame.cmake` (`oly_add_game`, with `ENVIRONMENT`, `DIMENSION`, `PLUGINS` and `TYPESCRIPT`), `cmake/OlyPlugin.cmake` (`oly_add_plugin`), the `schema-tool`, `ts`, `game`, `serve`, `games-test`, `desktop`, `native-games-test` and `windows-test` tasks of the `Spurfile` |
 | behaviour a game relies on | loop order, deferred vs. direct changes, event rounds, scope rules, validity of views, error messages |
 
 What to update:

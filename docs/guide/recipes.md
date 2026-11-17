@@ -653,7 +653,6 @@ The camera must read the player's position of this step, after every system that
 
 ```
 # game.oly
-component Position { x: f32, y: f32 }
 component Camera { x: f32, y: f32 }
 tag Player
 ```
@@ -690,7 +689,7 @@ oly_add_plugin(NAME lifetime SCHEMA lifetime.oly DEPENDS ecs app)
 ```
 
 ```cmake
-oly_add_game(<game>_game ENVIRONMENT web SCHEMA ${CMAKE_CURRENT_SOURCE_DIR}/<game>.oly SOURCES ${nativeSources} DEPENDS ecs app capi PLUGINS lifetime)
+oly_add_game(<game>_game ENVIRONMENT web DIMENSION 2d SCHEMA ${CMAKE_CURRENT_SOURCE_DIR}/<game>.oly SOURCES ${nativeSources} DEPENDS ecs app capi PLUGINS lifetime)
 ```
 
 The game's code changes in one place: the types come from the plugin's header, which the game's `schema.generated.hpp` includes. The full walk-through is in [Plugins](concepts/plugins.md#write-a-plugin). A TS game uses the plugin's components through its generated schema and writes no install code.

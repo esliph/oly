@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Oly: 2D game engine in C++20 on top of a single-threaded archetype ECS (study and benchmark project). The C++ core runs in environments (`web`: WASM with a TS client; `native`: a desktop host), with a C API `oly*` for clients in other languages. Plugins (`oly_add_plugin`) add engine-level features that a game turns on with `oly_add_game(... PLUGINS ...)`; the generated `setUpGame` installs them. Today only test plugins exist (`engine/testing/fixture/plugins/`); `plugins/` arrives with `essentials`.
+Oly: game engine in C++20 for 2D games, with 3D transforms in `essentials3d`, on top of a single-threaded archetype ECS (study and benchmark project). The C++ core runs in environments (`web`: WASM with a TS client; `native`: a desktop host), with a C API `oly*` for clients in other languages. Plugins (`oly_add_plugin`) add engine-level features that a game turns on with `oly_add_game(... PLUGINS ...)`; the generated `setUpGame` installs them. Every game also names its `DIMENSION` (`2d|3d`), which turns `essentials2d` or `essentials3d` on (`Position`, `Rotation`, `Scale`, `Parent`, `WorldTransform`). Plugins live in `plugins/`; the engine's own test plugins in `engine/testing/fixture/plugins/`.
 
 ## Documentation
 

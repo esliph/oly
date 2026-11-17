@@ -21,6 +21,10 @@ The TS client validates everything that goes through it, in release builds too (
 
 | Message contains | Cause | Fix |
 |---|---|---|
+| `Parent ... is dead`, `own parent`, `descendant` | a `Parent` that points to a dead entity, to the entity itself or to one of its descendants ([Transforms](concepts/transforms.md#parent-and-children)) | parent only live entities, and never in a loop |
+| `oly_add_game needs DIMENSION 2d\|3d`, `DIMENSION is 2d or 3d` | the game's CMake has no `DIMENSION` or an unknown one | add `DIMENSION 2d` or `DIMENSION 3d` |
+| `comes from DIMENSION; do not list it in PLUGINS` | `essentials2d` or `essentials3d` is in `PLUGINS` | remove it: `DIMENSION` turns it on |
+| `repeated name "Position"` | the game's `.oly` declares a component that `essentials` already brings | delete it from the `.oly` ([Transforms](concepts/transforms.md)) |
 | `dead entity` | the entity was destroyed (maybe by another handler, or its state ended) | check `isAlive` before using a stored handle |
 | `entity does not have the component` | `get`/`set` on a component the entity lacks | check with `has`, or add the component at spawn |
 | `direct structural change during frame; use context.spawn/destroy/add/remove` | you used `engine.world.spawn/destroy/add/remove` inside a system | use the `context` methods |

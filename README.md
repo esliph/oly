@@ -1,6 +1,6 @@
 # Oly
 
-Oly is a 2D game engine in C++20. The core is an archetype-based, single-threaded ECS (*Entity Component System*) with the whole engine on top of it: fixed-step loop, events, input actions, schedule and states. The core runs in **environments**: `web` (compiled to WebAssembly, with a TypeScript **client** and a web host for the browser and Node) and `native` (a desktop host in C++, in a window on Linux and Windows). A C API `oly*` lets a client in another language drive the core.
+Oly is a game engine in C++20 for 2D games, with 3D transforms in `essentials3d`. The core is an archetype-based, single-threaded ECS (*Entity Component System*) with the whole engine on top of it: fixed-step loop, events, input actions, schedule and states. The core runs in **environments**: `web` (compiled to WebAssembly, with a TypeScript **client** and a web host for the browser and Node) and `native` (a desktop host in C++, in a window on Linux and Windows). A C API `oly*` lets a client in another language drive the core.
 
 It is a study project. The goal is to measure how data representation (SoA, archetypes, aligned columns) and architectural decisions affect execution cost. That is why every performance target has a benchmark and a recorded result.
 
@@ -65,7 +65,6 @@ The game declares the schema in a `.oly` file. `oly-schema` generates the C++ an
 
 ```
 # game.oly
-component Position { x: f32, y: f32 }
 component Velocity { x: f32, y: f32 }
 tag Enemy
 ```

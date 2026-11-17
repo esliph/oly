@@ -104,6 +104,7 @@ if(OLY_ENVIRONMENT STREQUAL "web")
 
   oly_add_game(hello_game
     ENVIRONMENT web
+    DIMENSION 2d
     SCHEMA ${CMAKE_CURRENT_SOURCE_DIR}/hello.oly
     SOURCES ${nativeSources}
     DEPENDS ecs app capi
@@ -113,13 +114,14 @@ endif()
 
 `ENVIRONMENT` says where the game runs (`web` or `native`), and a game builds only in its own environment: the `if` keeps the folder out of the other builds. The target name must be `<folder>_game`: `./spur game hello` looks for `hello_game.mjs`.
 
+`DIMENSION` is required: `2d` or `3d` turns the matching `essentials` plugin on, which brings `Position` and the other [transform](../../concepts/transforms.md) components, so the game's `.oly` does not declare them.
+
 `TYPESCRIPT` names the TS schema file the build writes; `./spur ts` writes it before it compiles the TS. An optional `PLUGINS <plugin>...` turns [plugins](../../concepts/plugins.md) on: their types reach `schema.generated.ts` and their systems run in the WASM module, with no TS code.
 
 ### 5. `hello.oly`
 
 ```
 # hello.oly
-component Position { x: f32, y: f32 }
 component Velocity { x: f32, y: f32 }
 tag Player
 action move: axis2d
