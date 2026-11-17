@@ -31,7 +31,7 @@ The C API and TS parts get build support with the first plugin that needs them. 
 | `oly::app::Plugin` (`oly/app/plugin.hpp`) | base class: a virtual destructor and `virtual void install(Engine&) = 0` |
 | `Engine::installPlugin<P>()` | constructs `P`, keeps it, runs its `install` once and returns it |
 | `Engine::plugin<P>()` | returns the installed `P`, so a game can configure it before the first `frame` |
-| `Engine::~Engine()` | destroys the plugins in reverse install order |
+| `Engine::~Engine()` | discards the pending tasks (their discard may reach a plugin through the payload), then destroys the plugins in reverse install order |
 
 - `P` derives from `Plugin` and is default constructible (`static_assert`).
 - A plugin installs once per `Engine`, before the first `frame` call. Installing twice, or after the first `frame` call, is an `OLY_ASSERT`; so is `plugin<P>()` for a plugin that is not installed. Each message names the type.

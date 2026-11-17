@@ -69,6 +69,27 @@ namespace {
       g_events.push_back("added");
     }
   };
+
+  struct SchedulingPlugin : Plugin {
+    int pendingTasks = 0;
+
+    ~SchedulingPlugin() override {
+      g_events.push_back("destroyed");
+    }
+
+    void install(Engine& engine) override {
+      engine.schedule().every(1.0, tick, this, onDiscard);
+      ++pendingTasks;
+    }
+
+    static void tick(oly::app::TaskContext&) {}
+
+    static void onDiscard(void* payload) {
+      SchedulingPlugin* plugin = *static_cast<SchedulingPlugin**>(payload);
+      --plugin->pendingTasks;
+      g_events.push_back("discarded");
+    }
+  };
 }
 
 TEST_CASE("installPlugin runs install once and plugin<P> returns the same instance") {
@@ -119,4 +140,15 @@ TEST_CASE("after the Engine is destroyed, the World runs no observer of its plug
 
   CHECK(g_events == std::vector<std::string>{"added"});
   CHECK_INVARIANTS(world);
+}
+
+TEST_CASE("a pending task of a plugin is discarded before the plugin is destroyed") {
+  g_events.clear();
+  oly::ecs::World world;
+  {
+    Engine engine(world);
+    engine.installPlugin<SchedulingPlugin>();
+  }
+
+  CHECK(g_events == std::vector<std::string>{"discarded", "destroyed"});
 }

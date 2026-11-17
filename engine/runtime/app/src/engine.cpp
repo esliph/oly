@@ -18,6 +18,9 @@ namespace oly::app {
   }
 
   Engine::~Engine() {
+    // A task's discard may reach a plugin through its payload, so it runs while every plugin is still alive.
+    scheduler_.queue_.discardAll();
+
     while (!plugins_.empty()) {
       plugins_.pop_back();
     }

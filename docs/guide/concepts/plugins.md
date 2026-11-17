@@ -137,6 +137,7 @@ Inside `install`, `engine.plugin<Q>()` reaches a plugin that installed earlier, 
 | A plugin installs once per `Engine`, before the first `frame` | installing twice or after the first `frame` is an `OLY_ASSERT` naming the type |
 | The `Engine` owns the instance and destroys it in reverse install order | a plugin outlives the plugins installed after it, which may use it |
 | Systems, handlers and hooks end with the `Engine` | they belong to the `Engine` |
+| Pending tasks are discarded before any plugin is destroyed | a task's discard function can still use the plugin it points to |
 | The destructor removes the plugin's observers (`world.removeObserver(id)`) | observers belong to the `World`, which outlives the `Engine`; an observer left behind would call into a destroyed plugin |
 
 ## Run after the game's systems
