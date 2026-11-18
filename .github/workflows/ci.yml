@@ -1,0 +1,49 @@
+name: ci
+
+# The checks every pull request must pass: formatting, the native tests and the WASM and TypeScript tests. The Windows
+# cross-build, the subproject and the consumer tests stay in the release workflow, which runs them before publishing.
+on:
+  pull_request:
+    branches: [develop, master]
+  push:
+    branches: [develop]
+
+permissions:
+  contents: read
+
+# A new push to the same pull request makes the run of the previous one useless.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  native:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Let the runner write what the containers create
+        # The containers run as root and write into the mounted checkout (see release.yml).
+        run: |
+          mkdir -p build
+          sudo setfacl -R -m "u:$(id -un):rwX" -m "d:u:$(id -un):rwX" .
+      - name: Build the dev image
+        run: ./spur images dev
+      - name: Formatting
+        run: ./spur format-check
+      - name: Native tests (ASan + UBSan)
+        run: ./spur test
+
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Let the runner write what the containers create
+        run: |
+          mkdir -p build
+          sudo setfacl -R -m "u:$(id -un):rwX" -m "d:u:$(id -un):rwX" .
+      - name: Build the wasm image
+        run: ./spur images wasm
+      - name: WASM and TypeScript tests
+        run: ./spur games-test
