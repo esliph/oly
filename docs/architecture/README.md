@@ -52,6 +52,7 @@ Three rules guide the design:
 | [schema-and-codegen.md](schema-and-codegen.md) | the `.oly` schema, `oly-schema` and each game's WASM module |
 | [ts-packages.md](ts-packages.md) | `@oly/core`, `@oly/web-host`, `@oly/testing` |
 | [games.md](games.md) | the games in `games/`: `arena` on `web`, `drift` on `native` |
+| [publishing.md](publishing.md) | versioning, the release pipeline, `oly-tools`, the `oly` launcher, local mode, `toolchain.env`, the consumer test |
 | [build-and-tests.md](build-and-tests.md) | Docker, presets, tests and code quality |
 | [performance.md](performance.md) | targets, current status and boundary costs |
 | [decisions.md](decisions.md) | main architectural decisions, with reason and accepted cost |

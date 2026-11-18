@@ -42,6 +42,20 @@ The same verb stands for the same concept in C++, in the C API and in TS.
 | desktop window and loop | `oly::native_host::Window`, `oly::native_host::run(engine, window, options)` | — | — |
 | variant by ID | `ById` suffix: `addById`, `removeById`, `hasById`, `getById`, `tryGetById`, `queryById` | (all by ID) | — |
 
+## Publishing
+
+These terms have no C API or TS form. Details: [publishing.md](publishing.md).
+
+| Term | Meaning |
+|---|---|
+| `oly-tools` | the archive of one platform and one version that holds `spur`, the game `Spurfile`, `toolchain.env`, `bin/oly-schema`, `template/` and `docker-compose.yaml` |
+| launcher | the `oly` script (POSIX sh) in `~/.oly/bin`: finds the game, fetches the `oly-tools` of its version and runs that version's `Spurfile` |
+| pinned version | the `OLY_VERSION` of a game's `oly.env`: the engine release the game builds with |
+| local mode | `OLY_ENGINE_DIR` names an engine checkout, and the launcher takes the tools, the C++ source, `oly-schema` and the npm packages from it instead of from a release |
+| `toolchain.env` | the file at the engine root with the toolchain versions; the Dockerfiles, `oly doctor` and the configure check read it |
+| consumer test | the test that creates a game with `oly new` and builds and tests it, as a user of `oly` would |
+| staged release | the release files written to a local folder (`./spur stage`) with GitHub's layout, which `OLY_RELEASE_URL` points the launcher at before anything is published |
+
 ## Naming rules
 
 - The `oly` prefix appears only in the C API (`oly*`, `OlyWorld`, `OLY_API`) and in what is internal to `capi` (`OlyModule`). The C++ and TS APIs do not repeat `oly` in names. The reason is in [modules-and-boundaries.md](modules-and-boundaries.md#vocabulary-rules).

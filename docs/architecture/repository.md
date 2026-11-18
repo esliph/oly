@@ -3,6 +3,7 @@
 ```
 CMakeLists.txt  CMakePresets.json  Spurfile  spur   C++ build and task runner
 Dockerfile  Dockerfile.wasm  Dockerfile.windows  docker-compose.yaml    toolchains (versions in toolchain.env; gcc, emsdk, mingw-w64 + Wine)
+toolchain.env     the toolchain versions: read by the Dockerfiles, oly doctor and the configure check
 package.json  tsconfig.base.json  tsconfig.json     npm workspaces and project references
 cmake/            build functions: OlyModule, OlyPlugin, OlyGame, OlyOptions, OlyWarnings, OlyWasm, Dependencies; toolchains/mingw-w64.cmake; tests/ (plugin order)
 engine/
@@ -27,12 +28,18 @@ plugins/          one folder per plugin, beside engine/ and games/ (essentials2d
 games/
   arena/          validation game (arena.oly, C++ in native/, TS package in web/ (src/, tests/))
   drift/          desktop example, C++ only (drift.oly, gameplay in native/, SDL shell in desktop/)
-tools/            measurement and lint scripts (Python and shell)
+tools/
+  oly/            the oly launcher, install.sh, the game Spurfile, docker-compose.yaml for --docker and their shell tests
+  release/        the release scripts: version check and set, images, oly-tools archive, stage, staged consumer test
+  *.py, *.sh      measurement and lint scripts (Python and shell)
+templates/
+  game/           what oly new copies: common/, web/ and native/ overlays of a minimal game
 docs/
   architecture/   this documentation
   development/    commands and code style
   benchmarks/     recorded results: ecs/, bridge/, wasm/
   superpowers/    specs (source of truth) and implementation plans per phase
+.github/workflows/  release.yml: the release pipeline (docs/architecture/publishing.md)
 .claude/          Claude Code skills, agents and formatting hook
 ```
 

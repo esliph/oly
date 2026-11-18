@@ -24,6 +24,7 @@ There is no C++ toolchain on the host. Everything runs in Docker Compose:
 | `release` | tests and benchmarks with `OLY_ENABLE_ASSERTS=0` |
 | `relwithdebinfo` | benchmarks for `perf` |
 | `schema-tool` | `oly-schema` built for the machine in the `wasm` image (Release, no tests, target `oly-schema` only); `./spur schema-tool` |
+| `schema-tool-linux`, `schema-tool-windows` | the `oly-schema` of a release: linux-x64 (static) and windows-x64 (MinGW, static); `./spur stage` builds both |
 | `native-clang`, `native-clang-32`, `native-clang-32-scalar`, `native-clang-avx2`, `wasm-scalar`, `wasm-simd` | ladder of the native × WASM cost study |
 | `wasm-debug` | ECS tests in WASM |
 | `wasm-games`, `wasm-games-release` | games, `capi`, TS tests |
@@ -67,6 +68,18 @@ The native builds (Linux and Windows) run the in-tree `oly-schema` target. The W
 - **TS tests** run in node against the real WASM, not against a mock.
 - **Desktop tests** run SDL with `SDL_VIDEO_DRIVER=dummy`, so they need no display. `native_host.window` also checks that the X11 and Wayland drivers (Linux) or the `windows` driver are compiled in. `drift.desktop` runs the game's own executable for 600 frames.
 - **`capi.foreign_client`** is a plain C program (no doctest) that drives an engine only through `oly*`.
+
+## The engine as a subproject, and the consumer tests
+
+A game fetches the engine with `FetchContent` ([publishing.md](publishing.md#the-engine-as-a-subproject)). Three things in this repository check that:
+
+| Task | What it checks |
+|---|---|
+| `./spur subproject-test` | `cmake/tests/consumer`, a CMake project outside the engine tree that fetches it from this checkout (`FETCHCONTENT_SOURCE_DIR_OLY`) and builds one game with `oly_add_game`, native and web. Each run must print `consumer ok`. It covers the subproject defaults: no tests, no benchmarks, no games, no lint, no `-Werror` |
+| `./spur consumer-test` | creates a game through the launcher (`oly new`) in local mode (`OLY_ENGINE_DIR` is this checkout), for `web` and for `native`, builds and tests it. A third run, `docker`, runs `test --docker` in both games, and `--platform windows` for the native one |
+| `./spur staged-test <version>` | the same, against `./spur stage <version>` instead of the checkout: the launcher is installed with `install.sh` into a fresh `OLY_HOME`, and the tools, `oly-schema` and the npm tarballs are the downloaded ones |
+
+`OLY_SCHEMA_TOOL` is an input of `oly_add_game` and `oly_schema_tool`: a game gets the prebuilt `oly-schema` of its version, or the one local mode built, and the in-tree default stays for the engine's own build. `./spur oly-tools-test` runs the shell tests of `tools/oly/` (launcher, `install.sh`, `new`, doctor, Docker dispatch, `npm pack`) and `./spur release-test` those of `tools/release/`. The consumer test and its three runs are explained in [publishing.md](publishing.md#the-consumer-test); the commands are in [commands](../development/commands.md#the-game-tasks-and-the-consumer-test).
 
 ## Code quality
 

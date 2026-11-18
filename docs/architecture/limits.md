@@ -18,3 +18,7 @@
 - **NF-P5** is not met at N = 100000 ([performance.md](performance.md)).
 - **Two `Engine`s on the same `World`** share the scope tag: a state change in one cleans up the scoped entities of the other. `capi` avoids this by creating one `World` per `OlyEngine`.
 - **Arena workarounds** (recorded in `games/arena/README.md`): the right-click menu is prevented by `main.ts` itself, because `attachBrowserInput` only prevents it when `MouseRight` is bound to an action.
+- **Publishing supports Linux and Windows in Git Bash only.** No MSVC (a Windows native game builds with MinGW), no macOS, and no PowerShell or `cmd`: `oly` is a shell script ([publishing.md](publishing.md)).
+- **A plugin declared by a game is not supported yet.** A game turns on the plugins that come with the engine release it pins ([plugins.md](plugins.md)).
+- **`FetchContent` at a real tag is first exercised by games, after publishing.** The tag is created last, so the consumer test fetches the engine from the commit being released (`OLY_ENGINE_SOURCE_DIR`) instead.
+- **`oly` prints no help.** The commands are listed in [the guide](../guide/cli.md).
