@@ -16,7 +16,7 @@ ghcr.io/esliph/oly-{dev,wasm,windows}:0.1.0 ◄── --docker
 ## Versioning
 
 - One version for the whole release, in semver: the C++ package, `@oly/core`, `@oly/web-host` and the images carry it. While it is `0.x`, a minor release may break compatibility.
-- The version is written in three places that must agree: `project(Oly VERSION)` in `CMakeLists.txt`, and the `package.json` of `@oly/core` and `@oly/web-host`. `./spur release <version>` rewrites them (and `package-lock.json`) and commits. It creates no tag.
+- The version is written in several places that must agree: `project(Oly VERSION)` in `CMakeLists.txt`, the `package.json` files of the root, `@oly/core` and `@oly/web-host`, the web host dependency on core and `package-lock.json`. `./spur release <version>` rewrites them (and `package-lock.json`) and commits. It creates no tag.
 - Releases are cut from `master`.
 
 ## The tag comes last
@@ -25,7 +25,7 @@ The tag **is** the C++ package: a game fetches the engine with `FetchContent` at
 
 | Job | What it does |
 |---|---|
-| `check` | the dispatch is on `master`; the input version equals the tree's three versions; the tag does not exist |
+| `check` | the dispatch is on `master`; the input version equals the versions of the tree (`project(Oly VERSION)`, the root and the two web `package.json`, their dependency and the lock file entries); the tag does not exist |
 | `linux` | builds the three images from `toolchain.env`; runs the engine tests in them; stages the release; tests the release scripts and archives; runs the consumer test in local mode and staged; saves the tested images |
 | `windows` | runs the staged consumer test on `windows-latest`, with Git Bash, MSYS2 UCRT64, Ninja and emsdk |
 | `publish` | only without `dry_run`, and only if the others passed: loads the saved images and checks they are the tested ones, pushes them, tags the commit and creates the release |
@@ -80,7 +80,7 @@ Its contract with a version, for a command inside a game:
 2. If `~/.oly/versions/<version>/spur` is missing, download `oly-tools-<version>-<platform>.tar.gz` from `$OLY_RELEASE_URL/download/v<version>/` and extract it. The archive is extracted beside its final folder and moved in whole, so an interrupted run never leaves a half-filled version that the next run trusts.
 3. Run `sh <version>/spur -f <version>/Spurfile -C <game root> <task> [arguments]` with `OLY_GAME_DIR`, `OLY_TOOLS_DIR` and `OLY_VERSION` in the environment.
 
-The launcher keeps only four commands that cannot live in a version. `new` needs a version before there is a game, `upgrade` changes which version the game uses, `self-update` replaces the launcher, and `--version` must answer when no tools are installed. `new` and `doctor` outside a game use the latest release, which the launcher reads from `latest/download/VERSION`.
+The launcher keeps only four commands that cannot live in a version. `new` needs a version before there is a game, `upgrade` changes which version the game uses, `self-update` replaces the launcher, and `--version` must answer when no tools are installed. `new` and `doctor` outside a game use the latest release, which the launcher reads from `latest/download/VERSION`; in local mode they use the version of `project(Oly VERSION)` in the checkout.
 
 `OLY_RELEASE_URL` (default `https://github.com/esliph/oly/releases`) is the base of every download. A folder served over HTTP, or over `file://`, with GitHub's layout (`download/v<version>/...` and `latest/download/...`) works as a release. This is what lets the staged tests run before anything exists on GitHub.
 
@@ -92,7 +92,7 @@ The launcher keeps only four commands that cannot live in a version. `new` needs
 |---|---|---|
 | Tasks and template | `~/.oly/versions/<V>/` | `tools/oly/` and `templates/game/` |
 | C++ engine | `FetchContent` at `v<V>` | `-DFETCHCONTENT_SOURCE_DIR_OLY=<checkout>` |
-| `oly-schema` | prebuilt in the version | built from the checkout with the host compiler, or in the container |
+| `oly-schema` | web: prebuilt in the version; desktop: built with the game | web: built from the checkout with the host compiler, or in the container; desktop: built with the game |
 | npm packages | the tarballs of the release | the checkout's packages compiled over the installed tarballs; `package.json` is not changed |
 | Docker image | `ghcr.io/esliph/oly-*:<V>` | the same image, the checkout mounted at `/oly` |
 
@@ -136,7 +136,7 @@ A game fetches the engine with `FetchContent`; `oly_add_game` and the `oly::` ta
 
 - `OLY_BUILD_TESTS`, `OLY_BUILD_BENCH` and `OLY_BUILD_GAMES` are off, the boundary lint is not registered and `OLY_SANITIZE` adds no global flags;
 - `OLY_WERROR` is off: `oly_warnings` still applies `-Wall -Wextra -Wpedantic` to the game target, and the game turns `-Werror` on if it wants;
-- `OLY_SCHEMA_TOOL` is an input: `oly` passes the prebuilt `oly-schema` of the version, or the one it built from the checkout;
+- `OLY_SCHEMA_TOOL` is an input: for a web game `oly` passes the prebuilt `oly-schema` of the version, or the one it built from the checkout. A desktop game builds `oly-schema` with itself from the engine source;
 - `OLY_ENVIRONMENT` is derived where the game sees it, and a native game needs `OLY_BUILD_NATIVE_HOST`, which the game tasks turn on;
 - nothing a game calls uses a path relative to the engine root.
 

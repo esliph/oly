@@ -6,7 +6,7 @@ This page takes you from nothing to your own game running in the browser, in its
 
 ## What you need
 
-On **Linux**: `curl`, `tar`, CMake, GCC, Node.js with npm and emsdk. On **Windows**: **Git Bash**, **MSYS2 UCRT64** (`gcc`, `cmake` and `ninja`), Node.js with npm and emsdk. Run every command from Git Bash, not from PowerShell or `cmd`. Docker is optional.
+On **Linux**: `curl`, `tar`, `git`, `make`, CMake, GCC, Node.js with npm and emsdk. On **Windows**: **Git Bash**, **MSYS2 UCRT64** (`gcc`, `cmake` and `ninja`), Node.js with npm and emsdk. Run every command from Git Bash, not from PowerShell or `cmd`. Docker is optional.
 
 The exact versions, the install steps and the Docker option are in [The `oly` command](../../cli.md#what-you-install). `oly doctor` checks them for you.
 
@@ -91,6 +91,9 @@ oly_add_game(<target>
   SOURCES ${nativeSources}
   DEPENDS ecs app capi
   TYPESCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/web/schema.generated.ts)
+
+add_test(NAME <target>.smoke COMMAND ${OLY_NODE} --test ${CMAKE_CURRENT_SOURCE_DIR}/web/dist/tests/)
+set_tests_properties(<target>.smoke PROPERTIES ENVIRONMENT OLY_GAME_MODULE=$<TARGET_FILE:<target>>)
 ```
 
 `<target>` is the game name with `-` written as `_`; it is also the name of the `.mjs` that `main.ts` loads. `ENVIRONMENT` says where the game runs (`web` or `native`), `DIMENSION` is `2d` or `3d`, and `TYPESCRIPT` names the TS schema file the build writes. An optional `PLUGINS <plugin>...` turns [plugins](../../concepts/plugins.md) on: their types reach `schema.generated.ts` and their systems run in the WASM module, with no TS code.
@@ -165,7 +168,7 @@ export function installGame(engine: Engine, drawer: Drawer): void {
 ```ts
 const runtime = await loadRuntime(moduleFactoryFromUrl("./<target>.mjs"), schema);
 const engine = runtime.createEngine({ fixedHz: 60 });
-installGame(engine, drawer);
+installGame(engine, { clear, square });   // functions that draw on the canvas
 attachBrowserInput(engine, canvas);
 runInBrowser(engine);
 ```
@@ -198,7 +201,6 @@ Values used by both languages (world size, bullet speed) live in a C++ header (`
 ## Advanced: your own exported C functions
 
 A game can export extra `extern "C"` functions with `OLY_API`. From an `OlyWorld*` (the C API handle), `oly::capi::worldOf(world)` gives the `oly::ecs::World&` behind it, and `oly::capi::engineOf(engine)` gives the `Engine&`. The engine's test fixture (`engine/testing/fixture/systems.cpp`) shows this. Calling such functions from TS needs the module internals (`@oly/core/internal`), which are reserved for the engine; in game code, prefer `OLY_SYSTEM`, `OLY_HANDLER` and `OLY_STATE_HOOK` ([Engine, loop and systems](../../concepts/engine-and-systems.md#systems-in-c-registered-by-name-oly_system-oly_handler-oly_state_hook)).
-
 
 ## Inside the engine repository
 

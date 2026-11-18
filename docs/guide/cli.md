@@ -12,8 +12,8 @@ Install these before the first command. Versions are in [`toolchain.env`](../../
 |---|---|---|
 | Shell | any POSIX shell | **Git Bash**. `oly` is a shell script: run it from Git Bash, not from PowerShell or `cmd` |
 | Needed by `oly` itself | `curl`, `tar` | `curl`, `tar` (Git Bash has them) |
-| Native game | `cmake`, GCC `GCC_MINIMUM` or newer | **MSYS2 UCRT64**: `mingw-w64-ucrt-x86_64-gcc`, `mingw-w64-ucrt-x86_64-cmake`, `mingw-w64-ucrt-x86_64-ninja`. Put its `bin` folder on the `PATH` of Git Bash |
-| Web game | `cmake`, GCC, Node.js with npm, emsdk `EMSDK_VERSION` (source `emsdk_env.sh`) | the three MSYS2 packages above, Node.js with npm, emsdk `EMSDK_VERSION` (source `emsdk_env.sh`) |
+| Native game | `cmake`, `git`, `make`, GCC `GCC_MINIMUM` or newer, and the X11 and Wayland development headers that SDL3 needs to open a window (the `Dockerfile` of the engine lists them). Wine, to run the tests of a `--platform windows` build | **MSYS2 UCRT64**: `mingw-w64-ucrt-x86_64-gcc`, `mingw-w64-ucrt-x86_64-cmake`, `mingw-w64-ucrt-x86_64-ninja`. Put its `bin` folder on the `PATH` of Git Bash |
+| Web game | `cmake`, `git`, `make`, GCC, Node.js with npm, emsdk `EMSDK_VERSION` (source `emsdk_env.sh`) | the three MSYS2 packages above, Node.js with npm, emsdk `EMSDK_VERSION` (source `emsdk_env.sh`) |
 | Docker | optional: see [`--docker`](#docker) | optional |
 
 `oly doctor` checks all of this and says what is missing.
@@ -73,13 +73,13 @@ Put them right after the command name.
 |---|---|
 | `--docker` | run the task in the Docker image of the pinned version: [`--docker`](#docker) |
 | `--host` | run the task with the tools of the host, even when `oly.env` says `OLY_RUNNER=docker` |
-| `--platform windows` | build the `.exe` of a desktop game with MinGW. On Linux this cross-compiles; on Windows it is the normal build |
+| `--platform windows` | build the `.exe` of a desktop game with MinGW. On Linux this cross-compiles with `mingw-w64` and runs the Windows tools and tests under Wine; on Windows it is the normal build |
 
 `--platform windows` is for desktop games only.
 
 ## Docker
 
-By default `oly` uses the tools of your machine. With `--docker`, it runs the same task in the image `ghcr.io/esliph/oly-<dev|wasm|windows>:<version>`, with the game folder mounted at `/game`. The image brings the compiler, CMake, emsdk and Node.js, so the host needs only Docker with the compose plugin.
+By default `oly` uses the tools of your machine. With `--docker`, it runs the same task in the image `ghcr.io/esliph/oly-<dev|wasm|windows>:<version>`, with the game folder mounted at `/game`. The image brings the compiler, CMake, emsdk and Node.js, so the host needs Docker with the compose plugin. A web game still runs `npm install` on the host in `oly new` and `oly upgrade`, so it needs Node.js with npm there too.
 
 ```sh
 oly test --docker
@@ -93,7 +93,7 @@ To make Docker the default of a game, set `OLY_RUNNER=docker` in `oly.env`. `--h
 | desktop game | the `dev` image |
 | desktop game with `--platform windows` | the `windows` image; the tests run under Wine |
 
-A desktop window cannot open in a container: `oly run --docker` on a desktop game stops and prints the path of the executable to run on the host.
+A desktop window cannot open in a container: `oly run --docker` on a desktop game stops with that message: build it, then run the executable on the host.
 
 `oly doctor --docker` checks only that `docker compose` works.
 
@@ -157,7 +157,7 @@ This is **local mode**. The tools, the template, the C++ source, `oly-schema` an
 |---|---|---|
 | Tools and template | `~/.oly/versions/<version>/` | `tools/oly/` and `templates/game/` of the checkout |
 | C++ engine | fetched at the tag `v<version>` | the checkout |
-| `oly-schema` | prebuilt in the release | built from the checkout |
+| `oly-schema` | web games: prebuilt in the release. Desktop games: built with the game from the fetched engine source | web games: built from the checkout. Desktop games: built with the game from the checkout |
 | npm packages | the tarballs of the release | built from the checkout and installed over the tarballs |
 | Docker image | `ghcr.io/esliph/oly-*:<version>` | the same image, with the checkout mounted at `/oly` |
 

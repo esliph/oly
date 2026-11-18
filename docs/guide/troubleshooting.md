@@ -73,7 +73,7 @@ The TS client validates everything that goes through it, in release builds too (
 
 ## The `oly` command
 
-The messages of [`oly`](cli.md) start with `oly:` (the launcher) or `oly <command>:` (the tasks of the game). Both exit with 64 for a wrong use and with 1 for a failure.
+The messages of [`oly`](cli.md) start with `oly:` (the launcher) or `oly <command>:` (the tasks of the game). Both exit with 64 for a wrong use and with 1 for a failure. A command `oly` does not know is refused by `spur`, which lists the commands.
 
 | Message contains | Cause | Fix |
 |---|---|---|
@@ -82,18 +82,18 @@ The messages of [`oly`](cli.md) start with `oly:` (the launcher) or `oly <comman
 | `could not install oly-tools <version> from <url>` | the download failed: no network, a version that was never released, or a wrong `OLY_RELEASE_URL` | check the network and that the release `v<version>` exists; run again |
 | `could not read the latest version from <url>` | `oly new` or `oly doctor` outside a game could not reach the latest release | check the network, or pass `oly new --version <version>` |
 | `oly.env pins X but package.json has other @oly tarballs: run oly upgrade X` | the two files name different engine versions, after a hand edit or an interrupted upgrade | run `oly upgrade X` |
-| `EMSDK is not set: install emsdk <version> and source emsdk_env.sh` | a web game builds on the host and `emsdk_env.sh` was not sourced in this shell | install emsdk at that version and run `source <emsdk>/emsdk_env.sh`, or build with `--docker` |
+| `EMSDK is not set: install emsdk <version> and source emsdk_env.sh` | `emcc` is on the `PATH` but `emsdk_env.sh` was not sourced in this shell (without `emcc`, `oly doctor` reports `missing emcc` first) | install emsdk at that version and run `source <emsdk>/emsdk_env.sh`, or build with `--docker` |
 | `the host tools do not match toolchain.env (see above)` | a line of the check above this one is not `ok` | install what that line says, or build with `--docker` |
-| `unsupported host <name>: oly runs on Linux and on Windows in Git Bash` | macOS, or a shell on Windows that is not Git Bash | use Linux, or Git Bash on Windows |
+| `unsupported host <name>: oly runs on Linux and on Windows in Git Bash` | macOS or another system | use Linux, or Git Bash on Windows |
 | `<game> already exists` | `oly new` does not write over a folder | pick another name, or remove the folder |
 | `game name must match [a-z][a-z0-9-]*` | the name has capitals, spaces or `_`, or starts with a digit | rename the game |
 | `is a CMake or engine target name: pick another game name` | `test`, `all`, `clean`, `help`, `install`, `package`, `oly` and `oly-*` are targets | pick another game name |
 | `--platform windows is for native games` | `--platform windows` on a web game | build a web game without it |
-| `a desktop window cannot open in the container: run build/cmake-docker/games/<game> on the host` | `oly run --docker` on a desktop game | run the executable the message names on the host |
+| `a desktop window cannot open in the container` | `oly run --docker` on a desktop game | build with `oly build`, then run the executable on the host: `build/cmake/games/<target>` |
 | `OLY_ENGINE_DIR is not a directory` | the checkout path is wrong | fix the path ([local mode](cli.md#build-with-an-engine-checkout)) |
 | `this launcher runs from a checkout (version dev)` | `oly self-update` on the launcher of an engine checkout | install a release with `install.sh` |
 
-`oly doctor` prints one line per tool: `ok`, `old` (older than `toolchain.env` needs), `untested` (newer than the version the engine is tested with), `missing` or `wrong` (for example `g++` that does not target MinGW on Windows: use the MSYS2 UCRT64 shell). A line that is not `ok` makes it exit with 1. The engine configure checks the same versions and fails with the messages of the table above, such as `Emscripten X is not the tested version Y (toolchain.env)`.
+`oly doctor` prints one line per tool: `ok`, `old` (older than `toolchain.env` needs), `untested` (newer than the version the engine is tested with), `missing` or `wrong` (for example `g++` that does not target MinGW on Windows: put the `bin` folder of MSYS2 UCRT64 first on the `PATH` of Git Bash). A line that is not `ok` makes it exit with 1. The engine configure checks the same versions and fails with messages such as `Emscripten X is not the tested version Y (toolchain.env)`.
 
 ## "It does nothing" — silent problems
 

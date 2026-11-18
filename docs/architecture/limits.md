@@ -21,4 +21,4 @@
 - **Publishing supports Linux and Windows in Git Bash only.** No MSVC (a Windows native game builds with MinGW), no macOS, and no PowerShell or `cmd`: `oly` is a shell script ([publishing.md](publishing.md)).
 - **A plugin declared by a game is not supported yet.** A game turns on the plugins that come with the engine release it pins ([plugins.md](plugins.md)).
 - **`FetchContent` at a real tag is first exercised by games, after publishing.** The tag is created last, so the consumer test fetches the engine from the commit being released (`OLY_ENGINE_SOURCE_DIR`) instead.
-- **`oly` prints no help.** The commands are listed in [the guide](../guide/cli.md).
+- **`oly` has no help text of its own.** Bare `oly` inside a game lists the tasks through `spur`; the commands are described in [the guide](../guide/cli.md).

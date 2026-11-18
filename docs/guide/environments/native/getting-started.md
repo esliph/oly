@@ -8,7 +8,7 @@ Choose it when the game does not need a browser. Choose [the web](../web/getting
 
 ## What you need
 
-On **Linux**: `curl`, `tar`, CMake and GCC. On **Windows**: **Git Bash** and **MSYS2 UCRT64** (`gcc`, `cmake` and `ninja`). Run every command from Git Bash, not from PowerShell or `cmd`. Docker is optional.
+On **Linux**: `curl`, `tar`, `git`, `make`, CMake, GCC and the X11 and Wayland development headers that SDL3 needs to open a window. On **Windows**: **Git Bash** and **MSYS2 UCRT64** (`gcc`, `cmake` and `ninja`). Run every command from Git Bash, not from PowerShell or `cmd`. Docker is optional.
 
 The exact versions, the install steps and the Docker option are in [The `oly` command](../../cli.md#what-you-install). `oly doctor` checks them for you.
 
@@ -30,7 +30,7 @@ oly run
 
 `oly run` opens a window. Press `W`, `A`, `S` and `D` to move the square. The arguments go to the game: `oly run --frames 60` runs 60 frames with a fixed clock and exits.
 
-To build the Windows `.exe`, run `oly build --platform windows`. On Linux this cross-compiles with MinGW, so it needs `mingw-w64`. Every command is described in [The `oly` command](../../cli.md).
+To build the Windows `.exe`, run `oly build --platform windows`. On Linux this cross-compiles with `mingw-w64` and runs the Windows tools and tests under Wine, so it needs both. Every command is described in [The `oly` command](../../cli.md).
 
 ## What `oly new` created
 
@@ -183,7 +183,7 @@ oly::native_host::run(engine, window, {.maxFrames = 600, .frameSeconds = 1.0 / 6
 
 The first frame only records the time, so `maxFrames = n` runs `n - 1` simulated frames. This checks that the game starts, runs and exits cleanly.
 
-To check what the game *did*, run the gameplay with no window at all. Keep the gameplay in functions that take an `Engine` (as `drift` does with `installGameplay`) and drive `engine.frame` with a time you choose, then read the `World`:
+To check what the game *did*, run the gameplay with no window at all. Keep the gameplay in functions that take an `Engine` (here `installGameplay`) and drive `engine.frame` with a time you choose, then read the `World`:
 
 ```cpp
 // test/main.cpp
@@ -228,7 +228,7 @@ int main() {
 }
 ```
 
-The test needs the generated schema header but no window, so build it with `oly_add_game` too, without `native_host`, and register it with ctest next to the game in `cmake/game.cmake`:
+The file names and the `Velocity` component below are an example: use your own gameplay (the template has `native/movement.cpp`). The test needs the generated schema header but no window, so build it with `oly_add_game` too, without `native_host`, and register it with ctest next to the game in `cmake/game.cmake`:
 
 ```cmake
 oly_add_game(<target>_test
