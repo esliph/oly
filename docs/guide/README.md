@@ -75,6 +75,7 @@ Read in order the first time. Each page builds on the one before.
 
 | Page | Use it when |
 |---|---|
+| [The `oly` command](cli.md) | you want to install `oly`, make a game, build, test, run or upgrade it, or build with an engine checkout |
 | [Recipes](recipes.md) | you want a ready pattern: projectile, cooldown, spawner, pickup, health, timer, nearest target, key rebinding and more |
 | [Cheat sheet](cheat-sheet.md) | you remember the idea but not the exact name or signature |
 | [Troubleshooting](troubleshooting.md) | you need to understand an error or fix a common mistake |
@@ -128,16 +129,16 @@ oly::native_host::Window window({"Hello", 640, 360});
 return oly::native_host::run(engine, window);
 ```
 
-**On the web**, the TS client registers the same functions by name and drives the loop from the browser: see the `game.ts` and `main.ts` of [Create your own game](environments/web/getting-started.md#create-your-own-game).
+**On the web**, the TS client registers the same functions by name and drives the loop from the browser: see the `game.ts` and `main.ts` of [What `oly new` created](environments/web/getting-started.md#what-oly-new-created).
 
 ## Example games
 
-Complete example games live in [`games/`](../../games), one folder per game: `arena` on the web and `drift` on the desktop. Each one has its own `README.md` that says what it shows and how to run it. After this guide, they are the best reference: real code that uses every part of the engine together.
+Complete example games live in the [`games/`](../../games) folder of the engine repository, one folder per game: `arena` on the web and `drift` on the desktop. Each one has its own `README.md` that says what it shows and how to run it. After this guide, they are the best reference: real code that uses every part of the engine together.
 
-All web example games follow the same layout ([Getting started on the web](environments/web/getting-started.md#create-your-own-game)), and all desktop ones follow [Getting started on the desktop](environments/native/getting-started.md), so once you know one, you can read any of them.
+All web example games follow the same layout ([Getting started on the web](environments/web/getting-started.md#what-oly-new-created)), and all desktop ones follow [Getting started on the desktop](environments/native/getting-started.md), so once you know one, you can read any of them.
 
 ## Conventions used in this guide
 
 - `cpp` blocks use the `oly::ecs`, `oly::app` and `oly::input` namespaces. `ts` blocks appear only in the client pages (`environments/web/typescript/`) and in the pages of the web environment.
-- Commands are `./spur` tasks, run from Git Bash; each one runs inside Docker ([commands](../development/commands.md)).
+- Commands are `oly` commands, run from Git Bash on Windows ([The `oly` command](cli.md)). Inside the engine repository they are `./spur` tasks, which run inside Docker ([commands](../development/commands.md)).
 - "Contract error" means the engine refuses the call: C++ stops on `OLY_ASSERT` in debug builds; TS throws `ContractError`.

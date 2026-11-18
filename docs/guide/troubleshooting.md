@@ -61,7 +61,7 @@ The TS client validates everything that goes through it, in release builds too (
 | `does not belong to this runtime's schema` | an entry from another generated schema module | import the entries from the game's `schema.generated.js` |
 | `invalid type name` / `invalid field` | schema naming rules | `PascalCase` types, `camelCase` fields, no C++ keywords |
 | `<game>.oly:<line>:<column>: ...` when building | a schema rule is broken | fix that line; the rules are in [Schema](concepts/schema.md#naming-rules) |
-| `<game> is a web game, but this build is native` (or the reverse) when configuring | the game's `ENVIRONMENT` is not the environment of the preset | wrap the game's `CMakeLists.txt` in `if(OLY_ENVIRONMENT STREQUAL "...")`, see [Getting started on the desktop](environments/native/getting-started.md#build-it) |
+| `<game> is a web game, but this build is native` (or the reverse) when configuring | the game's `ENVIRONMENT` is not the environment of the preset | wrap the game's `CMakeLists.txt` in `if(OLY_ENVIRONMENT STREQUAL "...")`, see [Getting started on the desktop](environments/native/getting-started.md#inside-the-engine-repository) |
 | `declareSchema: the Engine already declares events, actions or states` | `setUpGame` called after a manual `declareEvent`, `declareState` or action declaration, or called twice | call `setUpGame` once, first, and declare nothing by hand |
 | `<file>.oly:<line>:<column>: repeated name "X"; first declared at <file>.oly:<line>:<column>` when building | the game and a plugin it turns on (or two plugins) declare the same name | rename the game's type; names are flat across the merged schema ([Types that come from plugins](concepts/schema.md#types-that-come-from-plugins)) |
 | `a plugin declares only components, tags and events; action "x" is not allowed` (or `state "x"`) when building | an action or a state in a plugin's `.oly` | declare actions and states in the game's `.oly` |
@@ -70,6 +70,30 @@ The TS client validates everything that goes through it, in release builds too (
 | `SDL_InitSubSystem(video): ...` or `SDL window: ...` (`std::runtime_error` from `Window`) | no display or video driver on the machine | run on a desktop session, or set `SDL_VIDEO_DRIVER=dummy` for a headless run |
 | `Engine already disposed` / `World already disposed` | use after `dispose()` | keep the engine alive while the game runs |
 | `World belongs to the Engine; use engine.dispose()` | `engine.world.dispose()` | dispose the engine instead |
+
+## The `oly` command
+
+The messages of [`oly`](cli.md) start with `oly:` (the launcher) or `oly <command>:` (the tasks of the game). Both exit with 64 for a wrong use and with 1 for a failure.
+
+| Message contains | Cause | Fix |
+|---|---|---|
+| `not inside an Oly game: no oly.env in <folder> or above` | the current folder is not inside a game | `cd` into the game, or make one with `oly new` |
+| `oly.env has no OLY_VERSION`, `OLY_VERSION in ... is not a valid version` | `oly.env` lost the line, or the version has characters that are not letters, digits, `.` or `-` | write `OLY_VERSION=<version>`, or run `oly upgrade <version>` |
+| `could not install oly-tools <version> from <url>` | the download failed: no network, a version that was never released, or a wrong `OLY_RELEASE_URL` | check the network and that the release `v<version>` exists; run again |
+| `could not read the latest version from <url>` | `oly new` or `oly doctor` outside a game could not reach the latest release | check the network, or pass `oly new --version <version>` |
+| `oly.env pins X but package.json has other @oly tarballs: run oly upgrade X` | the two files name different engine versions, after a hand edit or an interrupted upgrade | run `oly upgrade X` |
+| `EMSDK is not set: install emsdk <version> and source emsdk_env.sh` | a web game builds on the host and `emsdk_env.sh` was not sourced in this shell | install emsdk at that version and run `source <emsdk>/emsdk_env.sh`, or build with `--docker` |
+| `the host tools do not match toolchain.env (see above)` | a line of the check above this one is not `ok` | install what that line says, or build with `--docker` |
+| `unsupported host <name>: oly runs on Linux and on Windows in Git Bash` | macOS, or a shell on Windows that is not Git Bash | use Linux, or Git Bash on Windows |
+| `<game> already exists` | `oly new` does not write over a folder | pick another name, or remove the folder |
+| `game name must match [a-z][a-z0-9-]*` | the name has capitals, spaces or `_`, or starts with a digit | rename the game |
+| `is a CMake or engine target name: pick another game name` | `test`, `all`, `clean`, `help`, `install`, `package`, `oly` and `oly-*` are targets | pick another game name |
+| `--platform windows is for native games` | `--platform windows` on a web game | build a web game without it |
+| `a desktop window cannot open in the container: run build/cmake-docker/games/<game> on the host` | `oly run --docker` on a desktop game | run the executable the message names on the host |
+| `OLY_ENGINE_DIR is not a directory` | the checkout path is wrong | fix the path ([local mode](cli.md#build-with-an-engine-checkout)) |
+| `this launcher runs from a checkout (version dev)` | `oly self-update` on the launcher of an engine checkout | install a release with `install.sh` |
+
+`oly doctor` prints one line per tool: `ok`, `old` (older than `toolchain.env` needs), `untested` (newer than the version the engine is tested with), `missing` or `wrong` (for example `g++` that does not target MinGW on Windows: use the MSYS2 UCRT64 shell). A line that is not `ok` makes it exit with 1. The engine configure checks the same versions and fails with the messages of the table above, such as `Emscripten X is not the tested version Y (toolchain.env)`.
 
 ## "It does nothing" — silent problems
 
@@ -90,7 +114,7 @@ The TS client validates everything that goes through it, in release builds too (
 
 ## Rebuild checklist
 
-After changing the schema:
+After changing the schema, run `oly build` (or `oly test`) in your game: it regenerates the C++ and TS schemas, builds the WASM or the executable and compiles the TS. The steps below are the ones inside the engine repository.
 
 **Web**
 

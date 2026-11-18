@@ -1,6 +1,6 @@
 # Cheat sheet
 
-[Guide index](README.md) · [Recipes](recipes.md) · [Glossary (C++ / C API / TS)](../architecture/glossary.md)
+[Guide index](README.md) · [Recipes](recipes.md) · [The `oly` command](cli.md) · [Glossary (C++ / C API / TS)](../architecture/glossary.md)
 
 One page with every public name: C++ first, then the C API, then the TypeScript client. Each topic links to its concept page.
 
@@ -149,6 +149,23 @@ OLY_HANDLER(name, Event) { /* context, events: std::span<const Event> */ }
 OLY_STATE_HOOK(name) { /* context: oly::app::StateContext& */ }
 ```
 
+## The `oly` command
+
+[The `oly` command](cli.md)
+
+```sh
+oly new <game> --environment web|native [--version <version>]
+oly doctor [--environment web|native] [--docker|--host]    # exit 1 when a line is not ok
+oly build|test|run [--docker|--host] [--platform windows]  # run: web serves :8000; native passes the arguments to the game
+oly clean                                                  # removes build/
+oly upgrade <version>                                      # oly.env, package.json, npm install
+oly self-update
+oly --version
+OLY_ENGINE_DIR=<engine checkout> oly build                 # local mode
+```
+
+`oly.env`: `OLY_VERSION`, `OLY_ENVIRONMENT`, `OLY_GAME`, `OLY_RUNNER=host|docker`. Variables: `OLY_ENGINE_DIR`, `OLY_HOME`, `OLY_RELEASE_URL`, `OLY_INSTALL_VERSION`.
+
 ## Native host and build
 
 [Getting started on the desktop](environments/native/getting-started.md)
@@ -163,7 +180,7 @@ oly::native_host::keyButtonOf(SDL_SCANCODE_W);            // std::optional<Physi
 ```
 
 ```cmake
-oly_add_game(<game>_game ENVIRONMENT web|native DIMENSION 2d|3d SCHEMA <game>.oly SOURCES <files> DEPENDS <modules> [PLUGINS <plugins>] [TYPESCRIPT <file.ts>])
+oly_add_game(<target> ENVIRONMENT web|native DIMENSION 2d|3d SCHEMA <game>.oly SOURCES <files> DEPENDS <modules> [PLUGINS <plugins>] [TYPESCRIPT <file.ts>])
 oly_add_plugin(NAME <plugin> [SCHEMA <plugin>.oly] DEPENDS <modules> [PLUGINS <plugins>])   # class oly::<plugin>::Plugin, sources src/*.cpp
 ```
 

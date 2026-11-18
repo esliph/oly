@@ -232,40 +232,36 @@ function sequence(values: readonly number[]): () => number {
 }
 ```
 
-## Register the test with ctest
+## Run the tests
 
-Add to the game's `CMakeLists.txt`, next to `oly_add_game`:
+A game made with `oly new` already registers its tests: `cmake/game.cmake` has the ctest test that runs `node --test web/dist/tests/` with `OLY_GAME_MODULE` set, and `web/tests/tsconfig.json` emits the compiled tests to `web/dist/tests/`. Put a new `*.test.ts` file in `web/tests/` and run:
+
+```sh
+oly test
+```
+
+`oly test` builds the game, compiles the TS tests and runs ctest. To run one test file or filter by name, use `node` and `ctest` on the build `oly test` left:
+
+```sh
+ctest --test-dir build/cmake -R '^<target>\.'
+```
+
+### Inside the engine repository
+
+A game in `games/<game>/` registers the test itself, next to `oly_add_game`:
 
 ```cmake
 if(OLY_BUILD_TESTS)
-  add_test(NAME ts.hello.smoke COMMAND ${OLY_NODE} --test ${CMAKE_CURRENT_SOURCE_DIR}/web/dist/tests/)
-  set_tests_properties(ts.hello.smoke PROPERTIES ENVIRONMENT OLY_GAME_MODULE=$<TARGET_FILE:hello_game>)
+  add_test(NAME ts.<game>.smoke COMMAND ${OLY_NODE} --test ${CMAKE_CURRENT_SOURCE_DIR}/web/dist/tests/)
+  set_tests_properties(ts.<game>.smoke PROPERTIES ENVIRONMENT OLY_GAME_MODULE=$<TARGET_FILE:<game>_game>)
 endif()
 ```
 
-The test TS project must emit to `web/dist/tests/`, so its relative imports (`../schema.generated.js`, `../src/game.js`) resolve at run time. `web/tests/tsconfig.json`:
-
-```json
-{
-  "extends": "../../../../tsconfig.base.json",
-  "compilerOptions": {
-    "rootDir": "..",
-    "outDir": "../dist",
-    "tsBuildInfoFile": "../dist-tests/tsconfig.tsbuildinfo",
-    "types": ["node"]
-  },
-  "include": ["**/*.ts"],
-  "references": [{ "path": ".." }, { "path": "../../../../engine/environments/web/clients/typescript/core" }]
-}
-```
-
-Add `{ "path": "games/<game>/web/tests" }` to the `references` of the root `tsconfig.json`.
-
-Run:
+Add `{ "path": "games/<game>/web/tests" }` to the `references` of the root `tsconfig.json`, and run:
 
 ```sh
 ./spur games-test                        # everything
-./spur games-test -R '^ts\.hello'        # only your game
+./spur games-test -R '^ts\.<game>'       # only your game
 ```
 
 ## Testing C++ systems alone

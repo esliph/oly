@@ -2,9 +2,71 @@
 
 [Guide index](../../README.md)
 
-A desktop game is a C++ game that runs in a window on Linux and Windows, in the `native` environment. There is no TypeScript, no WASM and no C API: your `main` creates the `World` and the `Engine`, opens a `Window` and hands the loop to `run`.
+A desktop game is a C++ game that runs in a window on Linux and Windows, in the `native` environment. There is no TypeScript, no WASM and no C API: your `main` creates the `World` and the `Engine`, opens a `Window` and hands the loop to `run`. It lives in its own repository.
 
 Choose it when the game does not need a browser. Choose [the web](../web/getting-started.md) (C++ with a TS client) when it does. The engine, the schema and the gameplay code are the same on both; only the shell and the drawing change.
+
+## What you need
+
+On **Linux**: `curl`, `tar`, CMake and GCC. On **Windows**: **Git Bash** and **MSYS2 UCRT64** (`gcc`, `cmake` and `ninja`). Run every command from Git Bash, not from PowerShell or `cmd`. Docker is optional.
+
+The exact versions, the install steps and the Docker option are in [The `oly` command](../../cli.md#what-you-install). `oly doctor` checks them for you.
+
+## Create and run a game
+
+```sh
+curl -fsSL https://github.com/esliph/oly/releases/latest/download/install.sh | sh
+```
+
+Open a new terminal, then:
+
+```sh
+oly doctor --environment native
+oly new <game> --environment native
+cd <game>
+oly test
+oly run
+```
+
+`oly run` opens a window. Press `W`, `A`, `S` and `D` to move the square. The arguments go to the game: `oly run --frames 60` runs 60 frames with a fixed clock and exits.
+
+To build the Windows `.exe`, run `oly build --platform windows`. On Linux this cross-compiles with MinGW, so it needs `mingw-w64`. Every command is described in [The `oly` command](../../cli.md).
+
+## What `oly new` created
+
+```
+<game>/
+  oly.env                    the engine version, the environment, the target name and the runner
+  CMakeLists.txt             fetches the engine at the version of oly.env
+  cmake/game.cmake           oly_add_game and the test
+  <game>.oly                 the schema
+  native/                    gameplay: movement.cpp, systems.hpp
+  desktop/main.cpp           the SDL shell: window, drawing, options
+  .github/workflows/ci.yml   installs oly and runs oly test --docker
+```
+
+Keep the gameplay in `native/` and the SDL code in `desktop/`: the gameplay stays the same if you add another shell. `cmake/game.cmake` holds the build:
+
+```cmake
+file(GLOB gameSources CONFIGURE_DEPENDS native/*.cpp desktop/*.cpp)
+
+oly_add_game(<target>
+  ENVIRONMENT native
+  DIMENSION 2d
+  SCHEMA ${CMAKE_CURRENT_SOURCE_DIR}/<game>.oly
+  SOURCES ${gameSources}
+  DEPENDS ecs app input native_host)
+target_include_directories(<target> PRIVATE native)
+
+add_test(NAME <target>.headless COMMAND <target> --frames 120)
+set_tests_properties(<target>.headless PROPERTIES ENVIRONMENT SDL_VIDEO_DRIVER=dummy)
+```
+
+`<target>` is the game name with `-` written as `_`. `DIMENSION` is required: `2d` or `3d` turns the matching `essentials` plugin on, which brings `Position` and the other [transform](../../concepts/transforms.md) components, so the game's `.oly` does not declare them. `PLUGINS <plugin>` is optional: it lists the [plugins](../../concepts/plugins.md) the game turns on. The test target of [Test your game](#test-your-game) lists the same plugins, so its `setUpGame` installs them too.
+
+A native game has no registry and no `.mjs`: the target is a plain executable in `build/cmake/games/`. `oly.env` carries the engine version; change it with `oly upgrade <version>` ([The `oly` command](../../cli.md#upgrade-the-engine)).
+
+The `desktop/main.cpp` of the template is the example below with a `--frames <n>` option and an error exit.
 
 ## The smallest game
 
@@ -166,34 +228,32 @@ int main() {
 }
 ```
 
-The test needs the generated schema header but no window, so build it with `oly_add_game` too, without `native_host`, and register it with ctest next to the game in its `CMakeLists.txt`:
+The test needs the generated schema header but no window, so build it with `oly_add_game` too, without `native_host`, and register it with ctest next to the game in `cmake/game.cmake`:
 
 ```cmake
-oly_add_game(<game>_test
+oly_add_game(<target>_test
   ENVIRONMENT native
   DIMENSION 2d
   SCHEMA ${CMAKE_CURRENT_SOURCE_DIR}/<game>.oly
   SOURCES native/gameplay.cpp test/main.cpp
   DEPENDS ecs app input)
-target_include_directories(<game>_test PRIVATE native)
+target_include_directories(<target>_test PRIVATE native)
 
-if(OLY_BUILD_TESTS)
-  add_test(NAME <game>.gameplay COMMAND <game>_test)
-endif()
+add_test(NAME <target>.gameplay COMMAND <target>_test)
 ```
 
 Run it:
 
 ```sh
-./spur native-games-test                          # everything
-./spur native-games-test -R '^<game>\.'           # only your game
+oly test                                          # builds and runs every test
+ctest --test-dir build/cmake -R '^<target>\.'     # only your game, after oly test
 ```
 
 `checkInvariants` after each step catches corruption at the step that caused it ([World and entities](../../concepts/world-and-entities.md#debugging-the-world)). The engine's own C++ tests use doctest with a bare `World` and `Engine` (`engine/runtime/app/tests/`); to add one inside the engine, follow the `add-test-case` skill described in [build and tests](../../../architecture/build-and-tests.md).
 
-## Build it
+## Inside the engine repository
 
-Add the game to CMake with `ENVIRONMENT native`:
+This section is for people who change the engine. A game can also live in the `games/` folder of the engine repository, which builds it together with the engine instead of fetching a release. Add it to CMake with `ENVIRONMENT native`:
 
 ```cmake
 file(GLOB gameSources CONFIGURE_DEPENDS native/*.cpp desktop/*.cpp)
@@ -207,27 +267,14 @@ oly_add_game(<game>_game
   PLUGINS <plugin>)
 ```
 
-`DIMENSION` is required: `2d` or `3d` turns the matching `essentials` plugin on, which brings `Position` and the other [transform](../../concepts/transforms.md) components, so the game's `.oly` does not declare them. `PLUGINS` is optional: it lists the [plugins](../../concepts/plugins.md) the game turns on. The test target above lists the same plugins, so its `setUpGame` installs them too.
-
-A game builds only in its own environment: `oly_add_game` stops the configure when `ENVIRONMENT` is not the one of the build (`native` for the `native-games*` and `windows*` presets, `web` for the WASM ones), so wrap the game's `CMakeLists.txt` in `if(OLY_ENVIRONMENT STREQUAL "native")`. A native game has no registry and no `.mjs`: the target is a plain executable in `build/<preset>/games/`.
-
-## Run it
+A game builds only in its own environment: `oly_add_game` stops the configure when `ENVIRONMENT` is not the one of the build (`native` for the `native-games*` and `windows*` presets, `web` for the WASM ones), so wrap the game's `CMakeLists.txt` in `if(OLY_ENVIRONMENT STREQUAL "native")`. The target is an executable in `build/<preset>/games/`. The toolchain there is Docker only, through `./spur`:
 
 | Where | Command | Result |
 |---|---|---|
 | Linux | `./spur desktop <game>` | builds `native-games-release` and prints `build/native-games-release/games/<game>_game` |
 | Windows | `PRESET=windows-release ./spur desktop <game>` | cross-compiles in the `windows` image and prints `build/windows-release/games/<game>_game.exe` |
 
-On Linux, run the executable on the host: the window needs your display (X11 or Wayland). The Windows `.exe` is static, so a double click runs it on a machine with nothing installed.
-
-The simplest check runs the executable itself, as the example games do:
-
-```cmake
-add_test(NAME <game>.desktop COMMAND <game>_game --frames 600)
-set_tests_properties(<game>.desktop PROPERTIES ENVIRONMENT SDL_VIDEO_DRIVER=dummy)
-```
-
-`./spur native-games-test` runs the Linux tests, and `./spur windows-test` runs the same tests under Wine ([Test your game](#test-your-game)). Each game under `games/` has its own `README.md`.
+On Linux, run the executable on the host: the window needs your display (X11 or Wayland). The Windows `.exe` is static, so a double click runs it on a machine with nothing installed. `./spur native-games-test` runs the Linux tests of every game and `./spur windows-test` runs the same tests under Wine. Each game under `games/` has its own `README.md`. To build a game that lives in its own repository against your checkout, use [local mode](../../cli.md#build-with-an-engine-checkout).
 
 ## Next
 
