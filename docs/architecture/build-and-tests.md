@@ -8,11 +8,13 @@ There is no C++ toolchain on the host. Everything runs in Docker Compose:
 
 | Service | Image | Use |
 |---|---|---|
-| `dev` | `Dockerfile` (`gcc:14`, CMake, perf) | native build and tests |
+| `dev` | `Dockerfile` (`gcc`, CMake, perf) | native build and tests |
 | `perf` | `Dockerfile`, privileged | `perf stat` |
-| `wasm` | `Dockerfile.wasm` (`emscripten/emsdk:3.1.74`, emsdk's Clang as the native compiler, node 20.18, Python) | WASM, TS, cost study |
+| `wasm` | `Dockerfile.wasm` (`emscripten/emsdk`, emsdk's Clang as the native compiler, node, Python) | WASM, TS, cost study |
 | `web` | `Dockerfile.wasm`, port 8000 | `./spur serve` |
 | `windows` | `Dockerfile.windows` (`debian:trixie-slim`, mingw-w64 GCC, Wine) | Windows cross-build and tests under Wine |
+
+`toolchain.env` holds the toolchain versions, in one place: `./spur images` passes them to the Dockerfiles as build arguments (none has a default), and `cmake/OlyToolchain.cmake` checks the compiler, Emscripten, CMake and Ninja against the same file at configure time. Emscripten must equal `EMSDK_VERSION`; GCC, MinGW GCC, CMake and Ninja must be at least their `*_MINIMUM`. The minimums are the versions the images test with, not bisected. `./spur images` is the only way to build the images: a plain `docker compose build` has no `toolchain.env` and stops naming the missing variable. The `oly-schema` of the `wasm` image is built with emsdk's Clang (`CC=clang`), because Ubuntu's default GCC there is below `GCC_MINIMUM`.
 
 ## Presets
 

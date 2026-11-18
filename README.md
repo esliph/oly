@@ -103,7 +103,7 @@ A complete example, with C++ systems called from TypeScript, is in [`engine/test
 
 ## Build and test
 
-The requirements on the host are **Git Bash** and **Docker** with Docker Compose. The images ship GCC 14, CMake, `perf`, Emscripten and Node. Run `docker compose build` once; `./spur --list` shows every task.
+The requirements on the host are **Git Bash** and **Docker** with Docker Compose. The images ship GCC, CMake, `perf`, Emscripten and Node, in the versions of `toolchain.env`. Run `./spur images` once; `./spur --list` shows every task.
 
 ```sh
 # Native C++: builds and runs all tests with ASan + UBSan.

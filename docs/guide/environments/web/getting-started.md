@@ -8,7 +8,7 @@ This page takes you from a clean clone to your own game running in the browser. 
 
 **Git Bash** and **Docker** with Docker Compose. The images bring GCC, CMake, Emscripten, Node and Python. There is no compiler on the host.
 
-Every command is a task of `./spur`, which runs it in the right container. `./spur --list` shows the tasks. Run `docker compose build` once before the first use.
+Every command is a task of `./spur`, which runs it in the right container. `./spur --list` shows the tasks. Run `./spur images` once before the first use.
 
 ## Run an example game
 

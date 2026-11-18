@@ -1,11 +1,14 @@
-FROM emscripten/emsdk:3.1.74
+ARG EMSDK_VERSION
+FROM emscripten/emsdk:${EMSDK_VERSION}
+
+ARG CMAKE_VERSION
 
 # g++-multilib: i386 libstdc++ for the native-clang-32* presets (V2, V2S). CMake via pip because the image ships 3.22
 # and the project requires 3.25+.
 RUN apt-get update \
   && apt-get install -y --no-install-recommends make g++ g++-multilib binutils python3-pip \
   && rm -rf /var/lib/apt/lists/* \
-  && pip install --no-cache-dir cmake==3.30.5
+  && pip install --no-cache-dir cmake==${CMAKE_VERSION}
 
 WORKDIR /app
 ENV OLY_TOOLCHAIN=wasm

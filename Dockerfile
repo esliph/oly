@@ -1,4 +1,5 @@
-FROM gcc:14
+ARG GCC_VERSION
+FROM gcc:${GCC_VERSION}
 
 # clang-format-22 and not Debian's default (19): .clang-format uses keys that 19 rejects
 # (BinPackParameters: OnePerLine, SortIncludes as a map, BinPackLongBracedList).

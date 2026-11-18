@@ -1,29 +1,47 @@
 name: cpp_services
 
+x-dev-build: &dev-build
+  context: .
+  args:
+    GCC_VERSION: ${GCC_VERSION:?set in toolchain.env; build with ./spur images}
+
+x-wasm-build: &wasm-build
+  context: .
+  dockerfile: Dockerfile.wasm
+  args:
+    EMSDK_VERSION: ${EMSDK_VERSION:?set in toolchain.env; build with ./spur images}
+    CMAKE_VERSION: ${CMAKE_VERSION:?set in toolchain.env; build with ./spur images}
+
+x-windows-build: &windows-build
+  context: .
+  dockerfile: Dockerfile.windows
+  args:
+    MINGW_GCC_MINIMUM: ${MINGW_GCC_MINIMUM:?set in toolchain.env; build with ./spur images}
+
 services:
   build:
-    build: .
+    build: *dev-build
     volumes:
       - .:/app
       - ./build:/app/build
     command: ./spur build
 
   run:
-    build: .
+    build: *dev-build
     volumes:
       - .:/app
       - ./build:/app/build
     command: ./spur test
 
   dev:
-    build: .
+    build: *dev-build
     volumes:
       - .:/app
       - ./build:/app/build
     command: bash
 
   perf:
-    build: .
+    build: *dev-build
     privileged: true
     volumes:
       - .:/app
@@ -31,27 +49,21 @@ services:
     command: bash
 
   wasm:
-    build:
-      context: .
-      dockerfile: Dockerfile.wasm
+    build: *wasm-build
     volumes:
       - .:/app
       - ./build:/app/build
     command: bash
 
   windows:
-    build:
-      context: .
-      dockerfile: Dockerfile.windows
+    build: *windows-build
     volumes:
       - .:/app
       - ./build:/app/build
     command: bash
 
   web:
-    build:
-      context: .
-      dockerfile: Dockerfile.wasm
+    build: *wasm-build
     ports:
       - "8000:8000"
     volumes:

@@ -51,7 +51,7 @@ _in() {
 
   # 69 stays outside spur's own 64-68.
   if ! command -v docker > /dev/null 2>&1; then
-    _fail 69 "this image predates OLY_TOOLCHAIN and has no docker: run 'docker compose build' on the host"
+    _fail 69 "this image predates OLY_TOOLCHAIN and has no docker: run './spur images' on the host"
   fi
 
   _options=0
@@ -72,8 +72,14 @@ _in() {
 
   # Git Bash would rewrite arguments such as '^ecs\.' as Windows paths.
   export MSYS_NO_PATHCONV=1
-  exec docker compose run --rm -e PRESET -e OLY_FUZZ_SEED -e OLY_FUZZ_OPS "$@"
+  exec docker compose --env-file toolchain.env run --rm -e PRESET -e OLY_FUZZ_SEED -e OLY_FUZZ_OPS "$@"
 }
+
+## Build the images with the toolchain versions of toolchain.env; the arguments go to docker compose build.
+##
+##   ./spur images wasm
+images: ## build the images from toolchain.env (on the host)
+  exec docker compose --env-file toolchain.env build "$@"
 
 configure: ## cmake --preset $PRESET (default debug-asan)
   preset=${PRESET:-debug-asan}

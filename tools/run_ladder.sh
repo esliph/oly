@@ -47,7 +47,7 @@ for round in $(seq 1 "$rounds"); do
     read -r service command <<< "$(command_for "$variant")"
     target="$output_directory/${variant}_r${round}.json"
     echo "round $round/$rounds: $variant ($bench)" >&2
-    if ! docker compose run --rm -T "$service" sh -c "$command $protocol" > "$target.tmp"; then
+    if ! docker compose --env-file toolchain.env run --rm -T "$service" sh -c "$command $protocol" > "$target.tmp"; then
       rm -f "$target.tmp"
       echo "failed: $variant round $round" >&2
       exit 1

@@ -2,9 +2,9 @@
 
 There is no C++ toolchain on the Windows host: everything runs in a container via Docker Compose, driven by `./spur <task>` from Git Bash. The host needs Git Bash and Docker. The services are described in [../architecture/build-and-tests.md](../architecture/build-and-tests.md#toolchain).
 
-`./spur --list` shows the tasks, and `./spur --describe <task>` the help of one. Each task runs in the container its preset needs (`dev`: gcc:14 + cmake + perf; `wasm`: emsdk + Clang + node + Python; `windows`: mingw-w64 + Wine); typed inside the wrong container, it exits with 64.
+`./spur --list` shows the tasks, and `./spur --describe <task>` the help of one. Each task runs in the container its preset needs (`dev`: gcc + cmake + perf; `wasm`: emsdk + Clang + node + Python; `windows`: mingw-w64 + Wine); typed inside the wrong container, it exits with 64.
 
-- Run `docker compose build` once after pulling the change that introduced `./spur`: images built before it lack `OLY_TOOLCHAIN` and stop with exit 69.
+- Run `./spur images` once, and again after `toolchain.env` changes: it builds the images with the versions of that file. Images built before `./spur` existed lack `OLY_TOOLCHAIN` and stop with exit 69.
 - `-x` and `-n` given on the host show only the dispatch to the container. To trace a task, run it inside: `./spur dev ./spur -x test`.
 
 ## Native C++

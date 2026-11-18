@@ -1,9 +1,17 @@
 FROM debian:trixie-slim
 
+ARG MINGW_GCC_MINIMUM
+
 RUN apt-get update \
   && apt-get install -y --no-install-recommends cmake make git python3 ca-certificates \
     g++-mingw-w64-x86-64-posix gcc-mingw-w64-x86-64-posix binutils-mingw-w64-x86-64 wine wine64 \
   && rm -rf /var/lib/apt/lists/*
+
+# The MinGW comes from Debian: below the minimum there is nothing to install instead, so the build stops.
+RUN found=$(x86_64-w64-mingw32-g++-posix -dumpversion) \
+  && if ! dpkg --compare-versions "$found" ge "$MINGW_GCC_MINIMUM"; then \
+    echo "MinGW GCC $found is older than MINGW_GCC_MINIMUM $MINGW_GCC_MINIMUM (toolchain.env)" >&2; exit 1; \
+  fi
 
 ENV WINEPREFIX=/opt/wine WINEDEBUG=-all
 

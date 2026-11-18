@@ -22,7 +22,7 @@ if [ "$relative" = "$absolute" ]; then
 fi
 
 cd "$CLAUDE_PROJECT_DIR"
-if ! output=$(docker compose run --rm -T dev clang-format -i "$relative" 2>&1); then
+if ! output=$(docker compose --env-file toolchain.env run --rm -T dev clang-format -i "$relative" 2>&1); then
   printf '%s\n' "$output" | grep -v '^ Container ' >&2
   exit 1
 fi
