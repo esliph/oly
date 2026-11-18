@@ -140,8 +140,7 @@ TEST_CASE("a child spawned by a CommandBuffer during update has its WorldTransfo
     Spawner& spawned = *static_cast<Spawner*>(context.userData());
     const WorldTransform& world = context.get<WorldTransform>(spawned.child);
     CHECK(world.x == doctest::Approx(11));
-    CHECK(world.y == doctest::Approx(5));
-  }, &spawner);
+    CHECK(world.y == doctest::Approx(5)); }, &spawner);
 
   fixture.step();
 

@@ -42,8 +42,8 @@ struct LifeCounter {
 };
 
 // Requires doctest to be included before use.
-#define CHECK_INVARIANTS(world)                          \
-  do {                                                   \
-    std::string why_;                                    \
+#define CHECK_INVARIANTS(world)                                   \
+  do {                                                            \
+    std::string why_;                                             \
     CHECK_MESSAGE(oly::ecs::checkInvariants(world, &why_), why_); \
   } while (0)

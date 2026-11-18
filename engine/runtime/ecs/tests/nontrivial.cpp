@@ -21,7 +21,7 @@ TEST_CASE("string, unique_ptr, vector and LifeCounter survive reallocation and t
     std::vector<oly::ecs::Entity> entities;
     for (uint64_t i = 0; i < 300; ++i) {
       entities.push_back(world.spawn(longString(i), std::make_unique<int>(int(i)), std::vector<int>(i % 7 + 1, int(i)),
-                                      LifeCounter{i}));
+                                     LifeCounter{i}));
     }
     CHECK(LifeCounter::alive == 300);
 

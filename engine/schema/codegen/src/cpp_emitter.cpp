@@ -9,24 +9,24 @@ namespace oly::schema {
   namespace {
     std::string_view cppType(ScalarType type) {
       switch (type) {
-      case ScalarType::F32:
-        return "float";
-      case ScalarType::F64:
-        return "double";
-      case ScalarType::I8:
-        return "int8_t";
-      case ScalarType::U8:
-        return "uint8_t";
-      case ScalarType::I16:
-        return "int16_t";
-      case ScalarType::U16:
-        return "uint16_t";
-      case ScalarType::I32:
-        return "int32_t";
-      case ScalarType::U32:
-        return "uint32_t";
-      case ScalarType::Entity:
-        return "oly::ecs::Entity";
+        case ScalarType::F32:
+          return "float";
+        case ScalarType::F64:
+          return "double";
+        case ScalarType::I8:
+          return "int8_t";
+        case ScalarType::U8:
+          return "uint8_t";
+        case ScalarType::I16:
+          return "int16_t";
+        case ScalarType::U16:
+          return "uint16_t";
+        case ScalarType::I32:
+          return "int32_t";
+        case ScalarType::U32:
+          return "uint32_t";
+        case ScalarType::Entity:
+          return "oly::ecs::Entity";
       }
 
       return {};
@@ -34,12 +34,12 @@ namespace oly::schema {
 
     std::string_view cppActionHandle(ActionKind kind) {
       switch (kind) {
-      case ActionKind::Button:
-        return "ButtonAction";
-      case ActionKind::Axis2d:
-        return "Axis2dAction";
-      case ActionKind::Pointer:
-        return "PointerAction";
+        case ActionKind::Button:
+          return "ButtonAction";
+        case ActionKind::Axis2d:
+          return "Axis2dAction";
+        case ActionKind::Pointer:
+          return "PointerAction";
       }
 
       return {};
@@ -47,12 +47,12 @@ namespace oly::schema {
 
     std::string_view cppActionKind(ActionKind kind) {
       switch (kind) {
-      case ActionKind::Button:
-        return "Button";
-      case ActionKind::Axis2d:
-        return "Axis2d";
-      case ActionKind::Pointer:
-        return "Pointer";
+        case ActionKind::Button:
+          return "Button";
+        case ActionKind::Axis2d:
+          return "Axis2d";
+        case ActionKind::Pointer:
+          return "Pointer";
       }
 
       return {};

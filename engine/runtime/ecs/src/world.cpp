@@ -254,11 +254,11 @@ namespace oly::ecs {
 
       // Small, common sizes inline: avoids the variable-size memcpy call.
       switch (info.size) {
-      case 4: std::memcpy(slot, value, 4); break;
-      case 8: std::memcpy(slot, value, 8); break;
-      case 12: std::memcpy(slot, value, 12); break;
-      case 16: std::memcpy(slot, value, 16); break;
-      default: std::memcpy(slot, value, info.size);
+        case 4: std::memcpy(slot, value, 4); break;
+        case 8: std::memcpy(slot, value, 8); break;
+        case 12: std::memcpy(slot, value, 12); break;
+        case 16: std::memcpy(slot, value, 16); break;
+        default: std::memcpy(slot, value, info.size);
       }
     }
 
@@ -921,28 +921,28 @@ namespace oly::ecs {
 
     commandBuffer.forEach([&](const detail::CommandView& command) {
       switch (command.operation) {
-      case detail::CommandOperation::Spawn:
-        if (store_.isReserved(command.entity)) {
-          materialize(command.entity);
-        }
-        break;
-      case detail::CommandOperation::Destroy:
-        if (store_.isAlive(command.entity)) {
-          destroy(command.entity);
-        } else if (store_.isReserved(command.entity)) {
-          store_.release(command.entity.index);
-        }
-        break;
-      case detail::CommandOperation::Add:
-        if (store_.isAlive(command.entity)) {
-          addById(command.entity, command.componentId, command.payload);
-        }
-        break;
-      case detail::CommandOperation::Remove:
-        if (store_.isAlive(command.entity)) {
-          removeById(command.entity, command.componentId);
-        }
-        break;
+        case detail::CommandOperation::Spawn:
+          if (store_.isReserved(command.entity)) {
+            materialize(command.entity);
+          }
+          break;
+        case detail::CommandOperation::Destroy:
+          if (store_.isAlive(command.entity)) {
+            destroy(command.entity);
+          } else if (store_.isReserved(command.entity)) {
+            store_.release(command.entity.index);
+          }
+          break;
+        case detail::CommandOperation::Add:
+          if (store_.isAlive(command.entity)) {
+            addById(command.entity, command.componentId, command.payload);
+          }
+          break;
+        case detail::CommandOperation::Remove:
+          if (store_.isAlive(command.entity)) {
+            removeById(command.entity, command.componentId);
+          }
+          break;
       }
     });
 

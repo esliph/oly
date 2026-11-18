@@ -13,11 +13,11 @@
 using oly::ecs::Entity;
 using oly::essentials3d::detail::HasChildren;
 
-#define CHECK_HIERARCHY(fixture)                                                       \
-  do {                                                                                 \
-    std::string hierarchyWhy_;                                                         \
+#define CHECK_HIERARCHY(fixture)                                                                    \
+  do {                                                                                              \
+    std::string hierarchyWhy_;                                                                      \
     CHECK_MESSAGE((fixture).plugin.checkHierarchy((fixture).world, &hierarchyWhy_), hierarchyWhy_); \
-    CHECK_INVARIANTS((fixture).world);                                                 \
+    CHECK_INVARIANTS((fixture).world);                                                              \
   } while (0)
 
 namespace {
