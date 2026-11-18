@@ -1,0 +1,15 @@
+{
+  "name": "@GAME_NAME@",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "dependencies": {
+    "@oly/core": "@OLY_RELEASE_URL@/download/v@OLY_VERSION@/oly-core-@OLY_VERSION@.tgz",
+    "@oly/web-host": "@OLY_RELEASE_URL@/download/v@OLY_VERSION@/oly-web-host-@OLY_VERSION@.tgz"
+  },
+  "devDependencies": {
+    "@types/node": "20.17.6",
+    "esbuild": "0.24.2",
+    "typescript": "5.6.3"
+  }
+}

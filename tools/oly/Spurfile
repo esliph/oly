@@ -74,7 +74,7 @@ _npm() {
 
 # Escapes a value for the replacement side of sed s|...|...|.
 _sed_replacement() {
-  printf '%s' "$1" | sed 's/[\&|]/\&/g'
+  printf '%s' "$1" | sed 's/[\\&|]/\\&/g'
 }
 
 # The engine C++ source: the checkout in local mode, the staged source of a release run, else empty so FetchContent
@@ -87,20 +87,152 @@ _engine_source() {
   fi
 }
 
+# CMake's default generator on Windows is Visual Studio, which drives neither MinGW nor Emscripten.
+_generator_arguments() {
+  if [ "$(_platform)" = windows-x64 ]; then
+    echo "-G Ninja"
+  fi
+}
+
 _build_native() {
   _source=$(_engine_source)
-  if [ "$(_platform)" = windows-x64 ]; then
-    cmake -S . -B build/cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DOLY_BUILD_NATIVE_HOST=ON "-DFETCHCONTENT_SOURCE_DIR_OLY=$_source"
-  else
-    cmake -S . -B build/cmake -DCMAKE_BUILD_TYPE=Debug -DOLY_BUILD_NATIVE_HOST=ON "-DFETCHCONTENT_SOURCE_DIR_OLY=$_source"
-  fi
+  cmake -S . -B build/cmake $(_generator_arguments) -DCMAKE_BUILD_TYPE=Debug -DOLY_BUILD_NATIVE_HOST=ON "-DFETCHCONTENT_SOURCE_DIR_OLY=$_source"
   cmake --build build/cmake -j
+}
+
+# local when OLY_ENGINE_DIR names a checkout, else pinned.
+_mode() {
+  if [ -n "${OLY_ENGINE_DIR:-}" ]; then
+    echo local
+  else
+    echo pinned
+  fi
+}
+
+# _toolchain_value <key>: a value of toolchain.env.
+_toolchain_value() {
+  sed -n "s/^$1=//p" "$(_asset toolchain.env toolchain.env)" | tr -d '\r'
+}
+
+# oly.env and package.json both carry the version, and must not diverge.
+_check_pins() {
+  _pinned=$(_env_value OLY_VERSION)
+  for _tarball in oly-core oly-web-host; do
+    grep -qF "$_tarball-$_pinned.tgz" package.json || _fail 64 "oly.env pins $_pinned but package.json has other @oly tarballs: run oly upgrade $_pinned"
+  done
+}
+
+# _overlay_package <package> <directory of its checkout> <lib>: compiles the checkout's package over the installed
+# tarball, writing nothing into the checkout and leaving package.json alone. The installed copy is emptied first, so
+# nothing of the tarball stays.
+_overlay_package() {
+  _checkout=$(_host_path "$OLY_ENGINE_DIR")
+  _game=$(_host_path "$PWD")
+  _installed=node_modules/@oly/$1
+  _config=build/oly-local/tsconfig.$1.json
+  _paths=
+  # The checkout's source resolves @oly/core by walking up from the checkout, which has no node_modules here.
+  if [ "$1" = web-host ]; then
+    _paths=", \"paths\": { \"@oly/core\": [\"$_game/node_modules/@oly/core/dist/index.d.ts\"] }"
+  fi
+
+  mkdir -p build/oly-local
+  cat > "$_config" << JSON
+{
+  "extends": "$_checkout/tsconfig.base.json",
+  "compilerOptions": {
+    "composite": false,
+    "rootDir": "$_checkout/$2/src",
+    "outDir": "$_game/$_installed/dist",
+    "lib": $3,
+    "types": []$_paths
+  },
+  "include": ["$_checkout/$2/src"]
+}
+JSON
+
+  rm -rf "$_installed"
+  mkdir -p "$_installed"
+  cp "$OLY_ENGINE_DIR/$2/package.json" "$_installed/package.json"
+  node_modules/.bin/tsc -p "$(_host_path "$_config")"
+}
+
+# Brings node_modules to what package.json and the mode say, and records it in node_modules/.oly-install. A platform
+# or mode change reinstalls: esbuild ships a binary per platform, and the checkout's packages must not outlive local mode.
+_sync() {
+  _want="$(_platform) $(_mode)"
+  _marker=node_modules/.oly-install
+  if [ -f "$_marker" ] && [ "$(cat "$_marker")" != "$_want" ]; then
+    rm -rf node_modules
+  fi
+
+  if [ ! -f package-lock.json ] || [ package.json -nt package-lock.json ]; then
+    _npm install --no-audit --no-fund
+    # npm leaves a lock it did not change alone, which would stay older than package.json and repeat this install.
+    touch package-lock.json
+  elif [ ! -f "$_marker" ] || [ package-lock.json -nt "$_marker" ]; then
+    _npm ci --no-audit --no-fund
+  fi
+
+  if [ "$(_mode)" = local ]; then
+    _overlay_package core engine/environments/web/clients/typescript/core '["ES2022"]'
+    _overlay_package web-host engine/environments/web/host/js '["ES2022", "DOM"]'
+  fi
+
+  printf '%s\n' "$_want" > "$_marker"
+}
+
+# Local mode builds oly-schema from the checkout; a pinned version brings it prebuilt.
+_build_schema_tool() {
+  if [ -z "${OLY_ENGINE_DIR:-}" ]; then
+    return 0
+  fi
+
+  cmake -S "$(_host_path "$OLY_ENGINE_DIR")" -B build/oly-schema $(_generator_arguments) -DCMAKE_BUILD_TYPE=Release -DOLY_BUILD_TESTS=OFF -DOLY_WERROR=OFF
+  cmake --build build/oly-schema --target oly-schema -j
+}
+
+_schema_tool_path() {
+  if [ -n "${OLY_ENGINE_DIR:-}" ]; then
+    echo "$(_host_path "$PWD")/build/oly-schema/bin/oly-schema$(_exe)"
+  else
+    echo "$(_host_path "${OLY_TOOLS_DIR:?}")/bin/oly-schema$(_exe)"
+  fi
+}
+
+_esbuild() {
+  node_modules/.bin/esbuild web/dist/src/main.js --bundle --format=esm --platform=browser --target=es2022 "$@"
+}
+
+_build_web() {
+  _check_pins
+  _sync
+  if [ -z "${EMSDK:-}" ]; then
+    _fail 64 "EMSDK is not set: install emsdk $(_toolchain_value EMSDK_VERSION) and source emsdk_env.sh"
+  fi
+
+  _build_schema_tool
+  _source=$(_engine_source)
+  _tool=$(_schema_tool_path)
+  _game_target=$(_env_value OLY_GAME)
+  cmake -S . -B build/cmake $(_generator_arguments) \
+    "-DCMAKE_TOOLCHAIN_FILE=$(_host_path "$EMSDK")/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake" \
+    -DCMAKE_BUILD_TYPE=Debug "-DOLY_SCHEMA_TOOL=$_tool" "-DFETCHCONTENT_SOURCE_DIR_OLY=$_source"
+  # The TS code imports the generated schema, so it exists before tsc.
+  cmake --build build/cmake --target oly_typescript_schemas
+  cmake --build build/cmake -j
+  node_modules/.bin/tsc -b
+
+  mkdir -p build/web
+  _esbuild --outfile=build/web/main.js
+  cp web/index.html "build/cmake/games/$_game_target.mjs" "build/cmake/games/$_game_target.wasm" build/web/
 }
 
 # A task never calls spur again: it would look for a Spurfile from the game directory and find the game's parents'.
 _build() {
   case $(_env_value OLY_ENVIRONMENT) in
     native) _build_native ;;
+    web) _build_web ;;
     *) _fail 64 "oly.env: OLY_ENVIRONMENT is web or native" ;;
   esac
 }
@@ -161,7 +293,7 @@ new: ## create <name>/ from the template: new <name> --environment web|native
   done
 
   if [ "$environment" = web ]; then
-    (cd "$name" && _npm install --no-audit --no-fund)
+    (cd "$name" && _npm install --no-audit --no-fund && printf '%s pinned\n' "$(_platform)" > node_modules/.oly-install)
   fi
 
   printf 'created %s (%s, oly %s)\n' "$name" "$environment" "$OLY_VERSION"
@@ -183,7 +315,11 @@ run: ## build the game and run it
   _build
   case $(_env_value OLY_ENVIRONMENT) in
     native) exec "build/cmake/games/$(_env_value OLY_GAME)$(_exe)" "$@" ;;
+    web) _esbuild --outfile=build/web/main.js --servedir=build/web --serve=0.0.0.0:8000 ;;
   esac
 
 clean: ## remove build/
   rm -rf build
+
+sync: ## install the npm packages of a web game
+  _sync

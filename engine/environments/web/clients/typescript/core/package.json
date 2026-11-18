@@ -2,6 +2,7 @@
   "name": "@oly/core",
   "version": "0.1.0",
   "type": "module",
+  "files": ["dist"],
   "exports": {
     ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
     "./internal": { "types": "./dist/internal.d.ts", "default": "./dist/internal.js" },

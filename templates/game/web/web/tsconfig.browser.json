@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "composite": true,
+    "declaration": true,
+    "skipLibCheck": true,
+    "noUncheckedIndexedAccess": false,
+    "rootDir": ".",
+    "outDir": "dist",
+    "lib": ["ES2022", "DOM"],
+    "types": []
+  },
+  "include": ["src/main.ts"],
+  "references": [{ "path": "./tsconfig.json" }]
+}

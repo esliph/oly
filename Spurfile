@@ -304,8 +304,12 @@ oly-tools-test: ## the tests of tools/oly
 consumer-test: ## create, build and test a game from the template, in local mode
   case ${1:-} in
     native) spur consumer-native ;;
-    "") spur consumer-native ;;
-    *) _fail 64 "usage: ./spur consumer-test [native]" ;;
+    web) spur consumer-web ;;
+    "")
+      spur consumer-native
+      spur consumer-web
+      ;;
+    *) _fail 64 "usage: ./spur consumer-test [native|web]" ;;
   esac
 
 consumer-native: ## the native half of consumer-test
@@ -319,3 +323,50 @@ consumer-native: ## the native half of consumer-test
   export OLY_ENGINE_DIR=$PWD OLY_TOOLS_DIR=$PWD/tools/oly
   OLY_GAME_DIR=$PWD/$directory OLY_VERSION=$version spur -f "$PWD/tools/oly/Spurfile" new consumer-game --environment native
   OLY_GAME_DIR=$PWD/$directory/consumer-game spur -f "$PWD/tools/oly/Spurfile" test
+
+consumer-web: ## the web half of consumer-test
+  _in wasm -- "$@"
+
+  version=$(sed -n 's/^project(Oly VERSION \([0-9.]*\).*/\1/p' CMakeLists.txt)
+  npm="$(dirname "$(command -v node)")/npm"
+  directory=build/consumer/web
+  release=build/consumer/release
+  releaseDirectory=$release/download/v$version
+
+  # Only the two packages: the games' own TypeScript needs generated schemas this task does not make.
+  [ -d node_modules ] || "$npm" ci --no-audit --no-fund
+  node_modules/.bin/tsc -b engine/environments/web/clients/typescript/core engine/environments/web/host/js
+
+  rm -rf "$directory" "$release"
+  mkdir -p "$directory" "$releaseDirectory"
+  "$npm" pack -w @oly/core -w @oly/web-host --pack-destination "$releaseDirectory"
+
+  # What GitHub serves in a real release: the game installs the packages by URL.
+  python3 -m http.server 8765 --bind 127.0.0.1 --directory "$release" > "$release/server.log" 2>&1 &
+  server=$!
+  trap 'kill "$server"' EXIT
+  until python3 -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8765/')" 2> /dev/null; do
+    sleep 0.2
+  done
+
+  export OLY_ENGINE_DIR=$PWD OLY_TOOLS_DIR=$PWD/tools/oly OLY_RELEASE_URL=http://127.0.0.1:8765
+  tools=$PWD/tools/oly/Spurfile
+  game=$PWD/$directory/consumer-game
+  OLY_GAME_DIR=$PWD/$directory OLY_VERSION=$version spur -f "$tools" new consumer-game --environment web
+  OLY_GAME_DIR=$game spur -f "$tools" test
+
+  [ "$(cat "$game/node_modules/.oly-install")" = "linux-x64 local" ] || _fail 1 "local mode left node_modules/.oly-install as: $(cat "$game/node_modules/.oly-install")"
+  for file in index.html main.js consumer_game.mjs consumer_game.wasm; do
+    [ -f "$game/build/web/$file" ] || _fail 1 "build/web has no $file"
+  done
+
+  # Back to the pinned version: the checkout's packages must give way to the tarballs.
+  env -u OLY_ENGINE_DIR OLY_GAME_DIR="$game" sh "$SPUR_BIN" -f "$tools" sync
+  [ "$(cat "$game/node_modules/.oly-install")" = "linux-x64 pinned" ] || _fail 1 "pinned sync left node_modules/.oly-install as: $(cat "$game/node_modules/.oly-install")"
+  tar -xzOf "$releaseDirectory/oly-core-$version.tgz" package/dist/index.js | cmp - "$game/node_modules/@oly/core/dist/index.js" || _fail 1 "node_modules/@oly/core is not the tarball's"
+
+  # A changed package.json makes the next sync rewrite the lock.
+  touch -d '2 minutes ago' "$game/package-lock.json"
+  touch "$game/package.json"
+  env -u OLY_ENGINE_DIR OLY_GAME_DIR="$game" sh "$SPUR_BIN" -f "$tools" sync
+  [ -z "$(find "$game/package-lock.json" -mmin +1)" ] || _fail 1 "sync did not rewrite package-lock.json after package.json changed"
