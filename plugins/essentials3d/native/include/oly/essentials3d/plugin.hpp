@@ -35,6 +35,8 @@ namespace oly::essentials3d {
     std::array<ecs::ObserverId, ObserverCount> observers_{};
     // Keyed by (index << 32) | generation of the parent. It changes only inside observers, so it is off the hot path.
     std::unordered_map<uint64_t, std::vector<ecs::Entity>> children_;
+    // Position of each child in its parent's list, keyed like children_ by the child, so a child leaves in O(1).
+    std::unordered_map<uint64_t, uint32_t> slots_;
     std::vector<ecs::Entity> order_; // every entity with a Parent, each after its own parent
     bool orderDirty_ = true;
 

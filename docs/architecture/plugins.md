@@ -129,10 +129,10 @@ At install the plugin:
 
 | Part | What it does |
 |---|---|
-| children index | `unordered_map` keyed by `(index << 32) \| generation` of the parent, with the list of its children; it changes only in observers |
+| children index | `unordered_map` keyed by `(index << 32) \| generation` of the parent, with the list of its children, plus a slot per child so it leaves in O(1); they change only in observers |
 | `detail::HasChildren` | a tag, C++ only, recorded on a parent with its first child and removed with its last; parents and non-parents live in different archetypes |
 | `onAdd<Parent>` | asserts the parent is alive, not the entity and not a descendant; adds the child to the index; records the tag on the parent; recomputes the child's `WorldTransform` |
-| `onRemove<Parent>` | removes the child from the index (linear in its siblings); removes the tag from a parent left with no children |
+| `onRemove<Parent>` | removes the child from the index in O(1), through the slot it keeps for each child; skips a child the index does not list (a `Parent` written through `get`); removes the tag from a parent left with no children |
 | `onRemove<HasChildren>` | if the index still lists children, the parent is being destroyed: records `destroy` for each. When the plugin removes the tag itself, the list is already empty |
 | `onAdd<WorldTransform>` | computes the value at once from the locals and the parent's `WorldTransform`, so a child spawned by a command buffer is right in `UpdateAfter` |
 | `propagateTransforms` | roots: three block passes over entities without `Parent` (`Position`, then `Rotation`, then `Scale`, each writing its part of `WorldTransform`); children: a cached vector in parent-before-child order, rebuilt by a breadth-first walk of the index when a `Parent` was added or removed |
@@ -150,7 +150,7 @@ Measured with `essentials2d_bench_propagation` (release, Docker, 8 CPUs at 3.1 G
 | `BM_PropagateRoots` (`Position`, `Rotation`, `Scale`) | 1.4 ns per entity | 3.1 ns per entity |
 | `BM_PropagateChildren` (8 children per parent) | 26.6 ns per entity | 36.2 ns per entity |
 
-There is no target. What the perf review found and left as is: each child pays six component lookups by entity and a `sincosf` of its parent's angle (2D); the three root queries are looked up each step; removing a child scans its siblings; any `Parent` change rebuilds the whole child order the next step.
+There is no target. What the perf review found and left as is: each child pays six component lookups by entity and a `sincosf` of its parent's angle (2D); the three root queries are looked up each step; any `Parent` change rebuilds the whole child order the next step.
 
 ## Boundaries
 

@@ -61,6 +61,7 @@ namespace oly::essentials3d {
 
     std::vector<ecs::Entity>& siblings = plugin.children_[keyOf(parent)];
     const bool firstChild = siblings.empty();
+    plugin.slots_[keyOf(entity)] = static_cast<uint32_t>(siblings.size());
     siblings.push_back(entity);
 
     if (firstChild) {
@@ -78,15 +79,25 @@ namespace oly::essentials3d {
     const ecs::Entity parent = world.get<Parent>(entity).entity;
     plugin.orderDirty_ = true;
 
+    const auto slot = plugin.slots_.find(keyOf(entity));
     const auto found = plugin.children_.find(keyOf(parent));
 
-    if (found == plugin.children_.end()) {
+    // A parent already erased by the cascade, or a Parent written through get (a contract violation), leaves nothing to fix.
+    if (found == plugin.children_.end() || slot == plugin.slots_.end() || slot->second >= found->second.size() || found->second[slot->second] != entity) {
+      if (slot != plugin.slots_.end() && found == plugin.children_.end()) {
+        plugin.slots_.erase(slot);
+      }
+
       return;
     }
 
     std::vector<ecs::Entity>& siblings = found->second;
-    *std::find(siblings.begin(), siblings.end(), entity) = siblings.back();
+    const uint32_t index = slot->second;
+    const ecs::Entity moved = siblings.back();
+    siblings[index] = moved;
+    plugin.slots_[keyOf(moved)] = index;
     siblings.pop_back();
+    plugin.slots_.erase(keyOf(entity));
 
     if (siblings.empty()) {
       plugin.children_.erase(found);

@@ -58,11 +58,16 @@ namespace oly::essentials2d {
         return fail(why, "empty child list", parent);
       }
 
-      for (const ecs::Entity child : children) {
+      for (uint32_t slot = 0; slot < children.size(); ++slot) {
+        const ecs::Entity child = children[slot];
         const Parent* link = world.tryGet<Parent>(child);
+        const auto recorded = slots_.find(keyOf(child));
 
         if (link == nullptr || link->entity != parent) {
           return fail(why, "indexed child with another Parent", child);
+        }
+        if (recorded == slots_.end() || recorded->second != slot) {
+          return fail(why, "child with a wrong slot", child);
         }
       }
 
@@ -80,7 +85,7 @@ namespace oly::essentials2d {
       }
     });
 
-    if (linked != indexed) {
+    if (linked != indexed || slots_.size() != indexed) {
       return fail(why, "Parent components and the index differ in size", ecs::NullEntity);
     }
     if (markedWithoutChildren) {
