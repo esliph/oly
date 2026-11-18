@@ -38,6 +38,15 @@ run_task "$work/meu-jogo" build
 check "local: build succeeds" exit_is 0
 check "local: the source directory is the checkout" sh -c "grep -q -- '-DFETCHCONTENT_SOURCE_DIR_OLY=/x' \"\$CMAKE_LOG\""
 
+mkdir "$work/engine"
+TEST_ENGINE_DIR=engine
+: > "$CMAKE_LOG"
+cd "$work"
+run_task "$work/meu-jogo" build
+cd - > /dev/null
+check "relative checkout: build succeeds" exit_is 0
+check "relative checkout: the source directory is absolute" sh -c "grep -Eq -- '-DFETCHCONTENT_SOURCE_DIR_OLY=/[^ ]*/engine( |\$)' \"\$CMAKE_LOG\""
+
 TEST_ENGINE_DIR=
 OLY_ENGINE_SOURCE_DIR=/staged
 export OLY_ENGINE_SOURCE_DIR

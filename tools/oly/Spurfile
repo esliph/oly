@@ -389,7 +389,7 @@ _dispatch_docker() {
   _compose=$(_asset docker-compose.yaml tools/oly/docker-compose.yaml)
   OLY_GAME_DIR=$(_host_path "$PWD")
   OLY_VERSION=$(_env_value OLY_VERSION)
-  export OLY_GAME_DIR OLY_VERSION MSYS_NO_PATHCONV=1
+  export OLY_GAME_DIR OLY_VERSION MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*'
 
   if [ -n "${OLY_ENGINE_DIR:-}" ]; then
     _tools=/oly/tools/oly
@@ -483,6 +483,15 @@ _build() {
   esac
 }
 
+# A relative checkout is relative to where the user ran oly; the cd below and every tool would read it differently.
+case ${OLY_ENGINE_DIR:-} in
+  "" | /* | ?:*) ;;
+  *)
+    OLY_ENGINE_DIR=$(cd "$SPUR_INVOCATION_DIR" && cd "$OLY_ENGINE_DIR" && pwd) || _fail 64 "OLY_ENGINE_DIR is not a directory: $OLY_ENGINE_DIR"
+    export OLY_ENGINE_DIR
+    ;;
+esac
+
 cd "${OLY_GAME_DIR:-$SPUR_INVOCATION_DIR}"
 
 ## Create a game from the template.
@@ -509,6 +518,12 @@ new: ## create <name>/ from the template: new <name> --environment web|native
 
   [ -n "$name" ] || _fail 64 "usage: oly new <name> --environment web|native"
   printf '%s' "$name" | LC_ALL=C grep -Eq '^[a-z][a-z0-9-]*$' || _fail 64 "game name must match [a-z][a-z0-9-]*: $name"
+  # CMake reserves these as target names, and oly and oly_<module> are the engine's own targets.
+  case $name in
+    test | all | clean | help | install | package | oly | oly-*)
+      _fail 64 "$name is a CMake or engine target name: pick another game name"
+      ;;
+  esac
   case $environment in
     web | native) ;;
     *) _fail 64 "--environment is web or native" ;;

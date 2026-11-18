@@ -35,6 +35,13 @@ check "bad name: exit 64" exit_is 64
 check "bad name: message" stderr_has "game name must match [a-z][a-z0-9-]*: Meu_Jogo"
 check "bad name: no folder" test -z "$(ls "$work_bad")"
 
+for reserved in test all clean help install package oly oly-ecs; do
+  run_task "$work_bad" new "$reserved" --environment native
+  check "reserved name $reserved: exit 64" exit_is 64
+  check "reserved name $reserved: message" stderr_has "is a CMake or engine target name"
+  check "reserved name $reserved: no folder" test -z "$(ls "$work_bad")"
+done
+
 run_task "$work_bad" new meu-jogo
 check "no environment: exit 64" exit_is 64
 check "no environment: message" stderr_has "--environment is web or native"
