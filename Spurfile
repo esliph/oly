@@ -373,6 +373,10 @@ consumer-web: ## the web half of consumer-test
   env -u OLY_ENGINE_DIR OLY_GAME_DIR="$game" sh "$SPUR_BIN" -f "$tools" sync
   [ -z "$(find "$game/package-lock.json" -mmin +1)" ] || _fail 1 "sync did not rewrite package-lock.json after package.json changed"
 
+  # The Docker half runs this game in local mode without the staging server.
+  OLY_GAME_DIR=$game spur -f "$tools" sync
+  [ "$(cat "$game/node_modules/.oly-install")" = "linux-x64 local" ] || _fail 1 "local sync left node_modules/.oly-install as: $(cat "$game/node_modules/.oly-install")"
+
 ## Run the games that consumer-test native and web left in build/consumer/ with --docker, on the host: the images are
 ## tagged as the ones a release publishes, under the registry oly-local.
 consumer-docker: ## the Docker half of consumer-test, on the host
