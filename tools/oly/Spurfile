@@ -55,9 +55,9 @@ _version_at_least() {
     foundCount = split(found, foundFields, ".")
     minimumCount = split(minimum, minimumFields, ".")
     count = foundCount > minimumCount ? foundCount : minimumCount
-    for (index = 1; index <= count; index++) {
-      if (foundFields[index] + 0 > minimumFields[index] + 0) exit 0
-      if (foundFields[index] + 0 < minimumFields[index] + 0) exit 1
+    for (field = 1; field <= count; field++) {
+      if (foundFields[field] + 0 > minimumFields[field] + 0) exit 0
+      if (foundFields[field] + 0 < minimumFields[field] + 0) exit 1
     }
     exit 0
   }'
@@ -228,9 +228,123 @@ _build_web() {
   cp web/index.html "build/cmake/games/$_game_target.mjs" "build/cmake/games/$_game_target.wasm" build/web/
 }
 
+# _doctor_report <ok|old|untested|missing|wrong> <message>
+_doctor_report() {
+  printf '%-8s %s\n' "$1" "$2"
+  if [ "$1" != ok ]; then
+    _doctor_failed=1
+  fi
+}
+
+# _doctor_minimum <tool> <found> <minimum> <what to install>
+_doctor_minimum() {
+  if _version_at_least "$2" "$3"; then
+    _doctor_report ok "$1 $2 (needs $3 or newer)"
+  else
+    _doctor_report old "$1 $2 (needs $3 or newer): $4"
+  fi
+}
+
+# _doctor_present <command> <what to install>
+_doctor_present() {
+  if command -v "$1" > /dev/null 2>&1; then
+    _doctor_report ok "$1"
+  else
+    _doctor_report missing "$1: $2"
+  fi
+}
+
+_doctor_cmake() {
+  if ! command -v cmake > /dev/null 2>&1; then
+    _doctor_report missing "cmake: install CMake $(_toolchain_value CMAKE_MINIMUM) or newer"
+    return 0
+  fi
+
+  _doctor_minimum cmake "$(cmake --version | sed -n '1s/.* //p')" "$(_toolchain_value CMAKE_MINIMUM)" "install CMake $(_toolchain_value CMAKE_MINIMUM) or newer"
+}
+
+_doctor_ninja() {
+  _needed=$(_toolchain_value NINJA_MINIMUM)
+  if ! command -v ninja > /dev/null 2>&1; then
+    _doctor_report missing "ninja: install Ninja $_needed or newer (MSYS2: pacman -S mingw-w64-ucrt-x86_64-ninja)"
+    return 0
+  fi
+
+  _doctor_minimum ninja "$(ninja --version)" "$_needed" "install Ninja $_needed or newer"
+}
+
+_doctor_web() {
+  _needed=$(_toolchain_value EMSDK_VERSION)
+  if ! command -v emcc > /dev/null 2>&1; then
+    _doctor_report missing "emcc: install emsdk $_needed and source emsdk_env.sh"
+  else
+    _found=$(emcc --version | sed -n '1s/.* \([0-9][0-9.]*\) (.*/\1/p')
+    if [ "$_found" = "$_needed" ]; then
+      _doctor_report ok "emcc $_found"
+    elif _version_at_least "$_found" "$_needed"; then
+      _doctor_report untested "emcc $_found (tested with $_needed): install emsdk $_needed"
+    else
+      _doctor_report old "emcc $_found (needs $_needed): install emsdk $_needed"
+    fi
+  fi
+
+  _doctor_present node "install Node.js"
+  if command -v npm > /dev/null 2>&1 || { command -v node > /dev/null 2>&1 && [ -x "$(dirname "$(command -v node)")/npm" ]; }; then
+    _doctor_report ok npm
+  else
+    _doctor_report missing "npm: install Node.js with npm"
+  fi
+}
+
+_doctor_native() {
+  if ! command -v g++ > /dev/null 2>&1; then
+    _doctor_report missing "g++: install GCC $(_toolchain_value GCC_MINIMUM) or newer"
+    return 0
+  fi
+
+  if [ "$(_platform)" = windows-x64 ]; then
+    _machine=$(g++ -dumpmachine)
+    case $_machine in
+      *mingw32*) _doctor_minimum "g++ (MinGW)" "$(g++ -dumpversion)" "$(_toolchain_value MINGW_GCC_MINIMUM)" "install MinGW GCC $(_toolchain_value MINGW_GCC_MINIMUM) or newer (MSYS2 UCRT64)" ;;
+      *) _doctor_report wrong "g++ targets $_machine, not MinGW: use the MSYS2 UCRT64 shell" ;;
+    esac
+  else
+    _doctor_minimum g++ "$(g++ -dumpversion)" "$(_toolchain_value GCC_MINIMUM)" "install GCC $(_toolchain_value GCC_MINIMUM) or newer"
+  fi
+}
+
+# _doctor <environments> <docker|host>: prints one line per check; returns 1 when any is not ok.
+_doctor() {
+  _doctor_failed=0
+
+  if [ "$2" = docker ]; then
+    if docker compose version > /dev/null 2>&1; then
+      _doctor_report ok "docker compose $(docker compose version --short 2> /dev/null)"
+    else
+      _doctor_report missing "docker compose: install Docker with the compose plugin"
+    fi
+    return "$_doctor_failed"
+  fi
+
+  _doctor_cmake
+  if [ "$(_platform)" = windows-x64 ]; then
+    _doctor_ninja
+  fi
+  for _environment in $1; do
+    case $_environment in
+      web) _doctor_web ;;
+      native) _doctor_native ;;
+    esac
+  done
+
+  return "$_doctor_failed"
+}
+
 # A task never calls spur again: it would look for a Spurfile from the game directory and find the game's parents'.
 _build() {
-  case $(_env_value OLY_ENVIRONMENT) in
+  _environment=$(_env_value OLY_ENVIRONMENT)
+  _doctor "$_environment" host || _fail 1 "the host tools do not match toolchain.env (see above)"
+  case $_environment in
     native) _build_native ;;
     web) _build_web ;;
     *) _fail 64 "oly.env: OLY_ENVIRONMENT is web or native" ;;
@@ -323,3 +437,44 @@ clean: ## remove build/
 
 sync: ## install the npm packages of a web game
   _sync
+
+## Check the host tools against toolchain.env. Inside a game it checks the game's environment, outside both. With
+## --docker, or OLY_RUNNER=docker in oly.env, it checks only docker compose. Exits 1 when any line is not ok.
+##
+##   oly doctor --environment web
+doctor: ## check the host tools against toolchain.env
+  environments="web native"
+  runner=host
+  if [ -f oly.env ]; then
+    environments=$(_env_value OLY_ENVIRONMENT)
+    runner=$(sed -n 's/^OLY_RUNNER=//p' oly.env | tr -d '\r' | tail -n 1)
+  fi
+
+  while [ "$#" -gt 0 ]; do
+    case $1 in
+      --environment)
+        [ "$#" -ge 2 ] || _fail 64 "--environment is web or native"
+        environments=$2
+        shift 2
+        ;;
+      --docker)
+        runner=docker
+        shift
+        ;;
+      --host)
+        runner=host
+        shift
+        ;;
+      *) _fail 64 "unknown option: $1" ;;
+    esac
+  done
+
+  case $environments in
+    web | native | "web native") ;;
+    *) _fail 64 "--environment is web or native" ;;
+  esac
+
+  _doctor "$environments" "$runner"
+
+version-at-least: ## exit 0 when <found> is at least <minimum>
+  _version_at_least "$1" "$2"

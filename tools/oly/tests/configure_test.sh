@@ -8,14 +8,21 @@ stubs=$work/stubs
 mkdir "$stubs"
 cat > "$stubs/cmake" <<'STUB'
 #!/bin/sh
+if [ "$1" = --version ]; then
+  echo "cmake version 3.30.5"
+  exit 0
+fi
 echo "$*" >> "$CMAKE_LOG"
 STUB
 chmod +x "$stubs/cmake"
+printf '#!/bin/sh
+echo 14.2.0
+' > "$stubs/g++"
+chmod +x "$stubs/g++"
 export CMAKE_LOG=$work/cmake.log
 PATH=$stubs:$PATH
 
 run_task "$work" new meu-jogo --environment native
-
 
 : > "$CMAKE_LOG"
 TEST_ENGINE_DIR=
