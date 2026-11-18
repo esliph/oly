@@ -1,16 +1,19 @@
 . "$(dirname "$0")/../../oly/tests/assert.sh"
 
+current=$(sed -n 's/^project(Oly VERSION \([0-9.]*\).*/\1/p' "$repository/CMakeLists.txt")
 core=engine/environments/web/clients/typescript/core/package.json
 host=engine/environments/web/host/js/package.json
 check_script=$repository/tools/release/check_version.sh
 set_script=$repository/tools/release/set_version.sh
 
-# fresh_root: copies the files that carry the version into a new folder and leaves its path in $root.
+# fresh_root: copies the files that carry the version into a new folder, as if the tree were on 0.1.0, and leaves its
+# path in $root.
 fresh_root() {
   root=$(mktemp -d)
   for file in CMakeLists.txt package-lock.json $core $host; do
     mkdir -p "$root/$(dirname "$file")"
     cp "$repository/$file" "$root/$file"
+    sed -i "s/$current/0.1.0/g" "$root/$file"
   done
 }
 
@@ -38,8 +41,8 @@ check "a version without a patch is refused" exit_is 64
 check "a version without a patch: message" stderr_has "version must be MAJOR.MINOR.PATCH: 1.0"
 rm -rf "$root"
 
-check_in "$repository" 0.1.0
-check "the real tree is on 0.1.0" exit_is 0
+check_in "$repository" "$current"
+check "the real tree is on its own version" exit_is 0
 
 differs_alone "CMakeLists.txt" CMakeLists.txt 's/^project(Oly VERSION [0-9.]*/project(Oly VERSION 0.0.9/' "project(Oly VERSION) is 0.0.9, expected 0.1.0"
 differs_alone "@oly/core package.json" $core '0,/"version": "0.1.0"/s//"version": "0.0.9"/' "@oly/core version is 0.0.9, expected 0.1.0"
@@ -53,7 +56,7 @@ fresh_root
 status=0
 sh "$set_script" 0.2.0 "$root" > "$logs/out" 2> "$logs/err" || status=$?
 check "set_version exits 0" exit_is 0
-check "set_version keeps the rest of the CMake line" grep -q '^project(Oly VERSION 0.2.0 LANGUAGES CXX C)$' "$root/CMakeLists.txt"
+check "set_version keeps the rest of the CMake line" grep -q '^project(Oly VERSION 0.2.0 LANGUAGES CXX C)' "$root/CMakeLists.txt"
 check_in "$root" 0.2.0
 check "after set_version only the lock is behind" exit_is 1
 check "after set_version only the lock is behind: message" stderr_has "package-lock.json @oly/core version is 0.1.0, expected 0.2.0"

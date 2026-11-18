@@ -1,7 +1,7 @@
 . "$(dirname "$0")/../../oly/tests/assert.sh"
 
-# Needs the tree that ./spur stage 0.1.0 leaves in build/release/0.1.0.
-version=0.1.0
+# Needs the tree that ./spur stage <version> leaves in build/release/<version>, for the version of CMakeLists.txt.
+version=$(sed -n 's/^project(Oly VERSION \([0-9.]*\).*/\1/p' "$repository/CMakeLists.txt")
 stage=$repository/build/release/$version
 release=$stage/download/v$version
 latest=$stage/latest/download
