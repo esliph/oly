@@ -12,7 +12,12 @@ ENV OLY_TOOLCHAIN=wasm
 
 # The emsdk LLVM is the same as Emscripten's and already has the x86-64 target: it serves as the native Clang (V1/V2/VX).
 RUN /emsdk/upstream/bin/clang++ --print-targets | grep -q x86-64 \
-  && ln -s /emsdk/upstream/bin/clang++ /usr/local/bin/clang++
+  && ln -s /emsdk/upstream/bin/clang++ /usr/local/bin/clang++ \
+  && ln -s /emsdk/upstream/bin/clang /usr/local/bin/clang
+
+# The host compiler of oly-schema (the schema-tool preset): Ubuntu's default GCC 11 is below GCC_MINIMUM of
+# toolchain.env, and the configure check would stop it.
+ENV CC=clang CXX=clang++
 
 # The emsdk entrypoint puts /emsdk/upstream/emscripten on the PATH, and there is a "cmake" directory there that make
 # (direct exec) mistakes for the executable (EACCES). /emsdk comes earlier on the PATH, so the link resolves it.

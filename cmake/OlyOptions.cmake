@@ -9,6 +9,7 @@ option(OLY_WERROR "Warnings become errors" ON)
 option(OLY_VEC_REPORT "Vectorization report in the benchmarks" OFF)
 option(OLY_BUILD_GAMES "Build the games (requires ./spur ts first)" OFF)
 option(OLY_BUILD_NATIVE_HOST "Build the native host (fetches SDL3)" OFF)
+option(OLY_ALLOW_UNTESTED_TOOLCHAIN "An Emscripten that is not the tested one only warns" OFF)
 set(OLY_ENABLE_ASSERTS "" CACHE STRING "0/1; empty = 0 with NDEBUG, otherwise 1")
 
 if(EMSCRIPTEN)

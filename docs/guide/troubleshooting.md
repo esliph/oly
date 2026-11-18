@@ -23,6 +23,10 @@ The TS client validates everything that goes through it, in release builds too (
 |---|---|---|
 | `Parent ... is dead`, `own parent`, `descendant` | a `Parent` that points to a dead entity, to the entity itself or to one of its descendants ([Transforms](concepts/transforms.md#parent-and-children)) | parent only live entities, and never in a loop |
 | `oly_add_game needs DIMENSION 2d\|3d`, `DIMENSION is 2d or 3d` | the game's CMake has no `DIMENSION` or an unknown one | add `DIMENSION 2d` or `DIMENSION 3d` |
+| `Emscripten X is not the tested version Y (toolchain.env)` | the configure found an Emscripten other than the one the engine is tested with | install emsdk Y, or configure with `-DOLY_ALLOW_UNTESTED_TOOLCHAIN=ON` to turn the error into a warning |
+| `GCC X is older than the minimum Y (toolchain.env)`, `MinGW GCC X ...` | the host or MinGW compiler is older than the minimum in `toolchain.env` | install GCC (or MinGW GCC) Y or newer |
+| `CMake X is older than the minimum Y (toolchain.env)` | the CMake that configures is older than the minimum | install CMake Y or newer |
+| `Ninja X is older than the minimum Y (toolchain.env)` | the Ninja generator is older than the minimum | install Ninja Y or newer |
 | `comes from DIMENSION; do not list it in PLUGINS` | `essentials2d` or `essentials3d` is in `PLUGINS` | remove it: `DIMENSION` turns it on |
 | `repeated name "Position"` | the game's `.oly` declares a component that `essentials` already brings | delete it from the `.oly` ([Transforms](concepts/transforms.md)) |
 | `dead entity` | the entity was destroyed (maybe by another handler, or its state ended) | check `isAlive` before using a stored handle |

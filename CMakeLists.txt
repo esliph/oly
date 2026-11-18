@@ -10,6 +10,9 @@ include(Dependencies)
 include(OlyModule)
 include(OlyPlugin)
 include(OlyGame)
+include(OlyToolchain)
+
+oly_check_build_toolchain()
 
 enable_testing()
 
@@ -42,6 +45,28 @@ if(OLY_BUILD_TESTS)
     add_test(NAME oly.cmake.dimension.${caseName}
       COMMAND ${CMAKE_COMMAND} -DCASE=${caseName} -P ${PROJECT_SOURCE_DIR}/cmake/tests/dimension.cmake)
     set_tests_properties(oly.cmake.dimension.${caseName} PROPERTIES PASS_REGULAR_EXPRESSION "${expected}")
+  endforeach()
+
+  set(toolchainCases
+    "emscripten_tested|toolchain ok"
+    "emscripten_untested|Emscripten 3\.1\.70 is not the tested version 3\.1\.74"
+    "emscripten_untested_allowed|untested Emscripten 3\.1\.70.*toolchain ok"
+    "gcc_at_minimum|toolchain ok"
+    "gcc_below|GCC 13\.2\.0 is older than the minimum 14"
+    "mingw_below|MinGW GCC 13\.2\.0 is older than the minimum 14"
+    "clang_unchecked|toolchain ok"
+    "ninja_below|Ninja 1\.10\.1 is older than the minimum 1\.11"
+    "cmake_below|CMake 3\.24\.0 is older than the minimum 3\.25"
+    "missing_key|has no NINJA_MINIMUM"
+    "real_file|toolchain ok"
+    "cmake_minimum_matches|toolchain ok")
+  foreach(toolchainCase IN LISTS toolchainCases)
+    string(REPLACE "|" ";" fields "${toolchainCase}")
+    list(GET fields 0 caseName)
+    list(GET fields 1 expected)
+    add_test(NAME oly.cmake.toolchain.${caseName}
+      COMMAND ${CMAKE_COMMAND} -DCASE=${caseName} -DROOT=${PROJECT_SOURCE_DIR} -P ${PROJECT_SOURCE_DIR}/cmake/tests/toolchain.cmake)
+    set_tests_properties(oly.cmake.toolchain.${caseName} PROPERTIES PASS_REGULAR_EXPRESSION "${expected}")
   endforeach()
 endif()
 add_subdirectory(engine)

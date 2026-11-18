@@ -1,0 +1,49 @@
+# cmake -DCASE=<case> -DROOT=<repository root> -P toolchain.cmake: runs one check of OlyToolchain.cmake and prints
+# "toolchain ok" when it did not stop.
+cmake_minimum_required(VERSION 3.25)
+include(${CMAKE_CURRENT_LIST_DIR}/../OlyToolchain.cmake)
+
+set(fixture ${CMAKE_CURRENT_LIST_DIR}/toolchain/fixture.env)
+
+if(CASE STREQUAL "emscripten_tested")
+  oly_check_toolchain(FILE ${fixture} COMPILER_ID Clang COMPILER_VERSION 20.0.0 CMAKE_VERSION 3.30.5
+    EMSCRIPTEN_VERSION 3.1.74)
+elseif(CASE STREQUAL "emscripten_untested")
+  oly_check_toolchain(FILE ${fixture} COMPILER_ID Clang COMPILER_VERSION 20.0.0 CMAKE_VERSION 3.30.5
+    EMSCRIPTEN_VERSION 3.1.70)
+elseif(CASE STREQUAL "emscripten_untested_allowed")
+  oly_check_toolchain(FILE ${fixture} COMPILER_ID Clang COMPILER_VERSION 20.0.0 CMAKE_VERSION 3.30.5
+    EMSCRIPTEN_VERSION 3.1.70 ALLOW_UNTESTED)
+elseif(CASE STREQUAL "gcc_at_minimum")
+  oly_check_toolchain(FILE ${fixture} COMPILER_ID GNU COMPILER_VERSION 14.2.0 CMAKE_VERSION 3.30.5)
+elseif(CASE STREQUAL "gcc_below")
+  oly_check_toolchain(FILE ${fixture} COMPILER_ID GNU COMPILER_VERSION 13.2.0 CMAKE_VERSION 3.30.5)
+elseif(CASE STREQUAL "mingw_below")
+  oly_check_toolchain(FILE ${fixture} COMPILER_ID GNU COMPILER_VERSION 13.2.0 CMAKE_VERSION 3.30.5 TARGET_WINDOWS)
+elseif(CASE STREQUAL "clang_unchecked")
+  oly_check_toolchain(FILE ${fixture} COMPILER_ID Clang COMPILER_VERSION 15.0.0 CMAKE_VERSION 3.30.5)
+elseif(CASE STREQUAL "ninja_below")
+  oly_check_toolchain(FILE ${fixture} COMPILER_ID GNU COMPILER_VERSION 14.2.0 CMAKE_VERSION 3.30.5
+    NINJA_VERSION 1.10.1)
+elseif(CASE STREQUAL "cmake_below")
+  oly_check_toolchain(FILE ${fixture} COMPILER_ID GNU COMPILER_VERSION 14.2.0 CMAKE_VERSION 3.24.0)
+elseif(CASE STREQUAL "missing_key")
+  file(STRINGS ${fixture} lines)
+  list(FILTER lines EXCLUDE REGEX "^NINJA_MINIMUM=")
+  list(JOIN lines "\n" content)
+  file(WRITE /tmp/oly_toolchain_missing_key.env "${content}\n")
+  oly_read_toolchain(/tmp/oly_toolchain_missing_key.env)
+elseif(CASE STREQUAL "real_file")
+  oly_read_toolchain(${ROOT}/toolchain.env)
+elseif(CASE STREQUAL "cmake_minimum_matches")
+  oly_read_toolchain(${ROOT}/toolchain.env)
+  file(READ ${ROOT}/CMakeLists.txt rootLists)
+  string(REGEX MATCH "cmake_minimum_required[(]VERSION ([0-9.]+)[)]" unused "${rootLists}")
+  if(NOT CMAKE_MATCH_1 VERSION_EQUAL OLY_TOOLCHAIN_CMAKE_MINIMUM)
+    message(FATAL_ERROR "cmake_minimum_required says ${CMAKE_MATCH_1}, toolchain.env says ${OLY_TOOLCHAIN_CMAKE_MINIMUM}")
+  endif()
+else()
+  message(FATAL_ERROR "unknown case ${CASE}")
+endif()
+
+message("toolchain ok")
