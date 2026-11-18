@@ -1,0 +1,48 @@
+name: Bug report
+description: Something in the engine, the oly command or the documentation does not work as described.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A security problem is never reported here: see SECURITY.md. Search the open issues first, the bug may be known.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected and what happened instead. Paste the full output, including the OLY_ASSERT message when there is one.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: The smallest code or the commands that reproduce it. A failing test is the best reproduction.
+      render: cpp
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Oly version or commit
+      description: The OLY_VERSION of the game's oly.env, or the commit of the checkout.
+      placeholder: 0.1.0 or a commit hash
+    validations:
+      required: true
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      options:
+        - web (WASM + TypeScript)
+        - native (desktop)
+        - both
+        - not specific to an environment
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Platform
+      description: Operating system, and whether the game runs on the host tools or with --docker.
+      placeholder: Windows 11, Git Bash, host tools

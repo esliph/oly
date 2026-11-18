@@ -142,3 +142,12 @@ The recorded results and the status of each target are in [`docs/benchmarks/READ
 | [`docs/development/code-style.md`](docs/development/code-style.md) | code style |
 | [`docs/benchmarks/`](docs/benchmarks/README.md) | benchmark results |
 | [`docs/superpowers/specs/`](docs/superpowers/specs) | specs (source of truth for the requirements) |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | how to contribute: what is welcome, workflow, rules and the pull request checklist |
+
+## Contributing
+
+Bug fixes, tests, benchmarks and documentation are welcome as pull requests against `develop`; a new feature or a public API change starts with an issue. Read [CONTRIBUTING.md](CONTRIBUTING.md) and the [code of conduct](CODE_OF_CONDUCT.md). Security problems are reported privately: [SECURITY.md](SECURITY.md).
+
+## License
+
+[MIT](LICENSE).
