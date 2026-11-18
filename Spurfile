@@ -288,3 +288,11 @@ serve: ## game, then serve it on port 8000
   PRESET=$preset spur game "$1"
   web_dir=build/$preset/web/$1
   _esbuild "$1" --outfile="$web_dir/main.js" --servedir="$web_dir" --serve=0.0.0.0:8000
+
+## Run the tests of the game tasks (tools/oly/), which need no engine build.
+##
+##   ./spur oly-tools-test
+oly-tools-test: ## the tests of tools/oly
+  _in wasm -- "$@"
+
+  sh tools/oly/tests/run.sh

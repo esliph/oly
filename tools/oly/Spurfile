@@ -1,0 +1,142 @@
+# The game-side toolchain, run as: spur -f <oly-tools>/Spurfile <task>, with the game as the working directory.
+# OLY_TOOLS_DIR is an extracted oly-tools archive or, in local mode, $OLY_ENGINE_DIR/tools/oly. OLY_GAME_DIR is the game
+# root: spur enters the Spurfile's directory, so the launcher passes the game here.
+
+_fail() {
+  printf 'oly %s: %s\n' "$SPUR_TASK" "$2" >&2
+  exit "$1"
+}
+
+_platform() {
+  case $(uname -s) in
+    Linux) echo linux-x64 ;;
+    MINGW* | MSYS*) echo windows-x64 ;;
+    *) _fail 64 "unsupported host $(uname -s): oly runs on Linux and on Windows in Git Bash" ;;
+  esac
+}
+
+_exe() {
+  case $(_platform) in
+    windows-x64) echo .exe ;;
+  esac
+}
+
+# Git Bash paths (/c/...) mean nothing to node, JSON or docker -v.
+_host_path() {
+  if command -v cygpath > /dev/null 2>&1; then
+    cygpath -m "$1"
+  else
+    printf '%s\n' "$1"
+  fi
+}
+
+# _asset <path in the oly-tools archive> <path in the engine checkout>
+_asset() {
+  if [ -n "${OLY_ENGINE_DIR:-}" ]; then
+    printf '%s/%s\n' "$OLY_ENGINE_DIR" "$2"
+  elif [ -n "${OLY_TOOLS_DIR:-}" ]; then
+    printf '%s/%s\n' "$OLY_TOOLS_DIR" "$1"
+  else
+    _fail 64 "OLY_TOOLS_DIR is not set"
+  fi
+}
+
+# _env_value <key>: reads oly.env of the current directory.
+_env_value() {
+  [ -f oly.env ] || _fail 64 "oly.env not found: run inside a game"
+  _line=$(sed -n "s/^$1=//p" oly.env | tr -d '\r' | tail -n 1)
+  [ -n "$_line" ] || _fail 64 "oly.env has no $1"
+  printf '%s\n' "$_line"
+}
+
+# _version_at_least <found> <minimum>: numeric per dot field; a tail such as -ubuntu1 is ignored.
+_version_at_least() {
+  awk -v found="$1" -v minimum="$2" 'BEGIN {
+    foundCount = split(found, foundFields, ".")
+    minimumCount = split(minimum, minimumFields, ".")
+    count = foundCount > minimumCount ? foundCount : minimumCount
+    for (index = 1; index <= count; index++) {
+      if (foundFields[index] + 0 > minimumFields[index] + 0) exit 0
+      if (foundFields[index] + 0 < minimumFields[index] + 0) exit 1
+    }
+    exit 0
+  }'
+}
+
+# The emsdk image keeps npm beside node, off the PATH.
+_npm() {
+  if command -v npm > /dev/null 2>&1; then
+    npm "$@"
+  else
+    "$(dirname "$(command -v node)")/npm" "$@"
+  fi
+}
+
+# Escapes a value for the replacement side of sed s|...|...|.
+_sed_replacement() {
+  printf '%s' "$1" | sed 's/[\&|]/\&/g'
+}
+
+cd "${OLY_GAME_DIR:-$SPUR_INVOCATION_DIR}"
+
+## Create a game from the template.
+##
+##   oly new meu-jogo --environment web
+new: ## create <name>/ from the template: new <name> --environment web|native
+  name=
+  environment=
+  while [ "$#" -gt 0 ]; do
+    case $1 in
+      --environment)
+        [ "$#" -ge 2 ] || _fail 64 "--environment is web or native"
+        environment=$2
+        shift 2
+        ;;
+      -*) _fail 64 "unknown option: $1" ;;
+      *)
+        [ -z "$name" ] || _fail 64 "usage: oly new <name> --environment web|native"
+        name=$1
+        shift
+        ;;
+    esac
+  done
+
+  [ -n "$name" ] || _fail 64 "usage: oly new <name> --environment web|native"
+  printf '%s' "$name" | LC_ALL=C grep -Eq '^[a-z][a-z0-9-]*$' || _fail 64 "game name must match [a-z][a-z0-9-]*: $name"
+  case $environment in
+    web | native) ;;
+    *) _fail 64 "--environment is web or native" ;;
+  esac
+  [ -n "${OLY_VERSION:-}" ] || _fail 64 "OLY_VERSION is not set"
+  [ ! -e "$name" ] || _fail 64 "$name already exists"
+
+  template=$(_asset template templates/game)
+  [ -d "$template/$environment" ] || _fail 64 "the template has no $environment overlay: $template"
+
+  target=$(printf '%s' "$name" | tr - _)
+  releaseUrl=${OLY_RELEASE_URL:-https://github.com/esliph/oly/releases}
+
+  mkdir "$name"
+  cp -R "$template/common/." "$name/"
+  cp -R "$template/$environment/." "$name/"
+  mv "$name/gitignore" "$name/.gitignore"
+  mv "$name/game.oly" "$name/$name.oly"
+
+  find "$name" -type f | while IFS= read -r file; do
+    sed -e "s|@GAME_NAME@|$(_sed_replacement "$name")|g" \
+      -e "s|@GAME_TARGET@|$(_sed_replacement "$target")|g" \
+      -e "s|@OLY_VERSION@|$(_sed_replacement "$OLY_VERSION")|g" \
+      -e "s|@OLY_ENVIRONMENT@|$environment|g" \
+      -e "s|@OLY_RELEASE_URL@|$(_sed_replacement "$releaseUrl")|g" \
+      "$file" > "$file.oly-new"
+    mv "$file.oly-new" "$file"
+  done
+
+  if [ "$environment" = web ]; then
+    (cd "$name" && _npm install --no-audit --no-fund)
+  fi
+
+  printf 'created %s (%s, oly %s)\n' "$name" "$environment" "$OLY_VERSION"
+
+platform: ## print the host platform: linux-x64 or windows-x64
+  _platform
