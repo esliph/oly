@@ -200,6 +200,8 @@ subproject-native: ## the native half of subproject-test
   _in dev -- "$@"
 
   directory=build/subproject-native
+  # An incremental build skips the compile that prints the warning the check below looks for.
+  rm -rf "$directory"
   cmake -S cmake/tests/consumer -B "$directory" -DFETCHCONTENT_SOURCE_DIR_OLY="$PWD"
   cmake --build "$directory" -j 2>&1 | tee "$directory/build.log"
   grep -q 'unused variable' "$directory/build.log" || _fail 1 "the consumer's own warning is gone: a subproject must not add -Werror to a game"
