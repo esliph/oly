@@ -151,6 +151,14 @@ cp "$launcher" "$work/bin/oly"
 add_launcher_asset "$tree" "$launcher" 0.2.0
 original_launcher=$launcher
 launcher=$work/bin/oly
+cp "$launcher" "$work/dev-oly"
+run_oly "$work" self-update
+check "self-update from a dev launcher: exit 64" exit_is 64
+check "self-update from a dev launcher: message" stderr_has "runs from a checkout"
+check "self-update from a dev launcher: the file stays" cmp -s "$work/bin/oly" "$work/dev-oly"
+sed -i 's/^OLY_LAUNCHER_VERSION=dev$/OLY_LAUNCHER_VERSION=0.1.0/' "$work/bin/oly"
+launcher=$original_launcher
+launcher=$work/bin/oly
 run_oly "$work" self-update
 check "self-update: exit 0" exit_is 0
 run_oly "$work/empty" --version
@@ -218,5 +226,56 @@ install_oly
 check "install truncated: exit 1" exit_is 1
 check "install truncated: no launcher is installed" test ! -e "$install_home/.oly/bin/oly"
 check "install truncated: no profile is touched" test ! -e "$install_home/.bashrc"
+
+make_game quoted-pin '"0.1.0"'
+run_oly "$work/quoted-pin" build
+check "quoted pin: exit 64" exit_is 64
+check "quoted pin: message" stderr_has "is not a valid version"
+run_oly "$work/quoted-pin" --version
+check "quoted pin, --version: exit 64" exit_is 64
+
+mkdir "$work/no-pin"
+printf 'OLY_ENVIRONMENT=native\n' > "$work/no-pin/oly.env"
+run_oly "$work/no-pin" build
+check "no pin: exit 64" exit_is 64
+run_oly "$work/no-pin" --version
+check "no pin, --version: exit 64" exit_is 64
+
+add_release "$tree" 0.5.0
+make_game half-installed 0.5.0
+mkdir -p "$home/versions/0.5.0"
+run_oly "$work/half-installed" build
+check "version folder without spur: exit 0" exit_is 0
+check "version folder without spur: reinstalled" test -f "$home/versions/0.5.0/spur"
+
+make_web_game out-of-step 0.2.0
+sed -i 's/0\.2\.0/0.1.0/g' "$work/out-of-step/package.json"
+run_oly "$work/out-of-step" upgrade 0.2.0
+check "upgrade with package.json behind oly.env: exit 0" exit_is 0
+check "upgrade with package.json behind oly.env: package.json follows" test "$(grep -c "v0.2.0/oly-.*-0.2.0.tgz" "$work/out-of-step/package.json")" -eq 2
+check "upgrade with package.json behind oly.env: runs sync" stdout_is "tools=$home/versions/0.2.0 version=0.2.0 args=-f $home/versions/0.2.0/Spurfile -C $work/out-of-step sync"
+
+make_game local-upgrade 0.1.0
+LOCAL_ENGINE=$repository
+run_oly "$work/local-upgrade" upgrade 9.9.9
+LOCAL_ENGINE=
+check "local-mode upgrade to a missing version: exit 1" exit_is 1
+check "local-mode upgrade to a missing version: oly.env unchanged" grep -qxF OLY_VERSION=0.1.0 "$work/local-upgrade/oly.env"
+
+mkdir "$work/engine-without-version"
+LOCAL_ENGINE=$work/engine-without-version
+run_oly "$work/empty" new demo --environment native
+LOCAL_ENGINE=
+check "local-mode new without a checkout version: exit 1" exit_is 1
+check "local-mode new without a checkout version: message" stderr_has "could not read the version"
+
+add_launcher_asset "$tree" "$original_launcher" 0.2.0
+install_home=$work/installed-custom
+mkdir "$install_home"
+status=0
+env HOME="$install_home" OLY_HOME="$work/custom-oly-home" SHELL=/bin/bash OLY_RELEASE_URL="file://$tree" sh "$repository/tools/oly/install.sh" > "$logs/out" 2> "$logs/err" || status=$?
+check "install in a custom OLY_HOME: exit 0" exit_is 0
+check "install in a custom OLY_HOME: the launcher is there" test -x "$work/custom-oly-home/bin/oly"
+check "install in a custom OLY_HOME: the profile exports OLY_HOME" grep -qxF "export OLY_HOME=\"$work/custom-oly-home\"" "$install_home/.bashrc"
 
 finish

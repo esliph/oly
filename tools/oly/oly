@@ -35,9 +35,15 @@ find_game_root() {
   printf '%s\n' "$directory"
 }
 
+valid_version() {
+  printf '%s' "$1" | LC_ALL=C grep -Eq '^[0-9A-Za-z][0-9A-Za-z.-]*$'
+}
+
+# The version names a folder and a URL, so it is checked before either is built.
 pinned_version() {
   version=$(sed -n 's/^OLY_VERSION=//p' "$1/oly.env" | tr -d '\r' | tail -n 1)
   [ -n "$version" ] || fail 64 "$1/oly.env has no OLY_VERSION"
+  valid_version "$version" || fail 64 "OLY_VERSION in $1/oly.env is not a valid version: $version"
   printf '%s\n' "$version"
 }
 
@@ -50,7 +56,9 @@ latest_version() {
 # The version a command outside a game runs with: the checkout's own in local mode, else the latest release.
 default_version() {
   if [ -n "${OLY_ENGINE_DIR:-}" ]; then
-    sed -n 's/^project(Oly VERSION \([0-9.]*\).*/\1/p' "$OLY_ENGINE_DIR/CMakeLists.txt"
+    version=$(sed -n 's/^project(Oly VERSION \([0-9.]*\).*/\1/p' "$OLY_ENGINE_DIR/CMakeLists.txt" 2> /dev/null)
+    [ -n "$version" ] || fail 1 "could not read the version from project(Oly VERSION) in $OLY_ENGINE_DIR/CMakeLists.txt"
+    printf '%s\n' "$version"
   else
     latest_version
   fi
@@ -60,23 +68,29 @@ default_version() {
 # versions/<version> for the next run to trust.
 install_tools() {
   version=$1
-  file=oly-tools-$version-$(platform).tar.gz
+  host_platform=$(platform) || exit $?
+  file=oly-tools-$version-$host_platform.tar.gz
   url=$release_url/download/v$version/$file
   staging=$oly_home/versions/.download-$version-$$
 
   mkdir -p "$staging/tools" || fail 1 "could not create $staging"
+  trap 'rm -rf "$staging"; exit 1' INT TERM HUP
+  # tar reads the archive by a relative path: an absolute one such as C:/... would be taken for a remote host.
   if curl -fsSL "$url" -o "$staging/$file" \
-    && tar -xzf "$staging/$file" -C "$staging/tools" \
+    && (cd "$staging/tools" && tar -xzf "../$file") \
     && [ -f "$staging/tools/spur" ] && [ -f "$staging/tools/Spurfile" ]; then
-    # A parallel run may have finished first; mv would then move the folder inside it.
-    if [ ! -d "$oly_home/versions/$version" ]; then
-      mv "$staging/tools" "$oly_home/versions/$version"
+    # A folder without spur is what an older failed install left: nothing trusts it. A complete one from a parallel run
+    # stays, since mv would move the new folder inside it.
+    if [ ! -f "$oly_home/versions/$version/spur" ]; then
+      rm -rf "${oly_home:?}/versions/$version"
+      mv "$staging/tools" "$oly_home/versions/$version" || { rm -rf "$staging"; fail 1 "could not move oly-tools $version into $oly_home/versions"; }
     fi
     rm -rf "$staging"
   else
     rm -rf "$staging"
     fail 1 "could not install oly-tools $version from $url"
   fi
+  trap - INT TERM HUP
 }
 
 # run_version <version> <game root> <spur arguments...>
@@ -113,7 +127,8 @@ print_version() {
   if [ -n "${OLY_ENGINE_DIR:-}" ]; then
     printf 'engine %s (local)\n' "$OLY_ENGINE_DIR"
   else
-    printf 'engine %s (oly.env)\n' "$(pinned_version "$root")"
+    engine_version=$(pinned_version "$root") || exit $?
+    printf 'engine %s (oly.env)\n' "$engine_version"
   fi
 }
 
@@ -136,8 +151,9 @@ new_command() {
   done
 
   if [ -z "$version" ]; then
-    version=$(default_version) || exit 1
+    version=$(default_version) || exit $?
   fi
+  valid_version "$version" || fail 64 "$version is not a valid version"
   run_version "$version" "$PWD" new "$@"
 }
 
@@ -145,29 +161,36 @@ new_command() {
 rewrite() {
   file=$1
   shift
-  sed "$@" "$file" > "$file.oly-new" || fail 1 "could not rewrite $file"
-  mv "$file.oly-new" "$file"
+  if ! sed "$@" "$file" > "$file.oly-new" || ! mv "$file.oly-new" "$file"; then
+    rm -f "$file.oly-new"
+    fail 1 "could not rewrite $file"
+  fi
+}
+
+# True when package.json already names both tarballs of the version.
+package_on_version() {
+  grep -qF "oly-core-$1.tgz" "$2/package.json" && grep -qF "oly-web-host-$1.tgz" "$2/package.json"
 }
 
 upgrade_command() {
   target=${1:-}
   [ -n "$target" ] || fail 64 "usage: oly upgrade <version>"
-  printf '%s' "$target" | LC_ALL=C grep -Eq '^[0-9A-Za-z][0-9A-Za-z.-]*$' || fail 64 "not a version: $target"
+  valid_version "$target" || fail 64 "$target is not a valid version"
 
   root=$(find_game_root)
   [ -n "$root" ] || fail 64 "not inside an Oly game: no oly.env in $PWD or above"
-  current=$(pinned_version "$root") || exit 1
-  if [ "$current" = "$target" ]; then
+  current=$(pinned_version "$root") || exit $?
+  # oly.env alone does not say the game is on the version: a hand edit or a failed earlier sync leaves package.json behind.
+  if [ "$current" = "$target" ] && { [ ! -f "$root/package.json" ] || package_on_version "$target" "$root"; }; then
     printf 'already on %s\n' "$target"
     exit 0
   fi
 
-  # Fetched before anything is rewritten: a version that does not exist leaves the game as it was.
-  if [ -z "${OLY_ENGINE_DIR:-}" ] && [ ! -f "$oly_home/versions/$target/spur" ]; then
+  # Fetched before anything is rewritten, local mode included: a version that does not exist leaves the game as it was.
+  if [ ! -f "$oly_home/versions/$target/spur" ]; then
     install_tools "$target"
   fi
 
-  escaped=$(printf '%s' "$current" | sed 's/\./\\./g')
   rewrite "$root/oly.env" "s/^OLY_VERSION=.*/OLY_VERSION=$target/"
   if [ ! -f "$root/package.json" ]; then
     printf 'oly.env now pins %s\n' "$target"
@@ -175,14 +198,15 @@ upgrade_command() {
   fi
 
   rewrite "$root/package.json" \
-    -e "s|v$escaped/oly-core-$escaped\.tgz|v$target/oly-core-$target.tgz|g" \
-    -e "s|v$escaped/oly-web-host-$escaped\.tgz|v$target/oly-web-host-$target.tgz|g"
+    -e "s|/v[^/]*/oly-core-[^/]*\.tgz|/v$target/oly-core-$target.tgz|g" \
+    -e "s|/v[^/]*/oly-web-host-[^/]*\.tgz|/v$target/oly-web-host-$target.tgz|g"
   run_version "$target" "$root" sync
 }
 
 # The new launcher is checked before it replaces the running one: it parses and ends with the closing line, which a cut
 # download lacks. mv swaps the file whole, so the old one is never half written.
 self_update() {
+  [ "$OLY_LAUNCHER_VERSION" != dev ] || fail 64 "this launcher runs from a checkout (version dev) and self-update would overwrite the tracked file: install a release with install.sh"
   url=$release_url/latest/download/oly
   self=$0
   temporary=$self.new.$$
@@ -224,10 +248,10 @@ esac
 
 game_root=$(find_game_root)
 if [ -n "$game_root" ]; then
-  game_version=$(pinned_version "$game_root") || exit 1
+  game_version=$(pinned_version "$game_root") || exit $?
 elif [ "${1:-}" = doctor ]; then
   game_root=$PWD
-  game_version=$(default_version) || exit 1
+  game_version=$(default_version) || exit $?
 else
   fail 64 "not inside an Oly game: no oly.env in $PWD or above"
 fi

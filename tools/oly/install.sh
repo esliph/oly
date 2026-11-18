@@ -29,6 +29,10 @@ esac
 
 path_line="export PATH=\"$oly_home/bin:\$PATH\""
 if ! grep -qsF "$oly_home/bin" "$profile"; then
+  # The launcher reads OLY_HOME to find its versions: a home other than the default must reach it.
+  if [ -n "${OLY_HOME:-}" ]; then
+    printf 'export OLY_HOME="%s"\n' "$oly_home" >> "$profile"
+  fi
   printf '%s\n' "$path_line" >> "$profile"
 fi
 
