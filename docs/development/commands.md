@@ -5,6 +5,8 @@ There is no C++ toolchain on the Windows host: everything runs in a container vi
 `./spur --list` shows the tasks, and `./spur --describe <task>` the help of one. Each task runs in the container its preset needs (`dev`: gcc + cmake + perf; `wasm`: emsdk + Clang + node + Python; `windows`: mingw-w64 + Wine); typed inside the wrong container, it exits with 64.
 
 - Run `./spur images` once, and again after `toolchain.env` changes: it builds the images with the versions of that file. Images built before `./spur` existed lack `OLY_TOOLCHAIN` and stop with exit 69.
+- A variable of `toolchain.env` exported in the shell (`GCC_VERSION`, `CMAKE_VERSION`) wins over the file and builds a different image: unset it before `./spur images`.
+- After `toolchain.env` or the `wasm` image changes, delete `build/schema-tool`: its CMake cache keeps the host compiler of the old image.
 - `-x` and `-n` given on the host show only the dispatch to the container. To trace a task, run it inside: `./spur dev ./spur -x test`.
 
 ## Native C++
@@ -29,7 +31,7 @@ PRESET=release ./spur build       # builds tests + benchmarks in Release, assert
 ./spur desktop drift                       # builds native-games-release and prints build/native-games-release/games/drift_game
 ./spur windows-test                        # cross-compiles with MinGW and runs every test under Wine (preset windows)
 PRESET=windows-release ./spur desktop drift   # build/windows-release/games/drift_game.exe, static
-./spur windows                             # a shell in the windows container (docker compose run --rm windows)
+./spur windows                             # a shell in the windows container (mingw-w64 and Wine)
 ./spur windows x86_64-w64-mingw32-objdump -p build/windows-release/games/drift_game.exe
 ```
 

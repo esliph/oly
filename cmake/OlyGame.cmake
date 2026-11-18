@@ -1,16 +1,6 @@
 find_program(OLY_NODE node)
 set(OLY_SCHEMA_TOOL ${PROJECT_SOURCE_DIR}/build/schema-tool/bin/oly-schema CACHE FILEPATH "oly-schema executable that WASM builds of oly_add_game run")
 
-# oly_environment(<outputVariable>): the environment this build runs in, web under Emscripten and native otherwise. A game
-# calls it from its own directory scope, which has none of the engine's variables.
-function(oly_environment outputVariable)
-  if(EMSCRIPTEN)
-    set(${outputVariable} web PARENT_SCOPE)
-  else()
-    set(${outputVariable} native PARENT_SCOPE)
-  endif()
-endfunction()
-
 # Writes the TS schema of every game declared with TYPESCRIPT; ./spur ts builds it before tsc.
 add_custom_target(oly_typescript_schemas)
 

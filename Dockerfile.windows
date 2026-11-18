@@ -8,7 +8,7 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 # The MinGW comes from Debian: below the minimum there is nothing to install instead, so the build stops.
-RUN found=$(x86_64-w64-mingw32-g++-posix -dumpversion) \
+RUN found=$(x86_64-w64-mingw32-g++-posix -dumpfullversion) \
   && if ! dpkg --compare-versions "$found" ge "$MINGW_GCC_MINIMUM"; then \
     echo "MinGW GCC $found is older than MINGW_GCC_MINIMUM $MINGW_GCC_MINIMUM (toolchain.env)" >&2; exit 1; \
   fi

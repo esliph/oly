@@ -203,8 +203,9 @@ subproject-native: ## the native half of subproject-test
   # An incremental build skips the compile that prints the warning the check below looks for.
   rm -rf "$directory"
   cmake -S cmake/tests/consumer -B "$directory" -DFETCHCONTENT_SOURCE_DIR_OLY="$PWD"
-  cmake --build "$directory" -j 2>&1 | tee "$directory/build.log"
-  grep -q 'unused variable' "$directory/build.log" || _fail 1 "the consumer's own warning is gone: a subproject must not add -Werror to a game"
+  cmake --build "$directory" -j > "$directory/build.log" 2>&1 || { cat "$directory/build.log"; _fail 1 "the native consumer did not build"; }
+  cat "$directory/build.log"
+  grep -q 'warning: unused variable' "$directory/build.log" || _fail 1 "the consumer's own warning is gone: a subproject must not add -Werror to a game"
 
   "$directory/games/consumer" | grep -q '^consumer ok$' || _fail 1 "the native consumer did not print 'consumer ok'"
   [ ! -e "$directory/_deps/doctest-src" ] || _fail 1 "a subproject configure fetched doctest"
@@ -223,7 +224,8 @@ subproject-web: ## the web half of subproject-test
   cmake -S cmake/tests/consumer -B "$directory" \
     -DCMAKE_TOOLCHAIN_FILE=/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
     -DFETCHCONTENT_SOURCE_DIR_OLY="$PWD" -DOLY_SCHEMA_TOOL="$PWD/build/schema-tool/bin/oly-schema"
-  cmake --build "$directory" -j --verbose 2>&1 | tee "$directory/build.log"
+  cmake --build "$directory" -j --verbose > "$directory/build.log" 2>&1 || { cat "$directory/build.log"; _fail 1 "the web consumer did not build"; }
+  cat "$directory/build.log"
   grep -q -- '-sALLOW_MEMORY_GROWTH=1' "$directory/build.log" || _fail 1 "the web consumer links without -sALLOW_MEMORY_GROWTH=1"
 
   node --input-type=module -e 'const m = await import(process.argv[1]); await m.default(); console.log("consumer ok")' "file://$PWD/$directory/games/consumer.mjs"

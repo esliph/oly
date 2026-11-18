@@ -12,7 +12,7 @@ function(oly_schema_tool toolVariable dependencyVariable)
   endif()
 
   if(NOT EXISTS ${OLY_SCHEMA_TOOL})
-    if(PROJECT_IS_TOP_LEVEL)
+    if(OLY_ENGINE_IS_TOP_LEVEL)
       message(FATAL_ERROR "oly-schema not found at ${OLY_SCHEMA_TOOL}: run './spur schema-tool' (or './spur ts') before configuring with OLY_BUILD_GAMES=ON")
     endif()
     message(FATAL_ERROR "oly-schema not found at ${OLY_SCHEMA_TOOL}: pass -DOLY_SCHEMA_TOOL=<path to oly-schema>")

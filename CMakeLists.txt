@@ -9,6 +9,7 @@ include(OlyWasm)
 include(Dependencies)
 include(OlyModule)
 include(OlyPlugin)
+include(OlyGame)
 include(OlyToolchain)
 
 oly_check_build_toolchain()
@@ -56,7 +57,7 @@ if(OLY_BUILD_TESTS)
     "clang_unchecked|toolchain ok"
     "ninja_below|Ninja 1\.10\.1 is older than the minimum 1\.11"
     "cmake_below|CMake 3\.24\.0 is older than the minimum 3\.25"
-    "missing_key|has no NINJA_MINIMUM"
+    "missing_key|has no[^A-Z]*NINJA_MINIMUM"
     "real_file|toolchain ok"
     "cmake_minimum_matches|toolchain ok")
   foreach(toolchainCase IN LISTS toolchainCases)
@@ -64,7 +65,7 @@ if(OLY_BUILD_TESTS)
     list(GET fields 0 caseName)
     list(GET fields 1 expected)
     add_test(NAME oly.cmake.toolchain.${caseName}
-      COMMAND ${CMAKE_COMMAND} -DCASE=${caseName} -DROOT=${PROJECT_SOURCE_DIR} -P ${PROJECT_SOURCE_DIR}/cmake/tests/toolchain.cmake)
+      COMMAND ${CMAKE_COMMAND} -DCASE=${caseName} -DROOT=${PROJECT_SOURCE_DIR} -DSCRATCH=${CMAKE_CURRENT_BINARY_DIR}/toolchain_${caseName} -P ${PROJECT_SOURCE_DIR}/cmake/tests/toolchain.cmake)
     set_tests_properties(oly.cmake.toolchain.${caseName} PROPERTIES PASS_REGULAR_EXPRESSION "${expected}")
   endforeach()
 endif()
