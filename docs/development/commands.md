@@ -19,6 +19,8 @@ There is no C++ toolchain on the Windows host: everything runs in a container vi
 PRESET=release ./spur build       # builds tests + benchmarks in Release, asserts disabled
 ./spur dev ./build/debug-asan/tests/ecs_unit_world -tc="case name"   # one specific doctest TEST_CASE
 ./spur dev                        # a shell in the dev container
+./spur format <files>             # clang-format the given files; with no argument, every tracked .cpp/.hpp
+./spur format-check               # fails when a tracked .cpp/.hpp is not formatted (run by CI)
 ```
 
 - Build in `build/<preset>/`. Test executables in `build/<preset>/tests/<module>_<suite>`; benchmark executables in `build/<preset>/bench/ecs_bench_*`.

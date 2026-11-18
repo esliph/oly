@@ -199,6 +199,25 @@ windows: ## command or shell in the windows container
   [ "$#" -gt 0 ] || set -- bash
   exec "$@"
 
+## Format with the dev image's clang-format, the one the CI checks against: the given files, or every tracked .cpp and
+## .hpp file when there is none.
+##
+##   ./spur format engine/runtime/ecs/src/world.cpp
+format: ## clang-format the given files, or every tracked .cpp/.hpp
+  _in dev -- "$@"
+
+  if [ "$#" -gt 0 ]; then
+    exec clang-format -i "$@"
+  fi
+
+  # The mounted checkout belongs to another user than the container's, and git refuses to read it without this.
+  git -c safe.directory='*' ls-files -z '*.cpp' '*.hpp' | xargs -0 clang-format -i
+
+format-check: ## fail when a tracked .cpp/.hpp is not clang-formatted
+  _in dev -- "$@"
+
+  git -c safe.directory='*' ls-files -z '*.cpp' '*.hpp' | xargs -0 clang-format --dry-run --Werror
+
 schema-tool: ## build oly-schema for the machine
   _in wasm -- "$@"
 

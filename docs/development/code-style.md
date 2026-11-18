@@ -7,7 +7,8 @@ Commits, comments and assert messages are in English.
 ## Formatting
 
 - `.clang-format`: Google base, indentation 2, `NamespaceIndentation: All`, no column limit.
-- A Claude Code `PostToolUse` hook (`.claude/hooks/clang-format.sh`) runs `clang-format -i` in the `dev` container after every edit of a `.cpp`/`.hpp`. Do not format by hand. If Docker is stopped, the hook fails.
+- The `dev` image's clang-format is the reference: `./spur format <files>` formats, `./spur format-check` is the check CI runs on every pull request. Do not format by hand.
+- A Claude Code `PostToolUse` hook (`.claude/hooks/clang-format.sh`) runs `clang-format -i` in the `dev` container after every edit of a `.cpp`/`.hpp`. If Docker is stopped, the hook fails.
 - `-Wall -Wextra -Wpedantic -Werror` on every target (`oly_warnings`): a warning breaks the build. TS in `strict`.
 
 ## C++ rules
