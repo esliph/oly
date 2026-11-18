@@ -37,7 +37,7 @@
     },
     {
       "name": "schema-tool-linux", "inherits": "schema-tool",
-      "cacheVariables": { "CMAKE_EXE_LINKER_FLAGS": "-static-libstdc++ -static-libgcc" }
+      "cacheVariables": { "CMAKE_EXE_LINKER_FLAGS": "-static" }
     },
     {
       "name": "schema-tool-windows", "inherits": "base",
