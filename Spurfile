@@ -322,9 +322,10 @@ consumer-native: ## the native half of consumer-test
   rm -rf "$directory"
   mkdir -p "$directory"
 
-  export OLY_ENGINE_DIR=$PWD OLY_TOOLS_DIR=$PWD/tools/oly
-  OLY_GAME_DIR=$PWD/$directory OLY_VERSION=$version spur -f "$PWD/tools/oly/Spurfile" new consumer-game --environment native
-  OLY_GAME_DIR=$PWD/$directory/consumer-game spur -f "$PWD/tools/oly/Spurfile" test
+  export OLY_ENGINE_DIR=$PWD
+  launcher=$PWD/tools/oly/oly
+  (cd "$directory" && sh "$launcher" new consumer-game --environment native --version "$version")
+  (cd "$directory/consumer-game" && sh "$launcher" test)
 
 consumer-web: ## the web half of consumer-test
   _in wasm -- "$@"
@@ -353,9 +354,10 @@ consumer-web: ## the web half of consumer-test
 
   export OLY_ENGINE_DIR=$PWD OLY_TOOLS_DIR=$PWD/tools/oly OLY_RELEASE_URL=http://127.0.0.1:8765
   tools=$PWD/tools/oly/Spurfile
+  launcher=$PWD/tools/oly/oly
   game=$PWD/$directory/consumer-game
-  OLY_GAME_DIR=$PWD/$directory OLY_VERSION=$version spur -f "$tools" new consumer-game --environment web
-  OLY_GAME_DIR=$game spur -f "$tools" test
+  (cd "$directory" && sh "$launcher" new consumer-game --environment web --version "$version")
+  (cd "$game" && sh "$launcher" test)
 
   [ "$(cat "$game/node_modules/.oly-install")" = "linux-x64 local" ] || _fail 1 "local mode left node_modules/.oly-install as: $(cat "$game/node_modules/.oly-install")"
   for file in index.html main.js consumer_game.mjs consumer_game.wasm; do
@@ -389,11 +391,11 @@ consumer-docker: ## the Docker half of consumer-test, on the host
     docker tag "cpp_services-$image" "oly-local/oly-$image:$version"
   done
 
-  export OLY_IMAGE_REGISTRY=oly-local OLY_ENGINE_DIR=$PWD OLY_TOOLS_DIR=$PWD/tools/oly
-  tools=$PWD/tools/oly/Spurfile
-  OLY_GAME_DIR=$native spur -f "$tools" test --docker
-  OLY_GAME_DIR=$web spur -f "$tools" test --docker
-  OLY_GAME_DIR=$native spur -f "$tools" test --docker --platform windows
+  export OLY_IMAGE_REGISTRY=oly-local OLY_ENGINE_DIR=$PWD
+  launcher=$PWD/tools/oly/oly
+  (cd "$native" && sh "$launcher" test --docker)
+  (cd "$web" && sh "$launcher" test --docker)
+  (cd "$native" && sh "$launcher" test --docker --platform windows)
 
   # The host build of the same game, from the same folder: its cache must not collide with the Docker one.
   spur dev env OLY_ENGINE_DIR=/app OLY_TOOLS_DIR=/app/tools/oly OLY_GAME_DIR=/app/build/consumer/native/consumer-game sh ./spur -f /app/tools/oly/Spurfile test --host

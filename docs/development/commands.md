@@ -52,14 +52,16 @@ PRESET=windows-release ./spur desktop drift   # build/windows-release/games/drif
 ## The game tasks and the consumer test
 
 ```sh
-./spur oly-tools-test             # the shell tests of tools/oly/ (new, build arguments, doctor, Docker dispatch, npm pack), in the wasm container
+./spur oly-tools-test             # the shell tests of tools/oly/ (launcher, install.sh, new, build arguments, doctor, Docker dispatch, npm pack), in the wasm container
 ./spur consumer-test              # native, web, then docker
 ./spur consumer-test native       # in the dev container
 ./spur consumer-test web          # in the wasm container
 ./spur consumer-test docker       # on the host
 ```
 
-`consumer-test` creates a game with `tools/oly/Spurfile` (`new consumer-game`) in `build/consumer/<environment>/`, with `OLY_ENGINE_DIR` set to this checkout (local mode), then builds and tests it as a user of `oly` would. `web` first packs `@oly/core` and `@oly/web-host` into `build/consumer/release/download/v<version>/` and serves them on `127.0.0.1:8765`, which the game installs from through `OLY_RELEASE_URL`; it then checks that going back to the pinned version replaces the checkout's packages in `node_modules`. `docker` needs the games the two earlier runs left. It tags the local `cpp_services-*` images as `oly-local/oly-*:<version>` and runs `test --docker` in both games, `test --docker --platform windows` in the native one (MinGW and Wine), and `test --host` of the native game again, so the host and Docker build directories are shown to live side by side.
+`consumer-test` creates a game through the launcher (`sh tools/oly/oly new consumer-game --version <version>`) in `build/consumer/<environment>/`, with `OLY_ENGINE_DIR` set to this checkout (local mode), then builds and tests it as a user of `oly` would. `web` first packs `@oly/core` and `@oly/web-host` into `build/consumer/release/download/v<version>/` and serves them on `127.0.0.1:8765`, which the game installs from through `OLY_RELEASE_URL`; it then checks that going back to the pinned version replaces the checkout's packages in `node_modules`. `docker` needs the games the two earlier runs left. It tags the local `cpp_services-*` images as `oly-local/oly-*:<version>` and runs `test --docker` in both games, `test --docker --platform windows` in the native one (MinGW and Wine), and `test --host` of the native game again, so the host and Docker build directories are shown to live side by side.
+
+To run a game task from a checkout, enter through the launcher with `OLY_ENGINE_DIR` set: `OLY_ENGINE_DIR=/path/to/oly sh tools/oly/oly build`, run in the game folder. The launcher skips the download, uses `tools/oly/Spurfile` and `spur` of the checkout, and makes a relative `OLY_ENGINE_DIR` absolute first. Without `OLY_ENGINE_DIR` it installs `~/.oly/versions/<V>/` for the version `oly.env` pins; `OLY_HOME` and `OLY_RELEASE_URL` move the install root and the release server (a folder served over HTTP or `file://` with GitHub's `download/v<V>/` and `latest/download/` layout works).
 
 ## ECS benchmarks
 

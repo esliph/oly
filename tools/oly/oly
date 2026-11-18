@@ -115,6 +115,85 @@ print_version() {
   fi
 }
 
+# oly new <name> ...: strips --version <version>; the version's `new` task makes the game in the current folder.
+new_command() {
+  version=
+  count=$#
+  while [ "$count" -gt 0 ]; do
+    argument=$1
+    shift
+    count=$((count - 1))
+    if [ "$argument" = --version ]; then
+      [ "$count" -gt 0 ] || fail 64 "--version needs a value"
+      version=$1
+      shift
+      count=$((count - 1))
+    else
+      set -- "$@" "$argument"
+    fi
+  done
+
+  if [ -z "$version" ]; then
+    version=$(default_version) || exit 1
+  fi
+  run_version "$version" "$PWD" new "$@"
+}
+
+# Rewrites the file through a temporary one, so a failed sed never truncates it.
+rewrite() {
+  file=$1
+  shift
+  sed "$@" "$file" > "$file.oly-new" || fail 1 "could not rewrite $file"
+  mv "$file.oly-new" "$file"
+}
+
+upgrade_command() {
+  target=${1:-}
+  [ -n "$target" ] || fail 64 "usage: oly upgrade <version>"
+  printf '%s' "$target" | LC_ALL=C grep -Eq '^[0-9A-Za-z][0-9A-Za-z.-]*$' || fail 64 "not a version: $target"
+
+  root=$(find_game_root)
+  [ -n "$root" ] || fail 64 "not inside an Oly game: no oly.env in $PWD or above"
+  current=$(pinned_version "$root") || exit 1
+  if [ "$current" = "$target" ]; then
+    printf 'already on %s\n' "$target"
+    exit 0
+  fi
+
+  # Fetched before anything is rewritten: a version that does not exist leaves the game as it was.
+  if [ -z "${OLY_ENGINE_DIR:-}" ] && [ ! -f "$oly_home/versions/$target/spur" ]; then
+    install_tools "$target"
+  fi
+
+  escaped=$(printf '%s' "$current" | sed 's/\./\\./g')
+  rewrite "$root/oly.env" "s/^OLY_VERSION=.*/OLY_VERSION=$target/"
+  if [ ! -f "$root/package.json" ]; then
+    printf 'oly.env now pins %s\n' "$target"
+    exit 0
+  fi
+
+  rewrite "$root/package.json" \
+    -e "s|v$escaped/oly-core-$escaped\.tgz|v$target/oly-core-$target.tgz|g" \
+    -e "s|v$escaped/oly-web-host-$escaped\.tgz|v$target/oly-web-host-$target.tgz|g"
+  run_version "$target" "$root" sync
+}
+
+# The new launcher is checked before it replaces the running one; mv swaps the file whole, so the old one is never half written.
+self_update() {
+  url=$release_url/latest/download/oly
+  self=$0
+  temporary=$self.new.$$
+
+  if curl -fsSL "$url" -o "$temporary" && sh -n "$temporary" && grep -q '^OLY_LAUNCHER_VERSION=' "$temporary"; then
+    chmod +x "$temporary" && mv "$temporary" "$self" || { rm -f "$temporary"; fail 1 "could not replace $self"; }
+  else
+    rm -f "$temporary"
+    fail 1 "could not update from $url"
+  fi
+
+  printf 'oly updated\n'
+}
+
 # With -C the Spurfile reads a relative checkout from the game root, not from where oly was run.
 if [ -n "${OLY_ENGINE_DIR:-}" ]; then
   OLY_ENGINE_DIR=$(cd "$OLY_ENGINE_DIR" 2> /dev/null && pwd) || fail 64 "OLY_ENGINE_DIR is not a directory: $OLY_ENGINE_DIR"
@@ -124,6 +203,18 @@ fi
 case ${1:-} in
   --version)
     print_version
+    exit 0
+    ;;
+  new)
+    shift
+    new_command "$@"
+    ;;
+  upgrade)
+    shift
+    upgrade_command "$@"
+    ;;
+  self-update)
+    self_update
     exit 0
     ;;
 esac
