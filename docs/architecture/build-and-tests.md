@@ -11,7 +11,6 @@ There is no C++ toolchain on the host. Everything runs in Docker Compose:
 | `dev` | `Dockerfile` (`gcc`, CMake, perf) | native build and tests |
 | `perf` | `Dockerfile`, privileged | `perf stat` |
 | `wasm` | `Dockerfile.wasm` (`emscripten/emsdk`, emsdk's Clang as the native compiler, node, Python) | WASM, TS, cost study |
-| `web` | `Dockerfile.wasm`, port 8000 | `./spur serve` |
 | `windows` | `Dockerfile.windows` (`debian:trixie-slim`, mingw-w64 GCC, Wine) | Windows cross-build and tests under Wine |
 
 `toolchain.env` holds the toolchain versions, in one place: `./spur images` passes them to the Dockerfiles as build arguments (none has a default), and `cmake/OlyToolchain.cmake` checks the compiler, Emscripten, CMake and Ninja against the same file at configure time. Emscripten must equal `EMSDK_VERSION`; GCC, MinGW GCC, CMake and Ninja must be at least their `*_MINIMUM`. The minimums are the versions the images test with, not bisected. `./spur images` is the only way to build the images: a plain `docker compose build` has no `toolchain.env` and stops naming the missing variable. The `oly-schema` of the `wasm` image is built with emsdk's Clang (`CC=clang`), because Ubuntu's default GCC there is below `GCC_MINIMUM`.
@@ -27,8 +26,8 @@ There is no C++ toolchain on the host. Everything runs in Docker Compose:
 | `schema-tool-linux`, `schema-tool-windows` | the `oly-schema` of a release: linux-x64 (static) and windows-x64 (MinGW, static); `./spur stage` builds both |
 | `native-clang`, `native-clang-32`, `native-clang-32-scalar`, `native-clang-avx2`, `wasm-scalar`, `wasm-simd` | ladder of the native × WASM cost study |
 | `wasm-debug` | ECS tests in WASM |
-| `wasm-games`, `wasm-games-release` | games, `capi`, TS tests |
-| `native-games` (from `debug-asan`), `native-games-release` (from `release`, no tests) | the native host and the desktop games on Linux |
+| `wasm-games`, `wasm-games-release` | the engine's test games, `capi`, TS tests |
+| `native-games` (from `debug-asan`), `native-games-release` (from `release`, no tests) | the native host on Linux |
 | `windows`, `windows-release` | the same, cross-compiled with `cmake/toolchains/mingw-w64.cmake` |
 
 Each rung of the cost study ladder changes a single factor (compiler, pointer width, WASM target, SIMD).
@@ -59,14 +58,14 @@ The native builds (Linux and Windows) run the in-tree `oly-schema` target. The W
 ## Tests
 
 - **One doctest suite = one executable**, registered with `oly_add_test(MODULE <m> NAME <suite> SOURCES ... [SUPPORT <dirs>])` in the module's `tests/CMakeLists.txt`. A new test file must be added there; the sources in `src/*.cpp` come in by glob.
-- **Names in ctest** carry the module prefix: `core.*`, `ecs.*`, `input.*`, `app.*`, `capi.*`, `schema.*`, `schema_typescript.*`, `<module>.contract_death.<case>`, `native_host.*`, `drift.desktop`, `ts.<package>.<suite>` (`ts.core.unit`, `ts.web_host.unit`, `ts.testing.wasm`, `ts.arena.smoke`), `fixture.plugins`, `oly.cmake.plugin_order.<case>` and `oly.lint.boundaries` / `oly.lint.boundaries_selftest`.
+- **Names in ctest** carry the module prefix: `core.*`, `ecs.*`, `input.*`, `app.*`, `capi.*`, `schema.*`, `schema_typescript.*`, `<module>.contract_death.<case>`, `native_host.*`, `ts.<package>.<suite>` (`ts.core.unit`, `ts.web_host.unit`, `ts.testing.wasm`), `fixture.plugins`, `oly.cmake.plugin_order.<case>` and `oly.lint.boundaries` / `oly.lint.boundaries_selftest`.
 - **Plugin tests.** `engine/testing/` is added on `web` with the games and on `native` with the tests, so every native preset with tests builds the test plugins ([plugins.md](plugins.md#test-plugins)). `fixture.plugins` (native) runs `plugin_fixture_game`, an engine test game with `PLUGINS doubling`; `ts.testing.wasm` checks the same plugins in the web fixture. `oly.cmake.plugin_order.<case>` runs `cmake/tests/plugin_order.cmake` in script mode, one case per test (order, shared dependency, cycle, unknown plugin).
 - **Death tests**: registered with `oly_add_contract_death(MODULE <m> SOURCE <file> CASES ...)`. Each case is a command-line argument. An assert handler checks substrings of the message and exits with 0; if the case does not fire the assert, it fails. New case = function in the file + name in the `CASES` list. They exist in `ecs`, `input`, `app` and `capi`, only with asserts enabled.
 - **Invariants**: `checkInvariants(const World&, std::string* why)` checks I-1 to I-13 (records, columns, indices, edges, queries, free list, iterating mode, observer flags, closure under implication). Tests call it after every structural operation.
 - **Fuzz against a model**: `fuzz_vs_model` compares the `World` with a trivial map. Values derive from the `Entity`, so swapped rows show up as a wrong value. Seed and number of operations via `OLY_FUZZ_SEED`/`OLY_FUZZ_OPS`.
 - **`LifeCounter`** counts constructions − destructions and catches undestroyed moved-from objects and double destroy.
 - **TS tests** run in node against the real WASM, not against a mock.
-- **Desktop tests** run SDL with `SDL_VIDEO_DRIVER=dummy`, so they need no display. `native_host.window` also checks that the X11 and Wayland drivers (Linux) or the `windows` driver are compiled in. `drift.desktop` runs the game's own executable for 600 frames.
+- **Desktop tests** run SDL with `SDL_VIDEO_DRIVER=dummy`, so they need no display. `native_host.window` also checks that the X11 and Wayland drivers (Linux) or the `windows` driver are compiled in.
 - **`capi.foreign_client`** is a plain C program (no doctest) that drives an engine only through `oly*`.
 
 ## The engine as a subproject, and the consumer tests

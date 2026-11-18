@@ -44,6 +44,6 @@
 | The `wasm` image builds `oly-schema` with emsdk's Clang (`CC=clang`) | Ubuntu's default GCC there is below `GCC_MINIMUM` | the schema tool is built by a different compiler in that image |
 | Windows hosts: MSYS2 UCRT64 and Ninja, from Git Bash; no MSVC, no macOS, no PowerShell or `cmd` | one host toolchain to test; CMake's default generator on Windows (Visual Studio) drives neither MinGW nor Emscripten | the guide names the packages, and a reader on another shell is told to use Git Bash |
 | Game builds are `Debug` | `OLY_ASSERT` stops a contract violation in a game, as in the engine's debug presets | a game's release build is not one of the tasks |
-| The template and the game tasks live in the engine (`templates/game/`, `tools/oly/`), and the template game is minimal | the template is tested by the consumer test at every release and cannot drift from the engine | `arena` and `drift` stay in the repository, testing the engine at `HEAD`; the consumer test covers the external path |
+| The template and the game tasks live in the engine (`templates/game/`, `tools/oly/`), and the template game is minimal | the template is tested by the consumer test at every release and cannot drift from the engine | the repository holds no example game: the engine's test games check the engine at `HEAD`, and only the consumer test, at release, builds a whole game |
 
 The details of each decision are in the module files ([README.md](README.md#index)) and in the specs.

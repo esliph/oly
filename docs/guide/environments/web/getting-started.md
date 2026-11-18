@@ -204,16 +204,12 @@ A game can export extra `extern "C"` functions with `OLY_API`. From an `OlyWorld
 
 ## Inside the engine repository
 
-This section is for people who change the engine. A game can also live in the `games/` folder of the engine repository, which builds it together with the engine instead of fetching a release. The toolchain there is Docker only, through `./spur`: Git Bash and Docker are all you need ([commands](../../../development/commands.md)).
+This section is for people who change the engine. A game always lives in its own repository; to build it against your checkout instead of a release, use [local mode](../../cli.md#build-with-an-engine-checkout). The engine's toolchain is Docker only, through `./spur`: Git Bash and Docker are all you need ([commands](../../../development/commands.md)).
 
 ```sh
 ./spur images             # once, and again after toolchain.env changes
-./spur games-test         # builds everything and runs the tests of every game
-./spur game <game>        # builds build/wasm-games-release/web/<game>/
-./spur serve <game>       # serves http://localhost:8000
+./spur games-test         # builds the WASM and the TS and runs the web tests of the engine
 ```
-
-Each folder in `games/` is a game, with its own `README.md`. It has the layout of the template, with differences: its `CMakeLists.txt` is wrapped in `if(OLY_ENVIRONMENT STREQUAL "web")`, its target is named `<folder>_game`, and you add it with `add_subdirectory(<game>)` in `games/CMakeLists.txt` and with its two TS projects in the `references` of the root `tsconfig.json`. To build a game that lives in its own repository against your checkout, use [local mode](../../cli.md#build-with-an-engine-checkout).
 
 ## Next
 

@@ -246,24 +246,6 @@ oly test
 ctest --test-dir build/cmake -R '^<target>\.'
 ```
 
-### Inside the engine repository
-
-A game in `games/<game>/` registers the test itself, next to `oly_add_game`:
-
-```cmake
-if(OLY_BUILD_TESTS)
-  add_test(NAME ts.<game>.smoke COMMAND ${OLY_NODE} --test ${CMAKE_CURRENT_SOURCE_DIR}/web/dist/tests/)
-  set_tests_properties(ts.<game>.smoke PROPERTIES ENVIRONMENT OLY_GAME_MODULE=$<TARGET_FILE:<game>_game>)
-endif()
-```
-
-Add `{ "path": "games/<game>/web/tests" }` to the `references` of the root `tsconfig.json`, and run:
-
-```sh
-./spur games-test                        # everything
-./spur games-test -R '^ts\.<game>'       # only your game
-```
-
 ## Testing C++ systems alone
 
 A C++ system with no WASM and no TS is tested on the desktop side: see [Test your game](../native/getting-started.md#test-your-game).

@@ -4,7 +4,7 @@ Oly is a game engine in C++20 for 2D games, with 3D transforms in `essentials3d`
 
 It is a study project, published for the author's own games. The goal is to measure how data representation (SoA, archetypes, aligned columns) and architectural decisions affect execution cost. That is why every performance target has a benchmark and a recorded result.
 
-> **Status:** in development. The ECS, the `Engine`, the C API, the TypeScript client and the web and native hosts work and have tests, and there is an example game per environment (`arena` on `web`, `drift` on `native`). Oly does not draw, play audio or do physics: the game does. A game lives in its own repository and uses the `oly` command: `curl -fsSL https://github.com/esliph/oly/releases/latest/download/install.sh | sh`, then `oly new <game> --environment web|native` ([guide](docs/guide/cli.md)). The packages are not published on npm: a release carries them. The API may change.
+> **Status:** in development. The ECS, the `Engine`, the C API, the TypeScript client and the web and native hosts work and have tests. Oly does not draw, play audio or do physics: the game does. A game lives in its own repository and uses the `oly` command: `curl -fsSL https://github.com/esliph/oly/releases/latest/download/install.sh | sh`, then `oly new <game> --environment web|native` ([guide](docs/guide/cli.md)). The packages are not published on npm: a release carries them. The API may change.
 
 ## What already exists
 

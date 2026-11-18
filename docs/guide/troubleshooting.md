@@ -6,7 +6,7 @@ Oly checks how you use it and fails **at the wrong call**, with a message that n
 
 ## C++: OLY_ASSERT and debug presets
 
-In C++, a contract violation stops on `OLY_ASSERT` in debug builds (`debug-asan`, `native-games`, `wasm-games`), with a message that names the operation, the entity and the type. In release builds (`release`, `native-games-release`, `wasm-games-release`) it is **not checked** and is undefined behaviour. Develop and test with asserts on: `PRESET=native-games ./spur native-games-test`, or `PRESET=wasm-games ./spur game <game>` for a web game.
+In C++, a contract violation stops on `OLY_ASSERT` in debug builds (`debug-asan`, `native-games`, `wasm-games`), with a message that names the operation, the entity and the type. In release builds (`release`, `native-games-release`, `wasm-games-release`) it is **not checked** and is undefined behaviour. Develop and test with asserts on: `oly build` and `oly test` build a game in `Debug`, and inside the engine repository `./spur native-games-test` and `./spur games-test` use debug presets by default.
 
 ## TypeScript: ContractError and SchemaMismatchError
 
@@ -61,7 +61,7 @@ The TS client validates everything that goes through it, in release builds too (
 | `does not belong to this runtime's schema` | an entry from another generated schema module | import the entries from the game's `schema.generated.js` |
 | `invalid type name` / `invalid field` | schema naming rules | `PascalCase` types, `camelCase` fields, no C++ keywords |
 | `<game>.oly:<line>:<column>: ...` when building | a schema rule is broken | fix that line; the rules are in [Schema](concepts/schema.md#naming-rules) |
-| `<game> is a web game, but this build is native` (or the reverse) when configuring | the game's `ENVIRONMENT` is not the environment of the preset | wrap the game's `CMakeLists.txt` in `if(OLY_ENVIRONMENT STREQUAL "...")`, see [Getting started on the desktop](environments/native/getting-started.md#inside-the-engine-repository) |
+| `<game> is a web game, but this build is native` (or the reverse) when configuring | the game's `ENVIRONMENT` is not the environment of the build | build with a preset of the game's environment, or guard the `oly_add_game` call with `if(OLY_ENVIRONMENT STREQUAL "...")` |
 | `declareSchema: the Engine already declares events, actions or states` | `setUpGame` called after a manual `declareEvent`, `declareState` or action declaration, or called twice | call `setUpGame` once, first, and declare nothing by hand |
 | `<file>.oly:<line>:<column>: repeated name "X"; first declared at <file>.oly:<line>:<column>` when building | the game and a plugin it turns on (or two plugins) declare the same name | rename the game's type; names are flat across the merged schema ([Types that come from plugins](concepts/schema.md#types-that-come-from-plugins)) |
 | `a plugin declares only components, tags and events; action "x" is not allowed` (or `state "x"`) when building | an action or a state in a plugin's `.oly` | declare actions and states in the game's `.oly` |
@@ -114,18 +114,9 @@ The messages of [`oly`](cli.md) start with `oly:` (the launcher) or `oly <comman
 
 ## Rebuild checklist
 
-After changing the schema, run `oly build` (or `oly test`) in your game: it regenerates the C++ and TS schemas, builds the WASM or the executable and compiles the TS. The steps below are the ones inside the engine repository.
+After changing the schema, run `oly build` (or `oly test`) in your game: it regenerates the C++ and TS schemas, builds the WASM or the executable and compiles the TS. Then reload the page or run the game again.
 
-**Web**
-
-1. `./spur ts` — builds `oly-schema`, generates the TS schemas and compiles the TS;
-2. build the game (`./spur game <game>` or `./spur games-test`) — regenerates `schema.generated.hpp` and the WASM;
-3. reload the page (or rerun the tests).
-
-**Desktop**
-
-1. build the game (`./spur desktop <game>` or `./spur native-games-test`) — `oly-schema` regenerates `schema.generated.hpp`;
-2. run it again.
+Inside the engine repository, `./spur games-test` (web) and `./spur native-games-test` (desktop) regenerate the schemas of the engine's test games and rerun their tests.
 
 ## What Oly does not do
 

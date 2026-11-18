@@ -16,4 +16,4 @@ Oly is maintained by one person in their spare time. Expect an answer within two
 
 In scope: the engine (`engine/`, `plugins/`), the `oly-schema` generator, the `oly` launcher and `install.sh`, the release pipeline and the published images and packages.
 
-Out of scope: the example games in `games/`, and problems that need the attacker to already run code on the machine or inside the game.
+Out of scope: problems that need the attacker to already run code on the machine or inside the game.

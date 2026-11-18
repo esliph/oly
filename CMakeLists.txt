@@ -73,9 +73,6 @@ add_subdirectory(engine)
 if(NOT EMSCRIPTEN OR OLY_BUILD_GAMES OR NOT PROJECT_IS_TOP_LEVEL)
   add_subdirectory(plugins)
 endif()
-if(OLY_BUILD_GAMES)
-  add_subdirectory(games)
-endif()
 
 if(PROJECT_IS_TOP_LEVEL)
   # Boundary manifest for oly.lint.boundaries: modules, plugins and games with their DEPENDS.

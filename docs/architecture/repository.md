@@ -24,10 +24,7 @@ engine/
     codegen/      oly-schema: parser, validation, layout, hash, emitters, C++ emitter
   testing/        @oly/testing (private): fixture game, WASM tests, boundary benchmarks
     fixture/plugins/  the engine's test plugins (counting, doubling) and the native plugin fixture
-plugins/          one folder per plugin, beside engine/ and games/ (essentials2d, essentials3d)
-games/
-  arena/          validation game (arena.oly, C++ in native/, TS package in web/ (src/, tests/))
-  drift/          desktop example, C++ only (drift.oly, gameplay in native/, SDL shell in desktop/)
+plugins/          one folder per plugin, beside engine/ (essentials2d, essentials3d)
 tools/
   oly/            the oly launcher, install.sh, the game Spurfile, docker-compose.yaml for --docker and their shell tests
   release/        the release scripts: version check and set, images, oly-tools archive, stage, staged consumer test
@@ -71,6 +68,6 @@ A plugin follows the same shape, with an optional `.oly` ([plugins.md](plugins.m
   src/                   implementation (comes in by glob, at least one file)
 ```
 
-`plugins/` sits beside `engine/` and `games/`, not inside `engine/`: plugins depend on the core, and a separate root makes a later split into packages a move of folders. Until it exists, the only plugins are the test plugins in `engine/testing/fixture/plugins/`.
+`plugins/` sits beside `engine/`, not inside `engine/`: plugins depend on the core, and a separate root makes a later split into packages a move of folders. Until it exists, the only plugins are the test plugins in `engine/testing/fixture/plugins/`.
 
 See also: [modules-and-boundaries.md](modules-and-boundaries.md).

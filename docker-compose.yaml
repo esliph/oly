@@ -61,12 +61,3 @@ services:
       - .:/app
       - ./build:/app/build
     command: bash
-
-  web:
-    build: *wasm-build
-    ports:
-      - "8000:8000"
-    volumes:
-      - .:/app
-      - ./build:/app/build
-    command: bash

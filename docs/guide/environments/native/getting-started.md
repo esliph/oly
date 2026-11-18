@@ -253,28 +253,7 @@ ctest --test-dir build/cmake -R '^<target>\.'     # only your game, after oly te
 
 ## Inside the engine repository
 
-This section is for people who change the engine. A game can also live in the `games/` folder of the engine repository, which builds it together with the engine instead of fetching a release. Add it to CMake with `ENVIRONMENT native`:
-
-```cmake
-file(GLOB gameSources CONFIGURE_DEPENDS native/*.cpp desktop/*.cpp)
-
-oly_add_game(<game>_game
-  ENVIRONMENT native
-  DIMENSION 2d
-  SCHEMA ${CMAKE_CURRENT_SOURCE_DIR}/<game>.oly
-  SOURCES ${gameSources}
-  DEPENDS ecs app input native_host
-  PLUGINS <plugin>)
-```
-
-A game builds only in its own environment: `oly_add_game` stops the configure when `ENVIRONMENT` is not the one of the build (`native` for the `native-games*` and `windows*` presets, `web` for the WASM ones), so wrap the game's `CMakeLists.txt` in `if(OLY_ENVIRONMENT STREQUAL "native")`. The target is an executable in `build/<preset>/games/`. The toolchain there is Docker only, through `./spur`:
-
-| Where | Command | Result |
-|---|---|---|
-| Linux | `./spur desktop <game>` | builds `native-games-release` and prints `build/native-games-release/games/<game>_game` |
-| Windows | `PRESET=windows-release ./spur desktop <game>` | cross-compiles in the `windows` image and prints `build/windows-release/games/<game>_game.exe` |
-
-On Linux, run the executable on the host: the window needs your display (X11 or Wayland). The Windows `.exe` is static, so a double click runs it on a machine with nothing installed. `./spur native-games-test` runs the Linux tests of every game and `./spur windows-test` runs the same tests under Wine. Each game under `games/` has its own `README.md`. To build a game that lives in its own repository against your checkout, use [local mode](../../cli.md#build-with-an-engine-checkout).
+This section is for people who change the engine. A game always lives in its own repository; to build it against your checkout instead of a release, use [local mode](../../cli.md#build-with-an-engine-checkout). The engine's toolchain is Docker only, through `./spur`: `./spur native-games-test` runs the tests of the native host on Linux, and `./spur windows-test` runs them under Wine.
 
 ## Next
 

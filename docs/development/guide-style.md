@@ -16,7 +16,7 @@ The public API is:
 | registration macros | `OLY_SYSTEM`, `OLY_HANDLER`, `OLY_STATE_HOOK` |
 | the C API | `engine/runtime/capi/include/oly/capi/c_api.h` and `engine_api.h` |
 | the schema language and the generated code | `engine/schema/format/`, `engine/schema/codegen/`, `engine/environments/web/clients/typescript/codegen/`, `@oly/core/generated` |
-| how a game is built | the `oly` commands (`oly new`, `build`, `test`, `run`, `doctor`, `upgrade`, `clean`, `--docker`, local mode), `templates/game/` and `tools/oly/`, `toolchain.env`, `cmake/OlyGame.cmake` (`oly_add_game`, with `ENVIRONMENT`, `DIMENSION`, `PLUGINS` and `TYPESCRIPT`), `cmake/OlyPlugin.cmake` (`oly_add_plugin`), the `schema-tool`, `ts`, `game`, `serve`, `games-test`, `desktop`, `native-games-test` and `windows-test` tasks of the `Spurfile` |
+| how a game is built | the `oly` commands (`oly new`, `build`, `test`, `run`, `doctor`, `upgrade`, `clean`, `--docker`, local mode), `templates/game/` and `tools/oly/`, `toolchain.env`, `cmake/OlyGame.cmake` (`oly_add_game`, with `ENVIRONMENT`, `DIMENSION`, `PLUGINS` and `TYPESCRIPT`), `cmake/OlyPlugin.cmake` (`oly_add_plugin`), the `schema-tool`, `ts`, `games-test`, `native-games-test` and `windows-test` tasks of the `Spurfile` |
 | behaviour a game relies on | loop order, deferred vs. direct changes, event rounds, scope rules, validity of views, error messages |
 
 What to update:
@@ -50,12 +50,10 @@ Before finishing, search `docs/guide/` for the old name and check the links you 
 
 ## Game-agnostic
 
-The guide does not reference any specific example game. More games will live in `games/`, and all of them are references.
+The guide does not reference any specific game. Games live in their own repositories, outside the engine.
 
-- Point to `games/` in general: "each game has its own `README.md`".
 - Write examples inline. Do not link to a game's file for code the reader needs.
 - Use generic names: `Player`, `Enemy`, `Position`, `WorldWidth`, `<game>`. Not names that belong to one game.
-- What is specific to one game goes in that game's `README.md`.
 
 ## Files and navigation
 
