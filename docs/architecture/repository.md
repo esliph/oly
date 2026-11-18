@@ -5,7 +5,7 @@ CMakeLists.txt  CMakePresets.json  Spurfile  spur   C++ build and task runner
 Dockerfile  Dockerfile.wasm  Dockerfile.windows  docker-compose.yaml    toolchains (versions in toolchain.env; gcc, emsdk, mingw-w64 + Wine)
 toolchain.env     the toolchain versions: read by the Dockerfiles, oly doctor and the configure check
 package.json  tsconfig.base.json  tsconfig.json     npm workspaces and project references
-cmake/            build functions: OlyModule, OlyPlugin, OlyGame, OlyOptions, OlyWarnings, OlyWasm, Dependencies; toolchains/mingw-w64.cmake; tests/ (plugin order)
+cmake/            build functions: OlyModule, OlyPlugin, OlyGame, OlyOptions, OlyWarnings, OlyWasm, Dependencies, OlyToolchain (the check against toolchain.env); toolchains/mingw-w64.cmake; tests/ (plugin order, toolchain, consumer)
 engine/
   runtime/        C++, one module per folder: <m>/{include/oly/<m>, src, tests, bench}
     core/         dependency-free utilities

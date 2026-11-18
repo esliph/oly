@@ -16,7 +16,7 @@ The public API is:
 | registration macros | `OLY_SYSTEM`, `OLY_HANDLER`, `OLY_STATE_HOOK` |
 | the C API | `engine/runtime/capi/include/oly/capi/c_api.h` and `engine_api.h` |
 | the schema language and the generated code | `engine/schema/format/`, `engine/schema/codegen/`, `engine/environments/web/clients/typescript/codegen/`, `@oly/core/generated` |
-| how a game is built | `cmake/OlyGame.cmake` (`oly_add_game`, with `ENVIRONMENT`, `DIMENSION`, `PLUGINS` and `TYPESCRIPT`), `cmake/OlyPlugin.cmake` (`oly_add_plugin`), the `schema-tool`, `ts`, `game`, `serve`, `games-test`, `desktop`, `native-games-test` and `windows-test` tasks of the `Spurfile` |
+| how a game is built | the `oly` commands (`oly new`, `build`, `test`, `run`, `doctor`, `upgrade`, `clean`, `--docker`, local mode), `templates/game/` and `tools/oly/`, `toolchain.env`, `cmake/OlyGame.cmake` (`oly_add_game`, with `ENVIRONMENT`, `DIMENSION`, `PLUGINS` and `TYPESCRIPT`), `cmake/OlyPlugin.cmake` (`oly_add_plugin`), the `schema-tool`, `ts`, `game`, `serve`, `games-test`, `desktop`, `native-games-test` and `windows-test` tasks of the `Spurfile` |
 | behaviour a game relies on | loop order, deferred vs. direct changes, event rounds, scope rules, validity of views, error messages |
 
 What to update:
@@ -29,6 +29,7 @@ What to update:
 | new or changed error | the table in [Troubleshooting](../guide/troubleshooting.md) |
 | changed behaviour (order, timing, scope) | the concept page that describes it and any recipe that relied on it |
 | a C API change | the cheat sheet and [capi.md](../architecture/capi.md) |
+| a change to the `oly` commands, the template or `toolchain.env` | [The `oly` command](../guide/cli.md), the cheat sheet and the messages in [Troubleshooting](../guide/troubleshooting.md) |
 | new page | the index tables in `docs/guide/README.md` and the navigation lines of the neighbouring pages in its folder |
 
 Before finishing, search `docs/guide/` for the old name and check the links you touched.
@@ -73,6 +74,7 @@ docs/guide/
     native/
       getting-started.md
   recipes.md                   recipes in C++, each linking to its TS version
+  cli.md                       the oly command: install, new, doctor, build, test, run, upgrade, local mode, --docker
   cheat-sheet.md               C++, C API and per-client names
   troubleshooting.md
 ```
@@ -131,7 +133,7 @@ docs/guide/
 - **Complete enough to copy**: imports when they are not obvious, the schema entries an example needs, no `...` inside the logic that matters.
 - **Follow the code style** ([code-style.md](code-style.md)): full names, braces on every `if`/`for`, blank lines between steps.
 - **Comments only for the why**, the same rule as in the code. No comments that narrate the example step by step: put that in the prose before the block.
-- **Commands** are `./spur` tasks (`./spur games-test`, `./spur wasm <command>`, `./spur dev <command>`), as in [commands.md](commands.md).
+- **Commands** are `oly` commands (`oly new`, `oly test`, `oly run`), as in [cli.md](../guide/cli.md). Inside the engine repository they are `./spur` tasks (`./spur games-test`, `./spur wasm <command>`, `./spur dev <command>`), as in [commands.md](commands.md).
 - Show the wrong way only when the mistake is common, and always next to the right way.
 
 ## Recipes
