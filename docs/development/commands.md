@@ -87,6 +87,8 @@ Nothing here publishes anything: the GitHub Actions workflow `release.yml` does 
 2. `./spur stage <version>` then `./spur staged-test <version>` for a check on the laptop (optional).
 3. In GitHub: Actions, `release`, `Run workflow` on `master` with `version`. `dry_run` starts true: `check`, `linux` and `windows` run and `publish` is skipped. Run again with `dry_run` false to tag `v<version>` on the tested commit and publish the images (`ghcr.io/esliph/oly-{dev,wasm,windows}:<version>`) and the release assets.
 
+The first publish of each image creates a GHCR package that is private until its visibility is set to public (package settings on GitHub): do that once, or games cannot pull it without a token. The `check` job fails when the dispatch is not on `master` or the tag exists; `publish` pushes the images the `linux` job tested and saved (it fails before any push when a loaded image ID differs).
+
 ## ECS benchmarks
 
 ```sh
