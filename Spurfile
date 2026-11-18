@@ -81,7 +81,13 @@ _serve() {
   python3 -m http.server "$2" --bind 127.0.0.1 --directory "$1" > "build/staged/server-$2.log" 2>&1 &
   _server=$!
   trap 'kill "$_server"' EXIT
+  _attempts=0
   until python3 -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:$2/')" 2> /dev/null; do
+    _attempts=$((_attempts + 1))
+    if [ "$_attempts" -ge 150 ]; then
+      cat "build/staged/server-$2.log"
+      _fail 1 "the release server did not answer on port $2"
+    fi
     sleep 0.2
   done
 }
@@ -442,8 +448,8 @@ release: ## write <version> into the tree and commit it (on the host)
 
   sh tools/release/set_version.sh "$version" . || exit $?
   # The lock holds the workspace versions: a stale one makes the next npm ci fail. npm sits beside node in the wasm image.
-  spur wasm sh -c '"$(dirname "$(command -v node)")/npm" install --package-lock-only --no-audit --no-fund'
-  sh tools/release/check_version.sh "$version" . || _fail 1 "the tree does not carry $version after the update"
+  spur wasm sh -c '"$(dirname "$(command -v node)")/npm" install --package-lock-only --no-audit --no-fund' || _fail 1 "npm could not update package-lock.json; git checkout . drops the version changes"
+  sh tools/release/check_version.sh "$version" . || _fail 1 "the tree does not carry $version after the update; git checkout . drops the version changes"
 
   if git diff --quiet; then
     printf 'already on %s\n' "$version"

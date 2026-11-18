@@ -17,7 +17,13 @@ on:
 permissions:
   contents: read
 
-# The input reaches the shell through the environment, never through ${{ }} inside a script.
+# One release at a time: two runs of the same version would both pass `check`, and the second would overwrite the image
+# tags of the first before failing at the git tag.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+# The version input reaches the shell through the environment, never through ${{ }} inside a script.
 env:
   VERSION: ${{ inputs.version }}
   REGISTRY: ghcr.io/esliph
@@ -100,7 +106,7 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v4
-      - uses: msys2/setup-msys2@v2
+      - uses: msys2/setup-msys2@ec48f7c5447b3140e2b088413ae3a55687bccb6e # v2
         id: msys2
         with:
           msystem: UCRT64
@@ -114,7 +120,7 @@ jobs:
       - name: Read the Emscripten version
         id: toolchain
         run: echo "emsdk=$(sed -n 's/^EMSDK_VERSION=//p' toolchain.env | tr -d '\r')" >> "$GITHUB_OUTPUT"
-      - uses: mymindstorm/setup-emsdk@v14
+      - uses: mymindstorm/setup-emsdk@6ab9eb1bda2574c4ddb79809fc9247783eaf9021 # v14
         with:
           version: ${{ steps.toolchain.outputs.emsdk }}
       - uses: actions/setup-node@v4
@@ -129,7 +135,14 @@ jobs:
           python -m http.server 8766 --bind 127.0.0.1 --directory "build/release/$VERSION" > server.log 2>&1 &
           server=$!
           trap 'kill "$server"' EXIT
+          attempts=0
           until curl -fsS http://127.0.0.1:8766/ > /dev/null 2>&1; do
+            attempts=$((attempts + 1))
+            if [ "$attempts" -ge 120 ]; then
+              cat server.log
+              echo "::error::the release server did not answer on port 8766"
+              exit 1
+            fi
             sleep 0.5
           done
 
@@ -149,6 +162,9 @@ jobs:
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
+      - name: Free disk space
+        # The saved images are loaded here, as big as the ones the linux job built; not measured.
+        run: sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android
       - uses: actions/download-artifact@v4
         with:
           name: release-tree
@@ -175,10 +191,28 @@ jobs:
           done
       - name: Tag the tested commit
         run: |
-          git tag "v$VERSION" "$GITHUB_SHA"
-          git push origin "v$VERSION"
+          # `check` already proved the tag was free in this run: one found here is the work of an earlier try of this job.
+          if git ls-remote --exit-code --tags origin "refs/tags/v$VERSION" > /dev/null; then
+            echo "tag v$VERSION exists already"
+          else
+            git tag "v$VERSION" "$GITHUB_SHA"
+            git push origin "v$VERSION"
+          fi
       - name: Create the release
         run: |
-          release="build/release/$VERSION"
-          gh release create "v$VERSION" --target "$GITHUB_SHA" --title "v$VERSION" --generate-notes \
-            "$release"/download/v"$VERSION"/* "$release/latest/download/VERSION" "$release/latest/download/oly"
+          files=(build/release/"$VERSION"/download/v"$VERSION"/*)
+
+          # A patch of an older line must not take the "latest" release away from a newer one: install.sh and the
+          # launcher read latest/download.
+          latest=$(gh release view --json tagName --jq .tagName 2> /dev/null || true)
+          flag=--latest
+          if [ -n "$latest" ] && [ "$(printf '%s\nv%s\n' "$latest" "$VERSION" | sort -V | tail -n 1)" != "v$VERSION" ]; then
+            flag=--latest=false
+          fi
+
+          # A re-run of a failed publish finds the release half made.
+          if gh release view "v$VERSION" > /dev/null 2>&1; then
+            gh release upload "v$VERSION" "${files[@]}" --clobber
+          else
+            gh release create "v$VERSION" --target "$GITHUB_SHA" --title "v$VERSION" --generate-notes "$flag" "${files[@]}"
+          fi

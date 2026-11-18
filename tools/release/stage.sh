@@ -31,3 +31,6 @@ cp "$root/tools/oly/install.sh" "$release/install.sh"
 sed "s/^OLY_LAUNCHER_VERSION=.*/OLY_LAUNCHER_VERSION=$version/" "$root/tools/oly/oly" > "$latest/oly" || fail 1 "could not write $latest/oly"
 printf '%s\n' "$version" > "$latest/VERSION"
 cp "$root/tools/oly/install.sh" "$latest/install.sh"
+# GitHub serves latest/download/X from the assets of the latest release: the release folder holds them too, and
+# install.sh reads download/v<version>/oly when OLY_INSTALL_VERSION is set.
+cp "$latest/oly" "$latest/VERSION" "$release/"

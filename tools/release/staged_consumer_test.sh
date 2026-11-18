@@ -48,6 +48,11 @@ mkdir "$work/profile"
 curl -fsSL "$OLY_RELEASE_URL/latest/download/install.sh" -o "$work/install.sh" || fail 1 "could not download install.sh from $OLY_RELEASE_URL"
 HOME=$work/profile sh "$work/install.sh" || fail 1 "install.sh failed"
 
+# The other way into install.sh: a release other than the latest, read from download/v<version>/.
+mkdir "$work/pinned-profile"
+HOME=$work/pinned-profile OLY_HOME=$work/pinned-home OLY_INSTALL_VERSION=$version sh "$work/install.sh" || fail 1 "install.sh failed with OLY_INSTALL_VERSION=$version"
+[ "$("$work/pinned-home/bin/oly" --version | head -n 1)" = "oly $version" ] || fail 1 "the launcher of download/v$version/ is not oly $version"
+
 oly=$OLY_HOME/bin/oly
 [ -x "$oly" ] || fail 1 "install.sh left no launcher at $oly"
 "$oly" doctor --environment "$environment" || fail 1 "oly doctor found the host unfit for $environment"

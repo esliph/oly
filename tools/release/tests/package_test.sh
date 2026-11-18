@@ -48,11 +48,15 @@ assets() {
   (cd "$release" && ls | LC_ALL=C sort)
 }
 
-check "the release holds the five assets and nothing else" test "$(assets)" = "install.sh
+check "the release holds the seven assets and nothing else" test "$(assets)" = "VERSION
+install.sh
+oly
 oly-core-$version.tgz
 oly-tools-$version-linux-x64.tar.gz
 oly-tools-$version-windows-x64.tar.gz
 oly-web-host-$version.tgz"
+check "the release's oly is latest's" cmp -s "$release/oly" "$latest/oly"
+check "the release's VERSION is latest's" cmp -s "$release/VERSION" "$latest/VERSION"
 check "the linux-x64 archive has the layout" test "$(listing linux-x64)" = "$(expected_listing '')"
 check "the windows-x64 archive has the layout" test "$(listing windows-x64)" = "$(expected_listing .exe)"
 

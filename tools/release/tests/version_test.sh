@@ -10,7 +10,7 @@ set_script=$repository/tools/release/set_version.sh
 # path in $root.
 fresh_root() {
   root=$(mktemp -d)
-  for file in CMakeLists.txt package-lock.json $core $host; do
+  for file in CMakeLists.txt package.json package-lock.json $core $host; do
     mkdir -p "$root/$(dirname "$file")"
     cp "$repository/$file" "$root/$file"
     sed -i "s/$current/0.1.0/g" "$root/$file"
@@ -45,6 +45,9 @@ check_in "$repository" "$current"
 check "the real tree is on its own version" exit_is 0
 
 differs_alone "CMakeLists.txt" CMakeLists.txt 's/^project(Oly VERSION [0-9.]*/project(Oly VERSION 0.0.9/' "project(Oly VERSION) is 0.0.9, expected 0.1.0"
+differs_alone "root package.json" package.json '0,/"version": "0.1.0"/s//"version": "0.0.9"/' "oly version is 0.0.9, expected 0.1.0"
+differs_alone "lock, top-level version" package-lock.json '0,/"version": "0.1.0"/s//"version": "0.0.9"/' "package-lock.json oly version is 0.0.9, expected 0.1.0"
+differs_alone "lock entry of the root workspace" package-lock.json '/^    "": {/,/^    }/s/"version": "0.1.0"/"version": "0.0.9"/' "package-lock.json root entry version is 0.0.9, expected 0.1.0"
 differs_alone "@oly/core package.json" $core '0,/"version": "0.1.0"/s//"version": "0.0.9"/' "@oly/core version is 0.0.9, expected 0.1.0"
 differs_alone "@oly/web-host package.json" $host '0,/"version": "0.1.0"/s//"version": "0.0.9"/' "@oly/web-host version is 0.0.9, expected 0.1.0"
 differs_alone "@oly/web-host dependency" $host 's/"@oly\/core": "0.1.0"/"@oly\/core": "0.0.9"/' "@oly/web-host dependency on @oly/core is 0.0.9, expected 0.1.0"
@@ -59,7 +62,8 @@ check "set_version exits 0" exit_is 0
 check "set_version keeps the rest of the CMake line" grep -q '^project(Oly VERSION 0.2.0 LANGUAGES CXX C)' "$root/CMakeLists.txt"
 check_in "$root" 0.2.0
 check "after set_version only the lock is behind" exit_is 1
-check "after set_version only the lock is behind: message" stderr_has "package-lock.json @oly/core version is 0.1.0, expected 0.2.0"
+check "after set_version only the lock is behind: message" stderr_has "package-lock.json oly version is 0.1.0, expected 0.2.0"
+check "set_version writes the root package.json" grep -q '^  "version": "0.2.0"' "$root/package.json"
 sh "$set_script" 1.0 "$root" > "$logs/out" 2> "$logs/err" || status=$?
 check "set_version refuses a bad version" exit_is 64
 check "set_version leaves the CMake line alone on a bad version" grep -q '^project(Oly VERSION 0.2.0 ' "$root/CMakeLists.txt"

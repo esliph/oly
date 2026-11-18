@@ -27,6 +27,7 @@ rewrite() {
 }
 
 rewrite CMakeLists.txt "s/^(project\(Oly VERSION )[0-9.]+/\1$version/"
+rewrite package.json "s/^(  \"version\": \")[^\"]*/\1$version/"
 rewrite "$core" "s/^(  \"version\": \")[^\"]*/\1$version/"
 rewrite "$host" "s/^(  \"version\": \")[^\"]*/\1$version/"
 rewrite "$host" "s/(\"@oly\/core\": \")[^\"]*/\1$version/"

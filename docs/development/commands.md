@@ -69,25 +69,27 @@ Nothing here publishes anything: the GitHub Actions workflow `release.yml` does 
 
 ```sh
 ./spur release 0.2.0                  # on the host: writes 0.2.0 into project(Oly VERSION), @oly/core, @oly/web-host and package-lock.json, and commits; no tag
-./spur release-test                   # the shell tests of tools/release (version scripts and, after ./spur stage, the archives), in the dev container
+./spur release-test                   # the shell tests of tools/release (version scripts, and the archive checks, which need ./spur stage of the version in CMakeLists.txt first), in the dev container
 ./spur stage 0.1.0                    # on the host: builds both oly-schema, packs the npm tarballs and writes build/release/0.1.0/
 ./spur stage-npm <folder>             # only the npm pack of the two web packages
 ./spur staged-test 0.1.0              # web, native, then docker, against build/release/0.1.0
 ./spur staged-test 0.1.0 web          # in the wasm container; native: in the dev container; docker: on the host
 ```
 
-- `./spur release` refuses a working tree with changes. A version that is not `MAJOR.MINOR.PATCH` exits with 64.
-- `./spur stage <version>` fails unless the tree already carries `<version>` (`tools/release/check_version.sh`). `build/release/<version>/` has GitHub's layout: `download/v<version>/` holds `oly-tools-<version>-linux-x64.tar.gz`, `oly-tools-<version>-windows-x64.tar.gz`, `oly-core-<version>.tgz`, `oly-web-host-<version>.tgz` and `install.sh`; `latest/download/` holds `VERSION`, `oly` (the launcher stamped with the version) and `install.sh`. The `oly-tools` archives are built in the dev container, because Git Bash on Windows cannot give `bin/oly-schema` the executable bit.
+- `./spur release` refuses a working tree with changes. A version that is not `MAJOR.MINOR.PATCH` exits with 64. If npm or the check fails after the files were rewritten, `git checkout .` drops the changes.
+- `./spur stage <version>` fails unless the tree already carries `<version>` (`tools/release/check_version.sh`). `build/release/<version>/` has GitHub's layout: `download/v<version>/` holds `oly-tools-<version>-linux-x64.tar.gz`, `oly-tools-<version>-windows-x64.tar.gz`, `oly-core-<version>.tgz`, `oly-web-host-<version>.tgz`, `install.sh`, `oly` (the launcher stamped with the version) and `VERSION`; `latest/download/` holds copies of the last three, which is what GitHub serves from the assets of the latest release. The `oly-tools` archives are built in the dev container, because Git Bash on Windows cannot give `bin/oly-schema` the executable bit.
 - The Linux `oly-schema` (preset `schema-tool-linux`) links statically: a dynamic one needs the glibc of the image it was built in, and the `wasm` image has an older one. The Windows one (`schema-tool-windows`, MinGW) is static through the toolchain file.
 - `staged-test` is the consumer test against the staged tree, not the checkout: it serves `build/release/<version>` on `127.0.0.1:8766`, installs the launcher with `install.sh` into a fresh `OLY_HOME` under `build/staged/<environment>/`, runs `oly doctor`, `oly new` and `oly test`. `OLY_ENGINE_DIR` stays unset, so the tools are the downloaded ones; `OLY_ENGINE_SOURCE_DIR` is this checkout, as the tag does not exist yet. `npm` runs with a user config whose `@oly` registry is `http://127.0.0.1:9`, so a lookup of an `@oly` package in the registry fails the run. `docker` needs the two games `web` and `native` left; it builds `oly-local/oly-<image>:<version>` from the local `cpp_services-*` images plus the staged linux-x64 `oly-tools` (`tools/release/Dockerfile.tools`) and runs `oly test --docker` in both.
 
 ### Cutting a release
 
-1. On `master`, `./spur release <version>` and merge the commit.
+1. On a branch, `./spur release <version>`, then merge the commit into `master`.
 2. `./spur stage <version>` then `./spur staged-test <version>` for a check on the laptop (optional).
 3. In GitHub: Actions, `release`, `Run workflow` on `master` with `version`. `dry_run` starts true: `check`, `linux` and `windows` run and `publish` is skipped. Run again with `dry_run` false to tag `v<version>` on the tested commit and publish the images (`ghcr.io/esliph/oly-{dev,wasm,windows}:<version>`) and the release assets.
 
 The first publish of each image creates a GHCR package that is private until its visibility is set to public (package settings on GitHub): do that once, or games cannot pull it without a token. The `check` job fails when the dispatch is not on `master` or the tag exists; `publish` pushes the images the `linux` job tested and saved (it fails before any push when a loaded image ID differs).
+
+`release.yml` runs one release at a time (`concurrency`). When `publish` fails after pushing the images, use "Re-run failed jobs": the tag and the release are created only if missing (an existing release gets its assets replaced). A patch of an older line is not made the "latest" release, so `latest/download` keeps serving the newest version.
 
 ## ECS benchmarks
 

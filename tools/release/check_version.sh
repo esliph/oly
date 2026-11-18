@@ -1,7 +1,7 @@
 #!/bin/sh
 # check_version.sh <version> <root>: exits 1 naming the first place that does not carry the version: project(Oly
-# VERSION), the two package.json files, or the two workspace entries of package-lock.json. The lock is read with sed
-# because the dev image has no node.
+# VERSION), the three package.json files, or the four entries of package-lock.json that carry it. The lock is read with
+# sed because the dev image has no node.
 
 version=${1:-}
 root=${2:-}
@@ -40,9 +40,12 @@ lock_entry() {
 }
 
 expect "project(Oly VERSION)" "$(sed -n 's/^project(Oly VERSION \([0-9.]*\).*/\1/p' "$root/CMakeLists.txt")"
+expect "oly version" "$(package_version package.json)"
 expect "@oly/core version" "$(package_version "$core/package.json")"
 expect "@oly/web-host version" "$(package_version "$host/package.json")"
 expect "@oly/web-host dependency on @oly/core" "$(dependency_version "$host/package.json")"
+expect "package-lock.json oly version" "$(sed -n 's/^  "version": "\([^"]*\)".*/\1/p' "$root/package-lock.json" | head -n 1)"
+expect "package-lock.json root entry version" "$(lock_entry "" | sed -n 's/^ *"version": "\([^"]*\)".*/\1/p' | head -n 1)"
 expect "package-lock.json @oly/core version" "$(lock_entry "$core" | sed -n 's/^ *"version": "\([^"]*\)".*/\1/p' | head -n 1)"
 expect "package-lock.json @oly/web-host version" "$(lock_entry "$host" | sed -n 's/^ *"version": "\([^"]*\)".*/\1/p' | head -n 1)"
 expect "package-lock.json @oly/web-host dependency on @oly/core" "$(lock_entry "$host" | sed -n 's/.*"@oly\/core": "\([^"]*\)".*/\1/p' | head -n 1)"
