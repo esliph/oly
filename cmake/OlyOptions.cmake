@@ -15,6 +15,8 @@ set(OLY_ENABLE_ASSERTS "" CACHE STRING "0/1; empty = 0 with NDEBUG, otherwise 1"
 include(OlyGame)
 
 oly_environment(OLY_ENVIRONMENT)
+# A cache entry reaches the directory of a game that fetched the engine; a normal variable stays in the engine's scope.
+set(OLY_ENVIRONMENT "${OLY_ENVIRONMENT}" CACHE INTERNAL "The environment this build targets")
 
 if(OLY_BUILD_NATIVE_HOST AND EMSCRIPTEN)
   message(FATAL_ERROR "OLY_BUILD_NATIVE_HOST is for native builds, not for Emscripten")

@@ -218,6 +218,8 @@ subproject-web: ## the web half of subproject-test
   spur schema-tool
 
   directory=build/subproject-web
+  # An incremental build does not relink, so the link line the check below looks for would be missing.
+  rm -rf "$directory"
   cmake -S cmake/tests/consumer -B "$directory" \
     -DCMAKE_TOOLCHAIN_FILE=/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
     -DFETCHCONTENT_SOURCE_DIR_OLY="$PWD" -DOLY_SCHEMA_TOOL="$PWD/build/schema-tool/bin/oly-schema"
