@@ -75,6 +75,26 @@ _in() {
   exec docker compose --env-file toolchain.env run --rm -e PRESET -e OLY_FUZZ_SEED -e OLY_FUZZ_OPS "$@"
 }
 
+# _serve <directory> <port>: serves a staged tree the way GitHub serves a release; stops when the task ends.
+_serve() {
+  mkdir -p build/staged
+  python3 -m http.server "$2" --bind 127.0.0.1 --directory "$1" > "build/staged/server-$2.log" 2>&1 &
+  _server=$!
+  trap 'kill "$_server"' EXIT
+  until python3 -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:$2/')" 2> /dev/null; do
+    sleep 0.2
+  done
+}
+
+# _staged_run <version> <web|native>: the staged consumer test over build/release/<version>, in build/staged/<environment>.
+_staged_run() {
+  [ -d "build/release/$1" ] || _fail 64 "run ./spur stage $1 first"
+  rm -rf "build/staged/$2"
+
+  _serve "build/release/$1" 8766
+  OLY_RELEASE_URL=http://127.0.0.1:8766 OLY_ENGINE_SOURCE_DIR=$PWD sh tools/release/staged_consumer_test.sh "$1" "$2" "$PWD/build/staged/$2"
+}
+
 ## Build the images with the toolchain versions of toolchain.env; the arguments go to docker compose build.
 ##
 ##   ./spur images wasm
@@ -463,3 +483,59 @@ stage: ## build the release assets of <version> into build/release/<version>
   spur stage-npm "$directory/download/v$version"
   # In the dev container: Git Bash on Windows cannot give bin/oly-schema the executable bit the archive must carry.
   spur dev sh tools/release/stage.sh "$version" "$directory"
+
+## Run a game as a user would, with the launcher installed from the tree ./spur stage built (build/release/<version>)
+## instead of from GitHub, the engine source being this checkout. No environment: web, native, then docker.
+##
+##   ./spur staged-test 0.1.0 web
+staged-test: ## install, create, build and test a game from the staged release
+  [ "$#" -ge 1 ] || _fail 64 "usage: ./spur staged-test <version> [web|native|docker]"
+  version=$1
+  case ${2:-} in
+    web) spur staged-web "$version" ;;
+    native) spur staged-native "$version" ;;
+    docker) spur staged-docker "$version" ;;
+    "")
+      spur staged-web "$version"
+      spur staged-native "$version"
+      spur staged-docker "$version"
+      ;;
+    *) _fail 64 "usage: ./spur staged-test <version> [web|native|docker]" ;;
+  esac
+
+staged-web: ## the web half of staged-test
+  _in wasm -- "$@"
+
+  _staged_run "$1" web
+
+staged-native: ## the native half of staged-test
+  _in dev -- "$@"
+
+  _staged_run "$1" native
+
+## Run the games that staged-test web and native left in build/staged/ with --docker, on the host: the images are built
+## from the local engine images and the staged oly-tools, and tagged as a release publishes them, under oly-local.
+staged-docker: ## the Docker half of staged-test, on the host
+  version=$1
+  native=$PWD/build/staged/native/staged-native
+  web=$PWD/build/staged/web/staged-web
+  [ -d "$native" ] && [ -d "$web" ] || _fail 64 "run ./spur staged-test $version web and native first"
+
+  sh tools/release/build_images.sh "$version" oly-local "build/release/$version"
+
+  home=$PWD/build/staged/docker-home
+  rm -rf "$home"
+  mkdir -p "$home/profile"
+  # The host may have no Python for _serve, and the containers need no release server: the games already hold their
+  # packages. curl reads the staged folder through file://.
+  root=$(cygpath -m "$PWD" 2> /dev/null || printf '%s' "$PWD")
+  case $root in
+    /*) url=file://$root/build/release/$version ;;
+    *) url=file:///$root/build/release/$version ;;
+  esac
+  export OLY_RELEASE_URL=$url OLY_HOME=$home OLY_IMAGE_REGISTRY=oly-local OLY_ENGINE_SOURCE_DIR=$PWD
+  curl -fsSL "$OLY_RELEASE_URL/latest/download/install.sh" -o "$home/install.sh" || _fail 1 "could not download install.sh"
+  HOME=$home/profile sh "$home/install.sh" || _fail 1 "install.sh failed"
+
+  (cd "$native" && "$home/bin/oly" test --docker)
+  (cd "$web" && "$home/bin/oly" test --docker)

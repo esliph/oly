@@ -24,14 +24,9 @@ expected_listing() {
   } | LC_ALL=C sort
 }
 
-# only_system_libraries <file>: ldd names nothing but the C library, the math library and the loader.
-only_system_libraries() {
-  ldd "$1" | awk '{print $1}' | while IFS= read -r library; do
-    case ${library##*/} in
-      libc.so.6 | libm.so.6 | linux-vdso.so.1 | ld-linux-x86-64.so.2) ;;
-      *) printf 'unexpected library: %s\n' "$library" >&2; exit 1 ;;
-    esac
-  done
+# is_static <file>: a static binary needs no glibc of the user's machine, which the downloaded tools must not depend on.
+is_static() {
+  ldd "$1" 2>&1 | grep -q 'not a dynamic executable'
 }
 
 # names_no_runtime_dll <file>: a statically linked exe has no import of the MinGW runtime.
@@ -67,7 +62,7 @@ tar -xzf "$release/oly-tools-$version-linux-x64.tar.gz" -C "$extracted/linux"
 tar -xzf "$release/oly-tools-$version-windows-x64.tar.gz" -C "$extracted/windows"
 
 check "the linux-x64 oly-schema runs" the_tool_runs "$extracted/linux/bin/oly-schema"
-check "the linux-x64 oly-schema links only libc, libm and the loader" only_system_libraries "$extracted/linux/bin/oly-schema"
+check "the linux-x64 oly-schema is statically linked" is_static "$extracted/linux/bin/oly-schema"
 check "the windows oly-schema imports no MinGW runtime" names_no_runtime_dll "$extracted/windows/bin/oly-schema.exe"
 check "spur is executable in the archive" test -x "$extracted/linux/spur"
 rm -rf "$extracted"

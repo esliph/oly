@@ -59,6 +59,15 @@ check "pinned: names the tools directory" docker_line_has "-e OLY_TOOLS_DIR=/oly
 check "pinned: mounts no checkout" sh -c "! grep -qF -- ':/oly ' '$DOCKER_LOG'"
 
 : > "$DOCKER_LOG"
+OLY_ENGINE_SOURCE_DIR=/staged
+export OLY_ENGINE_SOURCE_DIR
+run_task "$work/native-game" build --docker
+unset OLY_ENGINE_SOURCE_DIR
+check "staged: mounts the commit being released for FetchContent" docker_line_has "-v /staged:/oly-source -e OLY_ENGINE_SOURCE_DIR=/oly-source"
+check "staged: still takes the tools baked into the image" docker_line_has " dev sh /oly-tools/spur -f /oly-tools/Spurfile build --host"
+check "staged: is not local mode" sh -c "! grep -qF -- 'OLY_ENGINE_DIR=' '$DOCKER_LOG'"
+
+: > "$DOCKER_LOG"
 run_task "$work/web-game" run --docker
 check "web run: publishes the port" docker_line_has "--service-ports"
 check "web run: runs in wasm" docker_line_has " wasm sh /oly-tools/spur"

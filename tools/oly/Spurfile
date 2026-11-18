@@ -407,6 +407,8 @@ _dispatch_docker() {
   set -- "$_service" "$@"
   if [ -n "${OLY_ENGINE_DIR:-}" ]; then
     set -- -v "$(_host_path "$OLY_ENGINE_DIR"):/oly" -e OLY_ENGINE_DIR=/oly "$@"
+  elif [ -n "${OLY_ENGINE_SOURCE_DIR:-}" ]; then
+    set -- -v "$(_host_path "$OLY_ENGINE_SOURCE_DIR"):/oly-source" -e OLY_ENGINE_SOURCE_DIR=/oly-source "$@"
   fi
   set -- -e "OLY_TOOLS_DIR=$_tools" "$@"
   if [ "$SPUR_TASK" = run ] && [ "$_service" = wasm ]; then
