@@ -1,0 +1,141 @@
+#!/bin/sh
+# Finds the game, fetches the oly-tools of the version it pins and runs that version's Spurfile task. It rarely changes:
+# game logic belongs in the version's Spurfile.
+
+OLY_LAUNCHER_VERSION=dev
+
+oly_home=${OLY_HOME:-$HOME/.oly}
+release_url=${OLY_RELEASE_URL:-https://github.com/esliph/oly/releases}
+
+fail() {
+  printf 'oly: %s\n' "$2" >&2
+  exit "$1"
+}
+
+# Mirrors _platform of the Spurfile, which is not there yet when a version is being fetched.
+platform() {
+  case $(uname -s) in
+    Linux) echo linux-x64 ;;
+    MINGW* | MSYS*) echo windows-x64 ;;
+    *) fail 64 "unsupported host $(uname -s): oly runs on Linux and on Windows in Git Bash" ;;
+  esac
+}
+
+# The nearest folder from $PWD up that holds oly.env; prints nothing outside a game.
+find_game_root() {
+  directory=$PWD
+  while [ ! -f "$directory/oly.env" ]; do
+    parent=$(dirname "$directory")
+    if [ "$parent" = "$directory" ]; then
+      return 0
+    fi
+    directory=$parent
+  done
+  printf '%s\n' "$directory"
+}
+
+pinned_version() {
+  version=$(sed -n 's/^OLY_VERSION=//p' "$1/oly.env" | tr -d '\r' | tail -n 1)
+  [ -n "$version" ] || fail 64 "$1/oly.env has no OLY_VERSION"
+  printf '%s\n' "$version"
+}
+
+latest_version() {
+  url=$release_url/latest/download/VERSION
+  version=$(curl -fsSL "$url") || fail 1 "could not read the latest version from $url"
+  printf '%s\n' "$version" | tr -d '[:space:]'
+}
+
+# The version a command outside a game runs with: the checkout's own in local mode, else the latest release.
+default_version() {
+  if [ -n "${OLY_ENGINE_DIR:-}" ]; then
+    sed -n 's/^project(Oly VERSION \([0-9.]*\).*/\1/p' "$OLY_ENGINE_DIR/CMakeLists.txt"
+  else
+    latest_version
+  fi
+}
+
+# The archive is extracted beside its final folder and moved in whole, so an interrupted run never leaves a half-filled
+# versions/<version> for the next run to trust.
+install_tools() {
+  version=$1
+  file=oly-tools-$version-$(platform).tar.gz
+  url=$release_url/download/v$version/$file
+  staging=$oly_home/versions/.download-$version-$$
+
+  mkdir -p "$staging/tools" || fail 1 "could not create $staging"
+  if curl -fsSL "$url" -o "$staging/$file" \
+    && tar -xzf "$staging/$file" -C "$staging/tools" \
+    && [ -f "$staging/tools/spur" ] && [ -f "$staging/tools/Spurfile" ]; then
+    # A parallel run may have finished first; mv would then move the folder inside it.
+    if [ ! -d "$oly_home/versions/$version" ]; then
+      mv "$staging/tools" "$oly_home/versions/$version"
+    fi
+    rm -rf "$staging"
+  else
+    rm -rf "$staging"
+    fail 1 "could not install oly-tools $version from $url"
+  fi
+}
+
+# run_version <version> <game root> <spur arguments...>
+run_version() {
+  version=$1
+  root=$2
+  shift 2
+
+  if [ -n "${OLY_ENGINE_DIR:-}" ]; then
+    tools=$OLY_ENGINE_DIR/tools/oly
+    runner=$OLY_ENGINE_DIR/spur
+  else
+    tools=$oly_home/versions/$version
+    runner=$tools/spur
+    if [ ! -f "$runner" ]; then
+      install_tools "$version"
+    fi
+  fi
+
+  OLY_TOOLS_DIR=$tools
+  OLY_VERSION=$version
+  export OLY_TOOLS_DIR OLY_VERSION
+  exec sh "$runner" -f "$tools/Spurfile" -C "$root" "$@"
+}
+
+print_version() {
+  printf 'oly %s\n' "$OLY_LAUNCHER_VERSION"
+  root=$(find_game_root)
+  if [ -z "$root" ]; then
+    return 0
+  fi
+
+  if [ -n "${OLY_ENGINE_DIR:-}" ]; then
+    printf 'engine %s (local)\n' "$OLY_ENGINE_DIR"
+  else
+    printf 'engine %s (oly.env)\n' "$(pinned_version "$root")"
+  fi
+}
+
+# With -C the Spurfile reads a relative checkout from the game root, not from where oly was run.
+if [ -n "${OLY_ENGINE_DIR:-}" ]; then
+  OLY_ENGINE_DIR=$(cd "$OLY_ENGINE_DIR" 2> /dev/null && pwd) || fail 64 "OLY_ENGINE_DIR is not a directory: $OLY_ENGINE_DIR"
+  export OLY_ENGINE_DIR
+fi
+
+case ${1:-} in
+  --version)
+    print_version
+    exit 0
+    ;;
+esac
+
+game_root=$(find_game_root)
+if [ -n "$game_root" ]; then
+  game_version=$(pinned_version "$game_root") || exit 1
+elif [ "${1:-}" = doctor ]; then
+  game_root=$PWD
+  game_version=$(default_version) || exit 1
+else
+  fail 64 "not inside an Oly game: no oly.env in $PWD or above"
+fi
+
+run_version "$game_version" "$game_root" "$@"
