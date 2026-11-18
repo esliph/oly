@@ -77,6 +77,34 @@ _sed_replacement() {
   printf '%s' "$1" | sed 's/[\&|]/\&/g'
 }
 
+# The engine C++ source: the checkout in local mode, the staged source of a release run, else empty so FetchContent
+# fetches the pinned tag. Passed on every configure, empty included: a value left in the CMake cache by an earlier
+# local run would otherwise keep building the checkout.
+_engine_source() {
+  _source=${OLY_ENGINE_DIR:-${OLY_ENGINE_SOURCE_DIR:-}}
+  if [ -n "$_source" ]; then
+    _host_path "$_source"
+  fi
+}
+
+_build_native() {
+  _source=$(_engine_source)
+  if [ "$(_platform)" = windows-x64 ]; then
+    cmake -S . -B build/cmake -G Ninja -DCMAKE_BUILD_TYPE=Debug -DOLY_BUILD_NATIVE_HOST=ON "-DFETCHCONTENT_SOURCE_DIR_OLY=$_source"
+  else
+    cmake -S . -B build/cmake -DCMAKE_BUILD_TYPE=Debug -DOLY_BUILD_NATIVE_HOST=ON "-DFETCHCONTENT_SOURCE_DIR_OLY=$_source"
+  fi
+  cmake --build build/cmake -j
+}
+
+# A task never calls spur again: it would look for a Spurfile from the game directory and find the game's parents'.
+_build() {
+  case $(_env_value OLY_ENVIRONMENT) in
+    native) _build_native ;;
+    *) _fail 64 "oly.env: OLY_ENVIRONMENT is web or native" ;;
+  esac
+}
+
 cd "${OLY_GAME_DIR:-$SPUR_INVOCATION_DIR}"
 
 ## Create a game from the template.
@@ -140,3 +168,22 @@ new: ## create <name>/ from the template: new <name> --environment web|native
 
 platform: ## print the host platform: linux-x64 or windows-x64
   _platform
+
+build: ## build the game
+  _build
+
+test: ## build the game and run its tests
+  _build
+  ctest --test-dir build/cmake --output-on-failure --no-tests=error
+
+## Build the game and run it; the arguments go to the game.
+##
+##   oly run --frames 60
+run: ## build the game and run it
+  _build
+  case $(_env_value OLY_ENVIRONMENT) in
+    native) exec "build/cmake/games/$(_env_value OLY_GAME)$(_exe)" "$@" ;;
+  esac
+
+clean: ## remove build/
+  rm -rf build

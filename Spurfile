@@ -296,3 +296,26 @@ oly-tools-test: ## the tests of tools/oly
   _in wasm -- "$@"
 
   sh tools/oly/tests/run.sh
+
+## Create a game with the game tasks of this checkout (local mode) in build/consumer/, then build and test it, as a user
+## of oly would. No argument: every environment.
+##
+##   ./spur consumer-test native
+consumer-test: ## create, build and test a game from the template, in local mode
+  case ${1:-} in
+    native) spur consumer-native ;;
+    "") spur consumer-native ;;
+    *) _fail 64 "usage: ./spur consumer-test [native]" ;;
+  esac
+
+consumer-native: ## the native half of consumer-test
+  _in dev -- "$@"
+
+  version=$(sed -n 's/^project(Oly VERSION \([0-9.]*\).*/\1/p' CMakeLists.txt)
+  directory=build/consumer/native
+  rm -rf "$directory"
+  mkdir -p "$directory"
+
+  export OLY_ENGINE_DIR=$PWD OLY_TOOLS_DIR=$PWD/tools/oly
+  OLY_GAME_DIR=$PWD/$directory OLY_VERSION=$version spur -f "$PWD/tools/oly/Spurfile" new consumer-game --environment native
+  OLY_GAME_DIR=$PWD/$directory/consumer-game spur -f "$PWD/tools/oly/Spurfile" test
