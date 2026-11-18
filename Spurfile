@@ -6,7 +6,7 @@ _fail() {
 _image_for() {
   case $1 in
     wasm* | native-clang* | schema-tool) echo wasm ;;
-    windows*) echo windows ;;
+    windows* | schema-tool-windows) echo windows ;;
     *) echo dev ;;
   esac
 }
@@ -430,3 +430,36 @@ release: ## write <version> into the tree and commit it (on the host)
   else
     git commit -am "chore(release): $version"
   fi
+
+## Pack @oly/core and @oly/web-host into the folder given. Only the two packages are built: the games' own TypeScript
+## needs generated schemas this task does not make.
+##
+##   ./spur stage-npm build/release/0.1.0/download/v0.1.0
+stage-npm: ## npm pack the two web packages into a folder
+  _in wasm -- "$@"
+
+  [ "$#" -eq 1 ] || _fail 64 "usage: ./spur stage-npm <folder>"
+  npm="$(dirname "$(command -v node)")/npm"
+  [ -d node_modules ] || "$npm" ci --no-audit --no-fund
+  node_modules/.bin/tsc -b engine/environments/web/clients/typescript/core engine/environments/web/host/js
+  mkdir -p "$1"
+  "$npm" pack -w @oly/core -w @oly/web-host --pack-destination "$1"
+
+## Build every asset of a release into build/release/<version>, laid out as GitHub serves it, without publishing
+## anything (on the host).
+##
+##   ./spur stage 0.1.0
+stage: ## build the release assets of <version> into build/release/<version>
+  [ "$#" -eq 1 ] || _fail 64 "usage: ./spur stage <version>"
+  version=$1
+  sh tools/release/check_version.sh "$version" . || exit $?
+
+  directory=build/release/$version
+  rm -rf "$directory"
+  mkdir -p "$directory/download/v$version"
+
+  PRESET=schema-tool-linux spur build
+  PRESET=schema-tool-windows spur build
+  spur stage-npm "$directory/download/v$version"
+  # In the dev container: Git Bash on Windows cannot give bin/oly-schema the executable bit the archive must carry.
+  spur dev sh tools/release/stage.sh "$version" "$directory"

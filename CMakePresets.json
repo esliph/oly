@@ -36,6 +36,18 @@
       }
     },
     {
+      "name": "schema-tool-linux", "inherits": "schema-tool",
+      "cacheVariables": { "CMAKE_EXE_LINKER_FLAGS": "-static-libstdc++ -static-libgcc" }
+    },
+    {
+      "name": "schema-tool-windows", "inherits": "base",
+      "toolchainFile": "${sourceDir}/cmake/toolchains/mingw-w64.cmake",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release", "OLY_SANITIZE": "OFF", "OLY_WERROR": "OFF",
+        "OLY_BUILD_TESTS": "OFF", "OLY_BUILD_BENCH": "OFF", "OLY_BUILD_GAMES": "OFF", "OLY_BUILD_NATIVE_HOST": "OFF"
+      }
+    },
+    {
       "name": "variant", "hidden": true, "inherits": "base",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release", "OLY_SANITIZE": "OFF",
@@ -128,6 +140,8 @@
     { "name": "release", "configurePreset": "release" },
     { "name": "relwithdebinfo", "configurePreset": "relwithdebinfo" },
     { "name": "schema-tool", "configurePreset": "schema-tool", "targets": ["oly-schema"] },
+    { "name": "schema-tool-linux", "configurePreset": "schema-tool-linux", "targets": ["oly-schema"] },
+    { "name": "schema-tool-windows", "configurePreset": "schema-tool-windows", "targets": ["oly-schema"] },
     { "name": "native-clang", "configurePreset": "native-clang" },
     { "name": "native-clang-32", "configurePreset": "native-clang-32" },
     { "name": "native-clang-32-scalar", "configurePreset": "native-clang-32-scalar" },

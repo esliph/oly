@@ -1,0 +1,7 @@
+# An engine image plus the linux-x64 oly-tools of the release, where `oly <task> --docker` looks for them. The build
+# context is a folder holding the extracted archive as oly-tools/.
+ARG BASE
+FROM ${BASE}
+
+COPY oly-tools/ /oly-tools/
+ENV OLY_TOOLS_DIR=/oly-tools
