@@ -402,3 +402,31 @@ consumer-docker: ## the Docker half of consumer-test, on the host
 
   [ -d "$native/build/cmake" ] && [ -d "$native/build/cmake-docker" ] || _fail 1 "the host and Docker builds do not have their own directories"
   [ -f "$native/build/cmake-windows-docker/games/consumer_game.exe" ] || _fail 1 "the Windows build left no consumer_game.exe"
+
+## The shell tests of tools/release, which need no engine build.
+##
+##   ./spur release-test
+release-test: ## the tests of tools/release
+  _in dev -- "$@"
+
+  sh tools/release/tests/run.sh
+
+## Write a version into the tree and commit it. The tag is the release pipeline's: it creates it only after every check
+## passed (spec §4.2).
+##
+##   ./spur release 0.2.0
+release: ## write <version> into the tree and commit it (on the host)
+  [ "$#" -eq 1 ] || _fail 64 "usage: ./spur release <version>"
+  version=$1
+  [ -z "$(git status --porcelain)" ] || _fail 1 "the working tree has changes: commit or stash them first"
+
+  sh tools/release/set_version.sh "$version" . || exit $?
+  # The lock holds the workspace versions: a stale one makes the next npm ci fail. npm sits beside node in the wasm image.
+  spur wasm sh -c '"$(dirname "$(command -v node)")/npm" install --package-lock-only --no-audit --no-fund'
+  sh tools/release/check_version.sh "$version" . || _fail 1 "the tree does not carry $version after the update"
+
+  if git diff --quiet; then
+    printf 'already on %s\n' "$version"
+  else
+    git commit -am "chore(release): $version"
+  fi
