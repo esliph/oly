@@ -14,9 +14,10 @@ fi
 
 mkdir -p "$oly_home/bin" || exit 1
 temporary=$oly_home/bin/oly.new.$$
-if ! curl -fsSL "$url" -o "$temporary"; then
+# A download cut short can still parse, so the closing line of the launcher is required too.
+if ! curl -fsSL "$url" -o "$temporary" || ! sh -n "$temporary" || [ "$(tail -n 1 "$temporary")" != "# end of oly" ]; then
   rm -f "$temporary"
-  printf 'install.sh: could not download %s\n' "$url" >&2
+  printf 'install.sh: could not download a complete launcher from %s\n' "$url" >&2
   exit 1
 fi
 chmod +x "$temporary" && mv "$temporary" "$oly_home/bin/oly" || exit 1

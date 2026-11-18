@@ -195,4 +195,28 @@ check "install with zsh: exit 0" exit_is 0
 check "install with zsh: .zshrc has the PATH line" test "$(path_lines .zshrc)" -eq 1
 check "install with zsh: .bashrc is not created" test ! -e "$install_home/.bashrc"
 
+make_game nested-clean 0.1.0
+mkdir -p "$work/nested-clean/build" "$work/nested-clean/a/b/build"
+LOCAL_ENGINE=$repository
+run_oly "$work/nested-clean/a/b" clean
+LOCAL_ENGINE=
+check "task from a subfolder: exit 0" exit_is 0
+check "task from a subfolder: runs at the game root" test ! -e "$work/nested-clean/build"
+check "task from a subfolder: leaves the subfolder alone" test -d "$work/nested-clean/a/b/build"
+
+head -n 196 "$original_launcher" > "$tree/latest/download/oly"
+cp "$work/bin/oly" "$work/before-truncated-oly"
+launcher=$work/bin/oly
+run_oly "$work" self-update
+launcher=$original_launcher
+check "self-update truncated: exit 1" exit_is 1
+check "self-update truncated: the old launcher stays" cmp -s "$work/bin/oly" "$work/before-truncated-oly"
+
+install_home=$work/installed-truncated
+mkdir "$install_home"
+install_oly
+check "install truncated: exit 1" exit_is 1
+check "install truncated: no launcher is installed" test ! -e "$install_home/.oly/bin/oly"
+check "install truncated: no profile is touched" test ! -e "$install_home/.bashrc"
+
 finish

@@ -3,6 +3,7 @@
 # game logic belongs in the version's Spurfile.
 
 OLY_LAUNCHER_VERSION=dev
+launcher_end="# end of oly"
 
 oly_home=${OLY_HOME:-$HOME/.oly}
 release_url=${OLY_RELEASE_URL:-https://github.com/esliph/oly/releases}
@@ -95,9 +96,10 @@ run_version() {
     fi
   fi
 
+  OLY_GAME_DIR=$root
   OLY_TOOLS_DIR=$tools
   OLY_VERSION=$version
-  export OLY_TOOLS_DIR OLY_VERSION
+  export OLY_GAME_DIR OLY_TOOLS_DIR OLY_VERSION
   exec sh "$runner" -f "$tools/Spurfile" -C "$root" "$@"
 }
 
@@ -178,13 +180,14 @@ upgrade_command() {
   run_version "$target" "$root" sync
 }
 
-# The new launcher is checked before it replaces the running one; mv swaps the file whole, so the old one is never half written.
+# The new launcher is checked before it replaces the running one: it parses and ends with the closing line, which a cut
+# download lacks. mv swaps the file whole, so the old one is never half written.
 self_update() {
   url=$release_url/latest/download/oly
   self=$0
   temporary=$self.new.$$
 
-  if curl -fsSL "$url" -o "$temporary" && sh -n "$temporary" && grep -q '^OLY_LAUNCHER_VERSION=' "$temporary"; then
+  if curl -fsSL "$url" -o "$temporary" && sh -n "$temporary" && [ "$(tail -n 1 "$temporary")" = "$launcher_end" ]; then
     chmod +x "$temporary" && mv "$temporary" "$self" || { rm -f "$temporary"; fail 1 "could not replace $self"; }
   else
     rm -f "$temporary"
@@ -230,3 +233,4 @@ else
 fi
 
 run_version "$game_version" "$game_root" "$@"
+# end of oly
