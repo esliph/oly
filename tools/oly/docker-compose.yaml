@@ -1,0 +1,26 @@
+# The services of `oly <task> --docker`: the image of the engine version the game pins, with the game mounted at /game.
+# OLY_VERSION and OLY_GAME_DIR come from the oly-tools Spurfile; OLY_IMAGE_REGISTRY is for tests that use local images.
+name: oly-game
+
+x-game: &game
+  volumes:
+    - ${OLY_GAME_DIR:?set by oly}:/game
+  working_dir: /game
+  environment:
+    - OLY_IN_DOCKER=1
+    - OLY_RELEASE_URL
+
+services:
+  wasm:
+    <<: *game
+    image: ${OLY_IMAGE_REGISTRY:-ghcr.io/esliph}/oly-wasm:${OLY_VERSION:?set by oly}
+    ports:
+      - "8000:8000"
+
+  dev:
+    <<: *game
+    image: ${OLY_IMAGE_REGISTRY:-ghcr.io/esliph}/oly-dev:${OLY_VERSION:?set by oly}
+
+  windows:
+    <<: *game
+    image: ${OLY_IMAGE_REGISTRY:-ghcr.io/esliph}/oly-windows:${OLY_VERSION:?set by oly}

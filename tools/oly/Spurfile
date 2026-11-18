@@ -94,10 +94,40 @@ _generator_arguments() {
   fi
 }
 
+# Set by _start: windows, or empty for the host platform.
+_target=
+
+# The container sees the game at /game, the host at its own path: one CMake cache cannot serve both, so each runner
+# and each target platform has its own build directory.
+_cmake_directory() {
+  _directory=build/cmake
+  if [ "$_target" = windows ]; then
+    _directory=$_directory-windows
+  fi
+  if [ -n "${OLY_IN_DOCKER:-}" ]; then
+    _directory=$_directory-docker
+  fi
+  echo "$_directory"
+}
+
+_in_docker_suffix() {
+  if [ -n "${OLY_IN_DOCKER:-}" ]; then
+    echo -docker
+  fi
+}
+
+# Windows host: the host compiler is MinGW already. Elsewhere: cross-compile with the toolchain file.
+_toolchain_arguments() {
+  if [ "$_target" = windows ] && [ "$(_platform)" != windows-x64 ]; then
+    echo "-DCMAKE_TOOLCHAIN_FILE=$(_asset cmake/mingw-w64.cmake cmake/toolchains/mingw-w64.cmake)"
+  fi
+}
+
 _build_native() {
   _source=$(_engine_source)
-  cmake -S . -B build/cmake $(_generator_arguments) -DCMAKE_BUILD_TYPE=Debug -DOLY_BUILD_NATIVE_HOST=ON "-DFETCHCONTENT_SOURCE_DIR_OLY=$_source"
-  cmake --build build/cmake -j
+  _directory=$(_cmake_directory)
+  cmake -S . -B "$_directory" $(_generator_arguments) $(_toolchain_arguments) -DCMAKE_BUILD_TYPE=Debug -DOLY_BUILD_NATIVE_HOST=ON "-DFETCHCONTENT_SOURCE_DIR_OLY=$_source"
+  cmake --build "$_directory" -j
 }
 
 # local when OLY_ENGINE_DIR names a checkout, else pinned.
@@ -188,13 +218,13 @@ _build_schema_tool() {
     return 0
   fi
 
-  cmake -S "$(_host_path "$OLY_ENGINE_DIR")" -B build/oly-schema $(_generator_arguments) -DCMAKE_BUILD_TYPE=Release -DOLY_BUILD_TESTS=OFF -DOLY_WERROR=OFF
-  cmake --build build/oly-schema --target oly-schema -j
+  cmake -S "$(_host_path "$OLY_ENGINE_DIR")" -B "build/oly-schema$(_in_docker_suffix)" $(_generator_arguments) -DCMAKE_BUILD_TYPE=Release -DOLY_BUILD_TESTS=OFF -DOLY_WERROR=OFF
+  cmake --build "build/oly-schema$(_in_docker_suffix)" --target oly-schema -j
 }
 
 _schema_tool_path() {
   if [ -n "${OLY_ENGINE_DIR:-}" ]; then
-    echo "$(_host_path "$PWD")/build/oly-schema/bin/oly-schema$(_exe)"
+    echo "$(_host_path "$PWD")/build/oly-schema$(_in_docker_suffix)/bin/oly-schema$(_exe)"
   else
     echo "$(_host_path "${OLY_TOOLS_DIR:?}")/bin/oly-schema$(_exe)"
   fi
@@ -215,17 +245,18 @@ _build_web() {
   _source=$(_engine_source)
   _tool=$(_schema_tool_path)
   _game_target=$(_env_value OLY_GAME)
-  cmake -S . -B build/cmake $(_generator_arguments) \
+  _directory=$(_cmake_directory)
+  cmake -S . -B "$_directory" $(_generator_arguments) \
     "-DCMAKE_TOOLCHAIN_FILE=$(_host_path "$EMSDK")/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake" \
     -DCMAKE_BUILD_TYPE=Debug "-DOLY_SCHEMA_TOOL=$_tool" "-DFETCHCONTENT_SOURCE_DIR_OLY=$_source"
   # The TS code imports the generated schema, so it exists before tsc.
-  cmake --build build/cmake --target oly_typescript_schemas
-  cmake --build build/cmake -j
+  cmake --build "$_directory" --target oly_typescript_schemas
+  cmake --build "$_directory" -j
   node_modules/.bin/tsc -b
 
   mkdir -p build/web
   _esbuild --outfile=build/web/main.js
-  cp web/index.html "build/cmake/games/$_game_target.mjs" "build/cmake/games/$_game_target.wasm" build/web/
+  cp web/index.html "$_directory/games/$_game_target.mjs" "$_directory/games/$_game_target.wasm" build/web/
 }
 
 # _doctor_report <ok|old|untested|missing|wrong> <message>
@@ -330,8 +361,8 @@ _doctor() {
   if [ "$(_platform)" = windows-x64 ]; then
     _doctor_ninja
   fi
-  for _environment in $1; do
-    case $_environment in
+  for _checked in $1; do
+    case $_checked in
       web) _doctor_web ;;
       native) _doctor_native ;;
     esac
@@ -340,10 +371,111 @@ _doctor() {
   return "$_doctor_failed"
 }
 
+# _runner_of_game: OLY_RUNNER of oly.env, host when it has none.
+_runner_of_game() {
+  _value=
+  if [ -f oly.env ]; then
+    _value=$(sed -n 's/^OLY_RUNNER=//p' oly.env | tr -d '\r' | tail -n 1)
+  fi
+  echo "${_value:-host}"
+}
+
+# Re-runs the task in the compose service, with the game mounted: _dispatch_docker <service> <task arguments...>
+# The container runs the same Spurfile with --host, from the image (oly-tools baked at /oly-tools) or, in local mode,
+# from the checkout mounted at /oly. MSYS_NO_PATHCONV stops Git Bash from turning /oly and /game into Windows paths.
+_dispatch_docker() {
+  _service=$1
+  shift
+  _compose=$(_asset docker-compose.yaml tools/oly/docker-compose.yaml)
+  OLY_GAME_DIR=$(_host_path "$PWD")
+  OLY_VERSION=$(_env_value OLY_VERSION)
+  export OLY_GAME_DIR OLY_VERSION MSYS_NO_PATHCONV=1
+
+  if [ -n "${OLY_ENGINE_DIR:-}" ]; then
+    _tools=/oly/tools/oly
+    _spur=/oly/spur
+  else
+    _tools=/oly-tools
+    _spur=/oly-tools/spur
+  fi
+
+  if [ -n "$_target" ]; then
+    set -- --platform "$_target" "$@"
+  fi
+  set -- "$SPUR_TASK" --host "$@"
+  set -- sh "$_spur" -f "$_tools/Spurfile" "$@"
+  set -- "$_service" "$@"
+  if [ -n "${OLY_ENGINE_DIR:-}" ]; then
+    set -- -v "$(_host_path "$OLY_ENGINE_DIR"):/oly" -e OLY_ENGINE_DIR=/oly "$@"
+  fi
+  set -- -e "OLY_TOOLS_DIR=$_tools" "$@"
+  if [ "$SPUR_TASK" = run ] && [ "$_service" = wasm ]; then
+    set -- --service-ports "$@"
+  fi
+
+  exec docker compose -f "$(_host_path "$_compose")" run --rm "$@"
+}
+
+# Every task that builds begins with it: _start "$@"; shift "$_consumed". Reads the leading --docker, --host and
+# --platform windows, sets _target and _consumed, and when the runner is docker re-runs the task in its container.
+_start() {
+  _runner=
+  _consumed=0
+  while [ "$#" -gt 0 ]; do
+    case $1 in
+      --docker)
+        _runner=docker
+        _consumed=$((_consumed + 1))
+        shift
+        ;;
+      --host)
+        _runner=host
+        _consumed=$((_consumed + 1))
+        shift
+        ;;
+      --platform)
+        [ "$#" -ge 2 ] && [ "$2" = windows ] || _fail 64 "--platform is windows"
+        _target=windows
+        _consumed=$((_consumed + 2))
+        shift 2
+        ;;
+      *) break ;;
+    esac
+  done
+  _runner=${_runner:-$(_runner_of_game)}
+
+  _environment=$(_env_value OLY_ENVIRONMENT)
+  if [ "$_target" = windows ] && [ "$_environment" != native ]; then
+    _fail 64 "--platform windows is for native games"
+  fi
+  if [ "$_runner" != docker ]; then
+    return 0
+  fi
+
+  _service=dev
+  if [ "$_environment" = web ]; then
+    _service=wasm
+  elif [ "$_target" = windows ]; then
+    _service=windows
+  fi
+  if [ "$SPUR_TASK" = run ] && [ "$_environment" = native ]; then
+    _fail 64 "a desktop window cannot open in the container: run build/cmake-docker/games/$(_env_value OLY_GAME) on the host"
+  fi
+
+  _dispatch_docker "$_service" "$@"
+}
+
 # A task never calls spur again: it would look for a Spurfile from the game directory and find the game's parents'.
 _build() {
-  _environment=$(_env_value OLY_ENVIRONMENT)
-  _doctor "$_environment" host || _fail 1 "the host tools do not match toolchain.env (see above)"
+  # Cross-compiling for Windows needs MinGW, not the host g++.
+  if [ "$_target" = windows ] && [ "$(_platform)" != windows-x64 ]; then
+    _doctor_failed=0
+    _doctor_cmake
+    _doctor_present x86_64-w64-mingw32-g++-posix "install mingw-w64"
+    [ "$_doctor_failed" -eq 0 ] || _fail 1 "the host tools do not match toolchain.env (see above)"
+  else
+    _doctor "$_environment" host || _fail 1 "the host tools do not match toolchain.env (see above)"
+  fi
   case $_environment in
     native) _build_native ;;
     web) _build_web ;;
@@ -416,19 +548,25 @@ platform: ## print the host platform: linux-x64 or windows-x64
   _platform
 
 build: ## build the game
+  _start "$@"
+  shift "$_consumed"
   _build
 
 test: ## build the game and run its tests
+  _start "$@"
+  shift "$_consumed"
   _build
-  ctest --test-dir build/cmake --output-on-failure --no-tests=error
+  ctest --test-dir "$(_cmake_directory)" --output-on-failure --no-tests=error
 
 ## Build the game and run it; the arguments go to the game.
 ##
 ##   oly run --frames 60
 run: ## build the game and run it
+  _start "$@"
+  shift "$_consumed"
   _build
   case $(_env_value OLY_ENVIRONMENT) in
-    native) exec "build/cmake/games/$(_env_value OLY_GAME)$(_exe)" "$@" ;;
+    native) exec "$(_cmake_directory)/games/$(_env_value OLY_GAME)$(_exe)" "$@" ;;
     web) _esbuild --outfile=build/web/main.js --servedir=build/web --serve=0.0.0.0:8000 ;;
   esac
 

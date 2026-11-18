@@ -305,11 +305,13 @@ consumer-test: ## create, build and test a game from the template, in local mode
   case ${1:-} in
     native) spur consumer-native ;;
     web) spur consumer-web ;;
+    docker) spur consumer-docker ;;
     "")
       spur consumer-native
       spur consumer-web
+      spur consumer-docker
       ;;
-    *) _fail 64 "usage: ./spur consumer-test [native|web]" ;;
+    *) _fail 64 "usage: ./spur consumer-test [native|web|docker]" ;;
   esac
 
 consumer-native: ## the native half of consumer-test
@@ -370,3 +372,27 @@ consumer-web: ## the web half of consumer-test
   touch "$game/package.json"
   env -u OLY_ENGINE_DIR OLY_GAME_DIR="$game" sh "$SPUR_BIN" -f "$tools" sync
   [ -z "$(find "$game/package-lock.json" -mmin +1)" ] || _fail 1 "sync did not rewrite package-lock.json after package.json changed"
+
+## Run the games that consumer-test native and web left in build/consumer/ with --docker, on the host: the images are
+## tagged as the ones a release publishes, under the registry oly-local.
+consumer-docker: ## the Docker half of consumer-test, on the host
+  version=$(sed -n 's/^project(Oly VERSION \([0-9.]*\).*/\1/p' CMakeLists.txt)
+  native=$PWD/build/consumer/native/consumer-game
+  web=$PWD/build/consumer/web/consumer-game
+  [ -d "$native" ] && [ -d "$web" ] || _fail 64 "run ./spur consumer-test native and ./spur consumer-test web first"
+
+  for image in wasm dev windows; do
+    docker tag "cpp_services-$image" "oly-local/oly-$image:$version"
+  done
+
+  export OLY_IMAGE_REGISTRY=oly-local OLY_ENGINE_DIR=$PWD OLY_TOOLS_DIR=$PWD/tools/oly
+  tools=$PWD/tools/oly/Spurfile
+  OLY_GAME_DIR=$native spur -f "$tools" test --docker
+  OLY_GAME_DIR=$web spur -f "$tools" test --docker
+  OLY_GAME_DIR=$native spur -f "$tools" test --docker --platform windows
+
+  # The host build of the same game, from the same folder: its cache must not collide with the Docker one.
+  spur dev env OLY_ENGINE_DIR=/app OLY_TOOLS_DIR=/app/tools/oly OLY_GAME_DIR=/app/build/consumer/native/consumer-game sh ./spur -f /app/tools/oly/Spurfile test --host
+
+  [ -d "$native/build/cmake" ] && [ -d "$native/build/cmake-docker" ] || _fail 1 "the host and Docker builds do not have their own directories"
+  [ -f "$native/build/cmake-windows-docker/games/consumer_game.exe" ] || _fail 1 "the Windows build left no consumer_game.exe"

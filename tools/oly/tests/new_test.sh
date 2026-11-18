@@ -19,6 +19,7 @@ check "native game: oly.env has the version" has_line OLY_VERSION=0.1.0 "$work/m
 check "native game: the schema is renamed" test -f "$work/meu-jogo/meu-jogo.oly"
 check "native game: no placeholder is left" no_placeholder_left "$work/meu-jogo"
 check "native game: .gitignore exists" test -f "$work/meu-jogo/.gitignore"
+check "native game: the CI workflow exists" test -f "$work/meu-jogo/.github/workflows/ci.yml"
 
 touch "$work/meu-jogo/kept"
 run_task "$work" new meu-jogo --environment native
