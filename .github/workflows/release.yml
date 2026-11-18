@@ -58,6 +58,13 @@ jobs:
         # Three toolchain images, their build caches and the saved copies are not expected to fit in what the runner has
         # left; this was not measured.
         run: sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android
+      - name: Let the runner write what the containers create
+        # The containers run as root and write into the mounted checkout, while the stage and staged tasks write into the
+        # same folders from the host as the runner: without this, `./spur stage` failed with "mkdir: Permission denied" on
+        # the build/ that Docker had created. The default ACL reaches every file a container creates later.
+        run: |
+          mkdir -p build
+          sudo setfacl -R -m "u:$(id -un):rwX" -m "d:u:$(id -un):rwX" .
       - name: Build the images
         run: ./spur images
       - name: Engine tests
