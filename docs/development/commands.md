@@ -37,6 +37,16 @@ PRESET=windows-release ./spur desktop drift   # build/windows-release/games/drif
 - A desktop executable opens a window, so run it on the host, outside the container. `drift_game --frames 600` runs headless with `SDL_VIDEO_DRIVER=dummy`.
 - The first configure of a `native-games*` or `windows*` preset fetches SDL3.
 
+## The engine as a subproject
+
+```sh
+./spur subproject-test          # builds cmake/tests/consumer native, then web, and runs both
+./spur subproject-test native   # only the native one, in the dev container
+./spur subproject-test web      # only the web one, in the wasm container
+```
+
+`cmake/tests/consumer` is a CMake project outside the engine tree that fetches it with `FetchContent` (here from this checkout, through `FETCHCONTENT_SOURCE_DIR_OLY`) and builds one game with `oly_add_game`. Each run must print `consumer ok`.
+
 ## ECS benchmarks
 
 ```sh

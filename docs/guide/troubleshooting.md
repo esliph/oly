@@ -23,6 +23,7 @@ The TS client validates everything that goes through it, in release builds too (
 |---|---|---|
 | `Parent ... is dead`, `own parent`, `descendant` | a `Parent` that points to a dead entity, to the entity itself or to one of its descendants ([Transforms](concepts/transforms.md#parent-and-children)) | parent only live entities, and never in a loop |
 | `oly_add_game needs DIMENSION 2d\|3d`, `DIMENSION is 2d or 3d` | the game's CMake has no `DIMENSION` or an unknown one | add `DIMENSION 2d` or `DIMENSION 3d` |
+| `oly-schema not found at ...: pass -DOLY_SCHEMA_TOOL=<path to oly-schema>` | a web game that fetches the engine as a subproject has no `oly-schema` for the machine (WASM cannot run the one it builds) | build `oly-schema` with the engine's `schema-tool` preset and pass its path: `-DOLY_SCHEMA_TOOL=<path to oly-schema>` |
 | `Emscripten X is not the tested version Y (toolchain.env)` | the configure found an Emscripten other than the one the engine is tested with | install emsdk Y, or configure with `-DOLY_ALLOW_UNTESTED_TOOLCHAIN=ON` to turn the error into a warning |
 | `GCC X is older than the minimum Y (toolchain.env)`, `MinGW GCC X ...` | the host or MinGW compiler is older than the minimum in `toolchain.env` | install GCC (or MinGW GCC) Y or newer |
 | `CMake X is older than the minimum Y (toolchain.env)` | the CMake that configures is older than the minimum | install CMake Y or newer |

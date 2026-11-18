@@ -181,6 +181,49 @@ schema-tool: ## build oly-schema for the machine
   cmake --preset schema-tool
   cmake --build --preset schema-tool -j
 
+## Build cmake/tests/consumer, a project outside this tree that fetches the engine with FetchContent (here: this
+## checkout), and run it. No argument: native, then web.
+##
+##   ./spur subproject-test web
+subproject-test: ## build the FetchContent consumer fixture, native and web
+  case ${1:-} in
+    native) spur subproject-native ;;
+    web) spur subproject-web ;;
+    "")
+      spur subproject-native
+      spur subproject-web
+      ;;
+    *) _fail 64 "usage: ./spur subproject-test [native|web]" ;;
+  esac
+
+subproject-native: ## the native half of subproject-test
+  _in dev -- "$@"
+
+  directory=build/subproject-native
+  cmake -S cmake/tests/consumer -B "$directory" -DFETCHCONTENT_SOURCE_DIR_OLY="$PWD"
+  cmake --build "$directory" -j 2>&1 | tee "$directory/build.log"
+  grep -q 'unused variable' "$directory/build.log" || _fail 1 "the consumer's own warning is gone: a subproject must not add -Werror to a game"
+
+  "$directory/games/consumer" | grep -q '^consumer ok$' || _fail 1 "the native consumer did not print 'consumer ok'"
+  [ ! -e "$directory/_deps/doctest-src" ] || _fail 1 "a subproject configure fetched doctest"
+  if ctest --test-dir "$directory" -N | grep -q 'Test *#'; then
+    _fail 1 "a subproject configure registered engine tests"
+  fi
+
+subproject-web: ## the web half of subproject-test
+  _in wasm -- "$@"
+
+  spur schema-tool
+
+  directory=build/subproject-web
+  cmake -S cmake/tests/consumer -B "$directory" \
+    -DCMAKE_TOOLCHAIN_FILE=/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
+    -DFETCHCONTENT_SOURCE_DIR_OLY="$PWD" -DOLY_SCHEMA_TOOL="$PWD/build/schema-tool/bin/oly-schema"
+  cmake --build "$directory" -j --verbose 2>&1 | tee "$directory/build.log"
+  grep -q -- '-sALLOW_MEMORY_GROWTH=1' "$directory/build.log" || _fail 1 "the web consumer links without -sALLOW_MEMORY_GROWTH=1"
+
+  node --input-type=module -e 'const m = await import(process.argv[1]); await m.default(); console.log("consumer ok")' "file://$PWD/$directory/games/consumer.mjs"
+
 ts: ## generate the schemas from a wasm-games* preset (default wasm-games) and build the TypeScript
   preset=${PRESET:-wasm-games}
   _require_games_preset "$preset"

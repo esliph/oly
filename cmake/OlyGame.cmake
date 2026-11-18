@@ -1,6 +1,16 @@
 find_program(OLY_NODE node)
 set(OLY_SCHEMA_TOOL ${PROJECT_SOURCE_DIR}/build/schema-tool/bin/oly-schema CACHE FILEPATH "oly-schema executable that WASM builds of oly_add_game run")
 
+# oly_environment(<outputVariable>): the environment this build runs in, web under Emscripten and native otherwise. A game
+# calls it from its own directory scope, which has none of the engine's variables.
+function(oly_environment outputVariable)
+  if(EMSCRIPTEN)
+    set(${outputVariable} web PARENT_SCOPE)
+  else()
+    set(${outputVariable} native PARENT_SCOPE)
+  endif()
+endfunction()
+
 # Writes the TS schema of every game declared with TYPESCRIPT; ./spur ts builds it before tsc.
 add_custom_target(oly_typescript_schemas)
 
@@ -53,8 +63,9 @@ function(_oly_add_game_target target)
   if(NOT GAME_ENVIRONMENT)
     message(FATAL_ERROR "${target}: oly_add_game needs ENVIRONMENT web|native")
   endif()
-  if(NOT GAME_ENVIRONMENT STREQUAL OLY_ENVIRONMENT)
-    message(FATAL_ERROR "${target} is a ${GAME_ENVIRONMENT} game, but this build is ${OLY_ENVIRONMENT}")
+  oly_environment(buildEnvironment)
+  if(NOT GAME_ENVIRONMENT STREQUAL buildEnvironment)
+    message(FATAL_ERROR "${target} is a ${GAME_ENVIRONMENT} game, but this build is ${buildEnvironment}")
   endif()
 
   oly_schema_tool(schemaTool schemaToolDependency)
@@ -125,8 +136,10 @@ ${pluginInstalls}  }
     set_target_properties(${target} PROPERTIES SUFFIX ".mjs")
     target_link_libraries(${target} PRIVATE oly::web_host)
     # EXIT_RUNTIME=0 overrides the global =1: TS calls the module after it loads, so the runtime must not exit.
+    # ALLOW_MEMORY_GROWTH is repeated because the engine's own is a directory-scope link option, which a game fetched as
+    # a subproject does not inherit.
     target_link_options(${target} PRIVATE
-      -sMODULARIZE=1 -sEXPORT_ES6=1 -sENVIRONMENT=node,web
+      -sALLOW_MEMORY_GROWTH=1 -sMODULARIZE=1 -sEXPORT_ES6=1 -sENVIRONMENT=node,web
       -sEXPORTED_FUNCTIONS=_malloc,_free -sEXPORTED_RUNTIME_METHODS=HEAPU8 -sEXIT_RUNTIME=0)
   endif()
 

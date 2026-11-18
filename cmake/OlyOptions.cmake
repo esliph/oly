@@ -2,21 +2,19 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-option(OLY_BUILD_TESTS "Build the tests" ON)
+option(OLY_BUILD_TESTS "Build the tests" ${PROJECT_IS_TOP_LEVEL})
 option(OLY_BUILD_BENCH "Build the benchmarks" OFF)
 option(OLY_SANITIZE "ASan + UBSan" OFF)
-option(OLY_WERROR "Warnings become errors" ON)
+option(OLY_WERROR "Warnings become errors" ${PROJECT_IS_TOP_LEVEL})
 option(OLY_VEC_REPORT "Vectorization report in the benchmarks" OFF)
 option(OLY_BUILD_GAMES "Build the games (requires ./spur ts first)" OFF)
 option(OLY_BUILD_NATIVE_HOST "Build the native host (fetches SDL3)" OFF)
 option(OLY_ALLOW_UNTESTED_TOOLCHAIN "An Emscripten that is not the tested one only warns" OFF)
 set(OLY_ENABLE_ASSERTS "" CACHE STRING "0/1; empty = 0 with NDEBUG, otherwise 1")
 
-if(EMSCRIPTEN)
-  set(OLY_ENVIRONMENT web)
-else()
-  set(OLY_ENVIRONMENT native)
-endif()
+include(OlyGame)
+
+oly_environment(OLY_ENVIRONMENT)
 
 if(OLY_BUILD_NATIVE_HOST AND EMSCRIPTEN)
   message(FATAL_ERROR "OLY_BUILD_NATIVE_HOST is for native builds, not for Emscripten")
@@ -42,8 +40,9 @@ else()
   set(OLY_ASSERTS_ENABLED ${OLY_ENABLE_ASSERTS})
 endif()
 
-if(OLY_SANITIZE)
-  # Global: the dependencies are instrumented too, avoiding mixed runtimes.
+if(OLY_SANITIZE AND PROJECT_IS_TOP_LEVEL)
+  # Global: the dependencies are instrumented too, avoiding mixed runtimes. Ignored in a subproject: the same flags would
+  # instrument the whole build of the game that fetched the engine.
   add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer)
   add_link_options(-fsanitize=address,undefined)
 endif()
