@@ -16,7 +16,7 @@ Install these before the first command. Versions are in [`toolchain.env`](../../
 | Web game | `cmake`, `git`, `make`, GCC, Node.js with npm, emsdk `EMSDK_VERSION` (source `emsdk_env.sh`) | the three MSYS2 packages above, Node.js with npm, emsdk `EMSDK_VERSION` (source `emsdk_env.sh`) |
 | Docker | optional: see [`--docker`](#docker) | optional |
 
-`oly doctor` checks all of this and says what is missing.
+`oly doctor` checks `cmake`, `ninja` (Windows only) and, for a native game, `g++` or, for a web game, `emcc`, `node` and `npm`. It does not check `curl`, `tar`, `git`, `make`, the X11 and Wayland headers, Wine or Docker (`--docker` checks `docker compose`).
 
 Not supported: MSVC, macOS and shells other than Git Bash on Windows.
 

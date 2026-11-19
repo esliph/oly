@@ -8,7 +8,7 @@ A white square that you move with `W`, `A`, `S` and `D` in the browser. The game
 
 ## Before you start
 
-You need a computer with these tools. `oly doctor` checks them for you in step 1.
+You need a computer with these tools. In step 1, `oly doctor` checks `cmake`, `ninja` (Windows only), `emcc`, `node` and `npm`. It does not check the other tools in this list.
 
 - On Linux: `curl`, `tar`, `git`, `make`, CMake, GCC, Node.js with npm, and emsdk.
 - On Windows: Git Bash, MSYS2 UCRT64 (`gcc`, `cmake` and `ninja`), Node.js with npm, and emsdk. Run every command from Git Bash, not from PowerShell or `cmd`.

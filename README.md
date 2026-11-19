@@ -25,7 +25,7 @@ Oly does not draw, play audio or do physics: the game does ([Known limitations](
 |---|---|---|
 | Shell | any POSIX shell | Git Bash |
 | Tools | `curl`, `tar` | `curl`, `tar` (Git Bash has them) |
-| `native` game | `cmake`, `git`, `make`, GCC | MSYS2 UCRT64 with GCC, CMake and Ninja |
+| `native` game | `cmake`, `git`, `make`, GCC, and the X11 and Wayland development headers that SDL3 needs to open a window | MSYS2 UCRT64 with GCC, CMake and Ninja |
 | `web` game | the same, plus Node.js and emsdk | the same, plus Node.js and emsdk |
 
 ```sh
@@ -33,7 +33,7 @@ curl -fsSL https://github.com/esliph/oly/releases/latest/download/install.sh | s
 oly doctor
 ```
 
-`oly doctor` checks the host and says what is missing. The versions and the full table are in [The `oly` command](docs/reference/cli.md#install).
+`oly doctor` checks `cmake`, `ninja` (Windows only) and, for a `native` game, `g++` or, for a `web` game, `emcc`, `node` and `npm`, and says what is missing. It does not check `curl`, `tar`, `git`, `make` or the X11 and Wayland headers. The versions and the full table are in [The `oly` command](docs/reference/cli.md#install).
 
 ## Create a game
 

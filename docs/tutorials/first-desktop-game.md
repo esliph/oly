@@ -8,7 +8,7 @@ A white square that you move with `W`, `A`, `S` and `D` in a window on Linux or 
 
 ## Before you start
 
-You need a computer with these tools. `oly doctor` checks them for you in step 1.
+You need a computer with these tools. In step 1, `oly doctor` checks `cmake`, `ninja` (Windows only) and `g++`. It does not check the other tools in this list.
 
 - On Linux: `curl`, `tar`, `git`, `make`, CMake, GCC, and the X11 and Wayland development headers that SDL3 needs to open a window.
 - On Windows: Git Bash and MSYS2 UCRT64 (`gcc`, `cmake` and `ninja`). Run every command from Git Bash, not from PowerShell or `cmd`.
