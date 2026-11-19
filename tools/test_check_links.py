@@ -68,6 +68,10 @@ class CheckLinksTest(unittest.TestCase):
             "[Link](x.md) text": "link-text",
             "snake_case name": "snake_case-name",
             "**Bold** part": "bold-part",
+            "Text <b>bold</b> end": "text-bold-end",
+            "`a<b>c`": "abc",
+            "`World::get<T>`": "worldgett",
+            "`actions::<name>`": "actionsname",
         }
 
         for heading, expected in cases.items():

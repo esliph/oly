@@ -55,10 +55,20 @@ def without_inline_code(line):
 
 
 def slugify(heading):
-    text = LINK_TEXT_PATTERN.sub(r"\1", heading.replace("`", ""))
+    code_spans = []
+
+    def hide_code_span(match):
+        fence = len(match.group(1))
+        code_spans.append(match.group(0)[fence:-fence])
+        return f"\ue000{len(code_spans) - 1}\ue001"
+
+    text = INLINE_CODE_PATTERN.sub(hide_code_span, heading)
+    text = LINK_TEXT_PATTERN.sub(r"\1", text)
     text = STRONG_PATTERN.sub(r"\2", text)
     text = EMPHASIS_PATTERN.sub(lambda match: match.group(1) or match.group(2), text)
-    text = HTML_TAG_PATTERN.sub("", text).strip().lower()
+    text = HTML_TAG_PATTERN.sub("", text)
+    text = re.sub(r"\ue000(\d+)\ue001", lambda match: code_spans[int(match.group(1))], text)
+    text = text.strip().lower()
     return "".join(character for character in text if character.isalnum() or character in "-_ ").replace(" ", "-")
 
 
