@@ -257,4 +257,4 @@ This section is for people who change the engine. A game always lives in its own
 
 ## Next
 
-[Schema](../../concepts/schema.md): declare the data of your game. [Engine, loop and systems](../../concepts/engine-and-systems.md): what `run` calls every frame.
+[Schema](../../../explanation/concepts/schema.md): declare the data of your game. [Engine, loop and systems](../../concepts/engine-and-systems.md): what `run` calls every frame.

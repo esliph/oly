@@ -8,7 +8,7 @@ One page with every public name: C++ first, then the C API, then the TypeScript 
 
 ## Start-up
 
-[Schema](concepts/schema.md) · [Engine, loop and systems](concepts/engine-and-systems.md#create-the-engine)
+[Schema](../explanation/concepts/schema.md) · [Engine, loop and systems](concepts/engine-and-systems.md#create-the-engine)
 
 ```cpp
 #include "schema.generated.hpp"                           // structs, actions::, states::

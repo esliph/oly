@@ -17,7 +17,7 @@ oly_add_game(<game>_game
   DEPENDS ecs app input native_host)
 ```
 
-`2d` turns `essentials2d` on and `3d` turns `essentials3d` on. The game does not list the plugin and does not declare these components in its `.oly`: they come from the plugin ([Types that come from plugins](schema.md#types-that-come-from-plugins)). A game that declares its own `Position` stops compiling with a duplicate name.
+`2d` turns `essentials2d` on and `3d` turns `essentials3d` on. The game does not list the plugin and does not declare these components in its `.oly`: they come from the plugin ([Types that come from plugins](../../explanation/concepts/schema.md#types-that-come-from-plugins)). A game that declares its own `Position` stops compiling with a duplicate name.
 
 ## The components
 

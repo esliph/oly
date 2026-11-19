@@ -213,4 +213,4 @@ This section is for people who change the engine. A game always lives in its own
 
 ## Next
 
-[TypeScript client](../../../reference/typescript/README.md): the TS API, page by page. [Schema](../../concepts/schema.md): every kind of data you can declare. [Testing a web game](../../../how-to/test-a-web-game.md): run the game in Node.
+[TypeScript client](../../../reference/typescript/README.md): the TS API, page by page. [Schema](../../../explanation/concepts/schema.md): every kind of data you can declare. [Testing a web game](../../../how-to/test-a-web-game.md): run the game in Node.

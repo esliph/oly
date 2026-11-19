@@ -4,7 +4,7 @@
 
 The TypeScript client is the TS API over the [C API](../../architecture/capi.md), inside the `web` environment. It runs wherever the web host runs: a browser tab or Node. It has no DOM code of its own; drawing and sound are yours.
 
-Oly is complete in C++. The client adds TS conveniences (typed accessors, closures, `raw()` arrays) and never engine behaviour. The rules of each concept are in the [concept pages](../../guide/concepts/schema.md); the pages here only show the TS form of the same calls.
+Oly is complete in C++. The client adds TS conveniences (typed accessors, closures, `raw()` arrays) and never engine behaviour. The rules of each concept are in the [concept pages](../../explanation/concepts/README.md); the pages here only show the TS form of the same calls.
 
 ## Packages
 
@@ -29,7 +29,7 @@ Each page mirrors the concept page with the same file name.
 
 | Page | Concept |
 |---|---|
-| [Schema](schema.md) | [Schema](../../guide/concepts/schema.md) |
+| [Schema](schema.md) | [Schema](../../explanation/concepts/schema.md) |
 | [World and entities](world-and-entities.md) | [World and entities](../../explanation/concepts/world-and-entities.md) |
 | [Queries](queries.md) | [Queries](../../guide/concepts/queries.md) |
 | [Engine, loop and systems](engine-and-systems.md) | [Engine, loop and systems](../../guide/concepts/engine-and-systems.md) |

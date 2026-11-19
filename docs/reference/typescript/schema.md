@@ -1,8 +1,8 @@
 # Schema in TypeScript
 
-[TypeScript client](README.md) · Concept: [Schema](../../guide/concepts/schema.md) · Next: [World and entities →](world-and-entities.md)
+[TypeScript client](README.md) · Concept: [Schema](../../explanation/concepts/schema.md) · C++: [Schema in C++](../cpp/schema.md)
 
-The `.oly` file, the field types and the naming rules are in the [concept page](../../guide/concepts/schema.md). This page shows what TS gets from them.
+The `.oly` file is explained in the [concept page](../../explanation/concepts/schema.md); its field types and naming rules are in [The `.oly` schema language](../../../engine/schema/format/README.md). This page shows what TS gets from them.
 
 ## The five kinds of entries
 
@@ -22,7 +22,7 @@ The default export is the schema you pass to `loadRuntime`. You pass the entries
 | `i8` `u8` `i16` `u16` `i32` `u32` | `number` |
 | `entity` | `Entity` |
 
-There are no 64-bit integers because they would need `BigInt`. Keep text, sprites and other assets on the TS side, indexed by a number in a component.
+The schema has no 64-bit integers because they would need `BigInt`.
 
 ## What the build generates
 
@@ -52,7 +52,3 @@ try {
 ```
 
 `loadRuntime` compares the hash, the number of entries and the size and alignment of each type. The message names the first type that differs. An entry from another generated module is refused by `loadRuntime` and by the API calls, because the runtime only accepts the entries of its own schema.
-
-## Next
-
-[World and entities →](world-and-entities.md): create entities from these types.

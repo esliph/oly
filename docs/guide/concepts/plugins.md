@@ -25,7 +25,7 @@ The build then:
 | Step | Result |
 |---|---|
 | resolves the plugins the listed ones need | each plugin installs once, after the plugins it needs |
-| merges the plugins' `.oly` into the game's schema | the plugins' types come first ([Types that come from plugins](schema.md#types-that-come-from-plugins)) |
+| merges the plugins' `.oly` into the game's schema | the plugins' types come first ([Types that come from plugins](../../explanation/concepts/schema.md#types-that-come-from-plugins)) |
 | links the plugin targets | the game includes the plugins' headers |
 | generates `oly::app::setUpGame` | declares the schema, then installs each plugin |
 

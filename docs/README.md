@@ -20,6 +20,7 @@
 | Page | What it answers |
 |---|---|
 | [TypeScript client](reference/typescript/README.md) | What does the TypeScript API offer, and where is each part? |
+| [Schema in C++](reference/cpp/schema.md) | Which generated files and functions does the build write for a schema, and what do they declare? |
 | [World and entities in C++](reference/cpp/world-and-entities.md) | Which calls create, read, change and destroy entities, record commands and observe changes? |
 | [Glossary](reference/glossary.md) | What does each name mean in C++, the C API and TypeScript? |
 | [Known limitations](reference/limits.md) | What does the engine not do? |

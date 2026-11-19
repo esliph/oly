@@ -60,10 +60,10 @@ The TS client validates everything that goes through it, in release builds too (
 | `button outside the W3C table` | a key name that does not exist (`"W"` instead of `"KeyW"`) | use `KeyboardEvent.code` names; check with `isButtonName` |
 | `does not belong to this runtime's schema` | an entry from another generated schema module | import the entries from the game's `schema.generated.js` |
 | `invalid type name` / `invalid field` | schema naming rules | `PascalCase` types, `camelCase` fields, no C++ keywords |
-| `<game>.oly:<line>:<column>: ...` when building | a schema rule is broken | fix that line; the rules are in [Schema](concepts/schema.md#naming-rules) |
+| `<game>.oly:<line>:<column>: ...` when building | a schema rule is broken | fix that line; the rules are in [Schema](../../engine/schema/format/README.md#naming-rules-and-limits) |
 | `<game> is a web game, but this build is native` (or the reverse) when configuring | the game's `ENVIRONMENT` is not the environment of the build | build with a preset of the game's environment, or guard the `oly_add_game` call with `if(OLY_ENVIRONMENT STREQUAL "...")` |
 | `declareSchema: the Engine already declares events, actions or states` | `setUpGame` called after a manual `declareEvent`, `declareState` or action declaration, or called twice | call `setUpGame` once, first, and declare nothing by hand |
-| `<file>.oly:<line>:<column>: repeated name "X"; first declared at <file>.oly:<line>:<column>` when building | the game and a plugin it turns on (or two plugins) declare the same name | rename the game's type; names are flat across the merged schema ([Types that come from plugins](concepts/schema.md#types-that-come-from-plugins)) |
+| `<file>.oly:<line>:<column>: repeated name "X"; first declared at <file>.oly:<line>:<column>` when building | the game and a plugin it turns on (or two plugins) declare the same name | rename the game's type; names are flat across the merged schema ([Types that come from plugins](../explanation/concepts/schema.md#types-that-come-from-plugins)) |
 | `a plugin declares only components, tags and events; action "x" is not allowed` (or `state "x"`) when building | an action or a state in a plugin's `.oly` | declare actions and states in the game's `.oly` |
 | `unknown plugin <name>` when configuring | a name in `PLUGINS` with no `oly_add_plugin` | check the name; add the plugin's folder to the build before the games |
 | `plugin cycle: a -> b -> a` when configuring | two plugins list each other in `PLUGINS` | remove one of the dependencies |

@@ -99,7 +99,7 @@ OLY_HANDLER(countKillOnce, EnemyDied) {
 
 ## Order
 
-- **Between types**: the order of the events in the schema ([Schema](schema.md#order-matters)). Every round handles the first event type, then the second, and so on.
+- **Between types**: the order of the events in the schema ([Schema](../../explanation/concepts/schema.md#order-matters)). Every round handles the first event type, then the second, and so on.
 - **Between handlers of one type**: registration order. Handlers written in different languages mix.
 
 ### Put the destroying handler last
