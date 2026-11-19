@@ -75,7 +75,7 @@ TypeScript: [Restrict handlers to states](../../reference/typescript/events.md#r
 | You want | Use |
 |---|---|
 | several reactions to one fact, now | an event |
-| something to happen after N seconds | the [schedule](../../guide/concepts/schedule.md) |
+| something to happen after N seconds | the [schedule](schedule.md) |
 | to keep data on an entity across steps | a component |
 | to mark entities for another system to process | a tag (`context.add(entity, Hit{})`), then a query `With<Hit>` |
 | to change screens | a [state](../../guide/concepts/states.md) |

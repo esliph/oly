@@ -201,7 +201,7 @@ OLY_SYSTEM(dash) {
 engine.addSystem(oly::app::Phase::UpdateBefore, "dash", dash);
 ```
 
-The payload carries the entity to the task ([Schedule](../guide/concepts/schedule.md#payloads)).
+The payload carries the entity to the task ([Schedule](../reference/cpp/schedule.md#payloads)).
 
 TypeScript: [Ability with a cooldown](typescript/gameplay-recipes.md#ability-with-a-cooldown).
 

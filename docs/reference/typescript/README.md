@@ -35,7 +35,7 @@ Each page mirrors the concept page with the same file name.
 | [Engine, loop and systems](engine-and-systems.md) | [Engine, loop and systems](../../explanation/concepts/engine-and-systems.md) |
 | [Events](events.md) | [Events](../../explanation/concepts/events.md) |
 | [Input](input.md) | [Input](../../explanation/concepts/input.md) |
-| [Schedule](schedule.md) | [Schedule](../../guide/concepts/schedule.md) |
+| [Schedule](schedule.md) | [Schedule](../../explanation/concepts/schedule.md) |
 | [States](states.md) | [States](../../guide/concepts/states.md) |
 | [Recipes](../../how-to/typescript/gameplay-recipes.md) | [Recipes](../../how-to/gameplay-recipes.md) |
 

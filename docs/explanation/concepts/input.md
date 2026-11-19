@@ -1,6 +1,6 @@
 # Input
 
-[← Events](events.md) · [Concepts](README.md) · Next: [Schedule →](../../guide/concepts/schedule.md)
+[← Events](events.md) · [Concepts](README.md) · Next: [Schedule →](schedule.md)
 
 Gameplay never reads keys directly. It reads **actions** ("shoot", "move", "aim"). You **bind** physical buttons to actions, and you can change the bindings at any time. This gives you key rebinding, several keys per action and fake input in tests for free.
 
@@ -86,4 +86,4 @@ A test, a replay, a touch overlay or a gamepad poller calls the same functions: 
 
 ## Next
 
-[Schedule](../../guide/concepts/schedule.md): run code later, on the game clock.
+[Schedule](schedule.md): run code later, on the game clock.

@@ -1,8 +1,8 @@
 # Schedule in TypeScript
 
-[← Input](input.md) · [TypeScript client](README.md) · Concept: [Schedule](../../guide/concepts/schedule.md) · Next: [States →](states.md)
+[TypeScript client](README.md) · Concept: [Schedule](../../explanation/concepts/schedule.md) · C++: [Schedule in C++](../cpp/schedule.md)
 
-When tasks run, how pause and states affect them and the rules of `after` and `every` are in the [concept page](../../guide/concepts/schedule.md). This page shows the TS calls.
+When tasks run, how pause and states affect them and the rules of `after` and `every` are in the [concept page](../../explanation/concepts/schedule.md). This page shows the TS calls.
 
 ## `after` and `every`
 
@@ -77,7 +77,3 @@ function stunFor(context: SystemContext, enemy: Entity, seconds: number): void {
   });
 }
 ```
-
-## Next
-
-[States →](states.md): menus, rounds and game over with automatic clean-up.

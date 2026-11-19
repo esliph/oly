@@ -169,7 +169,7 @@ A system receives a `SystemContext`. It is valid only during that call.
 | events | `context.emit(EnemyDied{entity, x, y})` ([Events](events.md#contextemit)) |
 | input | `context.actions().button(actions::shoot).held` ([Input](input.md)) |
 | time | `context.fixedDeltaTime()`, `context.time()`, `context.interpolation()` |
-| schedule | `context.schedule().after(seconds, function, payload)` ([Schedule](../../guide/concepts/schedule.md)) |
+| schedule | `context.schedule().after(seconds, function, payload)` ([Schedule](schedule.md)) |
 | state | `context.state() == states::playing`, `context.requestState(states::gameOver)` ([States](../../guide/concepts/states.md)) |
 | pause | `context.pause()`, `context.resume()`, `context.paused()` |
 | where it runs | `context.phase()`, `context.systemId()`, `context.name()`, `context.userData()` |

@@ -1,6 +1,6 @@
 # States
 
-[← Schedule](schedule.md) · [Guide index](../README.md) · Next: [Performance →](performance.md)
+[← Schedule](../../explanation/concepts/schedule.md) · [Guide index](../README.md) · Next: [Performance →](performance.md)
 
 States split the game into screens or modes: `menu`, `playing`, `gameOver`. Each state can turn systems and handlers on or off, run code on entry and exit, and — the best part — **clean up after itself**.
 

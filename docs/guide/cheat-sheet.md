@@ -116,7 +116,7 @@ engine.actions().pointerMove(x, y);        engine.actions().releaseAll();
 
 ## Schedule
 
-[Schedule](concepts/schedule.md)
+[Schedule](../explanation/concepts/schedule.md)
 
 ```cpp
 oly::app::TaskHandle handle = context.schedule().after(seconds, function, Payload{...});   // payload: trivially copyable, ≤ 32 B
