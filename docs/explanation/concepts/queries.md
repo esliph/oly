@@ -1,6 +1,6 @@
 # Queries
 
-[← World and entities](world-and-entities.md) · [Concepts](README.md) · Next: [Engine, loop and systems →](../../guide/concepts/engine-and-systems.md)
+[← World and entities](world-and-entities.md) · [Concepts](README.md) · Next: [Engine, loop and systems →](engine-and-systems.md)
 
 A query visits every entity that has a given set of components. It is the main way to run gameplay over many entities. This page explains the rules that hold while a query iterates. The spec of a query and the calls that read its rows are in the API pages.
 
@@ -32,4 +32,4 @@ Ready patterns, such as counting entities, finding the nearest one or checking t
 
 ## Next
 
-[Engine, loop and systems](../../guide/concepts/engine-and-systems.md): run queries every step inside systems.
+[Engine, loop and systems](engine-and-systems.md): run queries every step inside systems.

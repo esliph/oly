@@ -200,7 +200,7 @@ Values used by both languages (world size, bullet speed) live in a C++ header (`
 
 ## Advanced: your own exported C functions
 
-A game can export extra `extern "C"` functions with `OLY_API`. From an `OlyWorld*` (the C API handle), `oly::capi::worldOf(world)` gives the `oly::ecs::World&` behind it, and `oly::capi::engineOf(engine)` gives the `Engine&`. The engine's test fixture (`engine/testing/fixture/systems.cpp`) shows this. Calling such functions from TS needs the module internals (`@oly/core/internal`), which are reserved for the engine; in game code, prefer `OLY_SYSTEM`, `OLY_HANDLER` and `OLY_STATE_HOOK` ([Engine, loop and systems](../../concepts/engine-and-systems.md#systems-in-c-registered-by-name-oly_system-oly_handler-oly_state_hook)).
+A game can export extra `extern "C"` functions with `OLY_API`. From an `OlyWorld*` (the C API handle), `oly::capi::worldOf(world)` gives the `oly::ecs::World&` behind it, and `oly::capi::engineOf(engine)` gives the `Engine&`. The engine's test fixture (`engine/testing/fixture/systems.cpp`) shows this. Calling such functions from TS needs the module internals (`@oly/core/internal`), which are reserved for the engine; in game code, prefer `OLY_SYSTEM`, `OLY_HANDLER` and `OLY_STATE_HOOK` ([Engine, loop and systems](../../../reference/cpp/engine-and-systems.md#c-systems-handlers-and-hooks)).
 
 ## Inside the engine repository
 

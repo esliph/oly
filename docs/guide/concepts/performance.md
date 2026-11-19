@@ -39,7 +39,7 @@ OLY_SYSTEM(drift) {
 }
 ```
 
-`eachBlock` gives the compiler whole columns, which it can vectorize. Register it as shown in [Engine, loop and systems](engine-and-systems.md#register-systems).
+`eachBlock` gives the compiler whole columns, which it can vectorize. Register it as shown in [Engine, loop and systems](../../reference/cpp/engine-and-systems.md#register-systems).
 
 ## Watch the fragmentation
 

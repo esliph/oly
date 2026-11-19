@@ -37,7 +37,7 @@ Pages are not numbered. Each path lists them in the order to read.
 **TypeScript on the web**
 
 1. [Getting started on the web](environments/web/getting-started.md)
-2. Each concept, followed by its TS page: [Schema](../explanation/concepts/schema.md) and [in TS](../reference/typescript/schema.md), [World and entities](../explanation/concepts/world-and-entities.md) and [in TS](../reference/typescript/world-and-entities.md), [Queries](../explanation/concepts/queries.md) and [in TS](../reference/typescript/queries.md), [Engine, loop and systems](concepts/engine-and-systems.md) and [in TS](../reference/typescript/engine-and-systems.md), [Events](concepts/events.md) and [in TS](../reference/typescript/events.md), [Input](concepts/input.md) and [in TS](../reference/typescript/input.md), [Schedule](concepts/schedule.md) and [in TS](../reference/typescript/schedule.md), [States](concepts/states.md) and [in TS](../reference/typescript/states.md)
+2. Each concept, followed by its TS page: [Schema](../explanation/concepts/schema.md) and [in TS](../reference/typescript/schema.md), [World and entities](../explanation/concepts/world-and-entities.md) and [in TS](../reference/typescript/world-and-entities.md), [Queries](../explanation/concepts/queries.md) and [in TS](../reference/typescript/queries.md), [Engine, loop and systems](../explanation/concepts/engine-and-systems.md) and [in TS](../reference/typescript/engine-and-systems.md), [Events](concepts/events.md) and [in TS](../reference/typescript/events.md), [Input](concepts/input.md) and [in TS](../reference/typescript/input.md), [Schedule](concepts/schedule.md) and [in TS](../reference/typescript/schedule.md), [States](concepts/states.md) and [in TS](../reference/typescript/states.md)
 3. [Testing a web game](../how-to/test-a-web-game.md)
 4. [The WASM↔JS boundary](environments/web/boundary.md)
 
@@ -51,7 +51,7 @@ Pages are not numbered. Each path lists them in the order to read.
 
 1. [Getting started on the web](environments/web/getting-started.md), especially [How to split work between C++ and a client](environments/web/getting-started.md#how-to-split-work-between-c-and-a-client)
 2. The [concepts](#concepts), in order
-3. [Systems in C++, registered by name](concepts/engine-and-systems.md#systems-in-c-registered-by-name-oly_system-oly_handler-oly_state_hook) and [C++ systems, handlers and hooks](../reference/typescript/engine-and-systems.md#c-systems-handlers-and-hooks)
+3. [Systems in C++, registered by name](../reference/cpp/engine-and-systems.md#c-systems-handlers-and-hooks) and [C++ systems, handlers and hooks](../reference/typescript/engine-and-systems.md#c-systems-handlers-and-hooks)
 
 ## Concepts
 
@@ -62,7 +62,7 @@ Read in order the first time. Each page builds on the one before.
 | [Schema](../explanation/concepts/schema.md) | declare components, tags, events, actions and states |
 | [World and entities](../explanation/concepts/world-and-entities.md) | create, change, read and destroy entities |
 | [Queries](../explanation/concepts/queries.md) | iterate over entities fast, filter them, find "the only one" |
-| [Engine, loop and systems](concepts/engine-and-systems.md) | run the game loop, register systems, pause, render |
+| [Engine, loop and systems](../explanation/concepts/engine-and-systems.md) | run the game loop, register systems, pause, render |
 | [Events](concepts/events.md) | let systems talk without knowing each other |
 | [Input](concepts/input.md) | bind keys and mouse to actions and read them |
 | [Schedule](concepts/schedule.md) | run code later or every N seconds on the game clock |

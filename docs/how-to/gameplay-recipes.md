@@ -682,7 +682,7 @@ OLY_SYSTEM(followPlayer) {
 engine.addSystem(oly::app::Phase::Update, "followPlayer", followPlayer, nullptr, oly::app::OrderBand::Last);
 ```
 
-The `Last` band runs after the whole default band of `Update`, so movement registered later still runs first ([Order bands](../guide/concepts/engine-and-systems.md#order-bands)). The clients register in the default band: in TS, register the camera system after the movement systems.
+The `Last` band runs after the whole default band of `Update`, so movement registered later still runs first ([Order bands](../explanation/concepts/engine-and-systems.md#order-bands)). The clients register in the default band: in TS, register the camera system after the movement systems.
 
 ## Share systems between games
 

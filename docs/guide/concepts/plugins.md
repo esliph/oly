@@ -145,7 +145,7 @@ Inside `install`, `engine.plugin<Q>()` reaches a plugin that installed earlier, 
 
 ## Run after the game's systems
 
-Plugins install before the game registers its systems, so a plugin system in the default band runs **before** the game's systems of the same phase. A plugin that must see the game's work of the step, such as positions after movement, registers in the `Last` band ([Order bands](engine-and-systems.md#order-bands)):
+Plugins install before the game registers its systems, so a plugin system in the default band runs **before** the game's systems of the same phase. A plugin that must see the game's work of the step, such as positions after movement, registers in the `Last` band ([Order bands](../../explanation/concepts/engine-and-systems.md#order-bands)):
 
 ```cpp
 engine.addSystem(app::Phase::Update, "followTargets", followTargets, nullptr, app::OrderBand::Last);

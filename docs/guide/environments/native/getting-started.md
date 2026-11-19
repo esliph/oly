@@ -145,7 +145,7 @@ engine.on<Hit>("countHits", countHits, &game);
 engine.requestState(states::playing);
 ```
 
-The macros (`OLY_SYSTEM`, `OLY_HANDLER`, `OLY_STATE_HOOK`) are only needed when a client registers by name ([Engine, loop and systems](../../concepts/engine-and-systems.md#systems-in-c-registered-by-name-oly_system-oly_handler-oly_state_hook)). A desktop game with no client can use plain functions, as above, or the macros so that the same code also runs on the web.
+The macros (`OLY_SYSTEM`, `OLY_HANDLER`, `OLY_STATE_HOOK`) are only needed when a client registers by name ([Engine, loop and systems](../../../reference/cpp/engine-and-systems.md#c-systems-handlers-and-hooks)). A desktop game with no client can use plain functions, as above, or the macros so that the same code also runs on the web.
 
 ## Drawing
 
@@ -257,4 +257,4 @@ This section is for people who change the engine. A game always lives in its own
 
 ## Next
 
-[Schema](../../../explanation/concepts/schema.md): declare the data of your game. [Engine, loop and systems](../../concepts/engine-and-systems.md): what `run` calls every frame.
+[Schema](../../../explanation/concepts/schema.md): declare the data of your game. [Engine, loop and systems](../../../explanation/concepts/engine-and-systems.md): what `run` calls every frame.

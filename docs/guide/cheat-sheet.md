@@ -8,7 +8,7 @@ One page with every public name: C++ first, then the C API, then the TypeScript 
 
 ## Start-up
 
-[Schema](../explanation/concepts/schema.md) · [Engine, loop and systems](concepts/engine-and-systems.md#create-the-engine)
+[Schema](../explanation/concepts/schema.md) · [Engine, loop and systems](../reference/cpp/engine-and-systems.md#create-the-engine)
 
 ```cpp
 #include "schema.generated.hpp"                           // structs, actions::, states::
@@ -59,7 +59,7 @@ auto row = context.query<A>().trySingle();               // std::optional<std::t
 
 ## Engine
 
-[Engine, loop and systems](concepts/engine-and-systems.md)
+[Engine, loop and systems](../explanation/concepts/engine-and-systems.md)
 
 | Call | Notes |
 |---|---|
@@ -68,7 +68,7 @@ auto row = context.query<A>().trySingle();               // std::optional<std::t
 | `pause()`, `resume()`, `paused()` | effect from the next step |
 | `time()`, `fixedDeltaTime()`, `interpolation()` | seconds |
 | `world()`, `actions()`, `schedule()` | |
-| `addSystem(phase, name, function, userData, band)` | returns `SystemId`; `band`: `OrderBand::Default` (default) or `OrderBand::Last` ([Order bands](concepts/engine-and-systems.md#order-bands)); `setWhilePaused(id, true)`, `setSystemStates(id, {states::a})` |
+| `addSystem(phase, name, function, userData, band)` | returns `SystemId`; `band`: `OrderBand::Default` (default) or `OrderBand::Last` ([Order bands](../explanation/concepts/engine-and-systems.md#order-bands)); `setWhilePaused(id, true)`, `setSystemStates(id, {states::a})` |
 | `installPlugin<P>()`, `plugin<P>()` | returns `P&`; install before the first `frame`, once ([Plugins](concepts/plugins.md)) |
 | `declareEvent<T>(name)`, `on<T>(name, function, userData)` | `on` returns `HandlerId`; `setHandlerStates(id, {...})` |
 | `requestState(state)`, `state()` | `oly::app::NoState` until the first change |
@@ -141,7 +141,7 @@ context.schedule().persist(handle);     // survives state changes
 
 ## Macros
 
-[Engine, loop and systems](concepts/engine-and-systems.md#systems-in-c-registered-by-name-oly_system-oly_handler-oly_state_hook)
+[Engine, loop and systems](../reference/cpp/engine-and-systems.md#c-systems-handlers-and-hooks)
 
 ```cpp
 OLY_SYSTEM(name) { /* context: oly::app::SystemContext& */ }

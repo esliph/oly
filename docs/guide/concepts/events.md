@@ -1,6 +1,6 @@
 # Events
 
-[← Engine, loop and systems](engine-and-systems.md) · [Guide index](../README.md) · Next: [Input →](input.md)
+[← Engine, loop and systems](../../explanation/concepts/engine-and-systems.md) · [Guide index](../README.md) · Next: [Input →](input.md)
 
 An event is a small message: "this enemy died here", "the player picked up this coin". The system that sees it happen **emits** it. Any number of **handlers** react to it later in the same step. The emitter does not know who listens.
 
@@ -126,7 +126,7 @@ OLY_HANDLER(chainExplosion, EnemyDied) {
 }
 ```
 
-The number of rounds per step is limited by `maxEventRounds` (default 16, see [Engine, loop and systems](engine-and-systems.md#create-the-engine)). Reaching it means an event loop (A emits B, B emits A): a contract violation. Raise the limit only if your chain is legitimately deep.
+The number of rounds per step is limited by `maxEventRounds` (default 16, see [Engine, loop and systems](../../reference/cpp/engine-and-systems.md#create-the-engine)). Reaching it means an event loop (A emits B, B emits A): a contract violation. Raise the limit only if your chain is legitimately deep.
 
 ## When events are dispatched
 

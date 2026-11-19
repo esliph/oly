@@ -1,8 +1,8 @@
 # Engine, loop and systems in TypeScript
 
-[← Queries](queries.md) · [TypeScript client](README.md) · Concept: [Engine, loop and systems](../../guide/concepts/engine-and-systems.md) · Next: [Events →](events.md)
+[TypeScript client](README.md) · Concept: [Engine, loop and systems](../../explanation/concepts/engine-and-systems.md) · C++: [Engine, loop and systems in C++](../cpp/engine-and-systems.md)
 
-The loop, the phases and the rules of structural changes are in the [concept page](../../guide/concepts/engine-and-systems.md). This page shows the TS calls.
+The loop, the phases and the rules of structural changes are in the [concept page](../../explanation/concepts/engine-and-systems.md). This page shows the TS calls. To call `frame` yourself: [Drive the loop yourself](../../how-to/drive-the-loop-yourself.md).
 
 ## Create the engine
 
@@ -21,7 +21,7 @@ engine.dispose();          // also disposes engine.world
 
 ## The loop
 
-In the browser, `runInBrowser(engine)` calls `engine.frame` with `requestAnimationFrame` and calls `engine.setHidden` when the tab is hidden ([the loop](../../guide/concepts/engine-and-systems.md#the-loop)).
+In the browser, `runInBrowser(engine)` calls `engine.frame` with `requestAnimationFrame` and calls `engine.setHidden` when the tab is hidden ([the loop](../../explanation/concepts/engine-and-systems.md#the-loop)).
 
 ```ts
 import { runInBrowser } from "@oly/web-host";
@@ -62,7 +62,7 @@ engine.addSystem(Phase.UpdateBefore, "resumeOnPress", resumeOnPress).whilePaused
 
 ## C++ systems, handlers and hooks
 
-A web game can register the functions it defines in C++ with `OLY_SYSTEM`, `OLY_HANDLER` and `OLY_STATE_HOOK` ([the macros](../../guide/concepts/engine-and-systems.md#systems-in-c-registered-by-name-oly_system-oly_handler-oly_state_hook)). TS looks the name up once, at registration.
+A web game can register the functions it defines in C++ with `OLY_SYSTEM`, `OLY_HANDLER` and `OLY_STATE_HOOK` ([the macros](../cpp/engine-and-systems.md#c-systems-handlers-and-hooks)). TS looks the name up once, at registration.
 
 | Macro | Register from TS with |
 |---|---|
@@ -174,25 +174,6 @@ engine.addSystem(Phase.UpdateBefore, "resumeOnPress", resumeOnPress).whilePaused
 
 In Render, read `context.paused` to draw a "Paused" overlay.
 
-## Driving the loop yourself
-
-You can call `frame` from a test, a worker or a server.
-
-```ts
-const engine = runtime.createEngine({ fixedHz: 60 });
-engine.frame(0);                 // the first frame only records the time
-
-for (let step = 1; step <= 600; ++step) {
-  engine.frame(step / 60);       // exactly one step per call: 10 seconds of game
-}
-```
-
-`frame` refuses a time that goes backwards or is not finite.
-
 ## When a system throws
 
-An exception in a TS system goes to your code, or to the browser console with `runInBrowser`, which keeps the loop alive. Until the next `frame` recovers ([what recovery does](../../guide/concepts/engine-and-systems.md#when-a-system-throws)), registering systems, handlers or hooks throws `ContractError`.
-
-## Next
-
-[Events →](events.md): let systems react to what other systems did.
+An exception in a TS system goes to your code, or to the browser console with `runInBrowser`, which keeps the loop alive. Until the next `frame` recovers ([what recovery does](../../explanation/concepts/engine-and-systems.md#when-a-system-throws)), registering systems, handlers or hooks throws `ContractError`.

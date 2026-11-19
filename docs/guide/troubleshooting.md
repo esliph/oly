@@ -120,6 +120,6 @@ Inside the engine repository, `./spur games-test` (web) and `./spur native-games
 
 ## What Oly does not do
 
-Out of scope by design: rendering, physics, audio, camera, UI, assets, networking, serialization, editor, threads and gamepad. Render and collision belong to the game: draw in a `Render` system ([Engine, loop and systems](concepts/engine-and-systems.md#phases)) and test overlaps in `UpdateAfter` ([Recipes](../how-to/gameplay-recipes.md#pickups)). More in [limits](../reference/limits.md).
+Out of scope by design: rendering, physics, audio, camera, UI, assets, networking, serialization, editor, threads and gamepad. Render and collision belong to the game: draw in a `Render` system ([Engine, loop and systems](../explanation/concepts/engine-and-systems.md#phases)) and test overlaps in `UpdateAfter` ([Recipes](../how-to/gameplay-recipes.md#pickups)). More in [limits](../reference/limits.md).
 
 ECS v1 also has no fixed-size chunks, no change detection, no enable/disable flag per component and no sparse storage.

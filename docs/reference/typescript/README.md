@@ -32,7 +32,7 @@ Each page mirrors the concept page with the same file name.
 | [Schema](schema.md) | [Schema](../../explanation/concepts/schema.md) |
 | [World and entities](world-and-entities.md) | [World and entities](../../explanation/concepts/world-and-entities.md) |
 | [Queries](queries.md) | [Queries](../../explanation/concepts/queries.md) |
-| [Engine, loop and systems](engine-and-systems.md) | [Engine, loop and systems](../../guide/concepts/engine-and-systems.md) |
+| [Engine, loop and systems](engine-and-systems.md) | [Engine, loop and systems](../../explanation/concepts/engine-and-systems.md) |
 | [Events](events.md) | [Events](../../guide/concepts/events.md) |
 | [Input](input.md) | [Input](../../guide/concepts/input.md) |
 | [Schedule](schedule.md) | [Schedule](../../guide/concepts/schedule.md) |

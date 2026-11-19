@@ -13,6 +13,7 @@
 | [Gameplay recipes in TypeScript](how-to/typescript/gameplay-recipes.md) | How do I write the same patterns in TypeScript? |
 | [Test a web game](how-to/test-a-web-game.md) | How do I run the real game in Node, press keys and read the world? |
 | [Debug the world](how-to/debug-the-world.md) | How do I check that a `World` is consistent and look at its shape? |
+| [Drive the loop yourself](how-to/drive-the-loop-yourself.md) | How do I call `frame` from a test or a tool, one step at a time? |
 | [User guide](guide/README.md) | Where are the other guides for the game user, until they move here? |
 
 ## Reference
@@ -22,6 +23,7 @@
 | [TypeScript client](reference/typescript/README.md) | What does the TypeScript API offer, and where is each part? |
 | [Schema in C++](reference/cpp/schema.md) | Which generated files and functions does the build write for a schema, and what do they declare? |
 | [Queries in C++](reference/cpp/queries.md) | Which calls build a query, visit its rows and read its only row? |
+| [Engine, loop and systems in C++](reference/cpp/engine-and-systems.md) | Which calls create the engine, register systems and states, emit from the host and pause or hide the game? |
 | [World and entities in C++](reference/cpp/world-and-entities.md) | Which calls create, read, change and destroy entities, record commands and observe changes? |
 | [Glossary](reference/glossary.md) | What does each name mean in C++, the C API and TypeScript? |
 | [Known limitations](reference/limits.md) | What does the engine not do? |

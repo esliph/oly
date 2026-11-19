@@ -116,7 +116,7 @@ The engine does not care where input comes from. The **host** of each environmen
 - the desktop host, from the window ([What the host does with the window](../environments/native/getting-started.md#what-the-host-does-with-the-window));
 - the web host, from the browser ([Getting started on the web](../environments/web/getting-started.md)).
 
-Key auto-repeat is ignored: holding a key gives one `pressed`. When the window loses focus the host calls `releaseAll`, so nothing stays stuck. When the game is hidden, the engine releases every button too ([Engine, loop and systems](engine-and-systems.md#hidden)).
+Key auto-repeat is ignored: holding a key gives one `pressed`. When the window loses focus the host calls `releaseAll`, so nothing stays stuck. When the game is hidden, the engine releases every button too ([Engine, loop and systems](../../explanation/concepts/engine-and-systems.md#hidden)).
 
 ## Rebind at run time
 

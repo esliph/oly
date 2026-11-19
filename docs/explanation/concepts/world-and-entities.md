@@ -54,7 +54,7 @@ OLY_SYSTEM(removeDeadEnemies) {
 }
 ```
 
-In this system `context.isAlive(entity)` is still `true` after `context.destroy(entity)`. The entity dies when the phase ends. More on phases: [Engine, loop and systems](../../guide/concepts/engine-and-systems.md#structural-changes-in-systems).
+In this system `context.isAlive(entity)` is still `true` after `context.destroy(entity)`. The entity dies when the phase ends. More on phases: [Engine, loop and systems](engine-and-systems.md#structural-changes-in-systems).
 
 TypeScript: [Where the World comes from](../../reference/typescript/world-and-entities.md#where-the-world-comes-from) (the client refuses `spawn`, `destroy`, `add` and `remove` on `engine.world` during `frame`).
 

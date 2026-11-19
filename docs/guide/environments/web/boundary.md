@@ -28,7 +28,7 @@ world.query({ write: [Position], with: [Enemy] }).eachBlock((block) => {
 
 ## Move per-entity work to C++
 
-A TS system costs at least one crossing per call and runs in the JS engine. A C++ system runs next to the data, can be inlined and vectorized by the compiler. Movement, collision, AI and weapons belong in C++ once the entity count grows. [Register them by name](../../concepts/engine-and-systems.md#systems-in-c-registered-by-name-oly_system-oly_handler-oly_state_hook) from TS:
+A TS system costs at least one crossing per call and runs in the JS engine. A C++ system runs next to the data, can be inlined and vectorized by the compiler. Movement, collision, AI and weapons belong in C++ once the entity count grows. [Register them by name](../../../reference/cpp/engine-and-systems.md#c-systems-handlers-and-hooks) from TS:
 
 ```ts
 engine.addNativeSystem(Phase.Update, "integrate");

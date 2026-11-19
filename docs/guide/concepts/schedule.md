@@ -130,7 +130,7 @@ On the last run of an `after`, the discard does **not** run; release the resourc
 - **Pause**: tasks do not run and the clock does not move. A 2-second `after` scheduled before a 10-second pause still fires 2 game seconds later.
 - **States**: a task created while a state is active is **scoped** to it. A state change cancels it, running its discard. This is what makes "play again" safe: the old wave timer does not keep spawning in the menu. Use `schedule().persist(handle)` to keep a task across state changes. See [States](states.md#scope-automatic-clean-up).
 - **Created during step 2**: a task scheduled by another task runs from the next step on. `after(0.0, ...)` inside a task is not a loop.
-- **Recovery**: scheduled tasks survive an interrupted frame ([Engine, loop and systems](engine-and-systems.md#when-a-system-throws)).
+- **Recovery**: scheduled tasks survive an interrupted frame ([Engine, loop and systems](../../explanation/concepts/engine-and-systems.md#when-a-system-throws)).
 
 ## Next
 
