@@ -60,9 +60,11 @@ _in() {
     _rotate=$((_rotate - 1))
   done
 
-  # Git Bash would rewrite arguments such as '^ecs\.' as Windows paths.
+  # Git Bash would rewrite arguments such as '^ecs\.' as Windows paths. A variable unset on the host stays unset in the
+  # container: the compiler cache and the ctest parallelism are on only where CI turns them on (ci.yml).
   export MSYS_NO_PATHCONV=1
-  exec docker compose --env-file toolchain.env run --rm -e PRESET -e OLY_FUZZ_SEED -e OLY_FUZZ_OPS "$@"
+  exec docker compose --env-file toolchain.env run --rm -e PRESET -e OLY_FUZZ_SEED -e OLY_FUZZ_OPS \
+    -e CCACHE_DIR -e CCACHE_MAXSIZE -e CMAKE_C_COMPILER_LAUNCHER -e CMAKE_CXX_COMPILER_LAUNCHER -e CTEST_PARALLEL_LEVEL "$@"
 }
 
 # _serve <directory> <port>: serves a staged tree the way GitHub serves a release; stops when the task ends.
@@ -483,8 +485,9 @@ staged-native: ## the native half of staged-test
 
   _staged_run "$1" native
 
-## Run the games that staged-test web and native left in build/staged/ with --docker, on the host: the images are built
-## from the local engine images and the staged oly-tools, and tagged as a release publishes them, under oly-local.
+## Run the games that staged-test web and native left in build/staged/ with --docker, on the host, and the native one
+## with --platform windows too: the images are built from the local engine images and the staged oly-tools, and tagged as
+## a release publishes them, under oly-local.
 staged-docker: ## the Docker half of staged-test, on the host
   version=$1
   native=$PWD/build/staged/native/staged-native
@@ -509,3 +512,8 @@ staged-docker: ## the Docker half of staged-test, on the host
 
   (cd "$native" && "$home/bin/oly" test --docker)
   (cd "$web" && "$home/bin/oly" test --docker)
+  (cd "$native" && "$home/bin/oly" test --docker --platform windows)
+
+  # staged-native built the same game in the dev container without --docker: each build keeps its own directory.
+  [ -d "$native/build/cmake" ] && [ -d "$native/build/cmake-docker" ] || _fail 1 "the host and Docker builds do not have their own directories"
+  [ -f "$native/build/cmake-windows-docker/games/staged_native.exe" ] || _fail 1 "the Windows build left no staged_native.exe"

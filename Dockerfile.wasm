@@ -4,9 +4,9 @@ FROM emscripten/emsdk:${EMSDK_VERSION}
 ARG CMAKE_VERSION
 
 # g++-multilib: i386 libstdc++ for the native-clang-32* presets (V2, V2S). CMake via pip because the image ships 3.22
-# and the project requires 3.25+.
+# and the project requires 3.25+. ccache: as in the dev image.
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends make g++ g++-multilib binutils python3-pip \
+  && apt-get install -y --no-install-recommends make g++ g++-multilib binutils python3-pip ccache \
   && rm -rf /var/lib/apt/lists/* \
   && pip install --no-cache-dir cmake==${CMAKE_VERSION}
 
