@@ -18,10 +18,10 @@ A plugin has up to three parts. Only the C++ part is required.
 | C API | functions exported to clients | no: shape only |
 | TS package `@oly/<plugin>` | wrappers of the C API part and pure-TS helpers | no: shape only |
 
-The C API and TS parts get build support with the first plugin that needs them. Their shape is fixed now, by rule 2 of the architecture ([README.md](README.md#overview)):
+The C API and TS parts get build support with the first plugin that needs them. Their shape is fixed now, by rule 2 of the architecture ([Architecture overview](../explanation/architecture/README.md#overview)):
 
 - A C++ game calls a plugin's public C++ functions directly, and the compiler inlines them.
-- A client call crosses the WASM boundary at ~40–50 ns ([performance.md](performance.md)), while a helper such as `lerp` costs ~1 ns. So **a plugin's C API part exposes only functions that work per batch or per system** (`raycastBatch`), never per entity.
+- A client call crosses the WASM boundary at ~40–50 ns ([Benchmark results](../reference/benchmarks/README.md#boundary-costs)), while a helper such as `lerp` costs ~1 ns. So **a plugin's C API part exposes only functions that work per batch or per system** (`raycastBatch`), never per entity.
 - Pure helpers (math) are rewritten in the plugin's TS package, not called through the boundary.
 
 ## Install and ownership
@@ -160,7 +160,7 @@ The rules that keep publishing cheap later hold from day one:
 - A plugin is its own CMake target, with no path relative to the repository root.
 - A plugin's `.oly` reaches `oly-schema` as an argument, never through a fixed path.
 
-The `oly.lint.boundaries` lint checks plugins like modules, and adds rules of its own ([modules-and-boundaries.md](modules-and-boundaries.md#how-the-boundaries-are-enforced)):
+The `oly.lint.boundaries` lint checks plugins like modules, and adds rules of its own ([Boundary rules](../reference/contributor/boundary-rules.md)):
 
 - nothing in `engine/` includes a plugin under `plugins/` (`engine cannot depend on plugin <p>`); the test plugins in `engine/testing/fixture/plugins/` are engine code;
 - a plugin includes only what it declares in `DEPENDS` or `PLUGINS`, and no `detail/` of another module or plugin;

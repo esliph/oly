@@ -17,7 +17,7 @@ Questions about using the engine go in an issue too.
 
 ## Before you start
 
-1. Read the [architecture overview](docs/architecture/README.md). It explains the parts, the boundaries between them and the index of every other document.
+1. Read the [architecture overview](docs/explanation/architecture/README.md). It explains the parts and the boundaries between them. [docs/README.md](docs/README.md) lists every other document.
 2. Use the names of the [glossary](docs/reference/glossary.md). No aliases, and no compatibility `using` with old names.
 3. The specs in [`docs/superpowers/specs/`](docs/superpowers/specs) are the source of truth for the requirements (`R-*`) and invariants (`I-*`). A change that breaks one is a change to the spec, and is discussed in an issue first.
 
@@ -32,14 +32,14 @@ The host needs only **Git Bash** (or any POSIX shell on Linux and macOS) and **D
 ./spur games-test      # WASM + TypeScript packages + integration tests
 ```
 
-Every command is in [docs/development/commands.md](docs/development/commands.md), and how the build and the tests are organized is in [build-and-tests.md](docs/architecture/build-and-tests.md).
+Every command is in [docs/reference/contributor/commands.md](docs/reference/contributor/commands.md), and how the build and the tests are organized is in [build-and-tests.md](docs/explanation/architecture/build-and-tests.md).
 
 ## Workflow
 
 1. Fork the repository and create a branch from **`develop`**. `master` only receives releases.
 2. Make the change, with its tests and documentation (below).
 3. Run the checks of [the pull request checklist](#pull-request-checklist) locally.
-4. Open the pull request against `develop`. CI (`.github/workflows/ci.yml`) builds the `dev` and `wasm` images and runs `./spur format-check`, `./spur test` and `./spur games-test`. The Windows cross-build, the subproject and the consumer tests run in the release workflow; when a change touches them (`cmake/`, `tools/`, `templates/`, the native host), run them locally too ([commands](docs/development/commands.md)).
+4. Open the pull request against `develop`. CI (`.github/workflows/ci.yml`) builds the `dev` and `wasm` images and runs `./spur format-check`, `./spur test` and `./spur games-test`. The Windows cross-build, the subproject and the consumer tests run in the release workflow; when a change touches them (`cmake/`, `tools/`, `templates/`, the native host), run them locally too ([commands](docs/reference/contributor/commands.md)).
 
 Keep one change per pull request. A refactoring that a fix needs goes in its own commit, before the fix.
 
@@ -52,7 +52,7 @@ The full rules are in [docs/reference/contributor/code-style.md](docs/reference/
 - Formatting is `.clang-format`, applied by the `dev` image's clang-format. Do not format by hand: `./spur format <files>` formats the `.cpp` and `.hpp` files you changed (with no argument, every tracked one), and `./spur format-check` is the check CI runs.
 - Comments only for the why or for a non-obvious contract. Nothing that repeats the code.
 - `OLY_ASSERT` messages name the operation, the `Entity` and the type.
-- Boundaries ([modules-and-boundaries.md](docs/architecture/modules-and-boundaries.md), [plugins.md](docs/architecture/plugins.md)): `engine/` never depends on `plugins/`; game concepts never go in `engine/`; game names only in `engine/testing/fixture/`. The boundary lint runs with the tests.
+- Boundaries ([modules-and-boundaries.md](docs/explanation/architecture/modules-and-boundaries.md), [plugins.md](docs/architecture/plugins.md)): `engine/` never depends on `plugins/`; game concepts never go in `engine/`; game names only in `engine/testing/fixture/`. The boundary lint runs with the tests.
 
 ## Tests
 
@@ -74,7 +74,7 @@ Numbers from different machines or different runs are not compared.
 ## Documentation
 
 - A change that adds, changes or removes public API (the surfaces listed in [docs/development/guide-style.md](docs/development/guide-style.md)) updates the user documentation in [`docs/`](docs/README.md) in the same pull request, following that style.
-- A change to how a part works updates its page in [`docs/architecture/`](docs/architecture/README.md). Those pages describe the engine as it is today, not its history.
+- A change to how a part works updates its page in [`docs/explanation/architecture/`](docs/explanation/architecture/README.md). Those pages describe the engine as it is today, not its history.
 
 ## Commits
 
@@ -91,7 +91,7 @@ fix(ecs): keep the query cache when an archetype is created during flush
 - [ ] `./spur test` and `./spur games-test` pass locally.
 - [ ] `./spur format-check` passes.
 - [ ] Each behaviour change has a test.
-- [ ] A public API change updates `docs/`; a change of design updates `docs/architecture/`.
+- [ ] A public API change updates `docs/`; a change of design updates `docs/explanation/architecture/`.
 - [ ] A hot path change reports the benchmark before and after.
 
 ## Working with Claude Code

@@ -150,9 +150,9 @@ The recorded results and the status of each target are in [`docs/reference/bench
 |---|---|
 | [`docs/README.md`](docs/README.md) | the index of the documentation: tutorials, how-to guides, reference and explanation |
 | [`docs/reference/cli.md`](docs/reference/cli.md) | the `oly` command: install, make, build, test, run and upgrade a game |
-| [`docs/architecture/`](docs/architecture/README.md) | architecture: overview, modules and boundaries, ECS, `Engine`, `capi`, TS packages, games, decisions and limitations |
+| [`docs/explanation/architecture/`](docs/explanation/architecture/README.md) | architecture: overview, modules and boundaries, ECS, `Engine`, `capi`, TS packages, games, decisions and limitations |
 | [`docs/reference/contributor/repository.md`](docs/reference/contributor/repository.md) | repository structure |
-| [`docs/development/commands.md`](docs/development/commands.md) | all commands for build, tests, benchmarks and games |
+| [`docs/reference/contributor/commands.md`](docs/reference/contributor/commands.md) | all commands for build, tests, benchmarks and games |
 | [`docs/reference/contributor/code-style.md`](docs/reference/contributor/code-style.md) | code style |
 | [`docs/reference/benchmarks/`](docs/reference/benchmarks/README.md) | benchmark results |
 | [`docs/superpowers/specs/`](docs/superpowers/specs) | specs (source of truth for the requirements) |

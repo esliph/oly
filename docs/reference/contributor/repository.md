@@ -32,11 +32,12 @@ tools/
 templates/
   game/           what oly new copies: common/, web/ and native/ overlays of a minimal game
 docs/
-  architecture/   this documentation
-  development/    commands and code style
-  reference/benchmarks/  recorded results: ecs/, bridge/, wasm/
-  superpowers/    specs (source of truth) and implementation plans per phase
-.github/workflows/  release.yml: the release pipeline (docs/architecture/publishing.md)
+  tutorials/      your first web game and your first desktop game
+  how-to/         tasks; contributor/ holds the ones about the engine itself
+  reference/      the oly command, the APIs, contributor/ and benchmarks/ (recorded results: ecs/, bridge/, wasm/)
+  explanation/    what a game relies on (concepts) and how the engine is built (architecture)
+  superpowers/    specs and implementation plans per phase
+.github/workflows/  release.yml: the release pipeline (docs/explanation/architecture/publishing.md)
 .claude/          Claude Code skills, agents and formatting hook
 ```
 
@@ -70,4 +71,4 @@ A plugin follows the same shape, with an optional `.oly` ([plugins.md](../../arc
 
 `plugins/` sits beside `engine/`, not inside `engine/`: plugins depend on the core, and a separate root makes a later split into packages a move of folders. Until it exists, the only plugins are the test plugins in `engine/testing/fixture/plugins/`.
 
-See also: [modules-and-boundaries.md](../../architecture/modules-and-boundaries.md).
+See also: [Modules and boundaries](../../explanation/architecture/modules-and-boundaries.md) and [Boundary rules](boundary-rules.md).

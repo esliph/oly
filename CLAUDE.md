@@ -1,10 +1,10 @@
 # CLAUDE.md
 
-Oly: game engine in C++20 for 2D games, with 3D transforms in `essentials3d`, on top of a single-threaded archetype ECS (study and benchmark project, published for the author's own games: `docs/architecture/publishing.md`). The C++ core runs in environments (`web`: WASM with a TS client; `native`: a desktop host), with a C API `oly*` for clients in other languages. Plugins (`oly_add_plugin`) add engine-level features that a game turns on with `oly_add_game(... PLUGINS ...)`; the generated `setUpGame` installs them. Every game also names its `DIMENSION` (`2d|3d`), which turns `essentials2d` or `essentials3d` on (`Position`, `Rotation`, `Scale`, `Parent`, `WorldTransform`). Plugins live in `plugins/`; the engine's own test plugins in `engine/testing/fixture/plugins/`. A game in its own repository uses `oly` (`tools/oly/`: the launcher and the game tasks; `templates/game/`: what `oly new` copies), and `toolchain.env` holds the toolchain versions.
+Oly: game engine in C++20 for 2D games, with 3D transforms in `essentials3d`, on top of a single-threaded archetype ECS (study and benchmark project, published for the author's own games: `docs/explanation/architecture/publishing.md`). The C++ core runs in environments (`web`: WASM with a TS client; `native`: a desktop host), with a C API `oly*` for clients in other languages. Plugins (`oly_add_plugin`) add engine-level features that a game turns on with `oly_add_game(... PLUGINS ...)`; the generated `setUpGame` installs them. Every game also names its `DIMENSION` (`2d|3d`), which turns `essentials2d` or `essentials3d` on (`Position`, `Rotation`, `Scale`, `Parent`, `WorldTransform`). Plugins live in `plugins/`; the engine's own test plugins in `engine/testing/fixture/plugins/`. A game in its own repository uses `oly` (`tools/oly/`: the launcher and the game tasks; `templates/game/`: what `oly new` copies), and `toolchain.env` holds the toolchain versions.
 
 ## Documentation
 
-Start with `docs/architecture/README.md`. It has the overview and the index of all documentation: architecture, glossary, commands, specs, plans and benchmarks.
+Start with `docs/README.md`. It is the index of all documentation: tutorials, how-to guides, reference and explanation.
 
 ## Rules that always apply
 

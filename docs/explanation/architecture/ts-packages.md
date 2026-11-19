@@ -1,19 +1,16 @@
 # TypeScript packages
 
-npm workspaces at the root, a single `package-lock.json`, `tsconfig.base.json` (`strict`, ES2022, `NodeNext`) and project references. Each package compiles to its own `dist/` (tests in `dist-tests/`). Pinned versions: TypeScript 5.6.3, `@types/node` 20.17.6 and esbuild 0.24.2. Tests with `node:test`.
+npm workspaces at the root, a single `package-lock.json`, `tsconfig.base.json` (`strict`, ES2022, `NodeNext`) and project references. Each package compiles to its own `dist/` (tests in `dist-tests/`). The workspace pins TypeScript 5.6.3 and `@types/node` 20.17.6. Tests with `node:test`.
+
+What each package exports is in [TypeScript client](../../reference/typescript/README.md#packages).
 
 ## `@oly/core`
 
 The engine on the TS side (`engine/environments/web/clients/typescript/core/`), with no DOM and no node (`types: []`): it runs in node, in the browser and in a worker. What depends on the environment comes in by injection (the WASM module factory, the time, the input).
 
-- **Schema**: the types (`ComponentType`, `TagType`, `EventType`, `ActionType`, `State`, `Schema`); the objects come from the game's generated `schema.generated.ts`, built with the `@oly/core/generated` constructors.
-- **Runtime**: `loadRuntime(factory, schema)` → `Runtime` (`schema`, `createWorld()`).
-- **World**: `World`, `Query` (`eachBlock`, `single`, `trySingle`), `Block` (`read`, `write`), `Entity`.
-- **Engine**: `Engine`, `SystemContext`, `HandlerContext`, `TaskContext`, `StateContext`, `EventBatch`, `Scheduler`, `ActionMap`.
-- **Errors**: `ContractError`, `SchemaMismatchError`.
-- **Internal** (`@oly/core/internal`, only for `engine/`): `Bridge`, `bridgeOf`, `moduleOf`, `componentIdOf`, `Heap`, `scalarSize`.
+`loadRuntime(factory, schema)` returns the `Runtime`, which creates the `Engine` (`createEngine(config)`) and the `World` (`createWorld()`). The objects of the schema come from the game's generated `schema.generated.ts`, built with the `@oly/core/generated` constructors. `@oly/core/internal` (`Bridge`, `bridgeOf`, `moduleOf`, `componentIdOf`, `Heap`, `scalarSize`) is only for `engine/`.
 
-The exact public list is `engine/environments/web/clients/typescript/core/api/public-exports.txt` ([modules-and-boundaries.md](modules-and-boundaries.md#how-the-boundaries-are-enforced)).
+The exact public list is `engine/environments/web/clients/typescript/core/api/public-exports.txt` ([how the boundaries are enforced](modules-and-boundaries.md#how-the-boundaries-are-enforced)).
 
 Implementation rules:
 
@@ -36,4 +33,4 @@ Loop and input are kept separate because they change for different reasons.
 
 ## `@oly/testing`
 
-- `@oly/testing` (`engine/testing/`, private): the `fixture` game (`engine/testing/fixture/`, the only place in the engine with game names), the integration tests against the real WASM (`tests/wasm/`) and the boundary, loop and event benchmarks (`bench/`). It stays outside `@oly/core` so as not to create a cycle in the project references or put game names in the package.
+`@oly/testing` (`engine/testing/`, private) holds the `fixture` game (`engine/testing/fixture/`, the only place in the engine with game names), the integration tests against the real WASM (`tests/wasm/`) and the boundary, loop and event benchmarks (`bench/`). It stays outside `@oly/core` so as not to create a cycle in the project references or put game names in the package.

@@ -1,6 +1,6 @@
 # Publishing
 
-How a game outside this repository gets the engine: a versioned release, the `oly` launcher that fetches it, local mode for engine work, and the file that fixes the toolchain. The commands are in [The `oly` command](../reference/cli.md) and in [commands](../development/commands.md); this page says why they are shaped this way.
+How a game outside this repository gets the engine: a versioned release, the `oly` launcher that fetches it, local mode for engine work, and the file that fixes the toolchain. The commands are in [The `oly` command](../../reference/cli.md) and in [Commands](../../reference/contributor/commands.md); the steps of a release are in [Cut a release](../../how-to/contributor/cut-a-release.md). This page says why they are shaped this way.
 
 ```
 engine repository                          a game's repository
@@ -86,15 +86,7 @@ The launcher keeps only four commands that cannot live in a version. `new` needs
 
 ## Local mode
 
-`OLY_ENGINE_DIR=<checkout>` replaces every part of a version with the checkout, so a change in the engine shows in a game without a release.
-
-| Part | Pinned version | Local mode |
-|---|---|---|
-| Tasks and template | `~/.oly/versions/<V>/` | `tools/oly/` and `templates/game/` |
-| C++ engine | `FetchContent` at `v<V>` | `-DFETCHCONTENT_SOURCE_DIR_OLY=<checkout>` |
-| `oly-schema` | web: prebuilt in the version; desktop: built with the game | web: built from the checkout with the host compiler, or in the container; desktop: built with the game |
-| npm packages | the tarballs of the release | the checkout's packages compiled over the installed tarballs; `package.json` is not changed |
-| Docker image | `ghcr.io/esliph/oly-*:<V>` | the same image, the checkout mounted at `/oly` |
+`OLY_ENGINE_DIR=<checkout>` replaces every part of a version with the checkout, so a change in the engine shows in a game without a release. What each part is in a pinned version and in local mode is in [Local mode](../../reference/cli.md#local-mode); this section says only why it works that way. The C++ engine comes from the checkout through `-DFETCHCONTENT_SOURCE_DIR_OLY=<checkout>`.
 
 `FETCHCONTENT_SOURCE_DIR_OLY` is passed on every configure, empty when there is no checkout: a value left in the CMake cache by an earlier local run would otherwise keep building the checkout. `node_modules/.oly-install` records the platform and the mode of the last install (`linux-x64 pinned`, `windows-x64 local`). When either changes, `node_modules` is removed and installed again: esbuild ships a binary per platform, and a checkout's packages must not outlive local mode.
 
@@ -156,6 +148,6 @@ A staged release is the release files written to a folder with GitHub's layout (
 
 ## Limits
 
-`FetchContent` at a real tag is the one step the tests do not run before publishing: games exercise it after the release exists. The rest is in [limits.md](../reference/limits.md).
+`FetchContent` at a real tag is the one step the tests do not run before publishing: games exercise it after the release exists. The rest is in [Known limitations](../../reference/limits.md).
 
-See also: [build-and-tests.md](build-and-tests.md), [repository.md](../reference/contributor/repository.md), [decisions.md](../explanation/architecture/decisions.md).
+See also: [Build, tests and tools](build-and-tests.md), [Repository map](../../reference/contributor/repository.md), [Main architectural decisions](decisions.md).

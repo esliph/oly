@@ -40,4 +40,4 @@ A web game installs the npm packages again when the mode changes, so the checkou
 
 - [Local mode](../reference/cli.md#local-mode) and [Environment variables](../reference/cli.md#environment-variables).
 - [Upgrade the engine](upgrade-the-engine.md): move the game to a release.
-- [Commands](../development/commands.md): the `./spur` tasks inside the engine repository.
+- [Commands](../reference/contributor/commands.md): the `./spur` tasks inside the engine repository.

@@ -32,4 +32,4 @@
 - **Current context.** `olyDirectSpawn` and `olyContextPersist` use the context TS is in: direct in a handler, task or hook; deferred in a system.
 - A script call with no invoker installed is a contract violation (`OLY_ASSERT`, with kind and id).
 
-The TS side that consumes this API is in [ts-packages.md](ts-packages.md). The link contract with the game's generated code is in [schema-and-codegen.md](../explanation/architecture/schema-and-codegen.md).
+The TS side that consumes this API is in [TypeScript packages](../explanation/architecture/ts-packages.md). The link contract with the game's generated code is in [schema-and-codegen.md](../explanation/architecture/schema-and-codegen.md).

@@ -105,15 +105,14 @@ Pages are not numbered. Each path lists every page of its environment in the ord
 | [Native host](reference/native-host.md) | Which calls open the window and run the loop, and what does the host do with each window event? |
 | [Glossary](reference/glossary.md) | What does each name mean in C++, the C API and TypeScript? |
 | [Known limitations](reference/limits.md) | What does the engine not do? |
-| [Repository map](reference/contributor/repository.md) | Where is each part of the repository? |
-| [Code style](reference/contributor/code-style.md) | Which rules does the code follow? |
 | [Benchmark results](reference/benchmarks/README.md) | How fast is the engine, and which targets does it meet? |
-| [Architecture index](architecture/README.md) | Where are the other contributor pages, until they move here? |
 
 ## Explanation
 
 | Page | What it answers |
 |---|---|
+| [Architecture overview](explanation/architecture/README.md) | What are the pieces of the engine, and which rules shape its design? |
+| [Modules and boundaries](explanation/architecture/modules-and-boundaries.md) | Which module depends on which, and how are the boundaries enforced? |
 | [`app`: the `Engine`](explanation/architecture/app.md) | How does the `Engine` run the loop, the systems and the events? |
 | [`ecs`: the archetype ECS](explanation/architecture/ecs.md) | How does the ECS store and query data? |
 | [`input`: actions](explanation/architecture/input.md) | How does the action map decide what is pressed, held and released? |
@@ -121,12 +120,24 @@ Pages are not numbered. Each path lists every page of its environment in the ord
 | [Main architectural decisions](explanation/architecture/decisions.md) | Why is the engine built this way, and what does it cost? |
 | [Environments and hosts](explanation/concepts/environments-and-hosts.md) | What are the core, an environment, a host and a client, and how is a game assembled? |
 | [Concepts](explanation/concepts/README.md) | In which order do I read the rules a game relies on, and what does each page explain? |
-| [Architecture index](architecture/README.md) | Where are the other contributor pages, until they move here? |
+| [Plugins in the engine](architecture/plugins.md) | How does a plugin install, own its parts and merge its schema? |
+| [`capi`: the C API](architecture/capi.md) | How is the C API designed, and how does the per-engine script invoker work? |
+| [TypeScript packages](explanation/architecture/ts-packages.md) | How are `@oly/core`, `@oly/web-host` and `@oly/testing` built? |
+| [Publishing](explanation/architecture/publishing.md) | How does a game outside this repository get the engine, and why is a release built this way? |
+| [Build, tests and tools](explanation/architecture/build-and-tests.md) | How are the build, the tests and the tools organized? |
 
 ## Working on the engine
 
 | Page | What it answers |
 |---|---|
+| [Set up the toolchain](how-to/contributor/set-up-the-toolchain.md) | How do I build the engine and run its tests? |
+| [Run the benchmarks](how-to/contributor/run-benchmarks.md) | How do I measure the engine and record the result? |
+| [Cut a release](how-to/contributor/cut-a-release.md) | How do I publish a version of the engine? |
+| [Commands](reference/contributor/commands.md) | Which `./spur` tasks, services and presets does the repository have? |
+| [Boundary rules](reference/contributor/boundary-rules.md) | Which includes and imports does the boundary lint reject? |
+| [Repository map](reference/contributor/repository.md) | Where is each part of the repository? |
+| [Code style](reference/contributor/code-style.md) | Which rules does the code follow? |
+| [Specs and plans](superpowers/README.md) | Where is the record of how the engine was designed and built? |
 
 ## Conventions
 
@@ -134,5 +145,5 @@ Pages are not numbered. Each path lists every page of its environment in the ord
 |---|---|
 
 - `cpp` blocks use the `oly::ecs`, `oly::app` and `oly::input` namespaces. `ts` blocks appear only in the TypeScript pages and in the pages of the web environment.
-- Commands are `oly` commands, run from Git Bash on Windows ([The `oly` command](reference/cli.md)). Inside the engine repository they are `./spur` tasks, which run inside Docker ([commands](development/commands.md)).
+- Commands are `oly` commands, run from Git Bash on Windows ([The `oly` command](reference/cli.md)). Inside the engine repository they are `./spur` tasks, which run inside Docker ([Commands](reference/contributor/commands.md)).
 - "Contract error" means the engine refuses the call: C++ stops on `OLY_ASSERT` in debug builds, and TypeScript throws `ContractError` ([Errors](reference/errors.md)).

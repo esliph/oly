@@ -47,7 +47,7 @@ The same verb stands for the same concept in C++, in the C API and in TS.
 
 ## Publishing
 
-These terms have no C API or TS form. Details: [publishing.md](../architecture/publishing.md).
+These terms have no C API or TS form. Details: [Publishing](../explanation/architecture/publishing.md).
 
 | Term | Meaning |
 |---|---|
@@ -61,7 +61,7 @@ These terms have no C API or TS form. Details: [publishing.md](../architecture/p
 
 ## Naming rules
 
-- The `oly` prefix appears only in the C API (`oly*`, `OlyWorld`, `OLY_API`) and in what is internal to `capi` (`OlyModule`). The C++ and TS APIs do not repeat `oly` in names. The reason is in [modules-and-boundaries.md](../architecture/modules-and-boundaries.md#vocabulary-rules).
+- The `oly` prefix appears only in the C API (`oly*`, `OlyWorld`, `OLY_API`) and in what is internal to `capi` (`OlyModule`). The C++ and TS APIs do not repeat `oly` in names. The reason is in [Modules and boundaries](../explanation/architecture/modules-and-boundaries.md#vocabulary-rules).
 - `create` does not exist as a name for an entity: an entity is born through `spawn`. `create` stays for the other objects (`olyWorldCreate`, `olyEngineCreate`, `Runtime.createEngine`).
 - "Raw" does not exist as a name: the variant by `ComponentId` uses the `ById` suffix.
 - There are no aliases or compatibility `using` declarations for old names.

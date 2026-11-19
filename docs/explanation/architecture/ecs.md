@@ -42,7 +42,7 @@ The two indices only change in `findOrCreate`, which also registers the new arch
 
 ## Templates and `ById`
 
-The templates in `world.hpp` are thin and delegate to non-template functions by `ComponentId` in `world.cpp` (`addById`, `removeById` etc.), which reduces compile time and binary size. The hot path (`get<T>`, `Query::each`, `eachBlock`) does **not** delegate: it stays inline, because an indirection there would affect the NF-P1 and NF-P2 targets ([performance.md](../../architecture/performance.md)).
+The templates in `world.hpp` are thin and delegate to non-template functions by `ComponentId` in `world.cpp` (`addById`, `removeById` etc.), which reduces compile time and binary size. The hot path (`get<T>`, `Query::each`, `eachBlock`) does **not** delegate: it stays inline, because an indirection there would affect the NF-P1 and NF-P2 targets ([Benchmark results](../../reference/benchmarks/README.md)).
 
 ## Iteration and structural changes
 
@@ -70,6 +70,6 @@ Validity rules:
 
 ## Correctness
 
-- Invariants I-1 to I-13, the fuzz against a model and `LifeCounter` are in [build-and-tests.md](../../architecture/build-and-tests.md#tests).
+- Invariants I-1 to I-13, the fuzz against a model and `LifeCounter` are in [Build, tests and tools](build-and-tests.md#tests).
 - When changing structural logic, keep `checkInvariants` covering what changed, including the `QueryById` caches (which go into `checkQueries`).
 - Test-only hooks (`flushSequential`, `setGeneration`, `CommandBuffer::forEach`) live in `detail/test_access.hpp` (`WorldTestAccess`, `EntityStoreTestAccess`, `CommandBufferTestAccess`). The public classes have nothing "for testing".

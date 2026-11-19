@@ -31,7 +31,7 @@ Render runs once per display frame, which may be 144 times per second. Draw with
 ## 4. Measure
 
 - Compare against a baseline in the **same run**: the environment is noisy (WSL2). The engine's benchmarks report ratios, not absolute times.
-- For the engine's own benchmarks, see [commands](../development/commands.md#ecs-benchmarks).
+- For the engine's own benchmarks, see [Run the benchmarks](contributor/run-benchmarks.md).
 - Profile a native game with any native profiler on the `native-games-release` build.
 
 ## TypeScript
@@ -88,7 +88,7 @@ Handlers already receive a whole batch per call. Do the loop inside the handler.
 ### Measure in the browser
 
 - Use the Chromium profiler on the running game.
-- The boundary benchmark runs with `./spur wasm node engine/testing/dist/bench/boundary.js ...`; see [commands](../development/commands.md#wasm-and-typescript) for the full command.
+- The boundary benchmark runs with `./spur wasm node engine/testing/dist/bench/boundary.js ...`; see [Run the benchmarks](contributor/run-benchmarks.md#3-run-a-wasm-boundary-benchmark) for the full command.
 
 ### Test in debug, ship in release
 

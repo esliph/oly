@@ -90,4 +90,4 @@ ctest --test-dir build/cmake -R '^<target>\.'     # only your game, after oly te
 - [Native host](../reference/native-host.md): `RunOptions` and `run`.
 - [Drive the loop yourself](drive-the-loop-yourself.md): call `frame` and press buttons from a test or a tool.
 - [Test a web game](test-a-web-game.md): the same idea in Node, against the WASM.
-- [Build and tests](../architecture/build-and-tests.md): how to add a test inside the engine.
+- [Set up the toolchain](contributor/set-up-the-toolchain.md#5-add-a-test): how to add a test inside the engine.

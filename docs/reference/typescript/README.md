@@ -14,6 +14,16 @@ Oly is complete in C++. The client adds TS conveniences (typed accessors, closur
 | `@oly/core/generated` | generated code only (`*.generated.ts`); never import it by hand |
 | `@oly/web-host` | the web host the client runs on: `runInBrowser`, `attachBrowserInput`, the WASM loader |
 
+`@oly/core` exports:
+
+- **Schema**: the types `ComponentType`, `TagType`, `EventType`, `ActionType`, `State` and `Schema`. The objects come from the game's generated `schema.generated.ts`.
+- **Runtime**: `loadRuntime(factory, schema)` returns a `Runtime` with `schema`, `createEngine(config)` and `createWorld()`.
+- **World**: `World`, `Query` (`eachBlock`, `single`, `trySingle`), `Block` (`read`, `write`) and `Entity`.
+- **Engine**: `Engine`, `SystemContext`, `HandlerContext`, `TaskContext`, `StateContext`, `EventBatch`, `Scheduler` and `ActionMap`.
+- **Errors**: `ContractError` and `SchemaMismatchError` ([Errors](#errors)).
+
+`@oly/web-host` exports `moduleFactoryFromUrl`, `runInBrowser` and `attachBrowserInput`. The public list of `@oly/core` is `engine/environments/web/clients/typescript/core/api/public-exports.txt`; how the packages are built is in [TypeScript packages](../../explanation/architecture/ts-packages.md).
+
 ## Errors
 
 | Class | Thrown when |

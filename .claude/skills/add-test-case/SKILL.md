@@ -158,7 +158,7 @@ If the case covers an `OLY_ASSERT` that is still to be written, its message foll
 
 ## 4. Prove that it runs
 
-The build and test commands, and how to filter a test by name, are in `docs/development/commands.md`. Everything runs in the container, in the default preset (ASan + UBSan + asserts).
+The build and test commands, and how to filter a test by name, are in `docs/reference/contributor/commands.md`. Everything runs in the container, in the default preset (ASan + UBSan + asserts).
 
 - **Doctest suite or case:** run only the affected suite (`./spur test -R '^ecs\.<name>'`) and confirm in the output that the number of cases went up. "0 test cases" or a filter with no test found means the wiring failed, not that it passed.
 - **Death case:** run the executable directly, `build/debug-asan/tests/<module>_contract_death <name>`, and read the message printed to stderr. It must be the intended assert's message, not just "some assert". Then run the `<module>.contract_death.<name>` filter through CTest to confirm the `foreach` created the test.

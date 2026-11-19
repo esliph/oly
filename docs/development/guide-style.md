@@ -1,6 +1,6 @@
 # Guide style
 
-How to write and maintain the user documentation in `docs/`. The guide teaches how to **use** the engine to make a game. The architecture docs (`docs/architecture/`) explain how the engine is **built** and why. Keep the two apart: the guide links to the architecture for the "why" and does not repeat it.
+How to write and maintain the user documentation in `docs/`. The guide teaches how to **use** the engine to make a game. The architecture docs (`docs/explanation/architecture/`) explain how the engine is **built** and why. Keep the two apart: the guide links to the architecture for the "why" and does not repeat it.
 
 ## When the guide must change
 
@@ -127,7 +127,7 @@ docs/
 - **Complete enough to copy**: imports when they are not obvious, the schema entries an example needs, no `...` inside the logic that matters.
 - **Follow the code style** ([code-style.md](../reference/contributor/code-style.md)): full names, braces on every `if`/`for`, blank lines between steps.
 - **Comments only for the why**, the same rule as in the code. No comments that narrate the example step by step: put that in the prose before the block.
-- **Commands** are `oly` commands (`oly new`, `oly test`, `oly run`), as in [cli.md](../reference/cli.md). Inside the engine repository they are `./spur` tasks (`./spur games-test`, `./spur wasm <command>`, `./spur dev <command>`), as in [commands.md](commands.md).
+- **Commands** are `oly` commands (`oly new`, `oly test`, `oly run`), as in [cli.md](../reference/cli.md). Inside the engine repository they are `./spur` tasks (`./spur games-test`, `./spur wasm <command>`, `./spur dev <command>`), as in [Commands](../reference/contributor/commands.md).
 - Show the wrong way only when the mistake is common, and always next to the right way.
 
 ## Recipes

@@ -15,9 +15,9 @@
 - **A plugin `.oly` cannot declare actions or states** ([plugins.md](../architecture/plugins.md#schema-merge)). Their ids are `constexpr` in a header generated once per plugin; the fix, when a plugin needs one, is runtime-resolved handles.
 - **A plugin with no `install` is not supported yet.** `oly_add_plugin` requires `src/*.cpp` and the generated `setUpGame` installs `oly::<name>::Plugin`, so a pure function library (a math plugin) cannot be a plugin until one exists.
 - **The C API and TS parts of a plugin have no build support yet.** Their shape is defined ([plugins.md](../architecture/plugins.md#parts)); the support comes with the first plugin that needs it.
-- **NF-P5** is not met at N = 100000 ([performance.md](../architecture/performance.md)).
+- **NF-P5** is not met at N = 100000 ([Benchmark results](benchmarks/README.md)).
 - **Two `Engine`s on the same `World`** share the scope tag: a state change in one cleans up the scoped entities of the other. `capi` avoids this by creating one `World` per `OlyEngine`.
-- **Publishing supports Linux and Windows in Git Bash only.** No MSVC (a Windows native game builds with MinGW), no macOS, and no PowerShell or `cmd`: `oly` is a shell script ([publishing.md](../architecture/publishing.md)).
+- **Publishing supports Linux and Windows in Git Bash only.** No MSVC (a Windows native game builds with MinGW), no macOS, and no PowerShell or `cmd`: `oly` is a shell script ([Publishing](../explanation/architecture/publishing.md)).
 - **A plugin declared by a game is not supported yet.** A game turns on the plugins that come with the engine release it pins ([plugins.md](../architecture/plugins.md)).
 - **`FetchContent` at a real tag is first exercised by games, after publishing.** The tag is created last, so the consumer test fetches the engine from the commit being released (`OLY_ENGINE_SOURCE_DIR`) instead.
 - **`oly` has no help text of its own.** Bare `oly` inside a game lists the tasks through `spur`; the commands are described in [The `oly` command](cli.md).
