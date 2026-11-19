@@ -179,17 +179,17 @@ A name of a group that a reference page already documents is documented, not exc
 | Surface | Group and names |
 |---|---|
 | C++ | The `core` module: `alignUp`, `alignedAllocate`, `alignedFree`, `AssertHandler`, `setAssertHandler`, `SmallMap`, `typeName<T>` |
-| C++ | Named registrations: `NamedHandler`, `findNamedHandler`, `NamedHandlerRegistration`, `NamedSystemRegistration`, `findNamedSystem`, `NamedStateHookRegistration`, `findNamedStateHook`, `SystemFunction`, `StateHookFunction` |
-| C++ | Event identifiers: `EventTypeId`, `EventKey`, `InvalidEventType`, `eventKey<T>`, `Engine::eventTypeOf`, `eventTypeCount`, `onById`, `emitById`, `context.emitById` |
-| C++ | Plugin and phase internals: `PluginKey`, `pluginKey<P>`, `PhaseCount`, `OrderBandCount`, `isGameplayPhase`, `Engine::inFrame` |
-| C++ | Task internals: `TaskPayload`, `TaskPayload::of`, `PayloadKey`, `payloadKey<P>`, `NoPayloadKey`, `InvalidTaskSlot`, `TaskHandle.slot` and `.generation`, `TaskFunction`, `TaskDiscardFunction` |
-| C++ | The `ById` variants: `World::addById`, `removeById`, `getById`, `tryGetById`, `hasById`, `queryById`; `context.addById`, `context.removeById`; `QueryByIdSpec`, `BlockById`, `QueryIteration`, `QueryById` |
-| C++ | Query and type diagnostics: `Query::matchedCount`, `Query::writes`; `TypeInfo`, `typeInfo()`, `registeredTypeCount`; `ArchetypeStats`, `signatureLookupCount`, `archetypeCount()` |
+| C++ | Named registrations: `NamedHandler`, `findNamedHandler`, `NamedHandlerRegistration`, `NamedSystemRegistration`, `findNamedSystem`, `NamedStateHookRegistration`, `findNamedStateHook` |
+| C++ | Event identifiers: `EventKey`, `InvalidEventType`, `eventKey<T>`, `Engine::eventTypeOf`, `eventTypeCount`, `onById`, `emitById`, `context.emitById` |
+| C++ | Plugin and phase internals: `PluginKey`, `pluginKey<P>`, `PhaseCount`, `OrderBandCount`, `isGameplayPhase` |
+| C++ | Task internals: `PayloadKey`, `payloadKey<P>`, `NoPayloadKey`, `InvalidTaskSlot`, `TaskHandle.slot` and `.generation` |
+| C++ | The query `ById` variants: `queryById`; `QueryByIdSpec`, `BlockById`, `QueryIteration`, `QueryById` |
+| C++ | Query and type diagnostics: `Query::matchedCount`, `Query::writes`; `TypeInfo`, `typeInfo()`, `registeredTypeCount`; `signatureLookupCount`, `archetypeCount()` |
 | C++ | Action map internals: `ActionState`, `ActionPressed`, `ActionHeld`, `ActionReleased`, `ActionValid`, `ActionMap::declare*`, `capture`, `snapshot`, `setDeclarationsLocked`, `PhysicalButton(uint32_t)`, `.usage` |
 | C++ | Schema registry: `capi::SchemaEvent`, `SchemaAction`, `SchemaState`, `capi::schemaHash`, `schemaComponentIds`, `schemaEvents`, `schemaActions`, `schemaStates` |
 | C++ | Plugin classes and checks: `essentials2d::Plugin`, `essentials3d::Plugin`, `checkHierarchy` |
-| TypeScript | Layout and view types: `ComponentLayout`, `FieldLayout`, `ScalarType`, `RawField`, `ReadField`, `ReadView`, `WriteField`, `WriteView`, `Fields` |
-| TypeScript | `@oly/web-host` test hooks: `FrameTarget`, `BrowserEnvironment`, `BrowserLoop`, `InputTarget`, `InputCanvas`, `InputEnvironment`, `BrowserInput` and the injection parameters (`runInBrowser(…, environment)`, `attachBrowserInput(…, environment)`, `moduleFactoryFromUrl(…, importModule)`) |
+| TypeScript | Layout and view types: `ComponentLayout`, `FieldLayout`, `ScalarType`, `RawField`, `ReadView`, `WriteView`, `Fields` |
+| TypeScript | `@oly/web-host` test hooks: `BrowserEnvironment`, `InputEnvironment` and the injection parameters (`runInBrowser(…, environment)`, `attachBrowserInput(…, environment)`, `moduleFactoryFromUrl(…, importModule)`) |
 | `oly` | `oly version-at-least`, `OLY_TOOLS_DIR`, `OLY_GAME_DIR`, `OLY_IN_DOCKER`, `OLY_ENGINE_SOURCE_DIR` |
 | CMake | Engine-level: `oly_typescript_schemas`, `oly_add_engine_test_game`, `OLY_WERROR`, `OLY_SANITIZE`, `OLY_BUILD_BENCH`, `OLY_VEC_REPORT`, `OLY_BUILD_GAMES`. [Commands](commands.md) documents the options; [CMake](../cmake.md) keeps only what a game sets |
 | `toolchain.env` | `GCC_VERSION`, `CMAKE_VERSION`, `CMAKE_MINIMUM`, `NINJA_MINIMUM`, `MINGW_GCC_MINIMUM` |
