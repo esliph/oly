@@ -18,6 +18,7 @@ Ready patterns for common game features, in TypeScript. Each recipe shows the sc
 | [Keep inside the screen or wrap around](#keep-inside-the-screen-or-wrap-around) | clamping, modulo |
 | [Score and HUD](#score-and-hud) | TS state, render system, `trySingle` (browser-only) |
 | [Round timer](#round-timer) | `context.time`, `after` |
+| [Rebind a key](#rebind-a-key) | `clearBindings`, `bind`, `isBound` |
 | [Pause screen](#pause-screen) | `whilePaused`, `paused` |
 | [Restart the game](#restart-the-game) | states and scope |
 | [High score saved in the browser](#high-score-saved-in-the-browser) | injected storage, `onExit` (browser-only) |
@@ -380,6 +381,32 @@ engine.addSystem(Phase.Render, "drawClock", (context) => {
 ```
 
 Both use the game clock, so the timer stops while paused and the task is cancelled if the round ends earlier.
+
+## Rebind a key
+
+```ts
+function rebind(engine: Engine, action: ButtonAction, button: ButtonName): void {
+  engine.actions.clearBindings(action);
+  engine.actions.bind(action, button);
+}
+
+rebind(engine, jump, "KeyK");
+```
+
+A "press a key to rebind" screen takes the next key the player presses:
+
+```ts
+window.addEventListener("keydown", function capture(event) {
+  if (!isButtonName(event.code)) {
+    return;
+  }
+
+  rebind(engine, jump, event.code);
+  window.removeEventListener("keydown", capture);
+});
+```
+
+Use `engine.actions.isBound(button)` to warn when a key is already in use.
 
 ## Pause screen
 

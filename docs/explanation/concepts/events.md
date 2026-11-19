@@ -1,6 +1,6 @@
 # Events
 
-[← Engine, loop and systems](engine-and-systems.md) · [Concepts](README.md) · Next: [Input →](../../guide/concepts/input.md)
+[← Engine, loop and systems](engine-and-systems.md) · [Concepts](README.md) · Next: [Input →](input.md)
 
 An event is a small message: "this enemy died here", "the player picked up this coin". The system that sees it happen **emits** it. Any number of **handlers** react to it later in the same step. The emitter does not know who listens.
 
@@ -87,4 +87,4 @@ TypeScript: [Restrict handlers to states](../../reference/typescript/events.md#r
 
 ## Next
 
-[Input](../../guide/concepts/input.md): turn keys and mouse into actions.
+[Input](input.md): turn keys and mouse into actions.

@@ -167,7 +167,7 @@ A system receives a `SystemContext`. It is valid only during that call.
 | create | `context.spawn(Bullet{}, Position{x, y}, Velocity{vx, vy})` |
 | change structure | `context.add(entity, Frozen{})`, `context.remove<Frozen>(entity)`, `context.destroy(entity)`, `context.persist(entity)` |
 | events | `context.emit(EnemyDied{entity, x, y})` ([Events](events.md#contextemit)) |
-| input | `context.actions().button(actions::shoot).held` ([Input](../../guide/concepts/input.md)) |
+| input | `context.actions().button(actions::shoot).held` ([Input](input.md)) |
 | time | `context.fixedDeltaTime()`, `context.time()`, `context.interpolation()` |
 | schedule | `context.schedule().after(seconds, function, payload)` ([Schedule](../../guide/concepts/schedule.md)) |
 | state | `context.state() == states::playing`, `context.requestState(states::gameOver)` ([States](../../guide/concepts/states.md)) |

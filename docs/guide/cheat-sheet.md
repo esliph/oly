@@ -99,7 +99,7 @@ engine.on<Event>("name", [](oly::app::HandlerContext& context) { name(context, c
 
 ## Input
 
-[Input](concepts/input.md)
+[Input](../explanation/concepts/input.md)
 
 ```cpp
 engine.actions().bind(actions::jump, oly::input::Key::Space);

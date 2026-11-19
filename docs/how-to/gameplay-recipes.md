@@ -18,6 +18,7 @@ Ready patterns for common game features, in C++. Each recipe shows the schema en
 | [Keep inside the screen or wrap around](#keep-inside-the-screen-or-wrap-around) | clamping, modulo |
 | [Score and HUD](typescript/gameplay-recipes.md#score-and-hud) | browser-only |
 | [Round timer](#round-timer) | `context.time()`, `after` |
+| [Rebind a key](#rebind-a-key) | `clearBindings`, `bind`, `isBound` |
 | [Pause screen](#pause-screen) | `setWhilePaused`, `paused` |
 | [Restart the game](#restart-the-game) | states and scope |
 | [High score saved in the browser](typescript/gameplay-recipes.md#high-score-saved-in-the-browser) | browser-only |
@@ -492,6 +493,40 @@ engine.addSystem(oly::app::Phase::Render, "readClock", readClock);
 Both use the game clock, so the timer stops while paused and the task is cancelled if the round ends earlier.
 
 TypeScript: [Round timer](typescript/gameplay-recipes.md#round-timer).
+
+## Rebind a key
+
+```
+# game.oly
+action jump: button
+```
+
+Bindings change at any time and apply from the next capture. Clear the old buttons of the action, bind the new one, and skip the change when another action already uses the button:
+
+```cpp
+void rebind(oly::input::ActionMap& map, oly::input::ButtonAction action, oly::input::PhysicalButton button) {
+  map.clearBindings(action.id);
+  map.bind(action, button);
+}
+
+OLY_SYSTEM(rebindJump) {
+  oly::input::ActionMap& map = context.actions();
+
+  if (!map.isBound(oly::input::Key::K)) {
+    rebind(map, actions::jump, oly::input::Key::K);
+  }
+}
+```
+
+**Where you own the `Engine`** (native):
+
+```cpp
+engine.addSystem(oly::app::Phase::UpdateBefore, "rebindJump", rebindJump);
+```
+
+`rebind` also works from the code that owns the `Engine`: pass `engine.actions()`. A settings screen calls it with the button the player picked. After the first call `K` is bound, so `rebindJump` does nothing from then on.
+
+TypeScript: [Rebind a key](typescript/gameplay-recipes.md#rebind-a-key).
 
 ## Pause screen
 

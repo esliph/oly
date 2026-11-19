@@ -1,6 +1,6 @@
 # Schedule
 
-[← Input](input.md) · [Guide index](../README.md) · Next: [States →](states.md)
+[← Input](../../explanation/concepts/input.md) · [Guide index](../README.md) · Next: [States →](states.md)
 
 The scheduler runs code **later** or **repeatedly**, on the **game clock**. Game time stops when the game pauses, so timers stop too. You never need to count frames or read the wall clock.
 

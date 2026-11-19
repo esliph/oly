@@ -1,8 +1,16 @@
 # Input in TypeScript
 
-[← Events](events.md) · [TypeScript client](README.md) · Concept: [Input](../../guide/concepts/input.md) · Next: [Schedule →](schedule.md)
+[TypeScript client](README.md) · Concept: [Input](../../explanation/concepts/input.md) · C++: [Input in C++](../cpp/input.md)
 
-The three kinds of actions, when `pressed`, `held` and `released` are true and how the axis is normalized are in the [concept page](../../guide/concepts/input.md). This page shows the TS calls.
+The three kinds of actions, when `pressed`, `held` and `released` are true and how the axis is normalized are in the [concept page](../../explanation/concepts/input.md). This page shows the TS calls. To rebind keys: [Rebind a key](../../how-to/typescript/gameplay-recipes.md#rebind-a-key). To press buttons yourself: [Drive the loop yourself](../../how-to/drive-the-loop-yourself.md#3-deliver-input).
+
+## Action kinds and ids
+
+```ts
+type ActionKind = "button" | "axis2d" | "pointer";
+```
+
+An action declared in the schema is an `ActionType`: its `actionKind` is one of the three kinds, and its `schemaIndex` is its position in `schema.actions`, which is also its `ActionId`. The types `ButtonAction`, `Axis2dAction` and `PointerAction` are an `ActionType` of one kind each: a call that takes a handle of the wrong kind does not compile, and one that gets it anyway throws `ContractError` (`<operation> action=<name>: action of kind <kind>, expected <kind>`).
 
 ## Bind buttons
 
@@ -18,6 +26,8 @@ engine.actions.bind(move, { up: "ArrowUp", down: "ArrowDown", left: "ArrowLeft",
 ```
 
 Available names: `KeyA`..`KeyZ`, `Digit0`..`Digit9`, `F1`..`F12`, `Enter`, `Escape`, `Space`, `Tab`, `Backspace`, arrows (`ArrowUp`...), modifiers (`ShiftLeft`, `ControlLeft`, `AltLeft`, `MetaLeft` and the `Right` versions), punctuation (`Minus`, `Comma`, `Slash`...), the numpad (`Numpad0`..`Numpad9`, `NumpadAdd`...) and the mouse (`MouseLeft`, `MouseRight`, `MouseMiddle`). The full list is the `ButtonName` type; `isButtonName(text)` checks a string at run time.
+
+`engine.actions.clearBindings(action)` removes every binding of the action. `engine.actions.isBound(button)` is `true` when any action uses the button. A button name outside the table throws `ContractError` (`<operation> button=<name>: button outside the W3C table`).
 
 ## Read actions in systems
 
@@ -74,42 +84,3 @@ The right-click menu is prevented only when `MouseRight` is bound. If you do not
 ```ts
 canvas.addEventListener("contextmenu", (event) => event.preventDefault());
 ```
-
-## Rebind at run time
-
-```ts
-function rebind(engine: Engine, action: ButtonAction, button: ButtonName): void {
-  engine.actions.clearBindings(action);
-  engine.actions.bind(action, button);
-}
-
-rebind(engine, jump, "KeyK");
-```
-
-A "press a key to rebind" screen:
-
-```ts
-window.addEventListener("keydown", function capture(event) {
-  if (!isButtonName(event.code)) {
-    return;
-  }
-
-  rebind(engine, jump, event.code);
-  window.removeEventListener("keydown", capture);
-});
-```
-
-Use `engine.actions.isBound(button)` to warn when a key is already in use.
-
-## Deliver input yourself
-
-```ts
-engine.actions.buttonDown("Space");
-engine.actions.buttonUp("Space");
-engine.actions.pointerMove(320, 180);
-engine.actions.releaseAll();
-```
-
-## Next
-
-[Schedule →](schedule.md): run code later, on the game clock.
