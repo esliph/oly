@@ -36,7 +36,7 @@ Each page mirrors the concept page with the same file name.
 | [Events](events.md) | [Events](../../explanation/concepts/events.md) |
 | [Input](input.md) | [Input](../../explanation/concepts/input.md) |
 | [Schedule](schedule.md) | [Schedule](../../explanation/concepts/schedule.md) |
-| [States](states.md) | [States](../../guide/concepts/states.md) |
+| [States](states.md) | [States](../../explanation/concepts/states.md) |
 | [Recipes](../../how-to/typescript/gameplay-recipes.md) | [Recipes](../../how-to/gameplay-recipes.md) |
 
 ## C++ systems in a web game

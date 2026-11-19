@@ -129,7 +129,7 @@ context.schedule().persist(handle);     // survives state changes
 
 ## Scope
 
-[States](concepts/states.md#scope-automatic-clean-up)
+[States](../explanation/concepts/states.md#scope-automatic-clean-up)
 
 | Created with | Scoped to the active state? |
 |---|---|

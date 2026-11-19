@@ -1,6 +1,6 @@
 # Performance
 
-[← States](states.md) · [Guide index](../README.md) · Next: [Plugins →](plugins.md)
+[← States](../../explanation/concepts/states.md) · [Guide index](../README.md) · Next: [Plugins →](plugins.md)
 
 Oly is built around one cost model: **a query walks columns of components that sit next to each other in memory**. A system that touches a few components of many entities is cheap. A system that allocates, moves entities between tables or reads data it does not need is not.
 

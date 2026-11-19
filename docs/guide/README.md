@@ -37,7 +37,7 @@ Pages are not numbered. Each path lists them in the order to read.
 **TypeScript on the web**
 
 1. [Getting started on the web](environments/web/getting-started.md)
-2. Each concept, followed by its TS page: [Schema](../explanation/concepts/schema.md) and [in TS](../reference/typescript/schema.md), [World and entities](../explanation/concepts/world-and-entities.md) and [in TS](../reference/typescript/world-and-entities.md), [Queries](../explanation/concepts/queries.md) and [in TS](../reference/typescript/queries.md), [Engine, loop and systems](../explanation/concepts/engine-and-systems.md) and [in TS](../reference/typescript/engine-and-systems.md), [Events](../explanation/concepts/events.md) and [in TS](../reference/typescript/events.md), [Input](../explanation/concepts/input.md) and [in TS](../reference/typescript/input.md), [Schedule](../explanation/concepts/schedule.md) and [in TS](../reference/typescript/schedule.md), [States](concepts/states.md) and [in TS](../reference/typescript/states.md)
+2. Each concept, followed by its TS page: [Schema](../explanation/concepts/schema.md) and [in TS](../reference/typescript/schema.md), [World and entities](../explanation/concepts/world-and-entities.md) and [in TS](../reference/typescript/world-and-entities.md), [Queries](../explanation/concepts/queries.md) and [in TS](../reference/typescript/queries.md), [Engine, loop and systems](../explanation/concepts/engine-and-systems.md) and [in TS](../reference/typescript/engine-and-systems.md), [Events](../explanation/concepts/events.md) and [in TS](../reference/typescript/events.md), [Input](../explanation/concepts/input.md) and [in TS](../reference/typescript/input.md), [Schedule](../explanation/concepts/schedule.md) and [in TS](../reference/typescript/schedule.md), [States](../explanation/concepts/states.md) and [in TS](../reference/typescript/states.md)
 3. [Testing a web game](../how-to/test-a-web-game.md)
 4. [The WASM↔JS boundary](environments/web/boundary.md)
 
@@ -66,7 +66,7 @@ Read in order the first time. Each page builds on the one before.
 | [Events](../explanation/concepts/events.md) | let systems talk without knowing each other |
 | [Input](../explanation/concepts/input.md) | bind keys and mouse to actions and read them |
 | [Schedule](../explanation/concepts/schedule.md) | run code later or every N seconds on the game clock |
-| [States](concepts/states.md) | build menu, playing and game over screens that reset cleanly |
+| [States](../explanation/concepts/states.md) | build menu, playing and game over screens that reset cleanly |
 | [Performance](concepts/performance.md) | keep the hot path fast |
 | [Plugins](concepts/plugins.md) | turn reusable engine functionality on, and write your own |
 | [Transforms](concepts/transforms.md) | place entities with `Position`, nest them with `Parent` and read `WorldTransform` |

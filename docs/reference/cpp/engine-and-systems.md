@@ -114,7 +114,7 @@ In the gameplay phases, a `whilePaused` system runs only in paused steps and the
 void setSystemStates(SystemId system, std::initializer_list<StateId> states);
 ```
 
-Restricts the system to the given states ([States](../../guide/concepts/states.md)), in every phase, including Render. An empty list removes the restriction. With no active state, a restricted system does not run. Cannot be called during `frame`.
+Restricts the system to the given states ([States](states.md)), in every phase, including Render. An empty list removes the restriction. With no active state, a restricted system does not run. Cannot be called during `frame`.
 
 ```cpp
 engine.setSystemStates(spinId, {states::playing});
@@ -170,7 +170,7 @@ A system receives a `SystemContext`. It is valid only during that call.
 | input | `context.actions().button(actions::shoot).held` ([Input](input.md)) |
 | time | `context.fixedDeltaTime()`, `context.time()`, `context.interpolation()` |
 | schedule | `context.schedule().after(seconds, function, payload)` ([Schedule](schedule.md)) |
-| state | `context.state() == states::playing`, `context.requestState(states::gameOver)` ([States](../../guide/concepts/states.md)) |
+| state | `context.state() == states::playing`, `context.requestState(states::gameOver)` ([States](states.md)) |
 | pause | `context.pause()`, `context.resume()`, `context.paused()` |
 | where it runs | `context.phase()`, `context.systemId()`, `context.name()`, `context.userData()` |
 

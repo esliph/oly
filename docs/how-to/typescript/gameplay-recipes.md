@@ -21,6 +21,7 @@ Ready patterns for common game features, in TypeScript. Each recipe shows the sc
 | [Rebind a key](#rebind-a-key) | `clearBindings`, `bind`, `isBound` |
 | [Pause screen](#pause-screen) | `whilePaused`, `paused` |
 | [Restart the game](#restart-the-game) | states and scope |
+| [Menu → playing → game over](#menu--playing--game-over) | `requestState`, hooks, `inState`, scope |
 | [High score saved in the browser](#high-score-saved-in-the-browser) | injected storage, `onExit` (browser-only) |
 | [A sequence of timed steps](#a-sequence-of-timed-steps) | chained `after` |
 | [Random spawn positions](#random-spawn-positions) | injected `random` |
@@ -459,6 +460,66 @@ engine.addSystem(Phase.UpdateBefore, "retry", (context) => {
   }
 }).inState(playing);
 ```
+
+## Menu → playing → game over
+
+```
+# game.oly
+action confirm: button
+action pause: button
+tag Player
+component Health { value: i32 }
+component Score { kills: i32 }
+event PlayerDied { entity: entity }
+state menu
+state playing
+state gameOver
+```
+
+The registrations, reduced to the state logic:
+
+```ts
+engine.actions.bind(confirm, "Enter");
+engine.actions.bind(pause, "Escape");
+
+engine.addSystem(Phase.UpdateBefore, "startOnConfirm", (context) => {
+  if (context.actions.button(confirm).pressed) {
+    context.requestState(playing);
+  }
+}).inState(menu, gameOver);
+
+engine.addSystem(Phase.UpdateBefore, "pauseOnPress", (context) => {
+  if (context.actions.button(pause).pressed) {
+    context.pause();
+  }
+}).inState(playing);
+
+engine.addSystem(Phase.UpdateBefore, "resumeOnPress", (context) => {
+  if (context.actions.button(pause).pressed) {
+    context.resume();
+  }
+}).whilePaused().inState(playing);
+
+engine.addNativeSystem(Phase.Update, "integrate").inState(playing);
+engine.addNativeSystem(Phase.UpdateAfter, "collide").inState(playing);
+
+engine.on(PlayerDied, "endRound", (context) => context.requestState(gameOver));
+
+engine.onEnter(playing, "startRound", (context) => {
+  score.kills = 0;
+  context.spawn([Player, Position, Health], { Position: { x: 480, y: 270 }, Health: { value: 3 } });
+  context.schedule.every(5, (task) => spawnWave(task));
+});
+
+engine.onExit(playing, "resumeOnExit", (context) => context.resume());
+
+engine.requestState(menu);
+```
+
+Notice:
+
+- No code destroys the enemies or cancels the wave timer: the scope does it ([Scope: automatic clean-up](../../explanation/concepts/states.md#scope-automatic-clean-up)).
+- The pause belongs to the whole engine, and only `resumeOnPress`, limited to `playing`, lifts it. Leaving `playing` while paused would freeze the next state, so `resumeOnExit` resumes on the way out.
 
 ## High score saved in the browser
 

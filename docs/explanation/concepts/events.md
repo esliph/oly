@@ -66,7 +66,7 @@ An event nobody handles is discarded at the end of the step.
 
 ## Handlers and states
 
-A handler can be restricted to some [states](../../guide/concepts/states.md): with an active state that is not in its list, the handler is skipped. The calls: [Restrict handlers to states](../../reference/cpp/events.md#restrict-handlers-to-states).
+A handler can be restricted to some [states](states.md): with an active state that is not in its list, the handler is skipped. The calls: [Restrict handlers to states](../../reference/cpp/events.md#restrict-handlers-to-states).
 
 TypeScript: [Restrict handlers to states](../../reference/typescript/events.md#restrict-handlers-to-states).
 
@@ -78,7 +78,7 @@ TypeScript: [Restrict handlers to states](../../reference/typescript/events.md#r
 | something to happen after N seconds | the [schedule](schedule.md) |
 | to keep data on an entity across steps | a component |
 | to mark entities for another system to process | a tag (`context.add(entity, Hit{})`), then a query `With<Hit>` |
-| to change screens | a [state](../../guide/concepts/states.md) |
+| to change screens | a [state](states.md) |
 
 ## API
 

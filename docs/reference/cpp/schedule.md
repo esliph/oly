@@ -99,7 +99,7 @@ bool persist(TaskHandle task);
 uint32_t pendingCount() const noexcept;
 ```
 
-`cancel` removes the task and runs its discard, and returns `true` if the task was pending, `false` if it already ended or was cancelled. `isPending` is `true` while the task may still run. Both return `false` for `TaskHandle{}`, which references no task, and for an `after` that is running or has run. `persist` removes the scope of a pending task, so a state change does not cancel it ([Scope: automatic clean-up](../../guide/concepts/states.md#scope-automatic-clean-up)); it returns `false` if the task is not pending. A handle with a slot out of range stops with `OLY_ASSERT` (`cancel: slot=<slot> out of range (<n> slots)`, and the same with `isPending` and `persist`).
+`cancel` removes the task and runs its discard, and returns `true` if the task was pending, `false` if it already ended or was cancelled. `isPending` is `true` while the task may still run. Both return `false` for `TaskHandle{}`, which references no task, and for an `after` that is running or has run. `persist` removes the scope of a pending task, so a state change does not cancel it ([Scope: automatic clean-up](../../explanation/concepts/states.md#scope-automatic-clean-up)); it returns `false` if the task is not pending. A handle with a slot out of range stops with `OLY_ASSERT` (`cancel: slot=<slot> out of range (<n> slots)`, and the same with `isPending` and `persist`).
 
 `pendingCount()` is the number of tasks that may still run: every `every` that is not cancelled and every `after` that has not run. Use it in a test to check that a round left nothing behind.
 

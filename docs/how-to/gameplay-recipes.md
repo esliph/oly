@@ -21,6 +21,7 @@ Ready patterns for common game features, in C++. Each recipe shows the schema en
 | [Rebind a key](#rebind-a-key) | `clearBindings`, `bind`, `isBound` |
 | [Pause screen](#pause-screen) | `setWhilePaused`, `paused` |
 | [Restart the game](#restart-the-game) | states and scope |
+| [Menu → playing → game over](#menu--playing--game-over) | `requestState`, hooks, `setSystemStates`, scope |
 | [High score saved in the browser](typescript/gameplay-recipes.md#high-score-saved-in-the-browser) | browser-only |
 | [A sequence of timed steps](#a-sequence-of-timed-steps) | chained `after` |
 | [Random spawn positions](#random-spawn-positions) | `std::minstd_rand` |
@@ -604,6 +605,89 @@ engine.setSystemStates(engine.addSystem(oly::app::Phase::UpdateBefore, "retry", 
 To restart from inside `playing` (a "retry" key), request `playing` again. A request for the active state is a full change: `onExit`, scope clean-up, then `onEnter`.
 
 TypeScript: [Restart the game](typescript/gameplay-recipes.md#restart-the-game).
+
+## Menu → playing → game over
+
+```
+# game.oly
+action confirm: button
+action pause: button
+tag Player
+component Health { value: i32 }
+component Score { kills: i32 }
+event PlayerDied { entity: entity }
+state menu
+state playing
+state gameOver
+```
+
+The bodies, reduced to the state logic:
+
+```cpp
+OLY_SYSTEM(startOnConfirm) {
+  if (context.actions().button(actions::confirm).pressed) {
+    context.requestState(states::playing);
+  }
+}
+
+OLY_SYSTEM(pauseOnPress) {
+  if (context.actions().button(actions::pause).pressed) {
+    context.pause();
+  }
+}
+
+OLY_SYSTEM(resumeOnPress) {
+  if (context.actions().button(actions::pause).pressed) {
+    context.resume();
+  }
+}
+
+OLY_HANDLER(endRound, PlayerDied) {
+  context.requestState(states::gameOver);
+}
+
+OLY_STATE_HOOK(startRound) {
+  Score& score = std::get<1>(context.query<Score>().single());
+  score.kills = 0;
+
+  context.spawn(Player{}, Position{480.0f, 270.0f}, Health{3});
+  context.schedule().every(5.0, spawnWave);
+}
+
+OLY_STATE_HOOK(resumeOnExit) {
+  context.resume();
+}
+```
+
+**Where you own the `Engine`** (native):
+
+```cpp
+engine.actions().bind(actions::confirm, oly::input::Key::Enter);
+engine.actions().bind(actions::pause, oly::input::Key::Escape);
+
+engine.setSystemStates(engine.addSystem(oly::app::Phase::UpdateBefore, "startOnConfirm", startOnConfirm), {states::menu, states::gameOver});
+
+engine.setSystemStates(engine.addSystem(oly::app::Phase::UpdateBefore, "pauseOnPress", pauseOnPress), {states::playing});
+
+oly::app::SystemId resumeId = engine.addSystem(oly::app::Phase::UpdateBefore, "resumeOnPress", resumeOnPress);
+engine.setWhilePaused(resumeId, true);
+engine.setSystemStates(resumeId, {states::playing});
+
+engine.on<PlayerDied>("endRound", [](oly::app::HandlerContext& context) { endRound(context, context.events<PlayerDied>()); });
+
+engine.onEnter(states::playing, "startRound", startRound);
+engine.onExit(states::playing, "resumeOnExit", resumeOnExit);
+
+engine.requestState(states::menu);
+```
+
+Notice:
+
+- No code destroys the enemies or cancels the wave timer: the scope does it ([Scope: automatic clean-up](../explanation/concepts/states.md#scope-automatic-clean-up)).
+- The pause belongs to the whole engine, and only `resumeOnPress`, limited to `playing`, lifts it. Leaving `playing` while paused would freeze the next state, so `resumeOnExit` resumes on the way out.
+- The render system has no restriction: it draws every state and picks the overlay with `context.state()`.
+
+TypeScript: [Menu → playing → game over](typescript/gameplay-recipes.md#menu--playing--game-over).
 
 ## A sequence of timed steps
 

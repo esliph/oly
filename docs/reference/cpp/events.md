@@ -155,7 +155,7 @@ engine.on<EnemyDied>("destroyDead", [](oly::app::HandlerContext& context) { dest
 
 ## Restrict handlers to states
 
-`on` returns a `HandlerId`. A restricted handler is skipped when the active state is not in its list ([Run only in some states](../../guide/concepts/states.md#run-only-in-some-states)).
+`on` returns a `HandlerId`. A restricted handler is skipped when the active state is not in its list ([Run only in some states](states.md#run-only-in-some-states)).
 
 ### `Engine::setHandlerStates`
 

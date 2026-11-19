@@ -1,6 +1,6 @@
 # Schedule
 
-[← Input](input.md) · [Concepts](README.md) · Next: [States →](../../guide/concepts/states.md)
+[← Input](input.md) · [Concepts](README.md) · Next: [States →](states.md)
 
 The scheduler runs code **later** or **repeatedly**, on the **game clock**. Game time stops when the game pauses, so timers stop too. You never need to count frames or read the wall clock.
 
@@ -52,7 +52,7 @@ TypeScript: the callback is a closure, so there is no payload and no discard ([C
 ## Pause, states and recovery
 
 - **Pause**: tasks do not run and the clock does not move. A 2-second `after` scheduled before a 10-second pause still fires 2 game seconds later.
-- **States**: a task created while a state is active is **scoped** to it. A state change cancels it, running its discard. This is what makes "play again" safe: the old wave timer does not keep spawning in the menu. `persist` keeps a task across state changes ([Scope: automatic clean-up](../../guide/concepts/states.md#scope-automatic-clean-up)).
+- **States**: a task created while a state is active is **scoped** to it. A state change cancels it, running its discard. This is what makes "play again" safe: the old wave timer does not keep spawning in the menu. `persist` keeps a task across state changes ([Scope: automatic clean-up](states.md#scope-automatic-clean-up)).
 - **Created during step 2**: a task scheduled by another task runs from the next step on. `after(0.0, ...)` inside a task is not a loop.
 - **Recovery**: scheduled tasks survive an interrupted frame ([Engine, loop and systems](engine-and-systems.md#when-a-system-throws)).
 
@@ -63,4 +63,4 @@ TypeScript: the callback is a closure, so there is no payload and no discard ([C
 
 ## Next
 
-[States](../../guide/concepts/states.md): menus, rounds and game over with automatic clean-up.
+[States](states.md): menus, rounds and game over with automatic clean-up.

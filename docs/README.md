@@ -9,7 +9,7 @@
 
 | Page | What it answers |
 |---|---|
-| [Gameplay recipes](how-to/gameplay-recipes.md) | How do I write a projectile, a cooldown, a spawner, a pickup, a key rebinding or a query pattern in C++? |
+| [Gameplay recipes](how-to/gameplay-recipes.md) | How do I write a projectile, a cooldown, a spawner, a pickup, a key rebinding, a game flow or a query pattern in C++? |
 | [Gameplay recipes in TypeScript](how-to/typescript/gameplay-recipes.md) | How do I write the same patterns in TypeScript? |
 | [Test a web game](how-to/test-a-web-game.md) | How do I run the real game in Node, press keys and read the world? |
 | [Debug the world](how-to/debug-the-world.md) | How do I check that a `World` is consistent and look at its shape? |
@@ -27,6 +27,7 @@
 | [Events in C++](reference/cpp/events.md) | Which calls declare an event, emit it, handle it and restrict a handler to states? |
 | [Input in C++](reference/cpp/input.md) | Which calls bind buttons to actions, read buttons, the axis and the pointer, and list the declared actions? |
 | [Schedule in C++](reference/cpp/schedule.md) | Which calls run a task after a delay or every interval, cancel it, and carry a payload into it? |
+| [States in C++](reference/cpp/states.md) | Which calls declare states, request a change, restrict systems to states and run hooks on entry and exit? |
 | [World and entities in C++](reference/cpp/world-and-entities.md) | Which calls create, read, change and destroy entities, record commands and observe changes? |
 | [Glossary](reference/glossary.md) | What does each name mean in C++, the C API and TypeScript? |
 | [Known limitations](reference/limits.md) | What does the engine not do? |

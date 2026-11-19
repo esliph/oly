@@ -12,7 +12,7 @@ Each page explains the rules a game relies on. Read them in this order; each one
 | [Events](events.md) | how systems and handlers talk through batches and rounds |
 | [Input](input.md) | how actions turn physical input into pressed, held and released |
 | [Schedule](schedule.md) | how to run code after a delay or every interval |
-| [States](../../guide/concepts/states.md) | how to switch between game states and scope entities to them |
+| [States](states.md) | how to switch between game states and scope entities to them |
 | [Performance](../../guide/concepts/performance.md) | what changes cost and how to keep the hot path fast |
 | [Plugins](../../guide/concepts/plugins.md) | how a game turns on engine-level features |
 | [Transforms](../../guide/concepts/transforms.md) | how `Position`, `Parent` and `WorldTransform` work together |

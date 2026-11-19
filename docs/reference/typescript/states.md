@@ -1,8 +1,8 @@
 # States in TypeScript
 
-[← Schedule](schedule.md) · [TypeScript client](README.md) · Concept: [States](../../guide/concepts/states.md) · Next: [Recipes →](../../how-to/typescript/gameplay-recipes.md)
+[TypeScript client](README.md) · Concept: [States](../../explanation/concepts/states.md) · C++: [States in C++](../cpp/states.md)
 
-When a state changes, what the scope cleans and in what order hooks run are in the [concept page](../../guide/concepts/states.md). This page shows the TS calls.
+When a state changes, what the scope cleans and in what order hooks run are in the [concept page](../../explanation/concepts/states.md). This page shows the TS calls. A menu, a round and a game over screen, put together: [Menu → playing → game over](../../how-to/typescript/gameplay-recipes.md#menu--playing--game-over).
 
 ## Declare and start
 
@@ -54,7 +54,7 @@ A hook written in C++ is registered with `engine.addNativeOnEnter(playing, "name
 
 ## Scope: automatic clean-up
 
-`engine.world.spawn(...)` is never scoped ([the scope table](../../guide/concepts/states.md#scope-automatic-clean-up)).
+`engine.world.spawn(...)` is never scoped ([the scope table](../../explanation/concepts/states.md#scope-automatic-clean-up)).
 
 ### Keep something across states: `persist`
 
@@ -69,55 +69,3 @@ engine.onEnter(playing, "startRound", (context) => {
 ```
 
 For things that exist from the start, create them with `engine.world.spawn` before the first frame: they are never scoped.
-
-## Complete pattern: menu → playing → game over
-
-A typical `src/game.ts`, reduced to the state logic.
-
-```ts
-export function installGame(engine: Engine): { kills: number } {
-  const score = { kills: 0 };
-
-  engine.actions.bind(confirm, "Enter");
-  engine.actions.bind(pause, "Escape");
-
-  engine.addSystem(Phase.UpdateBefore, "startOnConfirm", (context) => {
-    if (context.actions.button(confirm).pressed) {
-      context.requestState(playing);
-    }
-  }).inState(menu, gameOver);
-
-  engine.addSystem(Phase.UpdateBefore, "pauseOnPress", (context) => {
-    if (context.actions.button(pause).pressed) {
-      context.pause();
-    }
-  }).inState(playing);
-  engine.addSystem(Phase.UpdateBefore, "resumeOnPress", (context) => {
-    if (context.actions.button(pause).pressed) {
-      context.resume();
-    }
-  }).whilePaused().inState(playing);
-
-  engine.addNativeSystem(Phase.Update, "integrate").inState(playing);
-  engine.addNativeSystem(Phase.UpdateAfter, "collide").inState(playing);
-
-  engine.on(PlayerDied, "endRound", (context) => context.requestState(gameOver));
-
-  engine.onEnter(playing, "startRound", (context) => {
-    score.kills = 0;
-    context.spawn([Player, Position, Health], { Position: { x: 480, y: 270 }, Health: { value: 3 } });
-    context.schedule.every(5, (task) => spawnWave(task));
-  });
-  // The pause belongs to the whole engine and only resumeOnPress (limited to playing) lifts it:
-  // leaving playing while paused would freeze the next state.
-  engine.onExit(playing, "resumeOnExit", (context) => context.resume());
-
-  engine.requestState(menu);
-
-  return score;
-}
-```
-
-## Next
-
-[Recipes →](../../how-to/typescript/gameplay-recipes.md): ready patterns for common gameplay.
