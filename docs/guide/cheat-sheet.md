@@ -47,7 +47,7 @@ world.imply<A, B>();                                              // adding A ad
 
 ## Queries
 
-[Queries](concepts/queries.md)
+[Queries](../explanation/concepts/queries.md)
 
 ```cpp
 context.query<A, const B>(oly::ecs::With<Tag>{}, oly::ecs::Without<Other>{}).each([](A& a, const B& b) {});

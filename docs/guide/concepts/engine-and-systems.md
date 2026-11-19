@@ -1,6 +1,6 @@
 # Engine, loop and systems
 
-[← Queries](queries.md) · [Guide index](../README.md) · Next: [Events →](events.md)
+[← Queries](../../explanation/concepts/queries.md) · [Guide index](../README.md) · Next: [Events →](events.md)
 
 The `Engine` runs your game: a fixed-step clock, phases of systems, pause, events, input, schedule and states. It runs on top of one `World` that you give it.
 

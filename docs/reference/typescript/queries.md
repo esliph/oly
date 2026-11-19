@@ -1,8 +1,8 @@
 # Queries in TypeScript
 
-[← World and entities](world-and-entities.md) · [TypeScript client](README.md) · Concept: [Queries](../../guide/concepts/queries.md) · Next: [Engine, loop and systems →](engine-and-systems.md)
+[TypeScript client](README.md) · Concept: [Queries](../../explanation/concepts/queries.md) · C++: [Queries in C++](../cpp/queries.md)
 
-What a query visits and the rules while iterating are in the [concept page](../../guide/concepts/queries.md). This page shows the TS calls.
+What a query visits and the rules while iterating are in the [concept page](../../explanation/concepts/queries.md). This page shows the TS calls. Ready patterns: [Recipes in TypeScript](../../how-to/typescript/gameplay-recipes.md#count-entities).
 
 ## The query spec
 
@@ -51,7 +51,7 @@ The views read and write the WASM memory directly. There is **no copy** and no b
 
 ## Rules while iterating
 
-The block and its views are valid only inside the callback ([the contract](../../guide/concepts/queries.md#rules-while-iterating)). A direct structural change on the world (`world.spawn/destroy/add/remove`) throws `ContractError`. Outside the loop, collect the entities first and change them after it:
+The block and its views are valid only inside the callback ([the contract](../../explanation/concepts/queries.md#rules-while-iterating)). A direct structural change on the world (`world.spawn/destroy/add/remove`) throws `ContractError`. Outside the loop, collect the entities first and change them after it:
 
 ```ts
 const dead: Entity[] = [];
@@ -98,90 +98,6 @@ if (player === null) {
 drawer.text(16, 16, `Health ${player.get(Health).value}`);
 ```
 
-## Common query patterns
-
-### Count entities
-
-```ts
-function count(world: World, spec: QuerySpec): number {
-  let total = 0;
-  world.query(spec).eachBlock((block) => {
-    total += block.count;
-  });
-
-  return total;
-}
-
-count(world, { with: [Enemy] });
-count(world, { with: [Enemy], without: [Frozen] });
-```
-
-### Find the nearest entity
-
-```ts
-function nearestEnemy(context: SystemContext, x: number, y: number): Entity | null {
-  let nearest: Entity | null = null;
-  let nearestDistance = Infinity;
-
-  context.query({ read: [Position], with: [Enemy] }).eachBlock((block) => {
-    const position = block.read(Position);
-    for (let row = 0; row < block.count; ++row) {
-      const deltaX = position.x.get(row) - x;
-      const deltaY = position.y.get(row) - y;
-      const distance = deltaX * deltaX + deltaY * deltaY;
-      if (distance < nearestDistance) {
-        nearestDistance = distance;
-        nearest = block.entity(row);
-      }
-    }
-  });
-
-  return nearest;
-}
-```
-
-### Two queries together (pairs)
-
-Read the small set into local values first, then iterate the large set. Here, enemies chase the player:
-
-```ts
-const target = context.query({ read: [Position], with: [Player] }).single().get(Position);
-
-context.query({ read: [Position, Chaser], write: [Velocity], with: [Enemy] }).eachBlock((block) => {
-  const position = block.read(Position);
-  const chaser = block.read(Chaser);
-  const velocity = block.write(Velocity);
-  for (let row = 0; row < block.count; ++row) {
-    const deltaX = target.x - position.x.get(row);
-    const deltaY = target.y - position.y.get(row);
-    const length = Math.hypot(deltaX, deltaY) || 1;
-    velocity.x.set(row, (deltaX / length) * chaser.speed.get(row));
-    velocity.y.set(row, (deltaY / length) * chaser.speed.get(row));
-  }
-});
-```
-
-For "each against each" (bullets × enemies), prefer a C++ system: see [Nested queries](../../guide/concepts/queries.md#two-queries-together-pairs).
-
-### Several shapes with one function
-
-```ts
-type Filter = Pick<QuerySpec, "with" | "without">;
-
-function drawCircles(context: SystemContext, drawer: Drawer, filter: Filter, color: string): void {
-  context.query({ read: [Position, Collider], ...filter }).eachBlock((block) => {
-    const position = block.read(Position);
-    const collider = block.read(Collider);
-    for (let row = 0; row < block.count; ++row) {
-      drawer.circle(position.x.get(row), position.y.get(row), collider.radius.get(row), color);
-    }
-  });
-}
-
-drawCircles(context, drawer, { with: [Enemy] }, "red");
-drawCircles(context, drawer, { with: [Player], without: [Invulnerable] }, "blue");
-```
-
 ## Raw arrays
 
 `field.raw()` returns the typed array under a field, plus the base index and stride. Use it in tight loops to avoid one method call per element. When it pays off is in [The WASM↔JS boundary](../../guide/environments/web/boundary.md).
@@ -198,7 +114,3 @@ world.query({ read: [Velocity], write: [Position] }).eachBlock((block) => {
 ```
 
 A raw array is valid only until the next call that can allocate in the WASM (any spawn, add or engine call can grow the memory). Take it inside the block and use it right away. For `entity` fields, the array is `u32`: `base` points to the index and `base + 1` to the generation.
-
-## Next
-
-[Engine, loop and systems →](engine-and-systems.md): run queries every step inside systems.

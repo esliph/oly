@@ -24,6 +24,10 @@ Ready patterns for common game features, in TypeScript. Each recipe shows the sc
 | [A sequence of timed steps](#a-sequence-of-timed-steps) | chained `after` |
 | [Random spawn positions](#random-spawn-positions) | injected `random` |
 | [Debug overlay](#debug-overlay) | counting with queries (browser-only) |
+| [Count entities](#count-entities) | `eachBlock`, `block.count` |
+| [Find the nearest entity](#find-the-nearest-entity) | `eachBlock`, squared distance |
+| [Two queries together (pairs)](#two-queries-together-pairs) | `single` into a local value, `eachBlock` |
+| [Several shapes with one function](#several-shapes-with-one-function) | filters as parameters |
 
 ---
 
@@ -517,3 +521,93 @@ engine.addSystem(Phase.Render, "debug", (context) => {
 ```
 
 In tests, call `engine.world.checkInvariants()` after each step ([Testing a web game](../test-a-web-game.md)).
+
+## Count entities
+
+```ts
+function count(world: World, spec: QuerySpec): number {
+  let total = 0;
+  world.query(spec).eachBlock((block) => {
+    total += block.count;
+  });
+
+  return total;
+}
+
+count(world, { with: [Enemy] });
+count(world, { with: [Enemy], without: [Frozen] });
+```
+
+C++: [Count entities](../gameplay-recipes.md#count-entities).
+
+## Find the nearest entity
+
+```ts
+function nearestEnemy(context: SystemContext, x: number, y: number): Entity | null {
+  let nearest: Entity | null = null;
+  let nearestDistance = Infinity;
+
+  context.query({ read: [Position], with: [Enemy] }).eachBlock((block) => {
+    const position = block.read(Position);
+    for (let row = 0; row < block.count; ++row) {
+      const deltaX = position.x.get(row) - x;
+      const deltaY = position.y.get(row) - y;
+      const distance = deltaX * deltaX + deltaY * deltaY;
+      if (distance < nearestDistance) {
+        nearestDistance = distance;
+        nearest = block.entity(row);
+      }
+    }
+  });
+
+  return nearest;
+}
+```
+
+C++: [Find the nearest entity](../gameplay-recipes.md#find-the-nearest-entity).
+
+## Two queries together (pairs)
+
+Read the small set into local values first, then iterate the large set. Here, enemies chase the player:
+
+```ts
+const target = context.query({ read: [Position], with: [Player] }).single().get(Position);
+
+context.query({ read: [Position, Chaser], write: [Velocity], with: [Enemy] }).eachBlock((block) => {
+  const position = block.read(Position);
+  const chaser = block.read(Chaser);
+  const velocity = block.write(Velocity);
+  for (let row = 0; row < block.count; ++row) {
+    const deltaX = target.x - position.x.get(row);
+    const deltaY = target.y - position.y.get(row);
+    const length = Math.hypot(deltaX, deltaY) || 1;
+    velocity.x.set(row, (deltaX / length) * chaser.speed.get(row));
+    velocity.y.set(row, (deltaY / length) * chaser.speed.get(row));
+  }
+});
+```
+
+For "each against each" (bullets × enemies), prefer a C++ system: see [Nested queries](../gameplay-recipes.md#two-queries-together-pairs).
+
+C++: [Two queries together (pairs)](../gameplay-recipes.md#two-queries-together-pairs).
+
+## Several shapes with one function
+
+```ts
+type Filter = Pick<QuerySpec, "with" | "without">;
+
+function drawCircles(context: SystemContext, drawer: Drawer, filter: Filter, color: string): void {
+  context.query({ read: [Position, Collider], ...filter }).eachBlock((block) => {
+    const position = block.read(Position);
+    const collider = block.read(Collider);
+    for (let row = 0; row < block.count; ++row) {
+      drawer.circle(position.x.get(row), position.y.get(row), collider.radius.get(row), color);
+    }
+  });
+}
+
+drawCircles(context, drawer, { with: [Enemy] }, "red");
+drawCircles(context, drawer, { with: [Player], without: [Invulnerable] }, "blue");
+```
+
+C++: [Several shapes with one function](../gameplay-recipes.md#several-shapes-with-one-function).

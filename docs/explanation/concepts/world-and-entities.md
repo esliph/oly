@@ -1,6 +1,6 @@
 # World and entities
 
-[← Schema](schema.md) · [Concepts](README.md) · Next: [Queries →](../../guide/concepts/queries.md)
+[← Schema](schema.md) · [Concepts](README.md) · Next: [Queries →](queries.md)
 
 The `World` holds all entities and their components. An **entity** is only an id. What it *is* comes from the components it has. This page explains the rules a game relies on: who owns the `World`, what a handle is, what stays valid, which changes are direct and which are deferred, and when observers and implied components act.
 
@@ -115,4 +115,4 @@ Check a `World` while you build a game: [Debug the world](../../how-to/debug-the
 
 ## Next
 
-[Queries](../../guide/concepts/queries.md): visit many entities at once.
+[Queries](queries.md): visit many entities at once.

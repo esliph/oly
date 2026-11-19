@@ -26,6 +26,10 @@ Ready patterns for common game features, in C++. Each recipe shows the schema en
 | [Debug overlay](typescript/gameplay-recipes.md#debug-overlay) | browser-only |
 | [Camera that follows after movement](#camera-that-follows-after-movement) | `OrderBand::Last` |
 | [Share systems between games](#share-systems-between-games) | plugin, `PLUGINS` |
+| [Count entities](#count-entities) | `eachBlock`, rows per table |
+| [Find the nearest entity](#find-the-nearest-entity) | `each` with the `Entity`, squared distance |
+| [Two queries together (pairs)](#two-queries-together-pairs) | `single` into a local value, nested `each` |
+| [Several shapes with one function](#several-shapes-with-one-function) | filters as parameters |
 
 ---
 
@@ -693,3 +697,111 @@ oly_add_game(<game>_game ENVIRONMENT web DIMENSION 2d SCHEMA ${CMAKE_CURRENT_SOU
 ```
 
 The game's code changes in one place: the types come from the plugin's header, which the game's `schema.generated.hpp` includes. The full walk-through is in [Plugins](../guide/concepts/plugins.md#write-a-plugin). A TS game uses the plugin's components through its generated schema and writes no install code.
+
+## Count entities
+
+Count rows per table, not entity by entity:
+
+```cpp
+size_t countEnemies(oly::app::SystemContext& context) {
+  size_t total = 0;
+
+  context.query<const Health>(oly::ecs::With<Enemy>{}).eachBlock([&total](std::span<const Health> healths) {
+    total += healths.size();
+  });
+
+  return total;
+}
+```
+
+TypeScript: [Count entities](typescript/gameplay-recipes.md#count-entities).
+
+## Find the nearest entity
+
+```cpp
+oly::ecs::Entity nearestEnemy(oly::app::SystemContext& context, float x, float y) {
+  oly::ecs::Entity nearest = oly::ecs::NullEntity;
+  float nearestDistance = std::numeric_limits<float>::infinity();
+
+  context.query<const Position>(oly::ecs::With<Enemy>{}).each([&](oly::ecs::Entity entity, const Position& position) {
+    const float deltaX = position.x - x;
+    const float deltaY = position.y - y;
+    const float distance = deltaX * deltaX + deltaY * deltaY;
+
+    if (distance < nearestDistance) {
+      nearestDistance = distance;
+      nearest = entity;
+    }
+  });
+
+  return nearest;
+}
+```
+
+TypeScript: [Find the nearest entity](typescript/gameplay-recipes.md#find-the-nearest-entity).
+
+## Two queries together (pairs)
+
+Read the small set into a local value first, then iterate the large set. Here, enemies chase the player:
+
+```cpp
+OLY_SYSTEM(chasePlayer) {
+  const Position target = std::get<1>(context.query<const Position>(oly::ecs::With<Player>{}).single());
+
+  context.query<const Position, const Chaser, Velocity>(oly::ecs::With<Enemy>{}).each([target](const Position& position, const Chaser& chaser, Velocity& velocity) {
+    const float deltaX = target.x - position.x;
+    const float deltaY = target.y - position.y;
+    const float length = std::max(std::sqrt(deltaX * deltaX + deltaY * deltaY), 1e-6f);
+
+    velocity = Velocity{deltaX / length * chaser.speed, deltaY / length * chaser.speed};
+  });
+}
+```
+
+For "each against each" (bullets × enemies), take the inner query reference once, then nest the loops. Changes go through the context, so they are safe inside both loops.
+
+```cpp
+OLY_SYSTEM(hitEnemies) {
+  auto& enemies = context.query<const Position, const Collider, Health>(oly::ecs::With<Enemy>{});
+
+  context.query<const Position, const Collider>(oly::ecs::With<Bullet>{}).each([&](oly::ecs::Entity bullet, const Position& bulletPosition, const Collider& bulletCollider) {
+    bool hit = false;
+
+    enemies.each([&](oly::ecs::Entity enemy, const Position& enemyPosition, const Collider& enemyCollider, Health& health) {
+      if (hit || !touches(bulletPosition, bulletCollider, enemyPosition, enemyCollider)) {
+        return;
+      }
+
+      hit = true;
+      health.value -= 1;
+      context.destroy(bullet);
+
+      if (health.value <= 0) {
+        context.emit(EnemyDied{enemy, enemyPosition.x, enemyPosition.y});
+      }
+    });
+  });
+}
+```
+
+This is a brute-force O(bullets × enemies) check. It is fine for hundreds of entities. For thousands, add a spatial grid.
+
+TypeScript: [Two queries together (pairs)](typescript/gameplay-recipes.md#two-queries-together-pairs).
+
+## Several shapes with one function
+
+Pass the filter as a parameter. One function draws coins, bullets, enemies and the player:
+
+```cpp
+template <class... Filters>
+void drawCircles(oly::app::SystemContext& context, Drawer& drawer, Color color, Filters... filters) {
+  context.query<const Position, const Collider>(filters...).each([&](const Position& position, const Collider& collider) {
+    drawer.circle(position.x, position.y, collider.radius, color);
+  });
+}
+
+drawCircles(context, drawer, red, oly::ecs::With<Enemy>{});
+drawCircles(context, drawer, blue, oly::ecs::With<Player>{}, oly::ecs::Without<Invulnerable>{});
+```
+
+TypeScript: [Several shapes with one function](typescript/gameplay-recipes.md#several-shapes-with-one-function).
