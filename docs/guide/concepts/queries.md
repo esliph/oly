@@ -25,7 +25,7 @@ OLY_SYSTEM(integrate) {
 engine.addSystem(oly::app::Phase::Update, "integrate", integrate);
 ```
 
-**On the web**, the client registers it by name: [TypeScript](../environments/web/typescript/engine-and-systems.md#c-systems-handlers-and-hooks).
+**On the web**, the client registers it by name: [TypeScript](../../reference/typescript/engine-and-systems.md#c-systems-handlers-and-hooks).
 
 | Parameter | Gives you | Accepts tags? |
 |---|---|---|
@@ -220,4 +220,4 @@ drawCircles(context, drawer, blue, oly::ecs::With<Player>{}, oly::ecs::Without<I
 
 [Engine, loop and systems →](engine-and-systems.md): run queries every step inside systems.
 
-In other clients: [TypeScript](../environments/web/typescript/queries.md).
+In other clients: [TypeScript](../../reference/typescript/queries.md).

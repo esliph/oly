@@ -23,7 +23,7 @@ What to update:
 
 | The change | Update |
 |---|---|
-| new function, method, option or macro | the concept page and the client page of its topic, the [cheat sheet](../guide/cheat-sheet.md) and, if it enables a new pattern, a [recipe](../guide/recipes.md) |
+| new function, method, option or macro | the concept page and the client page of its topic, the [cheat sheet](../guide/cheat-sheet.md) and, if it enables a new pattern, a [recipe](../how-to/gameplay-recipes.md) |
 | renamed or changed signature | every example that uses it (search the whole `docs/guide/`) and the cheat sheet |
 | removed | every mention; replace examples that depended on it |
 | new or changed error | the table in [Troubleshooting](../guide/troubleshooting.md) |
@@ -44,7 +44,7 @@ Before finishing, search `docs/guide/` for the old name and check the links you 
 
 - English, like the rest of the repository.
 - Simple words, active voice, one idea per sentence, short paragraphs.
-- Use the glossary names ([glossary](../architecture/glossary.md)). Never an alias or an old name.
+- Use the glossary names ([glossary](../reference/glossary.md)). Never an alias or an old name.
 - Prefer a table to a paragraph when comparing two or more options.
 - No filler: no "simply", "just", "easily", no restating the heading.
 
@@ -129,7 +129,7 @@ docs/guide/
 
 - **Real signatures only.** Check each C++ call against the headers and each TS call against `@oly/core` or `@oly/web-host` before writing it. Compiling the examples is out of scope; an example that does not exist in the API is worse than none.
 - **Complete enough to copy**: imports when they are not obvious, the schema entries an example needs, no `...` inside the logic that matters.
-- **Follow the code style** ([code-style.md](code-style.md)): full names, braces on every `if`/`for`, blank lines between steps.
+- **Follow the code style** ([code-style.md](../reference/contributor/code-style.md)): full names, braces on every `if`/`for`, blank lines between steps.
 - **Comments only for the why**, the same rule as in the code. No comments that narrate the example step by step: put that in the prose before the block.
 - **Commands** are `oly` commands (`oly new`, `oly test`, `oly run`), as in [cli.md](../guide/cli.md). Inside the engine repository they are `./spur` tasks (`./spur games-test`, `./spur wasm <command>`, `./spur dev <command>`), as in [commands.md](commands.md).
 - Show the wrong way only when the mistake is common, and always next to the right way.

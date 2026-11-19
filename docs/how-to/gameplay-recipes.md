@@ -1,6 +1,6 @@
 # Recipes
 
-[Guide index](README.md) · [Cheat sheet](cheat-sheet.md)
+[Guide index](../guide/README.md) · [Cheat sheet](../guide/cheat-sheet.md)
 
 Ready patterns for common game features, in C++. Each recipe shows the schema entries it needs and the code: the bodies are written against the context, so they run in every environment, and the registration is labelled under them. Every recipe with a TS form ends with a link to its TypeScript version, which registers the same pieces from the TS client; order bands and plugins are C++ only.
 
@@ -16,14 +16,14 @@ Ready patterns for common game features, in C++. Each recipe shows the schema en
 | [Homing projectile](#homing-projectile) | `entity` field, `tryGet` on another entity |
 | [Attach one entity to another](#attach-one-entity-to-another) | parent handle, offset |
 | [Keep inside the screen or wrap around](#keep-inside-the-screen-or-wrap-around) | clamping, modulo |
-| [Score and HUD](environments/web/typescript/recipes.md#score-and-hud) | browser-only |
+| [Score and HUD](typescript/gameplay-recipes.md#score-and-hud) | browser-only |
 | [Round timer](#round-timer) | `context.time()`, `after` |
 | [Pause screen](#pause-screen) | `setWhilePaused`, `paused` |
 | [Restart the game](#restart-the-game) | states and scope |
-| [High score saved in the browser](environments/web/typescript/recipes.md#high-score-saved-in-the-browser) | browser-only |
+| [High score saved in the browser](typescript/gameplay-recipes.md#high-score-saved-in-the-browser) | browser-only |
 | [A sequence of timed steps](#a-sequence-of-timed-steps) | chained `after` |
 | [Random spawn positions](#random-spawn-positions) | `std::minstd_rand` |
-| [Debug overlay](environments/web/typescript/recipes.md#debug-overlay) | browser-only |
+| [Debug overlay](typescript/gameplay-recipes.md#debug-overlay) | browser-only |
 | [Camera that follows after movement](#camera-that-follows-after-movement) | `OrderBand::Last` |
 | [Share systems between games](#share-systems-between-games) | plugin, `PLUGINS` |
 
@@ -81,7 +81,7 @@ engine.addSystem(oly::app::Phase::Update, "fireWeapon", fireWeapon);
 
 A component timer is cheaper than one scheduled task per bullet when you have hundreds of bullets. For a few long-lived things, `schedule().after` is simpler.
 
-TypeScript: [Projectile with a lifetime](environments/web/typescript/recipes.md#projectile-with-a-lifetime).
+TypeScript: [Projectile with a lifetime](typescript/gameplay-recipes.md#projectile-with-a-lifetime).
 
 ## Spawner every N seconds
 
@@ -103,7 +103,7 @@ engine.onEnter(states::playing, "startSpawner", startSpawner);
 
 The task is created while `playing` is active, so it is cancelled when the round ends. No clean-up code.
 
-TypeScript: [Spawner every N seconds](environments/web/typescript/recipes.md#spawner-every-n-seconds).
+TypeScript: [Spawner every N seconds](typescript/gameplay-recipes.md#spawner-every-n-seconds).
 
 ## Difficulty that ramps up
 
@@ -139,7 +139,7 @@ OLY_STATE_HOOK(startWaves) {
 engine.onEnter(states::playing, "startWaves", startWaves);
 ```
 
-TypeScript: [Difficulty that ramps up](environments/web/typescript/recipes.md#difficulty-that-ramps-up).
+TypeScript: [Difficulty that ramps up](typescript/gameplay-recipes.md#difficulty-that-ramps-up).
 
 ## Ability with a cooldown
 
@@ -196,9 +196,9 @@ OLY_SYSTEM(dash) {
 engine.addSystem(oly::app::Phase::UpdateBefore, "dash", dash);
 ```
 
-The payload carries the entity to the task ([Schedule](concepts/schedule.md#payloads)).
+The payload carries the entity to the task ([Schedule](../guide/concepts/schedule.md#payloads)).
 
-TypeScript: [Ability with a cooldown](environments/web/typescript/recipes.md#ability-with-a-cooldown).
+TypeScript: [Ability with a cooldown](typescript/gameplay-recipes.md#ability-with-a-cooldown).
 
 ## Health, damage and death
 
@@ -247,9 +247,9 @@ engine.on<EnemyDied>("countKill", [](oly::app::HandlerContext& context) { countK
 engine.on<EnemyDied>("destroyDead", [](oly::app::HandlerContext& context) { destroyDead(context, context.events<EnemyDied>()); });
 ```
 
-The lambda passes the batch the macro's function expects ([Events](concepts/events.md#declare-emit-handle)).
+The lambda passes the batch the macro's function expects ([Events](../guide/concepts/events.md#declare-emit-handle)).
 
-TypeScript: [Health, damage and death](environments/web/typescript/recipes.md#health-damage-and-death).
+TypeScript: [Health, damage and death](typescript/gameplay-recipes.md#health-damage-and-death).
 
 ## Temporary status effect
 
@@ -298,7 +298,7 @@ engine.addSystem(oly::app::Phase::Update, "chase", chase);
 
 `stun` is a helper that a handler calls with its own context.
 
-TypeScript: [Temporary status effect](environments/web/typescript/recipes.md#temporary-status-effect).
+TypeScript: [Temporary status effect](typescript/gameplay-recipes.md#temporary-status-effect).
 
 ## Pickups
 
@@ -350,7 +350,7 @@ engine.addSystem(oly::app::Phase::UpdateAfter, "touchCoins", touchCoins);
 engine.on<CoinCollected>("collect", [](oly::app::HandlerContext& context) { collect(context, context.events<CoinCollected>()); });
 ```
 
-TypeScript: [Pickups](environments/web/typescript/recipes.md#pickups).
+TypeScript: [Pickups](typescript/gameplay-recipes.md#pickups).
 
 ## Homing projectile
 
@@ -386,7 +386,7 @@ engine.addSystem(oly::app::Phase::Update, "home", home);
 
 `tryGet` is `nullptr` if the target died or lost its `Position`, so one call replaces `isAlive` plus `get`.
 
-TypeScript: [Homing projectile](environments/web/typescript/recipes.md#homing-projectile).
+TypeScript: [Homing projectile](typescript/gameplay-recipes.md#homing-projectile).
 
 ## Attach one entity to another
 
@@ -419,7 +419,7 @@ OLY_SYSTEM(followParent) {
 engine.addSystem(oly::app::Phase::UpdateAfter, "followParent", followParent);
 ```
 
-TypeScript: [Attach one entity to another](environments/web/typescript/recipes.md#attach-one-entity-to-another).
+TypeScript: [Attach one entity to another](typescript/gameplay-recipes.md#attach-one-entity-to-another).
 
 ## Keep inside the screen or wrap around
 
@@ -445,7 +445,7 @@ engine.addSystem(oly::app::Phase::UpdateAfter, "confinePlayer", confinePlayer);
 engine.addSystem(oly::app::Phase::UpdateAfter, "wrapAsteroids", wrapAsteroids);
 ```
 
-TypeScript: [Keep inside the screen or wrap around](environments/web/typescript/recipes.md#keep-inside-the-screen-or-wrap-around).
+TypeScript: [Keep inside the screen or wrap around](typescript/gameplay-recipes.md#keep-inside-the-screen-or-wrap-around).
 
 ## Round timer
 
@@ -487,7 +487,7 @@ engine.addSystem(oly::app::Phase::Render, "readClock", readClock);
 
 Both use the game clock, so the timer stops while paused and the task is cancelled if the round ends earlier.
 
-TypeScript: [Round timer](environments/web/typescript/recipes.md#round-timer).
+TypeScript: [Round timer](typescript/gameplay-recipes.md#round-timer).
 
 ## Pause screen
 
@@ -528,7 +528,7 @@ engine.onExit(states::playing, "resumeOnExit", resumeOnExit);
 engine.addSystem(oly::app::Phase::Render, "pauseOverlay", pauseOverlay);
 ```
 
-TypeScript: [Pause screen](environments/web/typescript/recipes.md#pause-screen).
+TypeScript: [Pause screen](typescript/gameplay-recipes.md#pause-screen).
 
 ## Restart the game
 
@@ -564,7 +564,7 @@ engine.setSystemStates(engine.addSystem(oly::app::Phase::UpdateBefore, "retry", 
 
 To restart from inside `playing` (a "retry" key), request `playing` again. A request for the active state is a full change: `onExit`, scope clean-up, then `onEnter`.
 
-TypeScript: [Restart the game](environments/web/typescript/recipes.md#restart-the-game).
+TypeScript: [Restart the game](typescript/gameplay-recipes.md#restart-the-game).
 
 ## A sequence of timed steps
 
@@ -605,7 +605,7 @@ engine.onEnter(states::countdown, "startCountdown", startCountdown);
 
 A task created inside another task runs from the next step on, so the chain cannot loop within one step.
 
-TypeScript: [A sequence of timed steps](environments/web/typescript/recipes.md#a-sequence-of-timed-steps).
+TypeScript: [A sequence of timed steps](typescript/gameplay-recipes.md#a-sequence-of-timed-steps).
 
 ## Random spawn positions
 
@@ -643,9 +643,9 @@ std::minstd_rand random(42);
 engine.addSystem(oly::app::Phase::Update, "spawnEnemies", spawnEnemies, &random);
 ```
 
-Its sequence is the same in every standard library; the `std::*_distribution` classes are not, so use `random() % n` or your own mapping ([Deterministic randomness](environments/web/getting-started.md#deterministic-randomness)).
+Its sequence is the same in every standard library; the `std::*_distribution` classes are not, so use `random() % n` or your own mapping ([Deterministic randomness](../guide/environments/web/getting-started.md#deterministic-randomness)).
 
-TypeScript: [Random spawn positions](environments/web/typescript/recipes.md#random-spawn-positions).
+TypeScript: [Random spawn positions](typescript/gameplay-recipes.md#random-spawn-positions).
 
 ## Camera that follows after movement
 
@@ -678,7 +678,7 @@ OLY_SYSTEM(followPlayer) {
 engine.addSystem(oly::app::Phase::Update, "followPlayer", followPlayer, nullptr, oly::app::OrderBand::Last);
 ```
 
-The `Last` band runs after the whole default band of `Update`, so movement registered later still runs first ([Order bands](concepts/engine-and-systems.md#order-bands)). The clients register in the default band: in TS, register the camera system after the movement systems.
+The `Last` band runs after the whole default band of `Update`, so movement registered later still runs first ([Order bands](../guide/concepts/engine-and-systems.md#order-bands)). The clients register in the default band: in TS, register the camera system after the movement systems.
 
 ## Share systems between games
 
@@ -692,4 +692,4 @@ oly_add_plugin(NAME lifetime SCHEMA lifetime.oly DEPENDS ecs app)
 oly_add_game(<game>_game ENVIRONMENT web DIMENSION 2d SCHEMA ${CMAKE_CURRENT_SOURCE_DIR}/<game>.oly SOURCES ${nativeSources} DEPENDS ecs app capi PLUGINS lifetime)
 ```
 
-The game's code changes in one place: the types come from the plugin's header, which the game's `schema.generated.hpp` includes. The full walk-through is in [Plugins](concepts/plugins.md#write-a-plugin). A TS game uses the plugin's components through its generated schema and writes no install code.
+The game's code changes in one place: the types come from the plugin's header, which the game's `schema.generated.hpp` includes. The full walk-through is in [Plugins](../guide/concepts/plugins.md#write-a-plugin). A TS game uses the plugin's components through its generated schema and writes no install code.

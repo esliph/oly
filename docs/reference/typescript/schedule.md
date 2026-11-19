@@ -1,8 +1,8 @@
 # Schedule in TypeScript
 
-[← Input](input.md) · [TypeScript client](README.md) · Concept: [Schedule](../../../concepts/schedule.md) · Next: [States →](states.md)
+[← Input](input.md) · [TypeScript client](README.md) · Concept: [Schedule](../../guide/concepts/schedule.md) · Next: [States →](states.md)
 
-When tasks run, how pause and states affect them and the rules of `after` and `every` are in the [concept page](../../../concepts/schedule.md). This page shows the TS calls.
+When tasks run, how pause and states affect them and the rules of `after` and `every` are in the [concept page](../../guide/concepts/schedule.md). This page shows the TS calls.
 
 ## `after` and `every`
 

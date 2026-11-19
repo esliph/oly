@@ -21,7 +21,7 @@ oly::ecs::World world;
 oly::app::Engine engine(world);
 ```
 
-On the web the host creates the `World` and the `Engine` for you ([TypeScript](../environments/web/typescript/world-and-entities.md#where-the-world-comes-from)).
+On the web the host creates the `World` and the `Engine` for you ([TypeScript](../../reference/typescript/world-and-entities.md#where-the-world-comes-from)).
 
 ## Create entities
 
@@ -45,7 +45,7 @@ engine.addSystem(oly::app::Phase::Update, "spawnWave", spawnWave);
 oly::ecs::Entity player = engine.world().spawn(Player{}, Position{100.0f, 50.0f}, Velocity{0.0f, 0.0f}, Health{3});
 ```
 
-**On the web**, the client registers it by name: [TypeScript](../environments/web/typescript/engine-and-systems.md#c-systems-handlers-and-hooks).
+**On the web**, the client registers it by name: [TypeScript](../../reference/typescript/engine-and-systems.md#c-systems-handlers-and-hooks).
 
 ## Read and write values
 
@@ -238,4 +238,4 @@ Call `checkInvariants` in tests after each step. It catches corruption at the st
 
 [Queries →](queries.md): visit many entities at once.
 
-In other clients: [TypeScript](../environments/web/typescript/world-and-entities.md).
+In other clients: [TypeScript](../../reference/typescript/world-and-entities.md).

@@ -156,6 +156,6 @@ A staged release is the release files written to a folder with GitHub's layout (
 
 ## Limits
 
-`FetchContent` at a real tag is the one step the tests do not run before publishing: games exercise it after the release exists. The rest is in [limits.md](limits.md).
+`FetchContent` at a real tag is the one step the tests do not run before publishing: games exercise it after the release exists. The rest is in [limits.md](../reference/limits.md).
 
-See also: [build-and-tests.md](build-and-tests.md), [repository.md](repository.md), [decisions.md](decisions.md).
+See also: [build-and-tests.md](build-and-tests.md), [repository.md](../reference/contributor/repository.md), [decisions.md](../explanation/architecture/decisions.md).

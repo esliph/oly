@@ -41,7 +41,7 @@ engine.actions().bind(actions::move, oly::input::Axis2dBinding{Key::W, Key::S, K
 engine.actions().bind(actions::move, oly::input::Axis2dBinding{Key::ArrowUp, Key::ArrowDown, Key::ArrowLeft, Key::ArrowRight});
 ```
 
-**On the web**, the client binds them: [TypeScript](../environments/web/typescript/input.md#bind-buttons).
+**On the web**, the client binds them: [TypeScript](../../reference/typescript/input.md#bind-buttons).
 
 Binding the same button again does nothing. Pointer actions need no binding: they follow the mouse. The full list of buttons is `oly/input/physical_button.hpp`.
 
@@ -77,7 +77,7 @@ OLY_SYSTEM(readInput) {
 engine.addSystem(oly::app::Phase::UpdateBefore, "readInput", readInput);
 ```
 
-**On the web**, the client registers it by name: [TypeScript](../environments/web/typescript/input.md#read-actions-in-systems).
+**On the web**, the client registers it by name: [TypeScript](../../reference/typescript/input.md#read-actions-in-systems).
 
 | Flag | True in |
 |---|---|
@@ -137,7 +137,7 @@ OLY_SYSTEM(rebindJump) {
 engine.addSystem(oly::app::Phase::UpdateBefore, "rebindJump", rebindJump);
 ```
 
-**On the web**, the client rebinds: [TypeScript](../environments/web/typescript/input.md#rebind-at-run-time).
+**On the web**, the client rebinds: [TypeScript](../../reference/typescript/input.md#rebind-at-run-time).
 
 Use `map.isBound(button)` to warn when a button is already in use.
 
@@ -154,7 +154,7 @@ engine.actions().pointerMove(320.0f, 180.0f);
 engine.actions().releaseAll();
 ```
 
-**On the web**, the client has the same calls: [TypeScript](../environments/web/typescript/input.md#deliver-input-yourself).
+**On the web**, the client has the same calls: [TypeScript](../../reference/typescript/input.md#deliver-input-yourself).
 
 A virtual joystick for touch screens can map to the same `move` action by pressing and releasing the four bound keys, or you can bind a dedicated set of keys and press those.
 
@@ -162,4 +162,4 @@ A virtual joystick for touch screens can map to the same `move` action by pressi
 
 [Schedule →](schedule.md): run code later, on the game clock.
 
-In other clients: [TypeScript](../environments/web/typescript/input.md).
+In other clients: [TypeScript](../../reference/typescript/input.md).

@@ -93,8 +93,8 @@ The first publish of each image creates a GHCR package that is private until its
 
 ```sh
 PRESET=release ./spur build
-./spur dev ./build/release/bench/ecs_bench_iterate --benchmark_repetitions=10 --benchmark_report_aggregates_only=true --benchmark_out=docs/benchmarks/ecs/<file>.json
-./spur dev python3 -I tools/bench_ratio.py --json docs/benchmarks/ecs/<file>.json --name <bench> --baseline <bench> --max <ratio>
+./spur dev ./build/release/bench/ecs_bench_iterate --benchmark_repetitions=10 --benchmark_report_aggregates_only=true --benchmark_out=docs/reference/benchmarks/ecs/<file>.json
+./spur dev python3 -I tools/bench_ratio.py --json docs/reference/benchmarks/ecs/<file>.json --name <bench> --baseline <bench> --max <ratio>
 ```
 
 - Executables: `ecs_bench_iterate`, `ecs_bench_transitions`, `ecs_bench_fragmented`, `ecs_bench_flush`.
@@ -108,7 +108,7 @@ PRESET=release ./spur build
 ./spur ts                 # builds oly-schema, configures $PRESET (default wasm-games), writes each test game's TS schema from its CMake target (oly_typescript_schemas) and the test-only schemas, and compiles the TS
 ./spur games-test         # ts + ctest in the wasm-games preset (ECS in WASM, capi, TS tests)
 PRESET=wasm-games-release ./spur games-test -R '^ts\.'   # Release: only the TS validations catch the errors
-./spur wasm node engine/testing/dist/bench/boundary.js --module build/wasm-games-release/games/fixture_game.mjs --out docs/benchmarks/bridge/<file>.json --commit $(git rev-parse --short HEAD)
+./spur wasm node engine/testing/dist/bench/boundary.js --module build/wasm-games-release/games/fixture_game.mjs --out docs/reference/benchmarks/bridge/<file>.json --commit $(git rev-parse --short HEAD)
 ```
 
 Caveats:

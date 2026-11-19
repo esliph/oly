@@ -21,7 +21,7 @@ oly::app::setUpGame(engine);
 
 All three values must be positive (`OLY_ASSERT`). `setUpGame` comes from the build: it declares the schema, then installs the game's [plugins](plugins.md). Call it once, first. Register systems, handlers and hooks next, before the first `frame`.
 
-**On the web**, the host creates the engine: [TypeScript](../environments/web/typescript/engine-and-systems.md#create-the-engine).
+**On the web**, the host creates the engine: [TypeScript](../../reference/typescript/engine-and-systems.md#create-the-engine).
 
 ## The loop
 
@@ -96,7 +96,7 @@ engine.setSystemStates(spinId, {states::playing});
 engine.setWhilePaused(engine.addSystem(oly::app::Phase::UpdateBefore, "resumeOnPress", resumeOnPress), true);
 ```
 
-**On the web**, the client registers it by name: [TypeScript](../environments/web/typescript/engine-and-systems.md#register-systems).
+**On the web**, the client registers it by name: [TypeScript](../../reference/typescript/engine-and-systems.md#register-systems).
 
 `addSystem` takes a phase, a name for the error messages, the function, an optional `userData` pointer that the system reads with `context.userData()` and an optional [order band](#order-bands). It returns a `SystemId`:
 
@@ -213,7 +213,7 @@ engine.addSystem(oly::app::Phase::UpdateBefore, "rememberPosition", rememberPosi
 engine.addSystem(oly::app::Phase::Render, "draw", draw);
 ```
 
-**On the web**, the client registers it by name: [TypeScript](../environments/web/typescript/engine-and-systems.md#time-and-interpolation).
+**On the web**, the client registers it by name: [TypeScript](../../reference/typescript/engine-and-systems.md#time-and-interpolation).
 
 ## Pause
 
@@ -257,7 +257,7 @@ engine.addSystem(oly::app::Phase::UpdateBefore, "pauseOnPress", pauseOnPress);
 engine.setWhilePaused(engine.addSystem(oly::app::Phase::UpdateBefore, "resumeOnPress", resumeOnPress), true);
 ```
 
-**On the web**, the client registers it by name: [TypeScript](../environments/web/typescript/engine-and-systems.md#pause).
+**On the web**, the client registers it by name: [TypeScript](../../reference/typescript/engine-and-systems.md#pause).
 
 A `whilePaused` system runs **only** while paused. That is why the two systems above never both fire on the same key press.
 
@@ -297,4 +297,4 @@ An exception in a system leaves `frame` and goes to the code that called it. The
 
 [Events →](events.md): let systems react to what other systems did.
 
-In other clients: [TypeScript](../environments/web/typescript/engine-and-systems.md).
+In other clients: [TypeScript](../../reference/typescript/engine-and-systems.md).

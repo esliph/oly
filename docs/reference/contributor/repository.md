@@ -34,7 +34,7 @@ templates/
 docs/
   architecture/   this documentation
   development/    commands and code style
-  benchmarks/     recorded results: ecs/, bridge/, wasm/
+  reference/benchmarks/  recorded results: ecs/, bridge/, wasm/
   superpowers/    specs (source of truth) and implementation plans per phase
 .github/workflows/  release.yml: the release pipeline (docs/architecture/publishing.md)
 .claude/          Claude Code skills, agents and formatting hook
@@ -58,7 +58,7 @@ The include path repeats the module name (`#include "oly/ecs/world.hpp"`), so th
 
 ## Shape of a plugin
 
-A plugin follows the same shape, with an optional `.oly` ([plugins.md](plugins.md)):
+A plugin follows the same shape, with an optional `.oly` ([plugins.md](../../architecture/plugins.md)):
 
 ```
 <plugin>/
@@ -70,4 +70,4 @@ A plugin follows the same shape, with an optional `.oly` ([plugins.md](plugins.m
 
 `plugins/` sits beside `engine/`, not inside `engine/`: plugins depend on the core, and a separate root makes a later split into packages a move of folders. Until it exists, the only plugins are the test plugins in `engine/testing/fixture/plugins/`.
 
-See also: [modules-and-boundaries.md](modules-and-boundaries.md).
+See also: [modules-and-boundaries.md](../../architecture/modules-and-boundaries.md).

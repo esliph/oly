@@ -19,4 +19,4 @@ Start with `docs/architecture/README.md`. It has the overview and the index of a
 
 ## Code style
 
-@docs/development/code-style.md
+@docs/reference/contributor/code-style.md

@@ -18,7 +18,7 @@
 
 - **`OlyWorld` is opaque.** It holds the `World` and a stack of iteration slots. The game's C++ systems reach the `World` through `oly::capi::worldOf(OlyWorld*)`.
 - **`olyQueryBegin` returns an `OlyIteration*`** with its own descriptor buffer (`count`, address of the entities, address of each column). A nested `eachBlock` does not overwrite the outer one. `olyQueryEnd` must close the top slot.
-- **`OlyEngine`** holds an `OlyWorld` and the `Engine` on top of it (one `World` per `OlyEngine`, declared before the `Engine`, so it outlives the `Engine` and its plugins). On creation, `olyEngineCreate` calls `oly::app::setUpGame` ([app.md](app.md#plugins-and-setupgame)), which declares the schema's events, actions and states in schema order, so the index in the TS schema is the id in C++, and then installs the game's plugins. The `capi` test executables are not games, so they define `setUpGame` by hand (`tests/test_schema_registry.cpp`, `tests/contract_death.cpp`).
+- **`OlyEngine`** holds an `OlyWorld` and the `Engine` on top of it (one `World` per `OlyEngine`, declared before the `Engine`, so it outlives the `Engine` and its plugins). On creation, `olyEngineCreate` calls `oly::app::setUpGame` ([app.md](../explanation/architecture/app.md#plugins-and-setupgame)), which declares the schema's events, actions and states in schema order, so the index in the TS schema is the id in C++, and then installs the game's plugins. The `capi` test executables are not games, so they define `setUpGame` by hand (`tests/test_schema_registry.cpp`, `tests/contract_death.cpp`).
 - **A per-engine script invoker.** `olyEngineSetScriptInvoker(engine, invoker, userData)` installs the function that runs all script code of that engine; `userData` lets a client pass its own handle. On `web`, `olyWebHostInstallScriptInvoker(engine)` installs an invoker that calls `Module.olyInvokeScript`; the TS `Bridge` calls it right after `olyEngineCreate`. There is no `addFunction` and no growing function table. `kind` says what to call and the meaning of the other parameters:
 
   | `kind` | `id` | `events` / `eventCount` |
@@ -32,4 +32,4 @@
 - **Current context.** `olyDirectSpawn` and `olyContextPersist` use the context TS is in: direct in a handler, task or hook; deferred in a system.
 - A script call with no invoker installed is a contract violation (`OLY_ASSERT`, with kind and id).
 
-The TS side that consumes this API is in [ts-packages.md](ts-packages.md). The link contract with the game's generated code is in [schema-and-codegen.md](schema-and-codegen.md).
+The TS side that consumes this API is in [ts-packages.md](ts-packages.md). The link contract with the game's generated code is in [schema-and-codegen.md](../explanation/architecture/schema-and-codegen.md).

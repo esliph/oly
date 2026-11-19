@@ -163,4 +163,4 @@ The `oly.lint.boundaries` test checks these rules, and that nothing in `engine/`
 
 [Troubleshooting](../troubleshooting.md): what each error means.
 
-In other clients: a client uses a plugin through its components, which its generated schema lists ([TypeScript](../environments/web/typescript/schema.md)).
+In other clients: a client uses a plugin through its components, which its generated schema lists ([TypeScript](../../reference/typescript/schema.md)).

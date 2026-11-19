@@ -16,7 +16,7 @@ Respond in English.
 
 ## Project context you need to keep in mind
 
-Read `docs/architecture/ecs.md` for the layered architecture (`component → entity → table → archetype → query / command_buffer → world`). The spec is `docs/superpowers/specs/2026-10-16-ecs-archetype-spec.md`; section 7 has the targets:
+Read `docs/explanation/architecture/ecs.md` for the layered architecture (`component → entity → table → archetype → query / command_buffer → world`). The spec is `docs/superpowers/specs/2026-10-16-ecs-archetype-spec.md`; section 7 has the targets:
 
 | Target | What it requires | How it is confirmed |
 |---|---|---|
@@ -70,7 +70,7 @@ Use a dedicated build directory, so as not to dirty the `build/release` cache:
 ./spur dev sh -c 'cmake --preset release -B build/perf-review -DOLY_VEC_REPORT=ON > /dev/null && cmake --build build/perf-review -j --clean-first 2>&1 | grep -E "vectorized|missed" | sort -u'
 ```
 
-`--clean-first` is required: in an incremental build the unchanged TUs do not recompile and print nothing. The recorded reference is `docs/benchmarks/ecs/m3_vectorization.txt` (loops of `bench/iterate.cpp` vectorized with 16 B vectors). A loop that was there and disappeared is a finding.
+`--clean-first` is required: in an incremental build the unchanged TUs do not recompile and print nothing. The recorded reference is `docs/reference/benchmarks/ecs/m3_vectorization.txt` (loops of `bench/iterate.cpp` vectorized with 16 B vectors). A loop that was there and disappeared is a finding.
 
 ### 3. Generated assembly
 
@@ -91,7 +91,7 @@ Usual targets:
 
 - The regex is awk ERE and must match exactly one function; if the script says "ambiguous regex", anchor it more. If it says "function not found", it was inlined: look in the caller.
 - Long bodies: filter before reading (`grep -nE "call|div|vmovup|movup|addps|mulps|j[a-z]+ "`) and then read the whole inner loop.
-- Before reference: `docs/benchmarks/wasm/codegen/V0/{iterate_ecs,iterate_soa,transition,flush}.txt` is the GCC Release of commit `d0ddff1`. Compare the structure of the inner loop (vector instructions and their width, calls, jumps, loads per iteration), never addresses. For a function outside that list, the "before" does not exist ready-made; say so instead of comparing it from memory.
+- Before reference: `docs/reference/benchmarks/wasm/codegen/V0/{iterate_ecs,iterate_soa,transition,flush}.txt` is the GCC Release of commit `d0ddff1`. Compare the structure of the inner loop (vector instructions and their width, calls, jumps, loads per iteration), never addresses. For a function outside that list, the "before" does not exist ready-made; say so instead of comparing it from memory.
 
 What to look for in the assembly:
 
@@ -109,7 +109,7 @@ If a finding depends on quantification, an isolated benchmark with a filter give
 ./spur dev ./build/release/bench/ecs_bench_iterate --benchmark_filter='BM_IterateSingle_(ECS|SoA)/1000000' --benchmark_repetitions=5 --benchmark_report_aggregates_only=true
 ```
 
-Report only the ratio between the medians of the same run, never isolated ns, and make it clear it is not the official round. Do not write anything to `docs/benchmarks/`.
+Report only the ratio between the medians of the same run, never isolated ns, and make it clear it is not the official round. Do not write anything to `docs/reference/benchmarks/`.
 
 ## Report
 

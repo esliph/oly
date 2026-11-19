@@ -171,4 +171,4 @@ Include the generated header everywhere: from the game, from the shell and from 
 
 [World and entities →](world-and-entities.md): create entities from these types.
 
-In other clients: [TypeScript](../environments/web/typescript/schema.md).
+In other clients: [TypeScript](../../reference/typescript/schema.md).

@@ -248,8 +248,8 @@ ctest --test-dir build/cmake -R '^<target>\.'
 
 ## Testing C++ systems alone
 
-A C++ system with no WASM and no TS is tested on the desktop side: see [Test your game](../native/getting-started.md#test-your-game).
+A C++ system with no WASM and no TS is tested on the desktop side: see [Test your game](../guide/environments/native/getting-started.md#test-your-game).
 
 ## Next
 
-[The WASM↔JS boundary](boundary.md): keep the hot path fast across the boundary. [Troubleshooting](../../troubleshooting.md): what each error means.
+[The WASM↔JS boundary](../guide/environments/web/boundary.md): keep the hot path fast across the boundary. [Troubleshooting](../guide/troubleshooting.md): what each error means.

@@ -38,7 +38,7 @@ The C API and TS parts get build support with the first plugin that needs them. 
 - `install` registers the plugin's systems, handlers, hooks and observers. A plugin installed earlier is reachable from `install` through `plugin<Q>()`.
 - **The `Engine` owns the plugin instances.** A plugin's state lives in its instance and reaches its systems through `userData`.
 - Each plugin type gets a dense per-process key (`pluginKey<P>()`), the same pattern as `eventKey<T>()`. The lookup walks the installed list; it is a cold path.
-- **Destructor contract.** Systems, handlers and hooks die with the `Engine`. Observers belong to the `World` ([ecs.md](ecs.md)), and the `World` outlives the `Engine` (`OlyEngine` and a native `main` declare it first). So a plugin's destructor removes the observers its `install` registered (`World::removeObserver`); otherwise the `World` would call into a destroyed plugin.
+- **Destructor contract.** Systems, handlers and hooks die with the `Engine`. Observers belong to the `World` ([ecs.md](../explanation/architecture/ecs.md)), and the `World` outlives the `Engine` (`OlyEngine` and a native `main` declare it first). So a plugin's destructor removes the observers its `install` registered (`World::removeObserver`); otherwise the `World` would call into a destroyed plugin.
 
 No game code installs a plugin: the generated `setUpGame` does it, in dependency order ([Build](#build)).
 
@@ -52,11 +52,11 @@ Plugins install before the game registers its systems, so registration order alo
 - **Bands are storage, not a branch.** The `Engine` keeps one vector of systems per phase and band; `runPhase` walks the bands in order. There is no extra check per system.
 - The C API and the TS client register in `Default` only.
 
-Details of the loop: [app.md](app.md).
+Details of the loop: [app.md](../explanation/architecture/app.md).
 
 ## Schema merge
 
-`oly-schema` takes the plugins' `.oly` files with `--plugin <name>=<file.oly>`, one per plugin with a schema, in install order, plus the game's `.oly` ([schema-and-codegen.md](schema-and-codegen.md)).
+`oly-schema` takes the plugins' `.oly` files with `--plugin <name>=<file.oly>`, one per plugin with a schema, in install order, plus the game's `.oly` ([schema-and-codegen.md](../explanation/architecture/schema-and-codegen.md)).
 
 - **Order.** The merged schema holds the plugins' declarations in install order, then the game's. That order gives the `ComponentId` order and the event dispatch order.
 - **Flat names.** There are no namespaces. A name repeated across the merged files is an error that names both locations: `<later file>:<line>:<column>: repeated name "X"; first declared at <earlier file>:<line>:<column>`.
@@ -79,7 +79,7 @@ Details of the loop: [app.md](app.md).
 | generated header (with `SCHEMA`) | `oly/<name>/schema.generated.hpp`, written by `oly-schema --emit cpp-plugin=<dir>` |
 | links | `oly::<m>` for each `DEPENDS`, `oly::<p>` for each `PLUGINS` |
 
-It records the plugin's `.oly` and its plugin dependencies (global properties `OLY_PLUGIN_SCHEMA_<name>` and `OLY_PLUGIN_DEPENDENCIES_<name>`), so `oly_add_game` can find them, and registers the plugin in the boundary manifest. A plugin with no `install` (a pure function library) is not supported yet ([limits.md](limits.md)).
+It records the plugin's `.oly` and its plugin dependencies (global properties `OLY_PLUGIN_SCHEMA_<name>` and `OLY_PLUGIN_DEPENDENCIES_<name>`), so `oly_add_game` can find them, and registers the plugin in the boundary manifest. A plugin with no `install` (a pure function library) is not supported yet ([limits.md](../reference/limits.md)).
 
 ### Install order
 

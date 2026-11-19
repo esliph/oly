@@ -1,6 +1,6 @@
 # Cheat sheet
 
-[Guide index](README.md) · [Recipes](recipes.md) · [The `oly` command](cli.md) · [Glossary (C++ / C API / TS)](../architecture/glossary.md)
+[Guide index](README.md) · [Recipes](../how-to/gameplay-recipes.md) · [The `oly` command](cli.md) · [Glossary (C++ / C API / TS)](../reference/glossary.md)
 
 One page with every public name: C++ first, then the C API, then the TypeScript client. Each topic links to its concept page.
 
@@ -209,11 +209,11 @@ class Plugin : public oly::app::Plugin {                  // "oly/app/plugin.hpp
 
 # TypeScript
 
-Each topic has a page in the [TypeScript client](environments/web/typescript/README.md).
+Each topic has a page in the [TypeScript client](../reference/typescript/README.md).
 
 ## Start-up
 
-[Schema](environments/web/typescript/schema.md) · [Engine, loop and systems](environments/web/typescript/engine-and-systems.md)
+[Schema](../reference/typescript/schema.md) · [Engine, loop and systems](../reference/typescript/engine-and-systems.md)
 
 ```ts
 import { loadRuntime, Phase } from "@oly/core";
@@ -233,7 +233,7 @@ engine.dispose();
 
 ## World (and contexts)
 
-[World and entities](environments/web/typescript/world-and-entities.md)
+[World and entities](../reference/typescript/world-and-entities.md)
 
 | Call | Returns / effect |
 |---|---|
@@ -252,7 +252,7 @@ Helpers: `NullEntity`, `formatEntity(entity)`, `entityIndex(entity)`, `entityGen
 
 ## Queries
 
-[Queries](environments/web/typescript/queries.md)
+[Queries](../reference/typescript/queries.md)
 
 ```ts
 const query = context.query({ read: [A], write: [B], with: [TagOrType], without: [TagOrType] });
@@ -271,7 +271,7 @@ query.trySingle();   // SingleRow | null — ContractError if 2+
 
 ## Engine
 
-[Engine, loop and systems](environments/web/typescript/engine-and-systems.md)
+[Engine, loop and systems](../reference/typescript/engine-and-systems.md)
 
 | Member | Notes |
 |---|---|
@@ -301,7 +301,7 @@ All contexts: `time`, `fixedDeltaTime`, `paused`, `pause()`, `resume()`, `state`
 
 ## Events
 
-[Events](environments/web/typescript/events.md)
+[Events](../reference/typescript/events.md)
 
 ```ts
 context.emit(Event, { field: value });                     // missing fields = 0
@@ -315,7 +315,7 @@ engine.on(Event, "name", (context, batch) => {
 
 ## Input
 
-[Input](environments/web/typescript/input.md)
+[Input](../reference/typescript/input.md)
 
 ```ts
 engine.actions.bind(buttonAction, "KeyW");
@@ -333,7 +333,7 @@ engine.actions.pointerMove(x, y); engine.actions.releaseAll();
 
 ## Schedule
 
-[Schedule](environments/web/typescript/schedule.md)
+[Schedule](../reference/typescript/schedule.md)
 
 ```ts
 const handle = context.schedule.after(seconds, (task) => {});
@@ -345,7 +345,7 @@ context.schedule.persist(handle);     // survives state changes
 
 ## Scope
 
-[States](environments/web/typescript/states.md)
+[States](../reference/typescript/states.md)
 
 | Created with | Scoped to the active state? |
 |---|---|

@@ -1,8 +1,8 @@
 # Schema in TypeScript
 
-[TypeScript client](README.md) · Concept: [Schema](../../../concepts/schema.md) · Next: [World and entities →](world-and-entities.md)
+[TypeScript client](README.md) · Concept: [Schema](../../guide/concepts/schema.md) · Next: [World and entities →](world-and-entities.md)
 
-The `.oly` file, the field types and the naming rules are in the [concept page](../../../concepts/schema.md). This page shows what TS gets from them.
+The `.oly` file, the field types and the naming rules are in the [concept page](../../guide/concepts/schema.md). This page shows what TS gets from them.
 
 ## The five kinds of entries
 

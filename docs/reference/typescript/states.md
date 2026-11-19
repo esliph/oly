@@ -1,8 +1,8 @@
 # States in TypeScript
 
-[← Schedule](schedule.md) · [TypeScript client](README.md) · Concept: [States](../../../concepts/states.md) · Next: [Recipes →](recipes.md)
+[← Schedule](schedule.md) · [TypeScript client](README.md) · Concept: [States](../../guide/concepts/states.md) · Next: [Recipes →](../../how-to/typescript/gameplay-recipes.md)
 
-When a state changes, what the scope cleans and in what order hooks run are in the [concept page](../../../concepts/states.md). This page shows the TS calls.
+When a state changes, what the scope cleans and in what order hooks run are in the [concept page](../../guide/concepts/states.md). This page shows the TS calls.
 
 ## Declare and start
 
@@ -54,7 +54,7 @@ A hook written in C++ is registered with `engine.addNativeOnEnter(playing, "name
 
 ## Scope: automatic clean-up
 
-`engine.world.spawn(...)` is never scoped ([the scope table](../../../concepts/states.md#scope-automatic-clean-up)).
+`engine.world.spawn(...)` is never scoped ([the scope table](../../guide/concepts/states.md#scope-automatic-clean-up)).
 
 ### Keep something across states: `persist`
 
@@ -120,4 +120,4 @@ export function installGame(engine: Engine): { kills: number } {
 
 ## Next
 
-[Recipes →](recipes.md): ready patterns for common gameplay.
+[Recipes →](../../how-to/typescript/gameplay-recipes.md): ready patterns for common gameplay.

@@ -1,8 +1,8 @@
 # Engine, loop and systems in TypeScript
 
-[← Queries](queries.md) · [TypeScript client](README.md) · Concept: [Engine, loop and systems](../../../concepts/engine-and-systems.md) · Next: [Events →](events.md)
+[← Queries](queries.md) · [TypeScript client](README.md) · Concept: [Engine, loop and systems](../../guide/concepts/engine-and-systems.md) · Next: [Events →](events.md)
 
-The loop, the phases and the rules of structural changes are in the [concept page](../../../concepts/engine-and-systems.md). This page shows the TS calls.
+The loop, the phases and the rules of structural changes are in the [concept page](../../guide/concepts/engine-and-systems.md). This page shows the TS calls.
 
 ## Create the engine
 
@@ -21,7 +21,7 @@ engine.dispose();          // also disposes engine.world
 
 ## The loop
 
-In the browser, `runInBrowser(engine)` calls `engine.frame` with `requestAnimationFrame` and calls `engine.setHidden` when the tab is hidden ([the loop](../../../concepts/engine-and-systems.md#the-loop)).
+In the browser, `runInBrowser(engine)` calls `engine.frame` with `requestAnimationFrame` and calls `engine.setHidden` when the tab is hidden ([the loop](../../guide/concepts/engine-and-systems.md#the-loop)).
 
 ```ts
 import { runInBrowser } from "@oly/web-host";
@@ -62,7 +62,7 @@ engine.addSystem(Phase.UpdateBefore, "resumeOnPress", resumeOnPress).whilePaused
 
 ## C++ systems, handlers and hooks
 
-A web game can register the functions it defines in C++ with `OLY_SYSTEM`, `OLY_HANDLER` and `OLY_STATE_HOOK` ([the macros](../../../concepts/engine-and-systems.md#systems-in-c-registered-by-name-oly_system-oly_handler-oly_state_hook)). TS looks the name up once, at registration.
+A web game can register the functions it defines in C++ with `OLY_SYSTEM`, `OLY_HANDLER` and `OLY_STATE_HOOK` ([the macros](../../guide/concepts/engine-and-systems.md#systems-in-c-registered-by-name-oly_system-oly_handler-oly_state_hook)). TS looks the name up once, at registration.
 
 | Macro | Register from TS with |
 |---|---|
@@ -191,7 +191,7 @@ for (let step = 1; step <= 600; ++step) {
 
 ## When a system throws
 
-An exception in a TS system goes to your code, or to the browser console with `runInBrowser`, which keeps the loop alive. Until the next `frame` recovers ([what recovery does](../../../concepts/engine-and-systems.md#when-a-system-throws)), registering systems, handlers or hooks throws `ContractError`.
+An exception in a TS system goes to your code, or to the browser console with `runInBrowser`, which keeps the loop alive. Until the next `frame` recovers ([what recovery does](../../guide/concepts/engine-and-systems.md#when-a-system-throws)), registering systems, handlers or hooks throws `ContractError`.
 
 ## Next
 

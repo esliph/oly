@@ -1,6 +1,6 @@
 # Troubleshooting
 
-[Guide index](README.md) · References: [Recipes](recipes.md) · [Cheat sheet](cheat-sheet.md)
+[Guide index](README.md) · References: [Recipes](../how-to/gameplay-recipes.md) · [Cheat sheet](cheat-sheet.md)
 
 Oly checks how you use it and fails **at the wrong call**, with a message that names the operation, the entity (`index:generation`) and the type. This page explains the messages you will meet most.
 
@@ -15,7 +15,7 @@ In C++, a contract violation stops on `OLY_ASSERT` in debug builds (`debug-asan`
 | `ContractError` | you called the API in a way it does not allow | read the message: it says the operation and why |
 | `SchemaMismatchError` | the WASM was built from a different schema | rebuild: `./spur ts` then the game build |
 
-The TS client validates everything that goes through it, in release builds too ([TypeScript client](environments/web/typescript/README.md)).
+The TS client validates everything that goes through it, in release builds too ([TypeScript client](../reference/typescript/README.md)).
 
 ## Common messages
 
@@ -120,6 +120,6 @@ Inside the engine repository, `./spur games-test` (web) and `./spur native-games
 
 ## What Oly does not do
 
-Out of scope by design: rendering, physics, audio, camera, UI, assets, networking, serialization, editor, threads and gamepad. Render and collision belong to the game: draw in a `Render` system ([Engine, loop and systems](concepts/engine-and-systems.md#phases)) and test overlaps in `UpdateAfter` ([Recipes](recipes.md#pickups)). More in [limits](../architecture/limits.md).
+Out of scope by design: rendering, physics, audio, camera, UI, assets, networking, serialization, editor, threads and gamepad. Render and collision belong to the game: draw in a `Render` system ([Engine, loop and systems](concepts/engine-and-systems.md#phases)) and test overlaps in `UpdateAfter` ([Recipes](../how-to/gameplay-recipes.md#pickups)). More in [limits](../reference/limits.md).
 
 ECS v1 also has no fixed-size chunks, no change detection, no enable/disable flag per component and no sparse storage.

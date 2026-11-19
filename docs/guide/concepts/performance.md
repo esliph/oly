@@ -4,7 +4,7 @@
 
 Oly is built around one cost model: **a query walks columns of components that sit next to each other in memory**. A system that touches a few components of many entities is cheap. A system that allocates, moves entities between tables or reads data it does not need is not.
 
-The measured numbers are in [performance](../../architecture/performance.md) and [benchmarks](../../benchmarks/README.md). This page turns them into rules.
+The measured numbers are in [performance](../../architecture/performance.md) and [benchmarks](../../reference/benchmarks/README.md). This page turns them into rules.
 
 ## Avoid archetype churn
 

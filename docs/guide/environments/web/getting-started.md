@@ -2,7 +2,7 @@
 
 [Guide index](../../README.md)
 
-This page takes you from nothing to your own game running in the browser, in its own repository. The `web` environment runs the C++ engine as WASM, with the [TypeScript client](typescript/README.md) on top. For a game in a desktop window, see [Getting started on the desktop](../native/getting-started.md).
+This page takes you from nothing to your own game running in the browser, in its own repository. The `web` environment runs the C++ engine as WASM, with the [TypeScript client](../../../reference/typescript/README.md) on top. For a game in a desktop window, see [Getting started on the desktop](../native/getting-started.md).
 
 ## What you need
 
@@ -68,7 +68,7 @@ At start-up, `loadRuntime` checks that the WASM was built from the same schema a
 
 `oly.env` and the `@oly` URLs in `package.json` carry the engine version. Change them with `oly upgrade <version>`, not by hand ([The `oly` command](../../cli.md#upgrade-the-engine)).
 
-Keeping `game.ts` free of the DOM is what lets you [test the game in Node](testing.md). The two `tsconfig` files enforce it: using `document` outside `main.ts` is a compile error.
+Keeping `game.ts` free of the DOM is what lets you [test the game in Node](../../../how-to/test-a-web-game.md). The two `tsconfig` files enforce it: using `document` outside `main.ts` is a compile error.
 
 ### `<game>.oly`
 
@@ -175,7 +175,7 @@ runInBrowser(engine);
 
 ### The test
 
-`oly test` builds the game and runs `web/tests/smoke.test.ts` against the real WASM: it holds `KeyD` for one second and checks that the player moved by the player speed. `cmake/game.cmake` registers it with ctest. [Testing a web game](testing.md) explains how to write more.
+`oly test` builds the game and runs `web/tests/smoke.test.ts` against the real WASM: it holds `KeyD` for one second and checks that the player moved by the player speed. `cmake/game.cmake` registers it with ctest. [Testing a web game](../../../how-to/test-a-web-game.md) explains how to write more.
 
 ## How to split work between C++ and a client
 
@@ -213,4 +213,4 @@ This section is for people who change the engine. A game always lives in its own
 
 ## Next
 
-[TypeScript client](typescript/README.md): the TS API, page by page. [Schema](../../concepts/schema.md): every kind of data you can declare. [Testing a web game](testing.md): run the game in Node.
+[TypeScript client](../../../reference/typescript/README.md): the TS API, page by page. [Schema](../../concepts/schema.md): every kind of data you can declare. [Testing a web game](../../../how-to/test-a-web-game.md): run the game in Node.

@@ -82,11 +82,11 @@ A game fetches the engine with `FetchContent` ([publishing.md](publishing.md#the
 
 ## Code quality
 
-- Warnings, formatting and style rules: [../development/code-style.md](../development/code-style.md).
+- Warnings, formatting and style rules: [../development/code-style.md](../reference/contributor/code-style.md).
 - The boundaries lint runs outside Emscripten and in the `wasm-games*` presets, which have Python in the environment ([modules-and-boundaries.md](modules-and-boundaries.md)).
 
 ## Claude Code automation (`.claude/`)
 
-- Project skills: `add-test-case` (register a suite, a `TEST_CASE` or a `contract_death` case) and `bench-compare` (manual only, `/bench-compare <prefix>`: measures NF-P1/P2/P5 and records into `docs/benchmarks/`).
+- Project skills: `add-test-case` (register a suite, a `TEST_CASE` or a `contract_death` case) and `bench-compare` (manual only, `/bench-compare <prefix>`: measures NF-P1/P2/P5 and records into `docs/reference/benchmarks/`).
 - Agents: `spec-conformance-reviewer` (spec, invariants and `checkInvariants` coverage) and `perf-reviewer` (hot-path cost, checked in the assembly).
 - `PostToolUse` hook `.claude/hooks/clang-format.sh`: formats `.cpp`/`.hpp` after every edit.

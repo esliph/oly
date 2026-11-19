@@ -43,7 +43,7 @@ engine.on<EnemyDied>("countKill", [](oly::app::HandlerContext& context) { countK
 
 The macro's function takes the batch as a span, and `on<T>` takes a `HandlerFunction` (a function of the context alone), so the registration is a captureless lambda that passes the batch in.
 
-**On the web**, the client registers it by name: [TypeScript](../environments/web/typescript/events.md#declare-emit-handle).
+**On the web**, the client registers it by name: [TypeScript](../../reference/typescript/events.md#declare-emit-handle).
 
 Emitting an event that the schema does not declare is a contract violation (`OLY_ASSERT`).
 
@@ -114,7 +114,7 @@ engine.on<EnemyDied>("countKill", [](oly::app::HandlerContext& context) { countK
 engine.on<EnemyDied>("destroyDead", [](oly::app::HandlerContext& context) { destroyDead(context, context.events<EnemyDied>()); });   // destroys: last
 ```
 
-**On the web**, the client registers them by name: [TypeScript](../environments/web/typescript/events.md#order).
+**On the web**, the client registers them by name: [TypeScript](../../reference/typescript/events.md#order).
 
 ## Rounds: events that cause events
 
@@ -157,7 +157,7 @@ oly::app::HandlerId endRoundId = engine.on<PlayerDied>("endRound", [](oly::app::
 engine.setHandlerStates(endRoundId, {states::playing});
 ```
 
-**On the web**, the client registers it by name: [TypeScript](../environments/web/typescript/events.md#restrict-handlers-to-states).
+**On the web**, the client registers it by name: [TypeScript](../../reference/typescript/events.md#restrict-handlers-to-states).
 
 With an active state that is not in the list, the handler is skipped.
 
@@ -175,4 +175,4 @@ With an active state that is not in the list, the handler is skipped.
 
 [Input →](input.md): turn keys and mouse into actions.
 
-In other clients: [TypeScript](../environments/web/typescript/events.md).
+In other clients: [TypeScript](../../reference/typescript/events.md).

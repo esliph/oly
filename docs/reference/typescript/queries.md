@@ -1,8 +1,8 @@
 # Queries in TypeScript
 
-[← World and entities](world-and-entities.md) · [TypeScript client](README.md) · Concept: [Queries](../../../concepts/queries.md) · Next: [Engine, loop and systems →](engine-and-systems.md)
+[← World and entities](world-and-entities.md) · [TypeScript client](README.md) · Concept: [Queries](../../guide/concepts/queries.md) · Next: [Engine, loop and systems →](engine-and-systems.md)
 
-What a query visits and the rules while iterating are in the [concept page](../../../concepts/queries.md). This page shows the TS calls.
+What a query visits and the rules while iterating are in the [concept page](../../guide/concepts/queries.md). This page shows the TS calls.
 
 ## The query spec
 
@@ -51,7 +51,7 @@ The views read and write the WASM memory directly. There is **no copy** and no b
 
 ## Rules while iterating
 
-The block and its views are valid only inside the callback ([the contract](../../../concepts/queries.md#rules-while-iterating)). A direct structural change on the world (`world.spawn/destroy/add/remove`) throws `ContractError`. Outside the loop, collect the entities first and change them after it:
+The block and its views are valid only inside the callback ([the contract](../../guide/concepts/queries.md#rules-while-iterating)). A direct structural change on the world (`world.spawn/destroy/add/remove`) throws `ContractError`. Outside the loop, collect the entities first and change them after it:
 
 ```ts
 const dead: Entity[] = [];
@@ -161,7 +161,7 @@ context.query({ read: [Position, Chaser], write: [Velocity], with: [Enemy] }).ea
 });
 ```
 
-For "each against each" (bullets × enemies), prefer a C++ system: see [Nested queries](../../../concepts/queries.md#two-queries-together-pairs).
+For "each against each" (bullets × enemies), prefer a C++ system: see [Nested queries](../../guide/concepts/queries.md#two-queries-together-pairs).
 
 ### Several shapes with one function
 
@@ -184,7 +184,7 @@ drawCircles(context, drawer, { with: [Player], without: [Invulnerable] }, "blue"
 
 ## Raw arrays
 
-`field.raw()` returns the typed array under a field, plus the base index and stride. Use it in tight loops to avoid one method call per element. When it pays off is in [The WASM↔JS boundary](../boundary.md).
+`field.raw()` returns the typed array under a field, plus the base index and stride. Use it in tight loops to avoid one method call per element. When it pays off is in [The WASM↔JS boundary](../../guide/environments/web/boundary.md).
 
 ```ts
 world.query({ read: [Velocity], write: [Position] }).eachBlock((block) => {

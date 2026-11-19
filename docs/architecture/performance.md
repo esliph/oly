@@ -26,8 +26,8 @@ Consequence for game authors: hot per-entity loops stay in C++; TS keeps what ru
 
 | Folder | Contents |
 |---|---|
-| `docs/benchmarks/README.md` + `ecs/` | ECS targets, `perf stat` of the fragmented iteration |
-| `docs/benchmarks/bridge/` | boundary, loop and events |
-| `docs/benchmarks/wasm/` | runs (`runs/`) and generated code (`codegen/`) of the native × WASM ladder |
+| `docs/reference/benchmarks/README.md` + `ecs/` | ECS targets, `perf stat` of the fragmented iteration |
+| `docs/reference/benchmarks/bridge/` | boundary, loop and events |
+| `docs/reference/benchmarks/wasm/` | runs (`runs/`) and generated code (`codegen/`) of the native × WASM ladder |
 
 The ECS benchmarks live in `engine/runtime/ecs/bench/` (`ecs_bench_iterate`, `ecs_bench_transitions`, `ecs_bench_fragmented`, `ecs_bench_flush`). The boundary ones live in `engine/testing/bench/`. `tools/bench_ratio.py` computes the ratios.

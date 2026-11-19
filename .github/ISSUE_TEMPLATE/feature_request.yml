@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Read docs/architecture/limits.md and docs/architecture/decisions.md first: some features are out of scope on purpose (Oly does not draw, play audio or do physics).
+        Read docs/reference/limits.md and docs/explanation/architecture/decisions.md first: some features are out of scope on purpose (Oly does not draw, play audio or do physics).
   - type: textarea
     id: problem
     attributes:

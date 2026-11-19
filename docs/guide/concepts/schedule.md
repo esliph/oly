@@ -30,7 +30,7 @@ engine.addSystem(oly::app::Phase::Update, "startRound", startRound);
 engine.schedule().after(2.0, spawnEnemy);
 ```
 
-**On the web**, the client schedules from TS: [TypeScript](../environments/web/typescript/schedule.md#after-and-every).
+**On the web**, the client schedules from TS: [TypeScript](../../reference/typescript/schedule.md#after-and-every).
 
 The same scheduler is `engine.schedule()` and `context.schedule()` in every system, handler, task and hook.
 
@@ -108,7 +108,7 @@ If the task refers to an entity, check that it is still alive when the task runs
 engine.addSystem(oly::app::Phase::Update, "startDash", startDash);
 ```
 
-**On the web**, the client uses a closure instead: [TypeScript](../environments/web/typescript/schedule.md#captured-values-closures).
+**On the web**, the client uses a closure instead: [TypeScript](../../reference/typescript/schedule.md#captured-values-closures).
 
 ## Discard callbacks
 
@@ -136,4 +136,4 @@ On the last run of an `after`, the discard does **not** run; release the resourc
 
 [States →](states.md): menus, rounds and game over with automatic clean-up.
 
-In other clients: [TypeScript](../environments/web/typescript/schedule.md).
+In other clients: [TypeScript](../../reference/typescript/schedule.md).

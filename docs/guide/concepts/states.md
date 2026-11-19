@@ -21,7 +21,7 @@ The engine starts with **no state** (`engine.state() == oly::app::NoState`). Req
 engine.requestState(states::menu);
 ```
 
-**On the web**, the client requests it: [TypeScript](../environments/web/typescript/states.md#declare-and-start).
+**On the web**, the client requests it: [TypeScript](../../reference/typescript/states.md#declare-and-start).
 
 States are flat: one active state at a time, no nesting, no stack. At most 32.
 
@@ -59,7 +59,7 @@ engine.setSystemStates(engine.addSystem(oly::app::Phase::Update, "chasePlayer", 
 engine.setHandlerStates(engine.on<PlayerDied>("endRound", [](oly::app::HandlerContext& context) { endRound(context, context.events<PlayerDied>()); }), {states::playing});
 ```
 
-**On the web**, the client uses `.inState(...)`: [TypeScript](../environments/web/typescript/states.md#run-only-in-some-states).
+**On the web**, the client uses `.inState(...)`: [TypeScript](../../reference/typescript/states.md#run-only-in-some-states).
 
 - No restriction: runs in every state, and also with no state.
 - With a restriction: runs only in the listed states. With no active state, it does not run.
@@ -86,7 +86,7 @@ engine.onEnter(states::playing, "startRound", startRound);
 engine.onExit(states::playing, "saveBest", saveBest);
 ```
 
-**On the web**, the client registers hooks by name or as closures: [TypeScript](../environments/web/typescript/states.md#enter-and-exit-hooks).
+**On the web**, the client registers hooks by name or as closures: [TypeScript](../../reference/typescript/states.md#enter-and-exit-hooks).
 
 A hook receives a `StateContext`, with direct structural changes and these extra members:
 
@@ -204,7 +204,7 @@ engine.onExit(states::playing, "resumeOnExit", resumeOnExit);
 engine.requestState(states::menu);
 ```
 
-**On the web**, the client registers the same pieces: [TypeScript](../environments/web/typescript/states.md#complete-pattern-menu--playing--game-over).
+**On the web**, the client registers the same pieces: [TypeScript](../../reference/typescript/states.md#complete-pattern-menu--playing--game-over).
 
 Notice:
 
@@ -216,4 +216,4 @@ Notice:
 
 [Performance →](performance.md): keep the hot path fast.
 
-In other clients: [TypeScript](../environments/web/typescript/states.md).
+In other clients: [TypeScript](../../reference/typescript/states.md).

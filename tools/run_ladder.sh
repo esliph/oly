@@ -20,7 +20,7 @@ if [ "${#variants[@]}" -eq 0 ]; then
 fi
 
 cd "$(dirname "$0")/.."
-output_directory="docs/benchmarks/wasm/runs/$bench"
+output_directory="docs/reference/benchmarks/wasm/runs/$bench"
 mkdir -p "$output_directory"
 
 command_for() {

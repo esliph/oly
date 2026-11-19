@@ -1,8 +1,8 @@
 # World and entities in TypeScript
 
-[← Schema](schema.md) · [TypeScript client](README.md) · Concept: [World and entities](../../../concepts/world-and-entities.md) · Next: [Queries →](queries.md)
+[← Schema](schema.md) · [TypeScript client](README.md) · Concept: [World and entities](../../guide/concepts/world-and-entities.md) · Next: [Queries →](queries.md)
 
-The rules (deferred and direct changes, what a handle is) are in the [concept page](../../../concepts/world-and-entities.md). This page shows the TS calls.
+The rules (deferred and direct changes, what a handle is) are in the [concept page](../../guide/concepts/world-and-entities.md). This page shows the TS calls.
 
 ## Where the World comes from
 
@@ -109,7 +109,7 @@ if (problem !== null) {
 }
 ```
 
-Call `checkInvariants` in tests after each step ([Testing a web game](../testing.md)).
+Call `checkInvariants` in tests after each step ([Testing a web game](../../how-to/test-a-web-game.md)).
 
 ## Next
 

@@ -129,7 +129,7 @@ PRESET=release ./spur build
 ./spur dev ./build/release/bench/ecs_bench_iterate
 ```
 
-The recorded results and the status of each target are in [`docs/benchmarks/README.md`](docs/benchmarks/README.md).
+The recorded results and the status of each target are in [`docs/reference/benchmarks/README.md`](docs/reference/benchmarks/README.md).
 
 ## Documentation
 
@@ -137,10 +137,10 @@ The recorded results and the status of each target are in [`docs/benchmarks/READ
 |---|---|
 | [`docs/guide/`](docs/guide/README.md) | user guide: how to make a game, step by step, with examples, recipes and a cheat sheet |
 | [`docs/architecture/`](docs/architecture/README.md) | architecture: overview, modules and boundaries, ECS, `Engine`, `capi`, TS packages, games, decisions and limitations |
-| [`docs/architecture/repository.md`](docs/architecture/repository.md) | repository structure |
+| [`docs/reference/contributor/repository.md`](docs/reference/contributor/repository.md) | repository structure |
 | [`docs/development/commands.md`](docs/development/commands.md) | all commands for build, tests, benchmarks and games |
-| [`docs/development/code-style.md`](docs/development/code-style.md) | code style |
-| [`docs/benchmarks/`](docs/benchmarks/README.md) | benchmark results |
+| [`docs/reference/contributor/code-style.md`](docs/reference/contributor/code-style.md) | code style |
+| [`docs/reference/benchmarks/`](docs/reference/benchmarks/README.md) | benchmark results |
 | [`docs/superpowers/specs/`](docs/superpowers/specs) | specs (source of truth for the requirements) |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | how to contribute: what is welcome, workflow, rules and the pull request checklist |
 

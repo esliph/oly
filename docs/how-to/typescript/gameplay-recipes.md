@@ -1,8 +1,8 @@
 # Recipes in TypeScript
 
-[← States](states.md) · [TypeScript client](README.md) · Concept: [Recipes](../../../recipes.md)
+[← States](../../reference/typescript/states.md) · [TypeScript client](../../reference/typescript/README.md) · Concept: [Recipes](../gameplay-recipes.md)
 
-Ready patterns for common game features, in TypeScript. Each recipe shows the schema entries it needs and the code. Every recipe also has a C++ version in the [recipes page](../../../recipes.md), except the ones marked browser-only, which need the DOM or browser storage.
+Ready patterns for common game features, in TypeScript. Each recipe shows the schema entries it needs and the code. Every recipe also has a C++ version in the [recipes page](../gameplay-recipes.md), except the ones marked browser-only, which need the DOM or browser storage.
 
 | Recipe | Uses |
 |---|---|
@@ -127,7 +127,7 @@ engine.addSystem(Phase.UpdateBefore, "dash", (context) => {
 });
 ```
 
-C++: [Ability with a cooldown](../../../recipes.md#ability-with-a-cooldown).
+C++: [Ability with a cooldown](../gameplay-recipes.md#ability-with-a-cooldown).
 
 ## Health, damage and death
 
@@ -268,7 +268,7 @@ engine.addSystem(Phase.Update, "home", (context) => {
 });
 ```
 
-`context.get` crosses into WASM once per missile. For a few dozen missiles this is fine; for thousands, write the system in C++ ([C++ version](../../../recipes.md#homing-projectile)).
+`context.get` crosses into WASM once per missile. For a few dozen missiles this is fine; for thousands, write the system in C++ ([C++ version](../gameplay-recipes.md#homing-projectile)).
 
 ## Attach one entity to another
 
@@ -501,7 +501,7 @@ function edgePoint(random: () => number): { x: number; y: number } {
 }
 ```
 
-C++: [Random spawn positions](../../../recipes.md#random-spawn-positions).
+C++: [Random spawn positions](../gameplay-recipes.md#random-spawn-positions).
 
 ## Debug overlay
 
@@ -516,4 +516,4 @@ engine.addSystem(Phase.Render, "debug", (context) => {
 });
 ```
 
-In tests, call `engine.world.checkInvariants()` after each step ([Testing a web game](../testing.md)).
+In tests, call `engine.world.checkInvariants()` after each step ([Testing a web game](../test-a-web-game.md)).

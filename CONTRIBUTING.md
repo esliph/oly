@@ -10,7 +10,7 @@ By taking part you agree to follow the [code of conduct](CODE_OF_CONDUCT.md). Se
 |---|---|
 | Bug fix | Open a pull request directly. If the fix is not small, open an issue first with the reproduction. |
 | Test, benchmark or documentation | Open a pull request directly. |
-| New feature, new plugin, change to a public API | **Open an issue first** and wait until it is accepted. A pull request for a feature that was not discussed may be closed, however good it is, because it may not fit the scope ([limits.md](docs/architecture/limits.md)) or the design ([decisions.md](docs/architecture/decisions.md)). |
+| New feature, new plugin, change to a public API | **Open an issue first** and wait until it is accepted. A pull request for a feature that was not discussed may be closed, however good it is, because it may not fit the scope ([limits.md](docs/reference/limits.md)) or the design ([decisions.md](docs/explanation/architecture/decisions.md)). |
 | Performance change | Open an issue with the measurement that motivates it. A performance change is merged on numbers, not on reasoning. |
 
 Questions about using the engine go in an issue too.
@@ -18,7 +18,7 @@ Questions about using the engine go in an issue too.
 ## Before you start
 
 1. Read the [architecture overview](docs/architecture/README.md). It explains the parts, the boundaries between them and the index of every other document.
-2. Use the names of the [glossary](docs/architecture/glossary.md). No aliases, and no compatibility `using` with old names.
+2. Use the names of the [glossary](docs/reference/glossary.md). No aliases, and no compatibility `using` with old names.
 3. The specs in [`docs/superpowers/specs/`](docs/superpowers/specs) are the source of truth for the requirements (`R-*`) and invariants (`I-*`). A change that breaks one is a change to the spec, and is discussed in an issue first.
 
 ## Toolchain
@@ -45,7 +45,7 @@ Keep one change per pull request. A refactoring that a fix needs goes in its own
 
 ## Code rules
 
-The full rules are in [docs/development/code-style.md](docs/development/code-style.md). The ones a review asks about most:
+The full rules are in [docs/reference/contributor/code-style.md](docs/reference/contributor/code-style.md). The ones a review asks about most:
 
 - Commits, comments and assert messages in **English**.
 - `-Wall -Wextra -Wpedantic -Werror` on every target: a warning breaks the build. TypeScript is `strict`.
@@ -62,7 +62,7 @@ A change to `table`, `archetype`, `query*`, `command_buffer` or `world` keeps `c
 
 ## Performance
 
-The performance targets are ratios against a baseline measured in the same run ([docs/benchmarks/README.md](docs/benchmarks/README.md)). A change on a hot path (the ECS iteration, transitions, the `CommandBuffer` flush, the client boundary) states in the pull request the benchmark it ran before and after, on the same machine, in the `release` preset:
+The performance targets are ratios against a baseline measured in the same run ([docs/reference/benchmarks/README.md](docs/reference/benchmarks/README.md)). A change on a hot path (the ECS iteration, transitions, the `CommandBuffer` flush, the client boundary) states in the pull request the benchmark it ran before and after, on the same machine, in the `release` preset:
 
 ```sh
 PRESET=release ./spur build

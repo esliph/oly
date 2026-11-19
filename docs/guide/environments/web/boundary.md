@@ -4,7 +4,7 @@
 
 On the web, the engine runs in WASM and the TS client calls into it. Data in WASM memory is cheap to reach from C++, and cheap from TS only in batches. Each call from TS into WASM (or back) has a fixed cost. Pay it per system, per table or per event batch, never per entity.
 
-The measured numbers are in [performance](../../../architecture/performance.md) and [benchmarks](../../../benchmarks/README.md). The rules that do not depend on the boundary (archetype churn, splitting components, fragmentation) are in [Performance](../../concepts/performance.md).
+The measured numbers are in [performance](../../../architecture/performance.md) and [benchmarks](../../../reference/benchmarks/README.md). The rules that do not depend on the boundary (archetype churn, splitting components, fragmentation) are in [Performance](../../concepts/performance.md).
 
 ## Iterate with `eachBlock`, not with `get` per entity
 
@@ -36,7 +36,7 @@ engine.addNativeSystem(Phase.Update, "integrate");
 
 ## Use `raw()` in hot loops
 
-`field.raw()` gives the typed array, base and stride. One array access per element, no method call ([Raw arrays](typescript/queries.md#raw-arrays)):
+`field.raw()` gives the typed array, base and stride. One array access per element, no method call ([Raw arrays](../../../reference/typescript/queries.md#raw-arrays)):
 
 ```ts
 const x = block.write(Position).x.raw();

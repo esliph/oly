@@ -1,8 +1,8 @@
 # Input in TypeScript
 
-[← Events](events.md) · [TypeScript client](README.md) · Concept: [Input](../../../concepts/input.md) · Next: [Schedule →](schedule.md)
+[← Events](events.md) · [TypeScript client](README.md) · Concept: [Input](../../guide/concepts/input.md) · Next: [Schedule →](schedule.md)
 
-The three kinds of actions, when `pressed`, `held` and `released` are true and how the axis is normalized are in the [concept page](../../../concepts/input.md). This page shows the TS calls.
+The three kinds of actions, when `pressed`, `held` and `released` are true and how the axis is normalized are in the [concept page](../../guide/concepts/input.md). This page shows the TS calls.
 
 ## Bind buttons
 

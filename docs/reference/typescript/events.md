@@ -1,8 +1,8 @@
 # Events in TypeScript
 
-[← Engine, loop and systems](engine-and-systems.md) · [TypeScript client](README.md) · Concept: [Events](../../../concepts/events.md) · Next: [Input →](input.md)
+[← Engine, loop and systems](engine-and-systems.md) · [TypeScript client](README.md) · Concept: [Events](../../guide/concepts/events.md) · Next: [Input →](input.md)
 
-When events are dispatched, in what order, and what rounds are: see the [concept page](../../../concepts/events.md). This page shows the TS calls.
+When events are dispatched, in what order, and what rounds are: see the [concept page](../../guide/concepts/events.md). This page shows the TS calls.
 
 ## Declare, emit, handle
 
@@ -38,7 +38,7 @@ engine.on(EnemyDied, "spawnCorpses", (context, batch) => {
 
 ## Handlers change the world directly
 
-The entity named in an event may already be dead ([why](../../../concepts/events.md#handlers-change-the-world-directly)). Check it:
+The entity named in an event may already be dead ([why](../../guide/concepts/events.md#handlers-change-the-world-directly)). Check it:
 
 ```ts
 engine.on(CoinCollected, "collectCoin", (context, batch) => {
