@@ -815,7 +815,7 @@ oly_add_plugin(NAME lifetime SCHEMA lifetime.oly DEPENDS ecs app)
 oly_add_game(<game>_game ENVIRONMENT web DIMENSION 2d SCHEMA ${CMAKE_CURRENT_SOURCE_DIR}/<game>.oly SOURCES ${nativeSources} DEPENDS ecs app capi PLUGINS lifetime)
 ```
 
-The game's code changes in one place: the types come from the plugin's header, which the game's `schema.generated.hpp` includes. The full walk-through is in [Plugins](../guide/concepts/plugins.md#write-a-plugin). A TS game uses the plugin's components through its generated schema and writes no install code.
+The game's code changes in one place: the types come from the plugin's header, which the game's `schema.generated.hpp` includes. The full walk-through is in [Write a plugin](write-a-plugin.md). A TS game uses the plugin's components through its generated schema and writes no install code.
 
 ## Count entities
 

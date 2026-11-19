@@ -15,6 +15,8 @@
 | [Debug the world](how-to/debug-the-world.md) | How do I check that a `World` is consistent and look at its shape? |
 | [Drive the loop yourself](how-to/drive-the-loop-yourself.md) | How do I call `frame` from a test or a tool, one step at a time, and press buttons myself? |
 | [Keep the hot path fast](how-to/keep-the-hot-path-fast.md) | How do I keep a system that runs on many entities every step cheap? |
+| [Use a plugin](how-to/use-a-plugin.md) | How do I turn on a plugin that already exists in my game? |
+| [Write a plugin](how-to/write-a-plugin.md) | How do I make a plugin with its own components, events and systems? |
 | [User guide](guide/README.md) | Where are the other guides for the game user, until they move here? |
 
 ## Reference
@@ -29,6 +31,7 @@
 | [Input in C++](reference/cpp/input.md) | Which calls bind buttons to actions, read buttons, the axis and the pointer, and list the declared actions? |
 | [Schedule in C++](reference/cpp/schedule.md) | Which calls run a task after a delay or every interval, cancel it, and carry a payload into it? |
 | [States in C++](reference/cpp/states.md) | Which calls declare states, request a change, restrict systems to states and run hooks on entry and exit? |
+| [Plugins in C++](reference/cpp/plugins.md) | Which calls write a plugin, install it and reach an installed plugin? |
 | [World and entities in C++](reference/cpp/world-and-entities.md) | Which calls create, read, change and destroy entities, record commands and observe changes? |
 | [Glossary](reference/glossary.md) | What does each name mean in C++, the C API and TypeScript? |
 | [Known limitations](reference/limits.md) | What does the engine not do? |

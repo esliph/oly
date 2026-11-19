@@ -62,7 +62,7 @@ add_test(NAME <target>.headless COMMAND <target> --frames 120)
 set_tests_properties(<target>.headless PROPERTIES ENVIRONMENT SDL_VIDEO_DRIVER=dummy)
 ```
 
-`<target>` is the game name with `-` written as `_`. `DIMENSION` is required: `2d` or `3d` turns the matching `essentials` plugin on, which brings `Position` and the other [transform](../../concepts/transforms.md) components, so the game's `.oly` does not declare them. `PLUGINS <plugin>` is optional: it lists the [plugins](../../concepts/plugins.md) the game turns on. The test target of [Test your game](#test-your-game) lists the same plugins, so its `setUpGame` installs them too.
+`<target>` is the game name with `-` written as `_`. `DIMENSION` is required: `2d` or `3d` turns the matching `essentials` plugin on, which brings `Position` and the other [transform](../../concepts/transforms.md) components, so the game's `.oly` does not declare them. `PLUGINS <plugin>` is optional: it lists the [plugins](../../../explanation/concepts/plugins.md) the game turns on. The test target of [Test your game](#test-your-game) lists the same plugins, so its `setUpGame` installs them too.
 
 A native game has no registry and no `.mjs`: the target is a plain executable in `build/cmake/games/`. `oly.env` carries the engine version; change it with `oly upgrade <version>` ([The `oly` command](../../cli.md#upgrade-the-engine)).
 
@@ -115,7 +115,7 @@ int main() {
 }
 ```
 
-- `oly::app::setUpGame(engine)` declares the schema's events, actions and states in schema order, so `actions::move` and the other generated ids are valid, then installs the game's [plugins](../../concepts/plugins.md). The build generates it. Call it first, on an `Engine` that has declared nothing yet (`OLY_ASSERT`).
+- `oly::app::setUpGame(engine)` declares the schema's events, actions and states in schema order, so `actions::move` and the other generated ids are valid, then installs the game's [plugins](../../../explanation/concepts/plugins.md). The build generates it. Call it first, on an `Engine` that has declared nothing yet (`OLY_ASSERT`).
 - `Window` opens a resizable window and an SDL renderer. Its size is the **logical size** your game draws in: the host scales it to the window and adds bars when the aspect ratio differs. If SDL cannot open the window (no display, no video driver), the constructor throws `std::runtime_error` with SDL's message.
 - `run` returns when the window is closed, and its result is the process exit code.
 

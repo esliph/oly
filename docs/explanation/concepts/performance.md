@@ -1,6 +1,6 @@
 # Performance
 
-[← States](states.md) · [Concepts](README.md) · Next: [Plugins →](../../guide/concepts/plugins.md)
+[← States](states.md) · [Concepts](README.md) · Next: [Plugins →](plugins.md)
 
 Oly is built around one cost model: **a query walks columns of components that sit next to each other in memory**. A system that touches a few components of many entities is cheap. A system that allocates, moves entities between tables or reads data it does not need is not.
 
@@ -42,4 +42,4 @@ The techniques, in C++ and in TypeScript: [Keep the hot path fast](../../how-to/
 
 ## Next
 
-[Plugins](../../guide/concepts/plugins.md): reuse engine functionality across games.
+[Plugins](plugins.md): reuse engine functionality across games.

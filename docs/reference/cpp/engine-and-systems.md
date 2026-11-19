@@ -33,7 +33,7 @@ oly::app::Engine engine(world, oly::app::EngineConfig{
 oly::app::setUpGame(engine);
 ```
 
-`setUpGame` comes from the build: it declares the schema, then installs the game's [plugins](../../guide/concepts/plugins.md) ([Schema in C++](schema.md#olyappsetupgame)). Call it once, first. Register systems, handlers and hooks next, before the first `frame`.
+`setUpGame` comes from the build: it declares the schema, then installs the game's [plugins](../../explanation/concepts/plugins.md) ([Schema in C++](schema.md#olyappsetupgame)). Call it once, first. Register systems, handlers and hooks next, before the first `frame`.
 
 **On the web**, the host creates the engine: [TypeScript](../typescript/engine-and-systems.md#create-the-engine).
 

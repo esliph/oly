@@ -72,7 +72,7 @@ Each archetype stores one column per component (SoA across components). Inside a
 
 ## Types that come from plugins
 
-A plugin can bring its own `.oly` with components, tags and events. When a game turns the plugin on (`PLUGINS` in its CMake, [Plugins](../../guide/concepts/plugins.md)), the build merges the plugin's types into the game's schema:
+A plugin can bring its own `.oly` with components, tags and events. When a game turns the plugin on (`PLUGINS` in its CMake, [Plugins](plugins.md)), the build merges the plugin's types into the game's schema:
 
 - the plugins' types come first, in install order, then the game's. That order gives the component ids and the event order;
 - names are flat: a name that a plugin and the game both declare stops the build, and the error names both places (`game.oly:3:11: repeated name "Counter"; first declared at counting.oly:1:11`);

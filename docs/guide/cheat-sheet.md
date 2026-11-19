@@ -69,7 +69,7 @@ auto row = context.query<A>().trySingle();               // std::optional<std::t
 | `time()`, `fixedDeltaTime()`, `interpolation()` | seconds |
 | `world()`, `actions()`, `schedule()` | |
 | `addSystem(phase, name, function, userData, band)` | returns `SystemId`; `band`: `OrderBand::Default` (default) or `OrderBand::Last` ([Order bands](../explanation/concepts/engine-and-systems.md#order-bands)); `setWhilePaused(id, true)`, `setSystemStates(id, {states::a})` |
-| `installPlugin<P>()`, `plugin<P>()` | returns `P&`; install before the first `frame`, once ([Plugins](concepts/plugins.md)) |
+| `installPlugin<P>()`, `plugin<P>()` | returns `P&`; install before the first `frame`, once ([Plugins](../explanation/concepts/plugins.md)) |
 | `declareEvent<T>(name)`, `on<T>(name, function, userData)` | `on` returns `HandlerId`; `setHandlerStates(id, {...})` |
 | `requestState(state)`, `state()` | `oly::app::NoState` until the first change |
 | `onEnter(state, name, function)`, `onExit(state, name, function)` | |

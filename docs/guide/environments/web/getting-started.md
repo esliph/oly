@@ -96,7 +96,7 @@ add_test(NAME <target>.smoke COMMAND ${OLY_NODE} --test ${CMAKE_CURRENT_SOURCE_D
 set_tests_properties(<target>.smoke PROPERTIES ENVIRONMENT OLY_GAME_MODULE=$<TARGET_FILE:<target>>)
 ```
 
-`<target>` is the game name with `-` written as `_`; it is also the name of the `.mjs` that `main.ts` loads. `ENVIRONMENT` says where the game runs (`web` or `native`), `DIMENSION` is `2d` or `3d`, and `TYPESCRIPT` names the TS schema file the build writes. An optional `PLUGINS <plugin>...` turns [plugins](../../concepts/plugins.md) on: their types reach `schema.generated.ts` and their systems run in the WASM module, with no TS code.
+`<target>` is the game name with `-` written as `_`; it is also the name of the `.mjs` that `main.ts` loads. `ENVIRONMENT` says where the game runs (`web` or `native`), `DIMENSION` is `2d` or `3d`, and `TYPESCRIPT` names the TS schema file the build writes. An optional `PLUGINS <plugin>...` turns [plugins](../../../explanation/concepts/plugins.md) on: their types reach `schema.generated.ts` and their systems run in the WASM module, with no TS code.
 
 ### `native/movement.cpp`
 

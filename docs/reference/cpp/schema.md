@@ -75,7 +75,7 @@ Declares the schema's events, actions and states in schema order, so the index i
 void setUpGame(Engine& engine);
 ```
 
-Calls `declareSchema`, then installs the game's [plugins](../../guide/concepts/plugins.md) in dependency order. Call it once per `Engine`, before the first frame:
+Calls `declareSchema`, then installs the game's [plugins](../../explanation/concepts/plugins.md) in dependency order. Call it once per `Engine`, before the first frame:
 
 ```cpp
 oly::app::setUpGame(engine);

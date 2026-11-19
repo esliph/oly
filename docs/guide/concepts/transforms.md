@@ -1,6 +1,6 @@
 # Transforms
 
-[← Plugins](plugins.md) · [Guide index](../README.md)
+[← Plugins](../../explanation/concepts/plugins.md) · [Guide index](../README.md)
 
 Every game names its dimension in CMake, and the engine gives it the components to place entities in space and to nest them. You write `Position` on an entity; the engine keeps its world position up to date, including through parents.
 

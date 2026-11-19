@@ -1,6 +1,6 @@
 # Plugins
 
-Code in `engine/runtime/app/include/oly/app/{plugin,game}.hpp`, `cmake/OlyPlugin.cmake`, `cmake/OlyGame.cmake` and `engine/schema/codegen/src/merge.cpp`. Spec: `docs/superpowers/specs/2026-11-16-plugins-design.md`. How a game turns a plugin on and how to write one: [the guide](../guide/concepts/plugins.md).
+Code in `engine/runtime/app/include/oly/app/{plugin,game}.hpp`, `cmake/OlyPlugin.cmake`, `cmake/OlyGame.cmake` and `engine/schema/codegen/src/merge.cpp`. Spec: `docs/superpowers/specs/2026-11-16-plugins-design.md`. How a game turns a plugin on: [Use a plugin](../how-to/use-a-plugin.md). How to write one: [Write a plugin](../how-to/write-a-plugin.md).
 
 A **plugin** is a unit of engine-level functionality, compiled together with the core, that a game turns on in its build. It brings its own data (an optional `.oly`), its systems, handlers, hooks and observers, and its own state. A game uses a plugin through data: it adds and removes the plugin's components.
 
