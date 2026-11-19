@@ -16,6 +16,16 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# The Spurfile passes these into the containers. Without the compiler cache every run compiled the whole tree again,
+# about two minutes per job (2026-11-19); it lives in build/, the folder the containers mount, so the cache steps reach it.
+env:
+  CCACHE_DIR: /app/build/.ccache
+  CCACHE_MAXSIZE: 500M
+  CMAKE_C_COMPILER_LAUNCHER: ccache
+  CMAKE_CXX_COMPILER_LAUNCHER: ccache
+  # The vCPUs of an ubuntu-latest runner.
+  CTEST_PARALLEL_LEVEL: 4
+
 jobs:
   native:
     runs-on: ubuntu-latest
@@ -27,12 +37,19 @@ jobs:
         run: |
           mkdir -p build
           sudo setfacl -R -m "u:$(id -un):rwX" -m "d:u:$(id -un):rwX" .
+      - uses: actions/cache@v4
+        with:
+          path: build/.ccache
+          key: ccache-native-${{ hashFiles('toolchain.env', 'Dockerfile') }}-${{ github.run_id }}
+          restore-keys: ccache-native-${{ hashFiles('toolchain.env', 'Dockerfile') }}-
       - name: Build the dev image
         run: ./spur images dev
       - name: Formatting
         run: ./spur format-check
       - name: Native tests (ASan + UBSan)
         run: ./spur test
+      - name: Compiler cache statistics
+        run: ./spur dev ccache --show-stats
 
   web:
     runs-on: ubuntu-latest
@@ -43,7 +60,14 @@ jobs:
         run: |
           mkdir -p build
           sudo setfacl -R -m "u:$(id -un):rwX" -m "d:u:$(id -un):rwX" .
+      - uses: actions/cache@v4
+        with:
+          path: build/.ccache
+          key: ccache-web-${{ hashFiles('toolchain.env', 'Dockerfile.wasm') }}-${{ github.run_id }}
+          restore-keys: ccache-web-${{ hashFiles('toolchain.env', 'Dockerfile.wasm') }}-
       - name: Build the wasm image
         run: ./spur images wasm
       - name: WASM and TypeScript tests
         run: ./spur games-test
+      - name: Compiler cache statistics
+        run: ./spur wasm ccache --show-stats
