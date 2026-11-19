@@ -9,8 +9,8 @@
 
 #include "components.hpp"
 #include "oly/core/assert.hpp"
-#include "oly/ecs/detail/table.hpp"
 #include "oly/ecs/component.hpp"
+#include "oly/ecs/detail/table.hpp"
 
 namespace {
   uint16_t columnIndexOf(const oly::ecs::detail::Table& table, oly::ecs::ComponentId componentId) {

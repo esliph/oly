@@ -1,13 +1,13 @@
 ---
 name: bench-compare
-description: Measures the ECS benchmarks in Release, checks the performance targets NF-P1, NF-P2 and NF-P5 as ratios against the baseline measured in the same run and records the result in docs/benchmarks/. Use when the user asks to measure, run the benchmarks, check the NF-P targets or verify whether a change introduced a performance regression.
+description: Measures the ECS benchmarks in Release, checks the performance targets NF-P1, NF-P2 and NF-P5 as ratios against the baseline measured in the same run and records the result in docs/reference/benchmarks/. Use when the user asks to measure, run the benchmarks, check the NF-P targets or verify whether a change introduced a performance regression.
 argument-hint: "<prefix> [iterate] [fragmented] [flush]"
 disable-model-invocation: true
 ---
 
 # bench-compare
 
-A full round: Release build → run the benchmarks with repetitions → compute the ratios for each target → compare with the recorded status → update `docs/benchmarks/README.md`. Each step has an easy way to go wrong without noticing, and the error only shows up as a number that looks plausible. This skill exists so that the round comes out comparable with the previous ones.
+A full round: Release build → run the benchmarks with repetitions → compute the ratios for each target → compare with the recorded status → update `docs/reference/benchmarks/README.md`. Each step has an easy way to go wrong without noticing, and the error only shows up as a number that looks plausible. This skill exists so that the round comes out comparable with the previous ones.
 
 ## Boundary
 
@@ -17,7 +17,7 @@ A full round: Release build → run the benchmarks with repetitions → compute 
 
 **What I do not need to know** — what each benchmark measures inside and how the ECS is implemented. The skill compares medians; understanding why a ratio changed is another job, which starts after the verdict.
 
-**Edge contract** — I receive a prefix for the result files (e.g. `r2`) and, optionally, which executables to run; I deliver the JSON files in `docs/benchmarks/ecs/<prefix>_<executable>.json`, a ratio table with a verdict per target and the updated results `README.md`, without a commit.
+**Edge contract** — I receive a prefix for the result files (e.g. `r2`) and, optionally, which executables to run; I deliver the JSON files in `docs/reference/benchmarks/ecs/<prefix>_<executable>.json`, a ratio table with a verdict per target and the updated results `README.md`, without a commit.
 
 ## The ratio rule
 
@@ -50,8 +50,8 @@ All commands are `./spur` tasks, which run in the container.
 
 ### 1. Prepare
 
-- Set the prefix from `$ARGUMENTS`. Without a prefix, ask: the files in `docs/benchmarks/ecs/` are the project history (`m0_…`, `m3_…`, `e1_…`, `r1_…`), and a generic name would overwrite a record.
-- If `docs/benchmarks/ecs/<prefix>_*.json` already exists, stop and ask before overwriting.
+- Set the prefix from `$ARGUMENTS`. Without a prefix, ask: the files in `docs/reference/benchmarks/ecs/` are the project history (`m0_…`, `m3_…`, `e1_…`, `r1_…`), and a generic name would overwrite a record.
+- If `docs/reference/benchmarks/ecs/<prefix>_*.json` already exists, stop and ask before overwriting.
 - Note the commit (`git rev-parse --short HEAD`) and whether the tree is dirty. The README records the reference commit; numbers from a dirty tree must say so.
 - With no executables argument, run all three (`iterate`, `fragmented`, `flush`).
 
@@ -68,7 +68,7 @@ It has to be the `release` preset: the default `debug-asan` enables ASan, UBSan 
 For each chosen executable:
 
 ```sh
-./spur dev ./build/release/bench/ecs_bench_<executable> --benchmark_repetitions=10 --benchmark_report_aggregates_only=true --benchmark_out=docs/benchmarks/ecs/<prefix>_<executable>.json
+./spur dev ./build/release/bench/ecs_bench_<executable> --benchmark_repetitions=10 --benchmark_report_aggregates_only=true --benchmark_out=docs/reference/benchmarks/ecs/<prefix>_<executable>.json
 ```
 
 - The three flags are needed together: `bench_ratio.py` reads the `<name>_median` aggregate, which only exists with repetitions. Without `--benchmark_repetitions` it exits with code 2 (name not found).
@@ -80,7 +80,7 @@ For each chosen executable:
 For each row of the target table whose executable was run:
 
 ```sh
-./spur dev python3 -I tools/bench_ratio.py --json docs/benchmarks/ecs/<prefix>_<executable>.json --name <name> --baseline <baseline> --max <max>
+./spur dev python3 -I tools/bench_ratio.py --json docs/reference/benchmarks/ecs/<prefix>_<executable>.json --name <name> --baseline <baseline> --max <max>
 ```
 
 Read the exit code, not just the text:
@@ -95,7 +95,7 @@ Before declaring that a target is no longer met (or that a ratio got worse compa
 
 Never loosen `--max` to make the target pass.
 
-### 6. Record in `docs/benchmarks/README.md`
+### 6. Record in `docs/reference/benchmarks/README.md`
 
 - One row per new file in the file table, with the content and the targets it covers.
 - The ratios obtained per target, with the reference commit and the previously recorded ratio, when there is one.

@@ -2,13 +2,13 @@
   "name": "oly",
   "private": true,
   "version": "0.1.0",
-  "workspaces": ["engine/environments/web/clients/typescript/core", "engine/environments/web/host/js", "engine/testing", "games/*/web"],
+  "license": "MIT",
+  "workspaces": ["engine/environments/web/clients/typescript/core", "engine/environments/web/host/js", "engine/testing"],
   "scripts": {
     "build": "tsc -b"
   },
   "devDependencies": {
     "@types/node": "20.17.6",
-    "esbuild": "0.24.2",
     "typescript": "5.6.3"
   }
 }

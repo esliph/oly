@@ -5,8 +5,8 @@
 #include <random>
 #include <vector>
 
-#include "oly/ecs/world.hpp"
 #include "model.hpp"
+#include "oly/ecs/world.hpp"
 
 TEST_CASE("fuzz: World == reference model") {
   const uint64_t seed = fuzzSeed();
@@ -31,33 +31,33 @@ TEST_CASE("fuzz: World == reference model") {
       oly::ecs::Entity entity;
       std::map<oly::ecs::ComponentId, uint64_t> components;
       switch (generator() % 6) {
-      case 0:
-        entity = world.spawn();
-        break;
-      case 1:
-        entity = world.spawn(A{value});
-        components[oly::ecs::componentId<A>()] = value;
-        break;
-      case 2:
-        entity = world.spawn(A{value}, B{value, ~value});
-        components[oly::ecs::componentId<A>()] = value;
-        components[oly::ecs::componentId<B>()] = value;
-        break;
-      case 3:
-        entity = world.spawn(fuzz::makeFuzzState(value));
-        components[oly::ecs::componentId<FuzzState>()] = value;
-        break;
-      case 4:
-        entity = world.spawn(A{value}, Tag{});
-        components[oly::ecs::componentId<A>()] = value;
-        components[oly::ecs::componentId<Tag>()] = 0;
-        break;
-      default:
-        entity = world.spawn(LifeCounter{value}, fuzz::makeFuzzState(value), B{value, ~value});
-        components[oly::ecs::componentId<LifeCounter>()] = value;
-        components[oly::ecs::componentId<FuzzState>()] = value;
-        components[oly::ecs::componentId<B>()] = value;
-        break;
+        case 0:
+          entity = world.spawn();
+          break;
+        case 1:
+          entity = world.spawn(A{value});
+          components[oly::ecs::componentId<A>()] = value;
+          break;
+        case 2:
+          entity = world.spawn(A{value}, B{value, ~value});
+          components[oly::ecs::componentId<A>()] = value;
+          components[oly::ecs::componentId<B>()] = value;
+          break;
+        case 3:
+          entity = world.spawn(fuzz::makeFuzzState(value));
+          components[oly::ecs::componentId<FuzzState>()] = value;
+          break;
+        case 4:
+          entity = world.spawn(A{value}, Tag{});
+          components[oly::ecs::componentId<A>()] = value;
+          components[oly::ecs::componentId<Tag>()] = 0;
+          break;
+        default:
+          entity = world.spawn(LifeCounter{value}, fuzz::makeFuzzState(value), B{value, ~value});
+          components[oly::ecs::componentId<LifeCounter>()] = value;
+          components[oly::ecs::componentId<FuzzState>()] = value;
+          components[oly::ecs::componentId<B>()] = value;
+          break;
       }
 
       model[entity] = std::move(components);

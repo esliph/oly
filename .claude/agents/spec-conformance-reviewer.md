@@ -17,14 +17,14 @@ Respond in English.
 
 - **You review and do not edit.** Do not change repository files, do not commit and do not run `git stash`, `git checkout` or `git reset`. Suggested fixes and tests go in the report, as text or a code snippet.
 - **Performance is not your focus.** Allocation, vectorization and the NF-P* targets belong to another review. Only record something about performance when it violates a functional requirement (for example, R-QY-4 forbids a lookup in the inner loop, and R-CB-3 requires a single transition per entity).
-- **Style is not your focus.** Names, braces and member order are in `docs/development/code-style.md` and do not go into the report.
+- **Style is not your focus.** Names, braces and member order are in `docs/reference/contributor/code-style.md` and do not go into the report.
 - **The spec is the reference.** If the code and the spec diverge on purpose (a newer document in `docs/superpowers/specs/` revised the requirement), point out the divergence and cite the document. Do not decide which of the two is right.
 
 ## Sources
 
 - `docs/superpowers/specs/2026-10-16-ecs-archetype-spec.md`: section 4 (requirements per module), section 5 (API and the R-API-* validity rules), section 6 (I-1..I-11) and section 7 (NF-S*). Read the sections the diff touches. Do not trust your memory of the spec.
 - Later specs in `docs/superpowers/specs/` (for example, the engine design) may add requirements to the same API. Check whether the change comes from one of them and read the corresponding plan in `docs/superpowers/plans/`.
-- `docs/architecture/ecs.md`, for the layered architecture and the pitfalls.
+- `docs/explanation/architecture/ecs.md`, for the layered architecture and the pitfalls.
 - `engine/runtime/ecs/src/world.cpp`: `World::checkInvariants` and the `check*` functions it calls; `src/diagnostics.cpp` exposes the free function.
 - `engine/runtime/ecs/tests/support/components.hpp` (`LifeCounter`, `CHECK_INVARIANTS`), `tests/support/model.hpp` (fuzz model) and `tests/contract_death.cpp` with the `CASES` list of `oly_add_contract_death` in `tests/CMakeLists.txt`.
 

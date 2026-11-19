@@ -73,9 +73,6 @@ add_subdirectory(engine)
 if(NOT EMSCRIPTEN OR OLY_BUILD_GAMES OR NOT PROJECT_IS_TOP_LEVEL)
   add_subdirectory(plugins)
 endif()
-if(OLY_BUILD_GAMES)
-  add_subdirectory(games)
-endif()
 
 if(PROJECT_IS_TOP_LEVEL)
   # Boundary manifest for oly.lint.boundaries: modules, plugins and games with their DEPENDS.
@@ -111,6 +108,16 @@ if(PROJECT_IS_TOP_LEVEL)
                 --root ${PROJECT_SOURCE_DIR} --manifest ${CMAKE_BINARY_DIR}/oly_boundaries.json)
       add_test(NAME oly.lint.boundaries_selftest
         COMMAND ${Python3_EXECUTABLE} -I ${PROJECT_SOURCE_DIR}/tools/test_check_boundaries.py)
+      add_test(NAME oly.lint.links
+        COMMAND ${Python3_EXECUTABLE} -I ${PROJECT_SOURCE_DIR}/tools/check_links.py
+                --root ${PROJECT_SOURCE_DIR})
+      add_test(NAME oly.lint.links_selftest
+        COMMAND ${Python3_EXECUTABLE} -I ${PROJECT_SOURCE_DIR}/tools/test_check_links.py)
+      add_test(NAME oly.lint.readme_example
+        COMMAND ${Python3_EXECUTABLE} -I ${PROJECT_SOURCE_DIR}/tools/check_readme_example.py
+                --root ${PROJECT_SOURCE_DIR})
+      add_test(NAME oly.lint.readme_example_selftest
+        COMMAND ${Python3_EXECUTABLE} -I ${PROJECT_SOURCE_DIR}/tools/test_check_readme_example.py)
     endif()
   endif()
 endif()

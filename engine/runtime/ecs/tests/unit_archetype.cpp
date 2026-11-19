@@ -3,8 +3,8 @@
 #include <algorithm>
 
 #include "components.hpp"
-#include "oly/ecs/detail/archetype.hpp"
 #include "oly/core/small_map.hpp"
+#include "oly/ecs/detail/archetype.hpp"
 
 namespace {
   struct C {

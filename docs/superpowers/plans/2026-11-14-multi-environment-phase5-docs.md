@@ -218,7 +218,7 @@ what each holds. The steps are the same for all of them:
 Sections: what the TS client is (the TypeScript API over the C API, inside the `web` environment, no DOM); its
 packages (`@oly/core`, the client; `@oly/core/generated`, for generated code only; `@oly/web-host`, the web host it
 runs on; `@oly/testing` is private to the engine and not listed); the two error classes `ContractError` and
-`SchemaMismatchError` with a link to [Troubleshooting](../../../troubleshooting.md); a table of the TS pages, each with
+`SchemaMismatchError` with a link to [Troubleshooting](../../reference/errors.md); a table of the TS pages, each with
 the concept it mirrors; a line saying that the C++ systems of a web game are registered from TS by name
 (`addNativeSystem`, `addNativeHandler`, `addNativeOnEnter`/`addNativeOnExit`), with a link to
 `typescript/engine-and-systems.md#c-systems-handlers-and-hooks` (the heading Task 5 creates).

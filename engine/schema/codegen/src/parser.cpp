@@ -72,16 +72,16 @@ namespace oly::schema {
      private:
       static std::optional<TokenKind> punctuationKind(char character) {
         switch (character) {
-        case '{':
-          return TokenKind::LeftBrace;
-        case '}':
-          return TokenKind::RightBrace;
-        case ':':
-          return TokenKind::Colon;
-        case ',':
-          return TokenKind::Comma;
-        default:
-          return std::nullopt;
+          case '{':
+            return TokenKind::LeftBrace;
+          case '}':
+            return TokenKind::RightBrace;
+          case ':':
+            return TokenKind::Colon;
+          case ',':
+            return TokenKind::Comma;
+          default:
+            return std::nullopt;
         }
       }
 

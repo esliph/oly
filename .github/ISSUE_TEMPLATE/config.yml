@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/esliph/oly/security/advisories/new
+    about: Report it privately, never in a public issue.
+  - name: Ask a question
+    url: https://github.com/esliph/oly/blob/develop/SUPPORT.md
+    about: Read where to ask and what to include before you open an issue.

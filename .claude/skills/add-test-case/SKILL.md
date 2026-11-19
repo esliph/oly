@@ -127,7 +127,7 @@ OLY_ASSERT failed: <expression> | <formatted message> (<file>:<line>)
 The search is a `strstr` over the whole line, so a substring can match the **expression** or the **file path**, and not only the message. Choose substrings that only the intended assert's message would have:
 
 - **The operation** (`"add"`, `"flush"`, `"remove"`), which is what separates this assert from its neighbors.
-- **`"e="`** when the assert is about an entity: it confirms the message identifies the entity, as `docs/development/code-style.md` requires.
+- **`"e="`** when the assert is about an entity: it confirms the message identifies the entity, as `docs/reference/contributor/code-style.md` requires.
 - **The type name**, when the assert prints it. Use a local type with its own name (`struct Position { float x; };` inside the function, as in `getDeadEntity`), not `A` or `B`: a lone letter matches almost any message and proves nothing.
 
 Before trusting the case, read the target `OLY_ASSERT` in `src/` and copy the substrings from its format.
@@ -140,7 +140,7 @@ The handler exits on the first assert. Nothing after the violation runs, so do n
 
 ### New assert together with the case
 
-If the case covers an `OLY_ASSERT` that is still to be written, its message follows the rule in `docs/development/code-style.md` (operation, `Entity` as `e=%u:%u`, type name). The case's substrings enforce exactly that rule, and that is why they are worth it.
+If the case covers an `OLY_ASSERT` that is still to be written, its message follows the rule in `docs/reference/contributor/code-style.md` (operation, `Entity` as `e=%u:%u`, type name). The case's substrings enforce exactly that rule, and that is why they are worth it.
 
 ## 3. The checks every test carries
 
@@ -158,7 +158,7 @@ If the case covers an `OLY_ASSERT` that is still to be written, its message foll
 
 ## 4. Prove that it runs
 
-The build and test commands, and how to filter a test by name, are in `docs/development/commands.md`. Everything runs in the container, in the default preset (ASan + UBSan + asserts).
+The build and test commands, and how to filter a test by name, are in `docs/reference/contributor/commands.md`. Everything runs in the container, in the default preset (ASan + UBSan + asserts).
 
 - **Doctest suite or case:** run only the affected suite (`./spur test -R '^ecs\.<name>'`) and confirm in the output that the number of cases went up. "0 test cases" or a filter with no test found means the wiring failed, not that it passed.
 - **Death case:** run the executable directly, `build/debug-asan/tests/<module>_contract_death <name>`, and read the message printed to stderr. It must be the intended assert's message, not just "some assert". Then run the `<module>.contract_death.<name>` filter through CTest to confirm the `foreach` created the test.

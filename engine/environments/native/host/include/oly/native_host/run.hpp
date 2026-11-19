@@ -7,7 +7,7 @@
 
 namespace oly::native_host {
   struct RunOptions {
-    uint64_t maxFrames = 0;    // 0 = until the window is closed
+    uint64_t maxFrames = 0; // 0 = until the window is closed
     double frameSeconds = 0.0; // greater than 0: fixed time per frame instead of the clock
   };
 

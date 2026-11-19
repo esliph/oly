@@ -1,0 +1,32 @@
+name: Feature or API change
+description: Propose a new feature, plugin or change to a public API. It must be accepted here before a pull request.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Read docs/reference/limits.md and docs/explanation/architecture/decisions.md first: some features are out of scope on purpose (Oly does not draw, play audio or do physics).
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What a game cannot do today, or does at a cost. A concrete game case helps more than a general one.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: The API you would write in the game, in C++ or TypeScript, and where it lives (core module, plugin, client, host).
+    validations:
+      required: true
+  - type: textarea
+    id: cost
+    attributes:
+      label: Cost
+      description: What it costs on the hot paths (iteration, transitions, flush, the client boundary), and how it would be measured.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: What you considered instead, including doing it in the game without changing the engine.

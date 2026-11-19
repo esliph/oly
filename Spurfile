@@ -18,16 +18,6 @@ _require_games_preset() {
   esac
 }
 
-_require_game() {
-  [ -n "${1:-}" ] || _fail 64 "usage: ./spur $SPUR_TASK <game>"
-}
-
-_esbuild() {
-  _game=$1
-  shift
-  node_modules/.bin/esbuild "games/$_game/web/dist/src/main.js" --bundle --format=esm --platform=browser --target=es2022 "$@"
-}
-
 # _in IMAGE [--service SERVICE] [compose run options...] -- [task args...]
 # Returns when this is the IMAGE toolchain; on the host, re-runs the task in
 # the compose service. The compose options must end up before the service, and
@@ -154,23 +144,6 @@ windows-test: ## the tests of a windows* preset, under Wine
 
   PRESET=$preset spur test "$@"
 
-## Build a desktop game and print the path of its executable.
-##
-##   ./spur desktop drift
-##   PRESET=windows-release ./spur desktop drift
-desktop: ## build a game for the desktop and print its executable
-  preset=${PRESET:-native-games-release}
-  _require_game "$@"
-  _in "$(_image_for "$preset")" -- "$@"
-
-  PRESET=$preset spur build
-
-  suffix=
-  case $preset in
-    windows*) suffix=.exe ;;
-  esac
-  printf 'build/%s/games/%s_game%s\n' "$preset" "$1" "$suffix"
-
 ## Run a command in the dev container, or a shell.
 ##
 ##   ./spur dev ./build/release/bench/ecs_bench_iterate
@@ -192,12 +165,31 @@ wasm: ## command or shell in the wasm container
 
 ## Run a command in the windows container (MinGW and Wine), or a shell.
 ##
-##   ./spur windows x86_64-w64-mingw32-objdump -p build/windows-release/games/drift_game.exe
+##   ./spur windows wine --version
 windows: ## command or shell in the windows container
   _in windows -- "$@"
 
   [ "$#" -gt 0 ] || set -- bash
   exec "$@"
+
+## Format with the dev image's clang-format, the one the CI checks against: the given files, or every tracked .cpp and
+## .hpp file when there is none.
+##
+##   ./spur format engine/runtime/ecs/src/world.cpp
+format: ## clang-format the given files, or every tracked .cpp/.hpp
+  _in dev -- "$@"
+
+  if [ "$#" -gt 0 ]; then
+    exec clang-format -i "$@"
+  fi
+
+  # The mounted checkout belongs to another user than the container's, and git refuses to read it without this.
+  git -c safe.directory='*' ls-files -z '*.cpp' '*.hpp' | xargs -0 clang-format -i
+
+format-check: ## fail when a tracked .cpp/.hpp is not clang-formatted
+  _in dev -- "$@"
+
+  git -c safe.directory='*' ls-files -z '*.cpp' '*.hpp' | xargs -0 clang-format --dry-run --Werror
 
 schema-tool: ## build oly-schema for the machine
   _in wasm -- "$@"
@@ -286,34 +278,6 @@ games-test: ## ts, then the tests of a wasm-games* preset
 
   PRESET=$preset spur ts
   PRESET=$preset spur test "$@"
-
-game: ## bundle a game into build/<preset>/web/<game>
-  preset=${PRESET:-wasm-games-release}
-  _require_game "$@"
-  _require_games_preset "$preset"
-  _in wasm -- "$@"
-
-  PRESET=$preset spur ts
-  PRESET=$preset spur build
-
-  web_dir=build/$preset/web/$1
-  mkdir -p "$web_dir"
-  cp "games/$1/web/index.html" "$web_dir/"
-  cp "build/$preset/games/$1_game.mjs" "build/$preset/games/$1_game.wasm" "$web_dir/"
-  _esbuild "$1" --outfile="$web_dir/main.js"
-
-## Bundle a game and serve it on http://localhost:8000. esbuild stops when stdin closes.
-##
-##   ./spur serve arena
-serve: ## game, then serve it on port 8000
-  preset=${PRESET:-wasm-games-release}
-  _require_game "$@"
-  _require_games_preset "$preset"
-  _in wasm --service web --service-ports -- "$@"
-
-  PRESET=$preset spur game "$1"
-  web_dir=build/$preset/web/$1
-  _esbuild "$1" --outfile="$web_dir/main.js" --servedir="$web_dir" --serve=0.0.0.0:8000
 
 ## Run the tests of the game tasks (tools/oly/), which need no engine build.
 ##

@@ -11,8 +11,8 @@ namespace oly::native_host {
       throw std::runtime_error(std::string("SDL_InitSubSystem(video): ") + SDL_GetError());
     }
 
-    if (!SDL_CreateWindowAndRenderer(config.title.c_str(), config.width, config.height, SDL_WINDOW_RESIZABLE, &window_, &renderer_) ||
-        !SDL_SetRenderLogicalPresentation(renderer_, config.width, config.height, SDL_LOGICAL_PRESENTATION_LETTERBOX)) {
+    if (!SDL_CreateWindowAndRenderer(config.title.c_str(), config.width, config.height, SDL_WINDOW_RESIZABLE, &window_, &renderer_)
+        || !SDL_SetRenderLogicalPresentation(renderer_, config.width, config.height, SDL_LOGICAL_PRESENTATION_LETTERBOX)) {
       std::string message = SDL_GetError();
       SDL_DestroyRenderer(renderer_);
       SDL_DestroyWindow(window_);
