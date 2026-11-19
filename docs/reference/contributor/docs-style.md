@@ -139,13 +139,15 @@ A change to the public surface updates the docs in the same change (same commit 
 | a new or changed error | the table in [Errors](../errors.md) |
 | a C API change | [C API](../c-api.md) and, for the design, [The C API](../../explanation/architecture/capi.md) |
 | a change to the `oly` commands | [The `oly` command](../cli.md) and the messages in [Errors](../errors.md) |
-| a change to the template or `toolchain.env` | [The game template](../game-template.md), [The `oly` command](../cli.md) and the messages in [Errors](../errors.md) |
+| a change to the template or `toolchain.env` | [The game template](../game-template.md), [The `oly` command](../cli.md), the messages in [Errors](../errors.md), the two tutorials ([web](../../tutorials/first-web-game.md), [desktop](../../tutorials/first-desktop-game.md)) and the [README](../../../README.md) |
 | a change to `oly_add_game` or `oly_add_plugin` | [CMake](../cmake.md) |
 | a change to the native host | [Native host](../native-host.md) |
 | a change to the web host | [The web host in TypeScript](../typescript/web-host.md) |
 | a change to how a part of the engine works | its page in `explanation/architecture/` |
 | a change to a `./spur` task, a preset or an engine option | [Commands](commands.md) |
 | a new page | its row in [docs/README.md](../../README.md) and the navigation lines of its neighbours |
+
+The `oly.lint.readme_example` test checks the template blocks of the README. Nothing checks the tutorial blocks: copy them by hand from the template file.
 
 Before you finish, search `docs/` for the old name and run the link checker.
 
