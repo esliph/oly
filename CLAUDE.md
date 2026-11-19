@@ -9,13 +9,11 @@ Start with `docs/README.md`. It is the index of all documentation: tutorials, ho
 ## Rules that always apply
 
 - Toolchain only in Docker, through `./spur <task>` from Git Bash (`./spur images` builds the images, never `docker compose build`; `./spur --list` shows the tasks; `./spur dev ...` for any other native C++ command, `./spur wasm ...` for WASM and TS, `./spur windows ...` for the MinGW cross-build and Wine). There is no C++ compiler on the host.
-- Commits, comments and assert messages in English.
-- Do not format `.cpp`/`.hpp` by hand: the `.claude/hooks/clang-format.sh` hook formats after each edit (it fails if Docker is stopped).
 - Use the glossary names. No aliases or compatibility `using` with old names. Game concepts never in `engine/`; game names only in `engine/testing/fixture/`.
 - Plugins (`docs/explanation/architecture/plugins.md`): `engine/` never depends on `plugins/`; a plugin includes only public headers of the modules and plugins it declares, is its own CMake target with no path relative to the repository root, and its `.oly` reaches `oly-schema` as an argument. Game names never in `plugins/`.
 - When changing `table`, `archetype`, `query*`, `command_buffer` or `world`: keep `checkInvariants` covering the change and run the `spec-conformance-reviewer` and `perf-reviewer` agents.
 - New test: use the `add-test-case` skill.
-- Any change that adds, changes or removes public API (the surfaces listed in `docs/development/guide-style.md`) updates the user documentation in `docs/` in the same change, following that style.
+- Any change that adds, changes or removes public API (the public surface of `docs/reference/contributor/docs-style.md`) updates `docs/` in the same change, following that page.
 
 ## Code style
 

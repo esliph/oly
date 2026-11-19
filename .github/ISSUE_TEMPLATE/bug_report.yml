@@ -18,7 +18,7 @@ body:
     attributes:
       label: Reproduction
       description: The smallest code or the commands that reproduce it. A failing test is the best reproduction.
-      render: cpp
+      render: text
     validations:
       required: true
   - type: input

@@ -138,13 +138,14 @@ Pages are not numbered. Each path lists every page of its environment in the ord
 | [Commands](reference/contributor/commands.md) | Which `./spur` tasks, services and presets does the repository have? |
 | [Boundary rules](reference/contributor/boundary-rules.md) | Which includes and imports does the boundary lint reject? |
 | [Repository map](reference/contributor/repository.md) | Where is each part of the repository? |
-| [Code style](reference/contributor/code-style.md) | Which rules does the code follow? |
 | [Specs and plans](superpowers/README.md) | Where is the record of how the engine was designed and built? |
 
 ## Conventions
 
 | Page | What it answers |
 |---|---|
+| [Docs style](reference/contributor/docs-style.md) | Which type is a page, where does it go, and what does a change to the public surface update? |
+| [Code style](reference/contributor/code-style.md) | Which rules do the code and its examples follow? |
 
 - `cpp` blocks use the `oly::ecs`, `oly::app` and `oly::input` namespaces. `ts` blocks appear only in the TypeScript pages and in the pages of the web environment.
 - Commands are `oly` commands, run from Git Bash on Windows ([The `oly` command](reference/cli.md)). Inside the engine repository they are `./spur` tasks, which run inside Docker ([Commands](reference/contributor/commands.md)).

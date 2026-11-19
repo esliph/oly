@@ -8,9 +8,10 @@
 
 ## Checklist
 
-- [ ] The pull request targets `develop`.
+- [ ] The branch starts from `develop` and the pull request targets `develop`.
 - [ ] A feature or public API change has an accepted issue.
 - [ ] `./spur test` and `./spur games-test` pass locally.
 - [ ] `./spur format-check` passes.
 - [ ] Each behaviour change has a test.
-- [ ] A public API change updates `docs/`; a change of design updates `docs/explanation/architecture/`.
+- [ ] A hot path change reports the benchmark before and after.
+- [ ] A public API change updates `docs/`, as `docs/reference/contributor/docs-style.md` says; a change of design updates `docs/explanation/architecture/`.
