@@ -1,6 +1,6 @@
 # Transforms
 
-[← Plugins](plugins.md) · [Concepts](README.md) · Next: [Web boundary →](../../guide/environments/web/boundary.md)
+[← Plugins](plugins.md) · [Concepts](README.md) · Next: [Web boundary →](web-boundary.md)
 
 Every game names its dimension in CMake, and the engine gives it the components to place entities in space and to nest them. You write `Position` on an entity; the engine keeps its world position up to date, including through parents.
 
@@ -55,4 +55,4 @@ The components have the same names in the generated schema of a client ([TypeScr
 
 ## Next
 
-[Web boundary](../../guide/environments/web/boundary.md): why work crosses between C++ and TypeScript by block.
+[Web boundary](web-boundary.md): why work crosses between C++ and TypeScript by block.

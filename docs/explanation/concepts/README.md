@@ -16,4 +16,4 @@ Each page explains the rules a game relies on. Read them in this order; each one
 | [Performance](performance.md) | what changes cost and how to keep the hot path fast |
 | [Plugins](plugins.md) | how a game turns on engine-level features |
 | [Transforms](transforms.md) | how `Position`, `Parent` and `WorldTransform` work together |
-| [Web boundary](../../guide/environments/web/boundary.md) | why work crosses between C++ and TypeScript by block |
+| [Web boundary](web-boundary.md) | why work crosses between C++ and TypeScript by block |

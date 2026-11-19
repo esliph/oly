@@ -34,7 +34,7 @@ Many small tables (one entity per combination) make `eachBlock` call your functi
 
 ## What it means for a game
 
-Hot per-entity loops stay in C++. TypeScript keeps what runs per system, per batch or a few times per step. The reason is the cost of crossing from TypeScript into WebAssembly: [Web boundary](../../guide/environments/web/boundary.md).
+Hot per-entity loops stay in C++. TypeScript keeps what runs per system, per batch or a few times per step. The reason is the cost of crossing from TypeScript into WebAssembly: [Web boundary](web-boundary.md).
 
 ## Keep the hot path fast
 

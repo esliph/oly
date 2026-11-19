@@ -1,6 +1,6 @@
 # Keep the hot path fast
 
-Use this when a system runs on many entities every step and you want it cheap. It assumes a game with queries and systems ([Queries](../explanation/concepts/queries.md), [Engine, loop and systems](../explanation/concepts/engine-and-systems.md)) and the cost model of [Performance](../explanation/concepts/performance.md).
+Use this when a system runs on many entities every step and you want it cheap. Steps 1 to 4 apply to C++; [TypeScript](#typescript) has its own section. It assumes a game with queries and systems ([Queries](../explanation/concepts/queries.md), [Engine, loop and systems](../explanation/concepts/engine-and-systems.md)) and the cost model of [Performance](../explanation/concepts/performance.md).
 
 ## 1. Split components by who reads them
 
@@ -34,8 +34,69 @@ Render runs once per display frame, which may be 144 times per second. Draw with
 - For the engine's own benchmarks, see [commands](../development/commands.md#ecs-benchmarks).
 - Profile a native game with any native profiler on the `native-games-release` build.
 
+## TypeScript
+
+On the web, each call from TypeScript into WASM (or back) has a fixed cost: pay it per system, per table or per event batch, never per entity ([Web boundary](../explanation/concepts/web-boundary.md)).
+
+### Iterate with `eachBlock`, not with `get` per entity
+
+```ts
+// slow: two boundary crossings and one object per entity
+for (const enemy of enemies) {
+  const position = world.get(enemy, Position);
+  world.set(enemy, Position, { x: position.x + 1 });
+}
+
+// fast: one crossing per table, no objects
+world.query({ write: [Position], with: [Enemy] }).eachBlock((block) => {
+  const position = block.write(Position);
+  for (let row = 0; row < block.count; ++row) {
+    position.x.set(row, position.x.get(row) + 1);
+  }
+});
+```
+
+`get`, `set`, `single` and `trySingle` are for **one** entity: the player, the boss, the camera.
+
+### Move per-entity work to C++
+
+Movement, collision, AI and weapons belong in C++ once the entity count grows. [Register them by name](../reference/typescript/engine-and-systems.md#c-systems-handlers-and-hooks) from TS:
+
+```ts
+engine.addNativeSystem(Phase.Update, "integrate");
+```
+
+The C++ side of that registration: [Systems in C++, registered by name](../reference/cpp/engine-and-systems.md#c-systems-handlers-and-hooks).
+
+### Use `raw()` in hot loops
+
+`field.raw()` gives the typed array, base and stride. One array access per element, no method call ([Raw arrays](../reference/typescript/queries.md#raw-arrays)):
+
+```ts
+const x = block.write(Position).x.raw();
+for (let row = 0; row < block.count; ++row) {
+  x.array[x.base + row * x.stride] += 1;
+}
+```
+
+Take raw arrays inside the block and do not call anything that can allocate in WASM (spawn, add, emit) while you use them: if WASM memory grows, the old array is detached.
+
+### Handle events in batches
+
+Handlers already receive a whole batch per call. Do the loop inside the handler. Emitting thousands of events is fine; the queue is a byte buffer.
+
+### Measure in the browser
+
+- Use the Chromium profiler on the running game.
+- The boundary benchmark runs with `./spur wasm node engine/testing/dist/bench/boundary.js ...`; see [commands](../development/commands.md#wasm-and-typescript) for the full command.
+
+### Test in debug, ship in release
+
+In release (`wasm-games-release`), asserts are off: a violation inside your **C++** code is not checked and is undefined behaviour. The TS client still validates everything that goes through it and throws `ContractError`. Run your tests in the debug preset ([Debug and release](../explanation/concepts/performance.md#debug-and-release)).
+
 ## See also
 
+- [Web boundary](../explanation/concepts/web-boundary.md): why the crossing has a cost.
 - [Performance](../explanation/concepts/performance.md): the cost model behind these steps.
 - [Benchmark results](../reference/benchmarks/README.md): the measured numbers.
 - [Queries](../explanation/concepts/queries.md) and [Queries in C++](../reference/cpp/queries.md): `each`, `eachBlock` and `get`.

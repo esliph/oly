@@ -252,4 +252,4 @@ A C++ system with no WASM and no TS is tested on the desktop side: see [Test you
 
 ## Next
 
-[The WASM↔JS boundary](../guide/environments/web/boundary.md): keep the hot path fast across the boundary. [Troubleshooting](../guide/troubleshooting.md): what each error means.
+[Keep the hot path fast](keep-the-hot-path-fast.md#typescript): the techniques for the TypeScript side of the WASM boundary. [Troubleshooting](../guide/troubleshooting.md): what each error means.

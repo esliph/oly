@@ -188,7 +188,7 @@ On the web, a game is C++ systems plus a client (TypeScript today). Both can liv
 | tight math | score, waves, game rules that change often |
 | | bindings, state hooks that talk to the page |
 
-Why: a call across the WASM boundary has a fixed cost, so per-entity work belongs next to the data ([The WASM↔JS boundary](boundary.md)). A game can also use only TS systems (prototypes, few entities: the `native/` folder can be empty), or only C++ with no client at all: that is a [desktop game](../native/getting-started.md) or a tool, with an `oly::app::Engine` over an `oly::ecs::World`.
+Why: a call across the WASM boundary has a fixed cost, so per-entity work belongs next to the data ([The WASM↔JS boundary](../../../explanation/concepts/web-boundary.md)). A game can also use only TS systems (prototypes, few entities: the `native/` folder can be empty), or only C++ with no client at all: that is a [desktop game](../native/getting-started.md) or a tool, with an `oly::app::Engine` over an `oly::ecs::World`.
 
 ### Deterministic randomness
 

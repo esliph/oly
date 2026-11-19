@@ -100,7 +100,7 @@ drawer.text(16, 16, `Health ${player.get(Health).value}`);
 
 ## Raw arrays
 
-`field.raw()` returns the typed array under a field, plus the base index and stride. Use it in tight loops to avoid one method call per element. When it pays off is in [The WASM↔JS boundary](../../guide/environments/web/boundary.md).
+`field.raw()` returns the typed array under a field, plus the base index and stride. Use it in tight loops to avoid one method call per element. When it pays off is in [Keep the hot path fast](../../how-to/keep-the-hot-path-fast.md#use-raw-in-hot-loops).
 
 ```ts
 world.query({ read: [Velocity], write: [Position] }).eachBlock((block) => {

@@ -39,7 +39,7 @@ Pages are not numbered. Each path lists them in the order to read.
 1. [Getting started on the web](environments/web/getting-started.md)
 2. Each concept, followed by its TS page: [Schema](../explanation/concepts/schema.md) and [in TS](../reference/typescript/schema.md), [World and entities](../explanation/concepts/world-and-entities.md) and [in TS](../reference/typescript/world-and-entities.md), [Queries](../explanation/concepts/queries.md) and [in TS](../reference/typescript/queries.md), [Engine, loop and systems](../explanation/concepts/engine-and-systems.md) and [in TS](../reference/typescript/engine-and-systems.md), [Events](../explanation/concepts/events.md) and [in TS](../reference/typescript/events.md), [Input](../explanation/concepts/input.md) and [in TS](../reference/typescript/input.md), [Schedule](../explanation/concepts/schedule.md) and [in TS](../reference/typescript/schedule.md), [States](../explanation/concepts/states.md) and [in TS](../reference/typescript/states.md)
 3. [Testing a web game](../how-to/test-a-web-game.md)
-4. [The WASM↔JS boundary](environments/web/boundary.md)
+4. [The WASM↔JS boundary](../explanation/concepts/web-boundary.md)
 
 **C++ on the desktop**
 
