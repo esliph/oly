@@ -60,9 +60,11 @@ _in() {
     _rotate=$((_rotate - 1))
   done
 
-  # Git Bash would rewrite arguments such as '^ecs\.' as Windows paths.
+  # Git Bash would rewrite arguments such as '^ecs\.' as Windows paths. A variable unset on the host stays unset in the
+  # container: the compiler cache and the ctest parallelism are on only where CI turns them on (ci.yml).
   export MSYS_NO_PATHCONV=1
-  exec docker compose --env-file toolchain.env run --rm -e PRESET -e OLY_FUZZ_SEED -e OLY_FUZZ_OPS "$@"
+  exec docker compose --env-file toolchain.env run --rm -e PRESET -e OLY_FUZZ_SEED -e OLY_FUZZ_OPS \
+    -e CCACHE_DIR -e CCACHE_MAXSIZE -e CMAKE_C_COMPILER_LAUNCHER -e CMAKE_CXX_COMPILER_LAUNCHER -e CTEST_PARALLEL_LEVEL "$@"
 }
 
 # _serve <directory> <port>: serves a staged tree the way GitHub serves a release; stops when the task ends.
