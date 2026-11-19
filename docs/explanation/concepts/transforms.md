@@ -4,7 +4,7 @@
 
 Every game names its dimension in CMake, and the engine gives it the components to place entities in space and to nest them. You write `Position` on an entity; the engine keeps its world position up to date, including through parents.
 
-`2d` turns the `essentials2d` plugin on and `3d` turns `essentials3d` on. The game does not list the plugin and does not declare these components in its `.oly`: they come from the plugin ([Types that come from plugins](schema.md#types-that-come-from-plugins)). A game that declares its own `Position` stops `oly-schema` at the merge, with an error that names both places: `game.oly:3:11: repeated name "Position"; first declared at essentials2d.oly:1:11`. The components and how to turn the plugin on: [Transforms in C++](../../reference/cpp/transforms.md).
+`2d` turns the `essentials2d` plugin on and `3d` turns `essentials3d` on. The game does not list the plugin and does not declare these components in its `.oly`: they come from the plugin ([Types that come from plugins](schema.md#types-that-come-from-plugins)). A game that declares its own `Position` stops `oly-schema` at the merge, with an error that names both places, as the paths the build passes to `oly-schema`: `<game>.oly:3:11: repeated name "Position"; first declared at <engine>/plugins/essentials2d/essentials2d.oly:1:11`. The components and how to turn the plugin on: [Transforms in C++](../../reference/cpp/transforms.md).
 
 ## Local and derived
 

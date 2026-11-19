@@ -17,7 +17,7 @@ oly_add_game(<game>_game
   DEPENDS ecs app input native_host)
 ```
 
-`oly_add_game` needs `DIMENSION`: without it, configure stops with `<target>: oly_add_game needs DIMENSION 2d|3d`. `2d` turns `essentials2d` on and `3d` turns `essentials3d` on, installed before the plugins in `PLUGINS`. Listing `essentials2d` or `essentials3d` in `PLUGINS` stops configure with `<target>: <plugin> comes from DIMENSION; do not list it in PLUGINS`. A game that declares one of the components below stops `oly-schema` with `repeated name "<name>"; first declared at <file>:<line>:<column>`.
+`oly_add_game` needs `DIMENSION`: without it, configure stops with `<target>: oly_add_game needs DIMENSION 2d|3d`. `2d` turns `essentials2d` on and `3d` turns `essentials3d` on, installed before the plugins in `PLUGINS`. Listing `essentials2d` or `essentials3d` in `PLUGINS` stops configure with `<target>: <plugin> comes from DIMENSION; do not list it in PLUGINS`. A game that declares one of the components below stops `oly-schema` with `<game>.oly:<line>:<column>: repeated name "<name>"; first declared at <path>/essentials2d.oly:<line>:<column>` (`essentials3d.oly` for `3d`). The paths are the ones the build passes to `oly-schema`.
 
 ## The components
 

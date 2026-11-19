@@ -14,7 +14,9 @@ On a branch, on the host:
 
 This writes `<version>` into `project(Oly VERSION)`, `@oly/core`, `@oly/web-host` and `package-lock.json`, and commits. It creates no tag. It refuses a working tree with changes, and a version that is not `MAJOR.MINOR.PATCH` exits with 64. If npm or the check fails after the files were rewritten, `git checkout .` drops the changes.
 
-Merge the commit into `master`: releases are cut from `master`.
+Then update [`CHANGELOG.md`](../../../CHANGELOG.md) in the same branch: move the unreleased entries under a `## <version>` heading (with its `### Breaking` and `### Migration` lists filled in), and add a new `(unreleased)` section above it for the next version.
+
+Merge the branch into `master`: releases are cut from `master`.
 
 ## 2. Check on your machine (optional)
 

@@ -91,7 +91,7 @@ OLY_SYSTEM(movePlayer) {
 
 ## Contributing
 
-Bug fixes, tests, benchmarks and documentation are welcome as pull requests against `develop`; a new feature or a public API change starts with an issue. Read [CONTRIBUTING.md](CONTRIBUTING.md) and the [code of conduct](CODE_OF_CONDUCT.md). Security problems are reported privately: [SECURITY.md](SECURITY.md).
+Bug fixes, tests, benchmarks and documentation are welcome as pull requests against `develop`; a new feature or a public API change starts with an issue. Read [CONTRIBUTING.md](CONTRIBUTING.md) and the [code of conduct](CODE_OF_CONDUCT.md). Questions are welcome in an issue: [SUPPORT.md](SUPPORT.md). Security problems are reported privately: [SECURITY.md](SECURITY.md).
 
 ## License
 

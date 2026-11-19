@@ -18,20 +18,9 @@ SDL3 is a static library with only the video, events and render subsystems. The 
 
 The native builds (Linux and Windows) run the in-tree `oly-schema` target. The WASM builds cannot run what they compile, so they use the `schema-tool` preset's. In the cross build, CMake prefixes a target `COMMAND` with `CMAKE_CROSSCOMPILING_EMULATOR` (`wine`), so `oly-schema.exe` runs under Wine, and so does every test executable.
 
-## Build functions (`cmake/`)
+## Build functions
 
-| Function | What it does |
-|---|---|
-| `oly_add_module` | creates `oly_<m>` (alias `oly::<m>`) and links only the `DEPENDS` |
-| `oly_add_test` | registers a doctest suite as an executable and a ctest test |
-| `oly_add_contract_death` | registers a module's death cases |
-| `oly_add_bench` | registers a benchmark executable |
-| `oly_add_plugin` (`OlyPlugin.cmake`) | creates the plugin `oly_<p>` (alias `oly::<p>`) from `src/*.cpp`, links its `DEPENDS` and `PLUGINS` and, with `SCHEMA`, generates `oly/<p>/schema.generated.hpp` ([plugins.md](../../reference/cmake.md)) |
-| `oly_plugin_order` (`OlyPlugin.cmake`) | the install order of a plugin list: dependencies first, each plugin once, list order among independent ones |
-| `oly_schema_tool` (`OlyPlugin.cmake`) | picks the `oly-schema` a custom command runs: the in-tree target, or `OLY_SCHEMA_TOOL` |
-| `oly_add_game` | `ENVIRONMENT web`: runs `oly-schema` and links a game's `.mjs`/`.wasm` module, with `oly::web_host`. `ENVIRONMENT native`: runs `oly-schema` and builds an executable. The environment must be the build's `OLY_ENVIRONMENT`. `DIMENSION 2d|3d` (required): turns `essentials2d` or `essentials3d` on, first in the install order; listing either in `PLUGINS` is an error. `PLUGINS`: merges the plugins' `.oly`, links them and generates `game_setup.generated.cpp` (`setUpGame`). `TYPESCRIPT <file.ts>`: also writes the merged schema as TS, through the target `oly_typescript_schemas` |
-| `oly_add_engine_test_game` | the same as `oly_add_game`, for the engine's own test games; the lint rejects it outside `engine/` |
-| `oly_warnings`, `oly_wasm_exceptions`, `oly_wasm_node_env` | warnings and Emscripten settings |
+The functions of `cmake/` and what each does are in [Repository map](../../reference/contributor/repository.md#build-functions). They keep three rules: a module links only the modules it declares, a plugin is its own target, and a game gets its schema and its plugin list from one call, `oly_add_game`.
 
 ## Tests
 

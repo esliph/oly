@@ -25,3 +25,16 @@ The plans record, phase by phase, how each part was implemented and the decision
 
 ## Documentation audit
 
+
+Every other verified finding of [the audit](specs/2026-11-18-docs-audit.md) is closed. The open ones are below, each with its reason.
+
+| Finding | Why it is open |
+|---|---|
+| A10, the code half: the surfaces that are public only because they sit outside `detail/` (the `core` module, the `Named*Registration` types, the `ById` variants, the `capi::schema*` functions and the other groups of audit section 3.3) | Moving them into `detail/` or narrowing the rule is a code decision, outside the documentation work. Until then [`docs-style.md`](../reference/contributor/docs-style.md#public-surface) lists each group as internal, so a reviewer tells an omission from an exclusion. |
+| `engine_api.h:53-55` says that `olyEngineCreate` calls `declareSchema`; the code calls `setUpGame` (`engine_api.cpp:127`) | A comment in a header. The documentation is right ([C API](../reference/c-api.md), [Architecture of the C API](../explanation/architecture/capi.md)); the fix is a code change. |
+| The message of `oly run --docker` on a desktop game names `build/cmake-docker/games/<game>` (`tools/oly/Spurfile:464`), while a host build writes to `build/cmake/games/` | Which path the message should print is a code decision. [Errors](../reference/errors.md) and [CLI](../reference/cli.md) quote the message with `<path>`. |
+| In C++, `Engine::frame` called from inside a system takes the recovery path of an interrupted frame (`engine.cpp:125`), while the TypeScript client raises `frame is not reentrant` | The two languages differ in behavior, and which one is right is a code decision. [Errors](../reference/errors.md) lists the message in the TypeScript table only. |
+| D9, D11, D17 and D18, the duplications the audit marked as suspected | The audit could not prove them. The reorganization gave each topic one home, but no line-by-line comparison confirmed that no copy is left. |
+| `SECURITY.md`: an alternative channel in case private reporting is disabled in the repository, and `CODE_OF_CONDUCT.md`: a fixed contact for reports | Both need a maintainer decision and a setting of the GitHub repository that cannot be read from the checkout. |
+| GitHub Discussions as a place to ask a question | `SUPPORT.md` names only issues. Whether the repository has Discussions enabled cannot be checked from the checkout. |
+| `.github/CODEOWNERS` | Optional. With one maintainer it requests no review, so it was not added. |

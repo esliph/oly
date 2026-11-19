@@ -13,7 +13,7 @@ By taking part you agree to follow the [code of conduct](CODE_OF_CONDUCT.md). Se
 | New feature, new plugin, change to a public API | **Open an issue first** and wait until it is accepted. A pull request for a feature that was not discussed may be closed, however good it is, because it may not fit the scope ([limits.md](docs/reference/limits.md)) or the design ([decisions.md](docs/explanation/architecture/decisions.md)). |
 | Performance change | Open an issue with the measurement that motivates it. A performance change is merged on numbers, not on reasoning. |
 
-Questions about using the engine go in an issue too.
+Questions about using the engine go in an issue too: [SUPPORT.md](SUPPORT.md) says what to include.
 
 ## Before you start
 

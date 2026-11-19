@@ -75,7 +75,7 @@ Each archetype stores one column per component (SoA across components). Inside a
 A plugin can bring its own `.oly` with components, tags and events. When a game turns the plugin on (`PLUGINS` in its CMake, [Plugins](plugins.md)), the build merges the plugin's types into the game's schema:
 
 - the plugins' types come first, in install order, then the game's. That order gives the component ids and the event order;
-- names are flat: a name that a plugin and the game both declare stops the build, and the error names both places (`game.oly:3:11: repeated name "Counter"; first declared at counting.oly:1:11`);
+- names are flat: a name that a plugin and the game both declare stops the build, and the error names both places (`<game>.oly:3:11: repeated name "Counter"; first declared at <path>/counting.oly:1:11`, with the paths the build passes to `oly-schema`);
 - the hash covers the merged schema, so a client built with another set of plugins fails to load with a schema mismatch.
 
 `DIMENSION` is the one plugin you never list: it brings `Position`, `Rotation`, `Scale`, `Parent` and `WorldTransform` ([Transforms](transforms.md)), and the game's `.oly` does not declare them.
