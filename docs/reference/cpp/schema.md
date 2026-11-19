@@ -24,6 +24,17 @@ An action becomes a constant in the `actions` namespace, typed by its kind (`oly
 
 A state becomes an `oly::app::StateId` constant in the `states` namespace, with its index as the id: `states::playing`.
 
+## Field types
+
+| `.oly` type | C++ type |
+|---|---|
+| `f32` | `float` |
+| `f64` | `double` |
+| `i8` `u8` `i16` `u16` `i32` `u32` | `int8_t` `uint8_t` `int16_t` `uint16_t` `int32_t` `uint32_t` |
+| `entity` | `oly::ecs::Entity` |
+
+A tag (`tag Name`) is a struct with no fields. A component needs at least one field, and so does an event: `oly-schema` stops with `event <Name> has no fields: an event needs at least one field`.
+
 ## What the build generates
 
 On every build, `oly-schema` reads the `.oly` file and writes the generated files of the game. They are never committed and never edited.

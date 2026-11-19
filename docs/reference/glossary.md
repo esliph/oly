@@ -62,5 +62,6 @@ These terms have no C API or TS form. Details: [publishing.md](../architecture/p
 ## Naming rules
 
 - The `oly` prefix appears only in the C API (`oly*`, `OlyWorld`, `OLY_API`) and in what is internal to `capi` (`OlyModule`). The C++ and TS APIs do not repeat `oly` in names. The reason is in [modules-and-boundaries.md](../architecture/modules-and-boundaries.md#vocabulary-rules).
-- `create` and "Raw" do not exist as names. An entity is born through `spawn`; the variant by `ComponentId` uses the `ById` suffix.
+- `create` does not exist as a name for an entity: an entity is born through `spawn`. `create` stays for the other objects (`olyWorldCreate`, `olyEngineCreate`, `Runtime.createEngine`).
+- "Raw" does not exist as a name: the variant by `ComponentId` uses the `ById` suffix.
 - There are no aliases or compatibility `using` declarations for old names.

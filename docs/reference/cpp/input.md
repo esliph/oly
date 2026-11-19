@@ -78,6 +78,37 @@ bool isBound(PhysicalButton button) const;
 
 `clearBindings` removes every button and axis binding of the action. `isBound` is `true` when any action uses the button, alone or in an axis. An id out of range stops with `OLY_ASSERT` (`clearBindings: action <id> out of range (<n> declared)`). They are the two calls of [Rebind a key](../../how-to/gameplay-recipes.md#rebind-a-key).
 
+## Deliver host input
+
+### `ActionMap::buttonDown`
+
+```cpp
+void buttonDown(PhysicalButton button);
+void buttonUp(PhysicalButton button);
+void pointerMove(float x, float y);
+void releaseAll();
+```
+
+A host, a test or a replay calls these on `engine.actions()` to tell the engine what the player did. The engine captures the input at the start of the next step, so call them between two `frame` calls. `buttonDown` and `buttonUp` ignore a button that is already in that state. `releaseAll` releases every held button. A button with usage `0` stops with `OLY_ASSERT` (`buttonDown: invalid usage 0`, `buttonUp: invalid usage 0`), and a coordinate that is not finite stops `pointerMove` (`pointerMove: non-finite value (x=<x>, y=<y>)`).
+
+```cpp
+engine.actions().buttonDown(oly::input::Key::Space);
+engine.frame(1.0 / 60.0);
+engine.actions().buttonUp(oly::input::Key::Space);
+engine.actions().pointerMove(320.0f, 180.0f);
+engine.actions().releaseAll();
+```
+
+The native host does this for you from the window events ([Native host](../native-host.md#what-the-host-does-with-the-window)). To step a game yourself: [Drive the loop yourself](../../how-to/drive-the-loop-yourself.md#3-deliver-input).
+
+### `isKey`
+
+```cpp
+constexpr bool isKey(uint32_t usage) noexcept;
+```
+
+`true` when `usage` is one of the `Key` values. A `PhysicalButton` holds a usage that is either a `Key` or a `MouseButton`, so `isKey(button.usage)` tells which one it is.
+
 ## Read actions in systems
 
 ### `ActionMap::button`

@@ -76,6 +76,14 @@ A wrong name throws `ContractError` right there, not in the middle of the game.
 engine.addNativeSystem(Phase.Update, "integrate").inState(playing);
 ```
 
+### `Phase`
+
+```ts
+const Phase = { UpdateBefore: 0, Update: 1, UpdateAfter: 2, Render: 3 } as const;
+```
+
+`addSystem` takes one of `Phase.UpdateBefore`, `Phase.Update`, `Phase.UpdateAfter` and `Phase.Render`. The first three run in each fixed step, in this order, and `Render` runs once per frame ([Phases](../../explanation/concepts/engine-and-systems.md#phases)). A TS system always runs in the `Default` band.
+
 C++ and TS systems mix freely in one phase, in registration order.
 
 ## The system context
@@ -95,6 +103,17 @@ A system receives a `SystemContext`. It is valid only during that call.
 | `schedule` | timers ([Schedule](schedule.md)) |
 | `state`, `requestState(state)` | game state ([States](states.md)) |
 | `phase`, `name` | where the system is registered |
+
+## The contexts
+
+Four contexts reach a game's code. Three change the world at once, and the system context defers the changes to the end of the phase.
+
+| | System | Handler | Task | State hook |
+|---|---|---|---|---|
+| structural changes | deferred to the end of the phase | direct | direct | direct |
+| members only this context has | `phase`, `name`, `interpolation` | `eventType`, `name` (and the batch argument) | `handle`, `lastRun` | `fromState`, `toState` |
+
+Every context has `time`, `fixedDeltaTime`, `paused`, `pause()`, `resume()`, `state`, `requestState()`, `actions`, `schedule`, `query`, `get`, `set`, `has`, `isAlive`, `emit`, `spawn`, `destroy`, `add`, `remove` and `persist`. Each context is valid only during the call it was passed to.
 
 ## Structural changes in systems
 

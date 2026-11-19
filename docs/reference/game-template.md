@@ -24,7 +24,7 @@ Both environments get these files.
 
 | Template file | In `<game>/` | What it is |
 |---|---|---|
-| `common/oly.env` | `oly.env` | the engine version, the environment, the target name and the runner (`OLY_RUNNER=host`); change the version with `oly upgrade <version>`, not by hand ([The `oly` command](../guide/cli.md#upgrade-the-engine)) |
+| `common/oly.env` | `oly.env` | the engine version, the environment, the target name and the runner (`OLY_RUNNER=host`); change the version with `oly upgrade <version>`, not by hand ([Upgrade the engine](../how-to/upgrade-the-engine.md)); the keys are [below](#olyenv) |
 | `common/CMakeLists.txt` | `CMakeLists.txt` | reads the version from `oly.env`, fetches the engine at that version with `FetchContent` and includes `cmake/game.cmake` |
 | `common/game.oly` | `<game>.oly` | the schema: `tag Player` and `action move: axis2d` |
 | `common/gitignore` | `.gitignore` | ignores `build/`, `node_modules/`, `web/dist/`, `web/schema.generated.ts` and `*.tsbuildinfo` |
@@ -33,6 +33,21 @@ Both environments get these files.
 | `common/.github/workflows/ci.yml` | `.github/workflows/ci.yml` | installs `oly` and runs `oly test --docker` on every push and pull request |
 
 `Position` is not in `<game>.oly`: `DIMENSION 2d` in `cmake/game.cmake` turns the `essentials2d` plugin on, which brings it ([Transforms](../explanation/concepts/transforms.md)).
+
+### `oly.env`
+
+`oly.env` is the one file that names the engine version. Each line is `KEY=value`:
+
+| Key | Meaning |
+|---|---|
+| `OLY_VERSION` | the engine release the game builds with |
+| `OLY_ENVIRONMENT` | `web` or `native` |
+| `OLY_GAME` | the name of the CMake target |
+| `OLY_RUNNER` | `host` (default) or `docker`: where `oly build`, `oly test` and `oly run` run ([Docker](cli.md#docker)) |
+
+A web game names the version a second time: the `@oly/core` and `@oly/web-host` URLs in `package.json` carry it. `oly build` stops when the two differ. Do not edit them by hand: use `oly upgrade`.
+
+Commit everything except what `.gitignore` lists.
 
 ## Web
 
@@ -104,6 +119,6 @@ set_tests_properties(<target>.headless PROPERTIES ENVIRONMENT SDL_VIDEO_DRIVER=d
 
 ## See also
 
-- [The `oly` command](../guide/cli.md#make-a-game): `oly new` and the other commands.
+- [The `oly` command](cli.md): `oly new` and the other commands.
 - [Native host](native-host.md): the window and the loop of `desktop/main.cpp`.
 - [Test a web game](../how-to/test-a-web-game.md) and [Test a desktop game](../how-to/test-a-desktop-game.md).

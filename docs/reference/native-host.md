@@ -67,6 +67,16 @@ return oly::native_host::run(engine, window, {.maxFrames = 600, .frameSeconds = 
 
 With `frameSeconds` set and `SDL_VIDEO_DRIVER=dummy`, the whole game runs with no display ([Test a desktop game](../how-to/test-a-desktop-game.md)).
 
+## Keys
+
+### `keyButtonOf`
+
+```cpp
+std::optional<oly::input::PhysicalButton> keyButtonOf(SDL_Scancode scancode) noexcept;
+```
+
+Include `oly/native_host/keys.hpp`. Returns the `oly::input::Key` button of an SDL scancode, or `std::nullopt` when `Key` does not declare it. `run` uses it to turn key events into buttons, and ignores the keys that return `std::nullopt`. A shell that reads the keyboard itself can use it with `engine.actions().buttonDown`.
+
 ## What the host does with the window
 
 | Window event | What the engine sees |

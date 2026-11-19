@@ -58,7 +58,7 @@ Three rules guide the design:
 | [limits.md](../reference/limits.md) | known limitations and what is out of scope |
 | [glossary.md](../reference/glossary.md) | the same verb in C++, C API and TS |
 
-To make a game with the engine: [../guide/README.md](../guide/README.md) (user guide with examples and recipes). How to write and maintain it: [../development/guide-style.md](../development/guide-style.md).
+To make a game with the engine: [../README.md](../README.md) (the documentation index: tutorials, how-to guides and reference). How to write and maintain it: [../development/guide-style.md](../development/guide-style.md).
 
 To work on the code: [../development/commands.md](../development/commands.md) (build, tests, benchmarks, games) and [../development/code-style.md](../reference/contributor/code-style.md).
 

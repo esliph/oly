@@ -7,6 +7,63 @@
 | [Your first web game](tutorials/first-web-game.md) | How do I make a square that moves in the browser, with C++ movement and TypeScript drawing? |
 | [Your first desktop game](tutorials/first-desktop-game.md) | How do I make a square that moves in a window, in C++ only? |
 
+### Reading paths
+
+Pages are not numbered. Each path lists every page of its environment in the order to read. A concept page is followed by its API page.
+
+**TypeScript on the web**
+
+1. [Your first web game](tutorials/first-web-game.md)
+2. [Environments and hosts](explanation/concepts/environments-and-hosts.md)
+3. [Schema](explanation/concepts/schema.md) and [in TypeScript](reference/typescript/schema.md)
+4. [World and entities](explanation/concepts/world-and-entities.md) and [in TypeScript](reference/typescript/world-and-entities.md)
+5. [Queries](explanation/concepts/queries.md) and [in TypeScript](reference/typescript/queries.md)
+6. [Engine, loop and systems](explanation/concepts/engine-and-systems.md) and [in TypeScript](reference/typescript/engine-and-systems.md)
+7. [Events](explanation/concepts/events.md) and [in TypeScript](reference/typescript/events.md)
+8. [Input](explanation/concepts/input.md) and [in TypeScript](reference/typescript/input.md)
+9. [Schedule](explanation/concepts/schedule.md) and [in TypeScript](reference/typescript/schedule.md)
+10. [States](explanation/concepts/states.md) and [in TypeScript](reference/typescript/states.md)
+11. [Performance](explanation/concepts/performance.md) and [Keep the hot path fast](how-to/keep-the-hot-path-fast.md)
+12. [Plugins](explanation/concepts/plugins.md) and [Use a plugin](how-to/use-a-plugin.md)
+13. [Transforms](explanation/concepts/transforms.md)
+14. [Web boundary](explanation/concepts/web-boundary.md)
+15. [Test a web game](how-to/test-a-web-game.md) and [Gameplay recipes in TypeScript](how-to/typescript/gameplay-recipes.md)
+
+**C++ on the desktop**
+
+1. [Your first desktop game](tutorials/first-desktop-game.md)
+2. [Environments and hosts](explanation/concepts/environments-and-hosts.md) and [Native host](reference/native-host.md)
+3. [Schema](explanation/concepts/schema.md) and [in C++](reference/cpp/schema.md)
+4. [World and entities](explanation/concepts/world-and-entities.md) and [in C++](reference/cpp/world-and-entities.md)
+5. [Queries](explanation/concepts/queries.md) and [in C++](reference/cpp/queries.md)
+6. [Engine, loop and systems](explanation/concepts/engine-and-systems.md) and [in C++](reference/cpp/engine-and-systems.md)
+7. [Events](explanation/concepts/events.md) and [in C++](reference/cpp/events.md)
+8. [Input](explanation/concepts/input.md) and [in C++](reference/cpp/input.md)
+9. [Schedule](explanation/concepts/schedule.md) and [in C++](reference/cpp/schedule.md)
+10. [States](explanation/concepts/states.md) and [in C++](reference/cpp/states.md)
+11. [Performance](explanation/concepts/performance.md) and [Keep the hot path fast](how-to/keep-the-hot-path-fast.md)
+12. [Plugins](explanation/concepts/plugins.md) and [in C++](reference/cpp/plugins.md)
+13. [Transforms](explanation/concepts/transforms.md) and [in C++](reference/cpp/transforms.md)
+14. [Test a desktop game](how-to/test-a-desktop-game.md) and [Gameplay recipes](how-to/gameplay-recipes.md)
+
+**C++ inside a web game**
+
+1. [Your first web game](tutorials/first-web-game.md)
+2. [Environments and hosts](explanation/concepts/environments-and-hosts.md)
+3. [Schema](explanation/concepts/schema.md) and [in C++](reference/cpp/schema.md)
+4. [World and entities](explanation/concepts/world-and-entities.md) and [in C++](reference/cpp/world-and-entities.md)
+5. [Queries](explanation/concepts/queries.md) and [in C++](reference/cpp/queries.md)
+6. [Engine, loop and systems](explanation/concepts/engine-and-systems.md) and [in C++](reference/cpp/engine-and-systems.md), then [C++ systems, handlers and hooks in TypeScript](reference/typescript/engine-and-systems.md#c-systems-handlers-and-hooks)
+7. [Events](explanation/concepts/events.md) and [in C++](reference/cpp/events.md)
+8. [Input](explanation/concepts/input.md) and [in C++](reference/cpp/input.md)
+9. [Schedule](explanation/concepts/schedule.md) and [in C++](reference/cpp/schedule.md)
+10. [States](explanation/concepts/states.md) and [in C++](reference/cpp/states.md)
+11. [Performance](explanation/concepts/performance.md) and [Keep the hot path fast](how-to/keep-the-hot-path-fast.md)
+12. [Plugins](explanation/concepts/plugins.md) and [in C++](reference/cpp/plugins.md)
+13. [Transforms](explanation/concepts/transforms.md) and [in C++](reference/cpp/transforms.md)
+14. [Web boundary](explanation/concepts/web-boundary.md) and [Export your own C functions](how-to/export-your-own-c-functions.md)
+15. [Test a web game](how-to/test-a-web-game.md)
+
 ## How-to guides
 
 | Page | What it answers |
@@ -21,12 +78,17 @@
 | [Keep the hot path fast](how-to/keep-the-hot-path-fast.md) | How do I keep a system that runs on many entities every step cheap? |
 | [Use a plugin](how-to/use-a-plugin.md) | How do I turn on a plugin that already exists in my game? |
 | [Write a plugin](how-to/write-a-plugin.md) | How do I make a plugin with its own components, events and systems? |
-| [User guide](guide/README.md) | Where are the other guides for the game user, until they move here? |
+| [Fix common problems](how-to/fix-common-problems.md) | Why does my game run but not do what I expect, and what do I rebuild after a schema change? |
+| [Upgrade the engine](how-to/upgrade-the-engine.md) | How do I move a game to another engine release? |
+| [Set up the CI of a game](how-to/set-up-game-ci.md) | How do I run the tests of a game on every push? |
+| [Build with an engine checkout](how-to/build-with-an-engine-checkout.md) | How do I change the engine and a game together? |
 
 ## Reference
 
 | Page | What it answers |
 |---|---|
+| [The `oly` command](reference/cli.md) | How do I install `oly`, and which commands, options, Docker modes and variables does it have? |
+| [Errors](reference/errors.md) | What does this message mean, in C++, in TypeScript or from `oly`, and how do I fix it? |
 | [TypeScript client](reference/typescript/README.md) | What does the TypeScript API offer, and where is each part? |
 | [Schema in C++](reference/cpp/schema.md) | Which generated files and functions does the build write for a schema, and what do they declare? |
 | [Queries in C++](reference/cpp/queries.md) | Which calls build a query, visit its rows and read its only row? |
@@ -39,6 +101,7 @@
 | [Transforms in C++](reference/cpp/transforms.md) | Which CMake argument turns the transform components on, and which fields does each component have? |
 | [World and entities in C++](reference/cpp/world-and-entities.md) | Which calls create, read, change and destroy entities, record commands and observe changes? |
 | [The game template](reference/game-template.md) | Which files does `oly new` write for a web game and for a desktop game, and where does each one go? |
+| [C API](reference/c-api.md) | Which `oly*` functions can a client in another language call? |
 | [Native host](reference/native-host.md) | Which calls open the window and run the loop, and what does the host do with each window event? |
 | [Glossary](reference/glossary.md) | What does each name mean in C++, the C API and TypeScript? |
 | [Known limitations](reference/limits.md) | What does the engine not do? |
@@ -69,3 +132,7 @@
 
 | Page | What it answers |
 |---|---|
+
+- `cpp` blocks use the `oly::ecs`, `oly::app` and `oly::input` namespaces. `ts` blocks appear only in the TypeScript pages and in the pages of the web environment.
+- Commands are `oly` commands, run from Git Bash on Windows ([The `oly` command](reference/cli.md)). Inside the engine repository they are `./spur` tasks, which run inside Docker ([commands](development/commands.md)).
+- "Contract error" means the engine refuses the call: C++ stops on `OLY_ASSERT` in debug builds, and TypeScript throws `ContractError` ([Errors](reference/errors.md)).

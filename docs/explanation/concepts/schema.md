@@ -1,6 +1,6 @@
 # Schema
 
-[← Environments and hosts](../../guide/README.md) · [Concepts](README.md) · Next: [World and entities →](world-and-entities.md)
+[← Environments and hosts](environments-and-hosts.md) · [Concepts](README.md) · Next: [World and entities →](world-and-entities.md)
 
 The schema is the **single source** of your game's data. You write it once, in a `<game>.oly` file. The build generates the matching C++ (and the code of each client) from it, so every language agrees on the memory layout. This page explains what a schema declares, why its order matters and how its types become memory.
 

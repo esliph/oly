@@ -14,7 +14,7 @@ You need a computer with these tools. `oly doctor` checks them for you in step 1
 - On Windows: Git Bash, MSYS2 UCRT64 (`gcc`, `cmake` and `ninja`), Node.js with npm, and emsdk. Run every command from Git Bash, not from PowerShell or `cmd`.
 - Docker is optional: add `--docker` to a command to build in a container instead.
 
-The exact versions and the install steps are in [The `oly` command](../guide/cli.md#what-you-install).
+The exact versions and the install steps are in [The `oly` command](../reference/cli.md#install).
 
 ## 1. Install `oly`
 
@@ -187,4 +187,4 @@ Two `tsconfig` files keep the DOM out of the game: `web/tsconfig.json` has no DO
 - [Schema](../explanation/concepts/schema.md): every kind of data you can declare.
 - [Environments and hosts](../explanation/concepts/environments-and-hosts.md): how the core, the web host and the client fit together.
 - [Web boundary](../explanation/concepts/web-boundary.md): which work belongs in C++ and which in TypeScript.
-- [The `oly` command](../guide/cli.md): every command.
+- [The `oly` command](../reference/cli.md): every command.

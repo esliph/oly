@@ -15,7 +15,7 @@ A game is made of three layers. This page names them, shows how a game is assemb
 | `web` | the web host: WASM, `runInBrowser`, `attachBrowserInput` | [TypeScript](../../reference/typescript/README.md) | [Your first web game](../../tutorials/first-web-game.md) |
 | `native` | the native host: a window, SDL, `oly::native_host::run` | none: the game is C++ | [Your first desktop game](../../tutorials/first-desktop-game.md) |
 
-The engine, the schema and the gameplay code are the same in both environments. Only the shell and the drawing change. Choose `native` when the game does not need a browser, and `web` when it does. Both live in the game's own repository, which pins one engine version ([The `oly` command](../../guide/cli.md#the-game-repository)).
+The engine, the schema and the gameplay code are the same in both environments. Only the shell and the drawing change. Choose `native` when the game does not need a browser, and `web` when it does. Both live in the game's own repository, which pins one engine version ([The game template](../../reference/game-template.md)).
 
 Oly does not draw, play audio or do physics. You draw with whatever you want (Canvas 2D, SDL, a test recorder) inside a `Render` system.
 

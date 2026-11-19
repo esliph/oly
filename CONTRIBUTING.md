@@ -73,7 +73,7 @@ Numbers from different machines or different runs are not compared.
 
 ## Documentation
 
-- A change that adds, changes or removes public API (the surfaces listed in [docs/development/guide-style.md](docs/development/guide-style.md)) updates the user guide in [`docs/guide/`](docs/guide/README.md) in the same pull request, following that style.
+- A change that adds, changes or removes public API (the surfaces listed in [docs/development/guide-style.md](docs/development/guide-style.md)) updates the user documentation in [`docs/`](docs/README.md) in the same pull request, following that style.
 - A change to how a part works updates its page in [`docs/architecture/`](docs/architecture/README.md). Those pages describe the engine as it is today, not its history.
 
 ## Commits
@@ -91,7 +91,7 @@ fix(ecs): keep the query cache when an archetype is created during flush
 - [ ] `./spur test` and `./spur games-test` pass locally.
 - [ ] `./spur format-check` passes.
 - [ ] Each behaviour change has a test.
-- [ ] A public API change updates `docs/guide/`; a change of design updates `docs/architecture/`.
+- [ ] A public API change updates `docs/`; a change of design updates `docs/architecture/`.
 - [ ] A hot path change reports the benchmark before and after.
 
 ## Working with Claude Code

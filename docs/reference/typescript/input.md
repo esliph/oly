@@ -29,6 +29,17 @@ Available names: `KeyA`..`KeyZ`, `Digit0`..`Digit9`, `F1`..`F12`, `Enter`, `Esca
 
 `engine.actions.clearBindings(action)` removes every binding of the action. `engine.actions.isBound(button)` is `true` when any action uses the button. A button name outside the table throws `ContractError` (`<operation> button=<name>: button outside the W3C table`).
 
+## Deliver host input
+
+```ts
+engine.actions.buttonDown("Space");
+engine.actions.buttonUp("Space");
+engine.actions.pointerMove(320, 180);
+engine.actions.releaseAll();
+```
+
+`attachBrowserInput` calls these for you. A test or a replay calls them between two `frame` calls: the engine captures the input at the start of the next step. `buttonDown` and `buttonUp` ignore a button that is already in that state, and `releaseAll` releases every held button. A button name outside the table throws `ContractError` (`<operation> button=<name>: button outside the W3C table`), and a coordinate that is not finite throws `ContractError` (`pointerMove x=<x> y=<y>: non-finite value`). To step a game yourself: [Drive the loop yourself](../../how-to/drive-the-loop-yourself.md#3-deliver-input).
+
 ## Read actions in systems
 
 ```ts

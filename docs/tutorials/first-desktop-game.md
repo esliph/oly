@@ -14,7 +14,7 @@ You need a computer with these tools. `oly doctor` checks them for you in step 1
 - On Windows: Git Bash and MSYS2 UCRT64 (`gcc`, `cmake` and `ninja`). Run every command from Git Bash, not from PowerShell or `cmd`.
 - Docker is optional. A window cannot open in a container, so `oly run --docker` does not work for a desktop game.
 
-The exact versions and the install steps are in [The `oly` command](../guide/cli.md#what-you-install). To make a game for the browser instead, follow [Your first web game](first-web-game.md).
+The exact versions and the install steps are in [The `oly` command](../reference/cli.md#install). To make a game for the browser instead, follow [Your first web game](first-web-game.md).
 
 ## 1. Install `oly`
 
@@ -224,4 +224,4 @@ You see ctest report `<target>.headless` as passed.
 - [Native host](../reference/native-host.md): the window, the loop and what the host does with window events.
 - [Environments and hosts](../explanation/concepts/environments-and-hosts.md): how the core and the native host fit together.
 - [Concepts](../explanation/concepts/README.md): the rules a game relies on, in reading order.
-- [The `oly` command](../guide/cli.md): every command, including `oly build --platform windows` for the Windows `.exe`.
+- [The `oly` command](../reference/cli.md): every command, including `oly build --platform windows` for the Windows `.exe`.

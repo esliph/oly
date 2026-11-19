@@ -88,6 +88,15 @@ engine.setWhilePaused(engine.addSystem(oly::app::Phase::UpdateBefore, "resumeOnP
 
 **On the web**, the client registers it by name: [TypeScript](../typescript/engine-and-systems.md#register-systems).
 
+### `Phase` and `OrderBand`
+
+```cpp
+enum class Phase : uint8_t { UpdateBefore, Update, UpdateAfter, Render };
+enum class OrderBand : uint8_t { Default, Last };
+```
+
+`addSystem` takes the `Phase` and, last, the `OrderBand`. The first three phases run in each fixed step, in this order, and `Render` runs once per frame. Inside a phase, the `Default` band runs before the `Last` band, and inside a band the systems run in registration order ([Phases](../../explanation/concepts/engine-and-systems.md#phases)).
+
 ### Data for a system or a handler
 
 A system is a function pointer with an optional `userData` pointer, and `addSystem` returns an id you can restrict to states. A handler takes a `userData` pointer too, and reads the batch with `context.events<T>()`:
@@ -209,6 +218,17 @@ SystemId systemId() const noexcept;
 ```
 
 Returns the `SystemId` that `addSystem` returned for the running system. Use it with a system that serves several registrations, to know which one is running.
+
+## The contexts
+
+Four contexts reach a game's code. All of them derive from the same base, so they share the calls in the first row. The three direct contexts change the world at once. `SystemContext` defers the changes to the end of the phase.
+
+| | `SystemContext` | `HandlerContext` | `TaskContext` | `StateContext` |
+|---|---|---|---|---|
+| structural changes | deferred to the end of the phase | direct | direct | direct |
+| members only this context has | `phase()`, `systemId()`, `name()`, `userData()`, `interpolation()` | `eventType()`, `handlerId()`, `name()`, `userData()`, `events<T>()`, `eventCount()`, `eventData()` | `handle()`, `lastRun()`, `payload<P>()` | `hookId()`, `name()`, `userData()`, `fromState()`, `toState()`, `entering()` |
+
+Every context has `time()`, `fixedDeltaTime()`, `paused()`, `pause()`, `resume()`, `state()`, `requestState()`, `actions()`, `schedule()`, `query`, `get`, `tryGet`, `has`, `isAlive` and `emit`. The ones that change the world also have `spawn`, `destroy`, `add`, `remove` and `persist`. Each context is valid only during the call it was passed to. The members of the others: [`HandlerContext`](events.md#handlercontextevents), [`TaskContext`](schedule.md#the-task-context) and [`StateContext`](states.md#statecontexthookid).
 
 ## Emit from the host
 

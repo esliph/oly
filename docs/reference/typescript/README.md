@@ -21,7 +21,7 @@ Oly is complete in C++. The client adds TS conveniences (typed accessors, closur
 | `ContractError` | you break a rule of the API (wrong entry, dead entity, call in the wrong place) |
 | `SchemaMismatchError` | the WASM and the generated TS were built from different schemas |
 
-See [Troubleshooting](../../guide/troubleshooting.md) for each message.
+See [Errors](../errors.md#typescript) for each message.
 
 ## Pages
 

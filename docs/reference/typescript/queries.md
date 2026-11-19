@@ -80,6 +80,8 @@ player.get(Position);           // a copy: { x, y }
 player.get(Health).value;
 ```
 
+`single()` and `trySingle()` return a `SingleRow`: `.entity` is the `Entity` and `.get(Type)` is a copy of one component of the row.
+
 | Method | 0 rows | 1 row | 2+ rows |
 |---|---|---|---|
 | `single()` | `ContractError` | the row | `ContractError` |

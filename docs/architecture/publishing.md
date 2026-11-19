@@ -1,6 +1,6 @@
 # Publishing
 
-How a game outside this repository gets the engine: a versioned release, the `oly` launcher that fetches it, local mode for engine work, and the file that fixes the toolchain. The commands are in the [user guide](../guide/cli.md) and in [commands](../development/commands.md); this page says why they are shaped this way.
+How a game outside this repository gets the engine: a versioned release, the `oly` launcher that fetches it, local mode for engine work, and the file that fixes the toolchain. The commands are in [The `oly` command](../reference/cli.md) and in [commands](../development/commands.md); this page says why they are shaped this way.
 
 ```
 engine repository                          a game's repository

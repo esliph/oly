@@ -244,5 +244,5 @@ A C++ system with no WASM and no TS is tested on the desktop side: see [Test a d
 ## See also
 
 - [Keep the hot path fast](keep-the-hot-path-fast.md#typescript): the techniques for the TypeScript side of the WASM boundary.
-- [Troubleshooting](../guide/troubleshooting.md): what each error means.
+- [Errors](../reference/errors.md): what each error means.
 - [The game template](../reference/game-template.md#web): the files of the smoke test.

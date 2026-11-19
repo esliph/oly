@@ -86,6 +86,8 @@ console.log(formatEntity(player));   // "12:0" (index:generation)
 let target = NullEntity;             // "no entity"
 ```
 
+`entityIndex(entity)` and `entityGeneration(entity)` return the two parts that `formatEntity` prints, as numbers. All four come from `@oly/core`.
+
 ### Keep references between entities
 
 ```ts

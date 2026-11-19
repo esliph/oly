@@ -1,10 +1,10 @@
 # The `oly` command
 
-[Guide index](README.md)
+[Reference](../README.md#reference) · Concept: [Environments and hosts](../explanation/concepts/environments-and-hosts.md)
 
-`oly` creates a game in its own repository, builds it, tests it and runs it. A game does not live in the engine repository: it pins one engine version, and `oly` downloads the tools of that version when it needs them.
+`oly` creates a game in its own repository, builds it, tests it and runs it. A game does not live in the engine repository: it pins one engine version, and `oly` downloads the tools of that version when it needs them. The messages of `oly` are in [Errors](errors.md#oly).
 
-## What you install
+## Install
 
 Install these before the first command. Versions are in [`toolchain.env`](../../toolchain.env).
 
@@ -28,26 +28,9 @@ curl -fsSL https://github.com/esliph/oly/releases/latest/download/install.sh | s
 
 `install.sh` puts `oly` in `~/.oly/bin` and adds that folder to the `PATH` of your shell profile (`~/.bashrc`, or `~/.zshrc` for zsh). Open a new terminal afterwards. `OLY_INSTALL_VERSION=<version>` installs the launcher of another release; `OLY_HOME` moves `~/.oly`.
 
-## Make a game
+## Commands
 
-```sh
-oly doctor --environment web
-oly new <game> --environment web
-cd <game>
-oly test
-oly run
-```
-
-`<game>` is the name of the folder and of the game: lowercase letters, digits and `-`, starting with a letter. `oly new` makes the folder in the current directory and, for a web game, installs the npm packages.
-
-| Option | Meaning |
-|---|---|
-| `--environment web\|native` | where the game runs (required): [web](../tutorials/first-web-game.md) or [desktop](../tutorials/first-desktop-game.md) |
-| `--version <version>` | the engine release to start from. Default: the latest release |
-
-## The commands
-
-Inside a game, `oly` finds the game by walking up from the current folder to `oly.env`.
+Inside a game, `oly` finds the game by walking up from the current folder to `oly.env`. The tutorials use these commands in order: [Your first web game](../tutorials/first-web-game.md) and [Your first desktop game](../tutorials/first-desktop-game.md).
 
 | Command | What it does |
 |---|---|
@@ -57,17 +40,28 @@ Inside a game, `oly` finds the game by walking up from the current folder to `ol
 | `oly test` | builds the game and runs its tests |
 | `oly run [arguments]` | builds the game and runs it. Web: serves `build/web/` on port 8000. Desktop: runs the executable and passes it the arguments |
 | `oly clean` | removes `build/` |
-| `oly upgrade <version>` | moves the game to another engine release |
+| `oly sync` | installs the npm packages of a web game, as `package.json` and the mode ([local mode](#local-mode)) ask. `oly build` runs it for you |
+| `oly platform` | prints the host platform: `linux-x64` or `windows-x64` |
+| `oly upgrade <version>` | moves the game to another engine release: [Upgrade the engine](../how-to/upgrade-the-engine.md) |
 | `oly self-update` | replaces the launcher with the one of the latest release |
 | `oly --version` | prints the launcher version and, inside a game, the engine version it pins |
 
-`oly doctor` outside a game checks the tools of both environments. Each line starts with one of `ok`, `old`, `untested`, `missing` or `wrong`, then the tool and what to install.
+### `oly new`
 
-`oly build`, `oly test` and `oly run` build in `Debug`, so contract errors stop the game ([Troubleshooting](troubleshooting.md)).
+`<game>` is the name of the folder and of the game: lowercase letters, digits and `-`, starting with a letter. `oly new` makes the folder in the current directory and, for a web game, installs the npm packages. `test`, `all`, `clean`, `help`, `install`, `package`, `oly` and `oly-*` are CMake or engine target names, so a game cannot use them. The files it writes: [The game template](game-template.md).
 
-### Options of `build`, `test` and `run`
+| Option | Meaning |
+|---|---|
+| `--environment web\|native` | where the game runs (required): [web](../tutorials/first-web-game.md) or [desktop](../tutorials/first-desktop-game.md) |
+| `--version <version>` | the engine release to start from. Default: the latest release |
 
-Put them right after the command name.
+### `oly doctor`
+
+Outside a game, `oly doctor` checks the tools of both environments. Each line starts with one of `ok`, `old` (older than `toolchain.env` needs), `untested` (newer than the version the engine is tested with), `missing` or `wrong` (for example `g++` that does not target MinGW on Windows: put the `bin` folder of MSYS2 UCRT64 first on the `PATH` of Git Bash), then the tool and what to install. A line that is not `ok` makes it exit with 1. The configure step of the engine checks the same versions: [Errors](errors.md#at-build-time).
+
+### `oly build`, `oly test` and `oly run`
+
+They build in `Debug`, so contract errors stop the game ([Errors](errors.md#at-run-time)). Put the options right after the command name.
 
 | Option | Meaning |
 |---|---|
@@ -93,59 +87,13 @@ To make Docker the default of a game, set `OLY_RUNNER=docker` in `oly.env`. `--h
 | desktop game | the `dev` image |
 | desktop game with `--platform windows` | the `windows` image; the tests run under Wine |
 
-A desktop window cannot open in a container: `oly run --docker` on a desktop game stops with that message: build it, then run the executable on the host.
+A desktop window cannot open in a container: `oly run --docker` on a desktop game stops with that message. Run it with `oly run --host`.
 
 `oly doctor --docker` checks only that `docker compose` works.
 
-## The game repository
+## Local mode
 
-`oly new <game> --environment web` creates:
-
-```
-<game>/
-  oly.env                     OLY_VERSION, OLY_ENVIRONMENT, OLY_GAME, OLY_RUNNER
-  CMakeLists.txt              fetches the engine at the version of oly.env
-  cmake/game.cmake            oly_add_game and the test
-  <game>.oly                  the schema
-  native/                     C++ systems
-  web/src/                    game.ts (installGame, no DOM), main.ts (browser shell)
-  web/index.html
-  web/tests/                  a smoke test against the real WASM
-  package.json, tsconfig.json
-  .github/workflows/ci.yml
-  .gitignore
-```
-
-A desktop game has no `web/`, `package.json` or `tsconfig.json`. It has `desktop/main.cpp`, the SDL shell, instead.
-
-`oly.env` is the one file that names the engine version:
-
-| Key | Meaning |
-|---|---|
-| `OLY_VERSION` | the engine release the game builds with |
-| `OLY_ENVIRONMENT` | `web` or `native` |
-| `OLY_GAME` | the name of the CMake target |
-| `OLY_RUNNER` | `host` (default) or `docker` |
-
-A web game names the version a second time: the `@oly/core` and `@oly/web-host` URLs in `package.json` carry it. `oly build` stops when the two differ. Do not edit them by hand: use `oly upgrade`.
-
-Commit everything except what `.gitignore` lists. The template game is minimal: a square that moves with the keyboard. [Your first web game](../tutorials/first-web-game.md) and [Your first desktop game](../tutorials/first-desktop-game.md) walk through it.
-
-## Upgrade the engine
-
-```sh
-oly upgrade <version>
-```
-
-`oly upgrade` downloads the tools of `<version>` first, so a version that does not exist leaves the game as it was. Then it rewrites `OLY_VERSION` in `oly.env` and, for a web game, the URLs in `package.json`, and installs the npm packages again. Run `oly test` afterwards: while the engine is `0.x`, a minor release can break compatibility.
-
-## The game's CI
-
-The template has `.github/workflows/ci.yml`. It installs `oly` and runs `oly test --docker`, so the runner needs no compiler, emsdk or Node.js.
-
-## Build with an engine checkout
-
-To change the engine and a game together, point `OLY_ENGINE_DIR` at a checkout of the engine:
+To change the engine and a game together, point `OLY_ENGINE_DIR` at a checkout of the engine ([Build with an engine checkout](../how-to/build-with-an-engine-checkout.md)):
 
 ```sh
 OLY_ENGINE_DIR=../oly oly test
@@ -161,24 +109,22 @@ This is **local mode**. The tools, the template, the C++ source, `oly-schema` an
 | npm packages | the tarballs of the release | built from the checkout and installed over the tarballs |
 | Docker image | `ghcr.io/esliph/oly-*:<version>` | the same image, with the checkout mounted at `/oly` |
 
-Unset `OLY_ENGINE_DIR` and run `oly build` to go back to the pinned version.
-
-A change to an engine Dockerfile reaches a game only with the next release.
+Unset `OLY_ENGINE_DIR` and run `oly build` to go back to the pinned version. A change to an engine Dockerfile reaches a game only with the next release.
 
 ## Environment variables
 
 | Variable | Meaning |
 |---|---|
-| `OLY_ENGINE_DIR` | an engine checkout: [local mode](#build-with-an-engine-checkout) |
+| `OLY_ENGINE_DIR` | an engine checkout: [local mode](#local-mode) |
 | `OLY_HOME` | where `oly` keeps the launcher and the downloaded versions. Default: `~/.oly` |
 | `OLY_RELEASE_URL` | where `oly` downloads releases from. Default: `https://github.com/esliph/oly/releases` |
 | `OLY_INSTALL_VERSION` | for `install.sh`: the launcher version to install |
 | `EMSDK` | set by emsdk's `emsdk_env.sh`; a web game needs it on the host |
 
-## Errors
+The keys of `oly.env` are in [The game template](game-template.md#olyenv).
 
-The messages of `oly` are in [Troubleshooting](troubleshooting.md#the-oly-command).
+## See also
 
-## Next
-
-[The game template](../reference/game-template.md): every file of a new game, one row each. [Your first web game](../tutorials/first-web-game.md) and [Your first desktop game](../tutorials/first-desktop-game.md) walk through it.
+- [Upgrade the engine](../how-to/upgrade-the-engine.md), [Set up the CI of a game](../how-to/set-up-game-ci.md) and [Build with an engine checkout](../how-to/build-with-an-engine-checkout.md).
+- [Errors](errors.md#oly): the messages of `oly`.
+- [The game template](game-template.md): every file of a new game.

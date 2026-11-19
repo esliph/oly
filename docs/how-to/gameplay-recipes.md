@@ -1,6 +1,6 @@
 # Recipes
 
-[Guide index](../guide/README.md) · [Cheat sheet](../guide/cheat-sheet.md)
+[Docs](../README.md#how-to-guides) · Reference: [Glossary](../reference/glossary.md)
 
 Ready patterns for common game features, in C++. Each recipe shows the schema entries it needs and the code: the bodies are written against the context, so they run in every environment, and the registration is labelled under them. Every recipe with a TS form ends with a link to its TypeScript version, which registers the same pieces from the TS client; order bands and plugins are C++ only.
 

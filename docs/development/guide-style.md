@@ -1,6 +1,6 @@
 # Guide style
 
-How to write and maintain the user guide in `docs/guide/`. The guide teaches how to **use** the engine to make a game. The architecture docs (`docs/architecture/`) explain how the engine is **built** and why. Keep the two apart: the guide links to the architecture for the "why" and does not repeat it.
+How to write and maintain the user documentation in `docs/`. The guide teaches how to **use** the engine to make a game. The architecture docs (`docs/architecture/`) explain how the engine is **built** and why. Keep the two apart: the guide links to the architecture for the "why" and does not repeat it.
 
 ## When the guide must change
 
@@ -23,16 +23,16 @@ What to update:
 
 | The change | Update |
 |---|---|
-| new function, method, option or macro | the concept page and the client page of its topic, the [cheat sheet](../guide/cheat-sheet.md) and, if it enables a new pattern, a [recipe](../how-to/gameplay-recipes.md) |
-| renamed or changed signature | every example that uses it (search the whole `docs/guide/`) and the cheat sheet |
+| new function, method, option or macro | the concept page and the reference pages of its topic ([C++](../reference/cpp/world-and-entities.md), [TypeScript](../reference/typescript/world-and-entities.md) and, when it has a C API function, [C API](../reference/c-api.md)) and, if it enables a new pattern, a [recipe](../how-to/gameplay-recipes.md) |
+| renamed or changed signature | every example that uses it (search the whole `docs/`) |
 | removed | every mention; replace examples that depended on it |
-| new or changed error | the table in [Troubleshooting](../guide/troubleshooting.md) |
+| new or changed error | the table in [Errors](../reference/errors.md) |
 | changed behaviour (order, timing, scope) | the concept page that describes it and any recipe that relied on it |
-| a C API change | the cheat sheet and [capi.md](../architecture/capi.md) |
-| a change to the `oly` commands, the template or `toolchain.env` | [The `oly` command](../guide/cli.md), the cheat sheet and the messages in [Troubleshooting](../guide/troubleshooting.md) |
-| new page | the index tables in `docs/guide/README.md` and the navigation lines of the neighbouring pages in its folder |
+| a C API change | [C API](../reference/c-api.md) and [capi.md](../architecture/capi.md) |
+| a change to the `oly` commands, the template or `toolchain.env` | [The `oly` command](../reference/cli.md), [The game template](../reference/game-template.md) and the messages in [Errors](../reference/errors.md) |
+| new page | the index tables in [docs/README.md](../README.md) and the navigation lines of the neighbouring pages in its folder |
 
-Before finishing, search `docs/guide/` for the old name and check the links you touched.
+Before finishing, search `docs/` for the old name and check the links you touched.
 
 ## Audience and tone
 
@@ -58,8 +58,7 @@ The guide does not reference any specific game. Games live in their own reposito
 ## Files and navigation
 
 ```
-docs/guide/
-  README.md                    the map: core, environments, clients, how to choose, a learning path per environment
+docs/
   concepts/                    valid in every environment; examples in C++
     schema.md  world-and-entities.md  queries.md  engine-and-systems.md
     events.md  input.md  schedule.md  states.md  performance.md  plugins.md
@@ -72,9 +71,6 @@ docs/guide/
     native/
       getting-started.md
   recipes.md                   recipes in C++, each linking to its TS version
-  cli.md                       the oly command: install, new, doctor, build, test, run, upgrade, local mode, --docker
-  cheat-sheet.md               C++, C API and per-client names
-  troubleshooting.md
 ```
 
 - Pages are not numbered. File names are lowercase `kebab-case`.
@@ -131,15 +127,10 @@ docs/guide/
 - **Complete enough to copy**: imports when they are not obvious, the schema entries an example needs, no `...` inside the logic that matters.
 - **Follow the code style** ([code-style.md](../reference/contributor/code-style.md)): full names, braces on every `if`/`for`, blank lines between steps.
 - **Comments only for the why**, the same rule as in the code. No comments that narrate the example step by step: put that in the prose before the block.
-- **Commands** are `oly` commands (`oly new`, `oly test`, `oly run`), as in [cli.md](../guide/cli.md). Inside the engine repository they are `./spur` tasks (`./spur games-test`, `./spur wasm <command>`, `./spur dev <command>`), as in [commands.md](commands.md).
+- **Commands** are `oly` commands (`oly new`, `oly test`, `oly run`), as in [cli.md](../reference/cli.md). Inside the engine repository they are `./spur` tasks (`./spur games-test`, `./spur wasm <command>`, `./spur dev <command>`), as in [commands.md](commands.md).
 - Show the wrong way only when the mistake is common, and always next to the right way.
 
 ## Recipes
 
 - One problem per section, named by what the reader wants (`## Ability with a cooldown`), listed in the table at the top. The recipe is in C++ in `recipes.md` and in TS under the same heading in `environments/web/typescript/recipes.md`; a recipe that only makes sense in the browser lives only in the TS page.
 - Each recipe shows the schema entries it needs, then the code, then one or two lines on why it is built that way or when to choose another tool.
-
-## Cheat sheet
-
-- Every public name, grouped by topic (C++, then the C API, then each client), with the shortest correct signature.
-- No explanations beyond a few words: link to the page instead.
