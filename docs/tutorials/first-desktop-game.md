@@ -18,11 +18,7 @@ The exact versions and the install steps are in [The `oly` command](../reference
 
 ## 1. Install `oly`
 
-```sh
-curl -fsSL https://github.com/esliph/oly/releases/latest/download/install.sh | sh
-```
-
-Open a new terminal, then check your tools:
+Install the launcher with the command in [The `oly` command](../reference/cli.md#install). Open a new terminal, then check your tools:
 
 ```sh
 oly doctor --environment native

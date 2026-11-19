@@ -14,6 +14,35 @@ oly::ecs::World world;
 
 A `World` is not copyable. Declare it before the `Engine` that uses it, so it outlives the `Engine`. In the game's `main`, a test or a tool, you create it. Inside a system, handler, task or hook you use the context methods instead. Who owns it: [Where the World comes from](../../explanation/concepts/world-and-entities.md#where-the-world-comes-from).
 
+A tool or a benchmark can use the ECS alone, with no `Engine`:
+
+```cpp
+#include "oly/ecs/world.hpp"
+
+struct Position { float x, y; };
+struct Velocity { float x, y; };
+struct Frozen {};  // tag: component with no data
+
+oly::ecs::World world;
+oly::ecs::Entity player = world.spawn(Position{0, 0}, Velocity{1, 2});
+
+// Iterates only entities with Position and Velocity and without the Frozen tag.
+world.query<Position, const Velocity>(oly::ecs::Without<Frozen>{})
+    .each([](Position& position, const Velocity& velocity) {
+      position.x += velocity.x;
+      position.y += velocity.y;
+    });
+
+// Structural changes during iteration go through the CommandBuffer.
+oly::ecs::CommandBuffer commands = world.commands();
+world.query<const Position>().each([&](oly::ecs::Entity entity, const Position& position) {
+  if (position.x > 100) {
+    commands.destroy(entity);
+  }
+});
+world.flush(commands);
+```
+
 ### `Engine::world`
 
 ```cpp

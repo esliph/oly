@@ -41,6 +41,22 @@ docs/
 .claude/          Claude Code skills, agents and formatting hook
 ```
 
+## Targets
+
+The name each part has in CMake and npm:
+
+| Target | Folder |
+|---|---|
+| `oly::core` | `engine/runtime/core` |
+| `oly::ecs` | `engine/runtime/ecs` |
+| `oly::input` | `engine/runtime/input` |
+| `oly::app` | `engine/runtime/app` |
+| `oly::capi` | `engine/runtime/capi` |
+| `oly::native_host` | `engine/environments/native/host` |
+| `@oly/core` | `engine/environments/web/clients/typescript/core` |
+| `@oly/web-host` | `engine/environments/web/host/js` |
+| `oly-schema` | `engine/schema/codegen` |
+
 ## Shape of a C++ module
 
 Every C++ module follows the same shape:

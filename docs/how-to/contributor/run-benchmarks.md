@@ -2,7 +2,7 @@
 
 [Docs](../../README.md#how-to-guides) · Reference: [Benchmark results](../../reference/benchmarks/README.md)
 
-Use this to measure the engine and record the result in `docs/reference/benchmarks/`. It assumes the images are built ([Set up the toolchain](set-up-the-toolchain.md)). The environment (Docker on WSL2) is noisy: always compare ratios measured in the same run, never the absolute times of two runs.
+Use this to measure the engine and record the result in `docs/reference/benchmarks/`. It assumes the images are built ([Set up the toolchain](set-up-the-toolchain.md)). The environment (Docker on WSL2) is noisy: always compare ratios measured in the same run, never the absolute times of two runs. A performance target is such a ratio against a baseline: for example, "iterating in the ECS costs at most 1.10× the cost of a hand-written SoA loop".
 
 ## 1. Run an ECS benchmark
 

@@ -113,6 +113,11 @@ if(PROJECT_IS_TOP_LEVEL)
                 --root ${PROJECT_SOURCE_DIR})
       add_test(NAME oly.lint.links_selftest
         COMMAND ${Python3_EXECUTABLE} -I ${PROJECT_SOURCE_DIR}/tools/test_check_links.py)
+      add_test(NAME oly.lint.readme_example
+        COMMAND ${Python3_EXECUTABLE} -I ${PROJECT_SOURCE_DIR}/tools/check_readme_example.py
+                --root ${PROJECT_SOURCE_DIR})
+      add_test(NAME oly.lint.readme_example_selftest
+        COMMAND ${Python3_EXECUTABLE} -I ${PROJECT_SOURCE_DIR}/tools/test_check_readme_example.py)
     endif()
   endif()
 endif()

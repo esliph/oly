@@ -1,6 +1,6 @@
 # TypeScript client
 
-[Guide index](../../../README.md)
+[Reference](../../README.md#reference)
 
 The TypeScript client is the TS API over the [C API](../c-api.md), inside the `web` environment. It runs wherever the web host runs: a browser tab or Node. It has no DOM code of its own; drawing and sound are yours.
 
