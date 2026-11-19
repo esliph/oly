@@ -54,7 +54,7 @@ Handlers already receive a whole batch per call. Do the loop inside the handler.
 ## Measuring
 
 - In the browser, use the Chromium profiler on the running game.
-- The boundary benchmark runs with `./spur wasm node engine/testing/dist/bench/boundary.js ...`; see [commands](../../../development/commands.md#wasm-typescript-and-games) for the full command.
+- The boundary benchmark runs with `./spur wasm node engine/testing/dist/bench/boundary.js ...`; see [commands](../../../development/commands.md#wasm-and-typescript) for the full command.
 
 ## Release builds
 

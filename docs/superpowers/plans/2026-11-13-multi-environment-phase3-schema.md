@@ -1950,7 +1950,7 @@ examples from the reader's side). A TS declaration snippet `export const X = com
 - `13-troubleshooting.md`: the "does not belong to this runtime's schema" row's cause becomes "an entry from another
   generated schema module" and its fix "import the entries from the game's `schema.generated.js`"; add a row
   "`<game>.oly:<line>:<column>: ...` when building | a schema rule is broken | fix that line; the rules are in
-  [Schema](02-schema.md#naming-rules)"; step 1 of the rebuild list becomes "`$WC make ts` — builds `oly-schema`,
+  [Schema](../../../engine/schema/format/README.md#naming-rules-and-limits)"; step 1 of the rebuild list becomes "`$WC make ts` — builds `oly-schema`,
   generates the TS schemas and compiles the TS".
 - `cheat-sheet.md`: the schema rows become the `.oly` forms (`component Name { field: f32 }`, `tag Name`,
   `event Name { field: u32 }`, `action name: button | axis2d | pointer`, `state name`), and the `defineSchema` row
