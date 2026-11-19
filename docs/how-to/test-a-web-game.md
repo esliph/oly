@@ -231,7 +231,7 @@ A game made with `oly new` already registers its tests: `cmake/game.cmake` has t
 oly test
 ```
 
-`oly test` builds the game, compiles the TS tests and runs ctest. To run one test file or filter by name, use `node` and `ctest` on the build `oly test` left:
+`oly test` builds the game, compiles the TS tests and runs ctest. To run only the tests of the game by their ctest name, use `ctest` on the build `oly test` left:
 
 ```sh
 ctest --test-dir build/cmake -R '^<target>\.'

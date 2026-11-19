@@ -9,7 +9,7 @@ The components come from the `essentials2d` or `essentials3d` plugin, so a game'
 ### `DIMENSION`
 
 ```cmake
-oly_add_game(<game>_game
+oly_add_game(<target>
   ENVIRONMENT native
   DIMENSION 2d
   SCHEMA ${CMAKE_CURRENT_SOURCE_DIR}/<game>.oly

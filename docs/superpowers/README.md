@@ -25,8 +25,7 @@ The plans record, phase by phase, how each part was implemented and the decision
 
 ## Documentation audit
 
-
-Every other verified finding of [the audit](specs/2026-11-18-docs-audit.md) is closed. The open ones are below, each with its reason.
+The verified findings of [the audit](specs/2026-11-18-docs-audit.md) are closed, except the ones below, each with its reason.
 
 | Finding | Why it is open |
 |---|---|
