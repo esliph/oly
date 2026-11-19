@@ -7,6 +7,7 @@ Exits 0 with no broken link; exits 1 printing "<file>:<line> | <target> | <reaso
 import argparse
 import os
 import re
+import subprocess
 import sys
 import urllib.parse
 
@@ -14,17 +15,23 @@ IGNORED_DIRECTORIES = {".git", "node_modules", ".superpowers"}
 IGNORED_DIRECTORY_PREFIX = "build"
 MARKDOWN_EXTENSION = ".md"
 
+INDENTED_CODE_COLUMNS = 4
+
 FENCE_PATTERN = re.compile(r"^\s*(`{3,}|~{3,})(.*)$")
 INLINE_CODE_PATTERN = re.compile(r"(?<!`)(`+)(?!`).+?(?<!`)\1(?!`)")
-INLINE_LINK_PATTERN = re.compile(r"""\[[^\]]*\]\(\s*(<[^>]*>|[^)\s]*)(?:\s+(?:"[^"]*"|'[^']*'))?\s*\)""")
+INLINE_LINK_PATTERN = re.compile(
+    r"""\[(?:[^\[\]]|\[[^\[\]]*\])*\]\(\s*(<[^>]*>|[^()\s]*(?:\([^()\s]*\)[^()\s]*)*)(?:\s+(?:"[^"]*"|'[^']*'))?\s*\)"""
+)
 REFERENCE_DEFINITION_PATTERN = re.compile(r"^ {0,3}\[[^\]]+\]:\s*(<[^>]*>|\S+)")
-ATX_HEADING_PATTERN = re.compile(r"^ {0,3}#{1,6}[ \t]+(.*?)(?:[ \t]+#+)?[ \t]*$")
+BLOCKQUOTE_PREFIX_PATTERN = re.compile(r"^ {0,3}(?:> ?)+")
+LIST_ITEM_PATTERN = re.compile(r"^ {0,3}(?:[-*+]|\d{1,9}[.)])(?:[ \t]|$)")
+ATX_HEADING_PATTERN =re.compile(r"^ {0,3}#{1,6}[ \t]+(.*?)(?:[ \t]+#+)?[ \t]*$")
 SETEXT_UNDERLINE_PATTERN = re.compile(r"^ {0,3}(?:=+|-+)[ \t]*$")
 HTML_ANCHOR_PATTERN = re.compile(r"""<a\s[^>]*?\b(?:name|id)\s*=\s*["']([^"']+)["']""")
 SCHEME_PATTERN = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:")
 
 LINK_TEXT_PATTERN = re.compile(r"\[([^\]]*)\]\([^)]*\)")
-STRONG_PATTERN = re.compile(r"(\*\*|__)(?=\S)(.+?)(?<=\S)\1")
+STRONG_PATTERN = re.compile(r"\*\*(?=\S)(.+?)(?<=\S)\*\*|(?<!\w)__(?=\S)(.+?)(?<=\S)__(?!\w)")
 EMPHASIS_PATTERN = re.compile(r"(?<![\w*])\*(?=\S)(.+?)(?<=\S)\*(?!\w)|(?<![\w_])_(?=\S)(.+?)(?<=\S)_(?![\w_])")
 HTML_TAG_PATTERN = re.compile(r"<[^>]+>")
 
@@ -33,11 +40,19 @@ def iter_lines(text):
     """Yields (line number, line, inside a fence or on a fence line), tracking fences the way GitHub renders them."""
     fence_character = None
     fence_length = 0
+    in_list = False
     for line_number, line in enumerate(text.split("\n"), start=1):
         line = line.rstrip("\r")
         match = FENCE_PATTERN.match(line)
         if fence_character is None:
-            opens = match is not None and not (match.group(1)[0] == "`" and "`" in match.group(2))
+            indent = len(line) - len(line.lstrip(" "))
+            if line.strip() and indent < INDENTED_CODE_COLUMNS:
+                in_list = LIST_ITEM_PATTERN.match(line) is not None
+            opens = (
+                match is not None
+                and not (match.group(1)[0] == "`" and "`" in match.group(2))
+                and (indent < INDENTED_CODE_COLUMNS or in_list)
+            )
             if opens:
                 fence_character = match.group(1)[0]
                 fence_length = len(match.group(1))
@@ -64,7 +79,7 @@ def slugify(heading):
 
     text = INLINE_CODE_PATTERN.sub(hide_code_span, heading)
     text = LINK_TEXT_PATTERN.sub(r"\1", text)
-    text = STRONG_PATTERN.sub(r"\2", text)
+    text = STRONG_PATTERN.sub(lambda match: match.group(1) or match.group(2), text)
     text = EMPHASIS_PATTERN.sub(lambda match: match.group(1) or match.group(2), text)
     text = HTML_TAG_PATTERN.sub("", text)
     text = re.sub(r"\ue000(\d+)\ue001", lambda match: code_spans[int(match.group(1))], text)
@@ -83,7 +98,7 @@ def anchors_of(text):
 
         stripped_line = without_inline_code(line)
         heading = None
-        atx_match = ATX_HEADING_PATTERN.match(line)
+        atx_match = ATX_HEADING_PATTERN.match(BLOCKQUOTE_PREFIX_PATTERN.sub("", line))
         if atx_match is not None:
             heading = atx_match.group(1)
         elif SETEXT_UNDERLINE_PATTERN.match(line) and previous_line.strip():
@@ -140,6 +155,7 @@ class Resolver:
         self._root = os.path.abspath(root)
         self._listings = {}
         self._anchors = {}
+        self._tracked = self._tracked_listings()
 
     def resolve(self, source_path, target_path):
         """Returns the existing path a link points to, comparing each component with the case on disk, or None."""
@@ -167,7 +183,25 @@ class Resolver:
             self._anchors[path] = anchors_of(read_markdown(path))
         return fragment in self._anchors[path] or fragment.lower() in self._anchors[path]
 
+    def _tracked_listings(self):
+        """Returns the folder contents GitHub serves (the files git tracks), or None when the root is not a git work tree."""
+        try:
+            result = subprocess.run(["git", "-C", self._root, "ls-files", "-z"], capture_output=True, check=True)
+        except (OSError, subprocess.CalledProcessError):
+            return None
+
+        listings = {}
+        for entry in result.stdout.decode("utf-8", errors="replace").split("\0"):
+            directory = self._root
+            for component in filter(None, entry.split("/")):
+                listings.setdefault(directory, set()).add(component)
+                directory = os.path.join(directory, component)
+
+        return listings
+
     def _listing(self, directory):
+        if self._tracked is not None:
+            return self._tracked.get(directory, set())
         if directory not in self._listings:
             try:
                 self._listings[directory] = set(os.listdir(directory))
@@ -206,12 +240,31 @@ def check(root):
     return [f"{file}:{line} | {target} | {reason}" for file, line, target, reason in sorted(broken)]
 
 
+def can_encode(stream, messages):
+    encoding = getattr(stream, "encoding", None)
+    if encoding is None or not hasattr(stream, "reconfigure"):
+        return True
+
+    try:
+        "".join(messages).encode(encoding)
+    except UnicodeEncodeError:
+        return False
+
+    return True
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", required=True)
     arguments = parser.parse_args(argv)
 
+    if not os.path.isdir(arguments.root):
+        print(f"{arguments.root}: root folder not found", file=sys.stderr)
+        return 1
+
     broken = check(arguments.root)
+    if not can_encode(sys.stdout, broken):
+        sys.stdout.reconfigure(errors="backslashreplace")
     for message in broken:
         print(message)
     return 1 if broken else 0

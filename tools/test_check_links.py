@@ -1,6 +1,8 @@
 import contextlib
 import io
 import os
+import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -216,6 +218,73 @@ class CheckLinksTest(unittest.TestCase):
             "z.md:1 | m.md | file not found\n"
         )
         self.assertEqual((code, output), (1, expected))
+
+    def test_missing_root_fails(self):
+        missing = os.path.join(self.root, "missing")
+        errors = io.StringIO()
+
+        with contextlib.redirect_stderr(errors):
+            code = check_links.main(["--root", missing])
+
+        self.assertEqual((code, errors.getvalue()), (1, f"{missing}: root folder not found\n"))
+
+    def test_link_to_untracked_file_fails_in_a_git_repository(self):
+        if shutil.which("git") is None:
+            self.skipTest("git is not installed")
+        self.write(".gitignore", "ignored.txt\n")
+        self.write("tracked.md", "# Tracked\n")
+        self.write("untracked.md", "# Untracked\n")
+        self.write("ignored.txt", "")
+        self.write("a.md", "[t](tracked.md)\n[u](untracked.md)\n[i](ignored.txt)\n[d](sub/)\n")
+        self.write("sub/x.md", "# X\n")
+        subprocess.run(["git", "init", "-q"], cwd=self.root, check=True)
+        subprocess.run(["git", "add", ".gitignore", "tracked.md", "a.md", "sub/x.md"], cwd=self.root, check=True)
+
+        code, output = self.run_check()
+
+        expected = "a.md:2 | untracked.md | file not found\na.md:3 | ignored.txt | file not found\n"
+        self.assertEqual((code, output), (1, expected))
+
+    def test_heading_inside_blockquote_has_anchor(self):
+        anchors = check_links.anchors_of("> ## Quoted\n>\n> text\n")
+
+        self.assertEqual(anchors, {"quoted"})
+
+    def test_indented_fence_outside_a_list_is_code_block(self):
+        self.write("a.md", "text\n\n    ```\n\n[x](missing.md)\n")
+
+        code, output = self.run_check()
+
+        self.assertEqual((code, output), (1, "a.md:5 | missing.md | file not found\n"))
+
+    def test_nested_brackets_and_parentheses_in_links(self):
+        self.write("b.md", "# B\n")
+        self.write("a(b).md", "# AB\n")
+        self.write("a.md", "[a [b]](b.md)\n[t](a(b).md)\n[a [b]](nb.md)\n[t](na(b).md)\n")
+
+        code, output = self.run_check()
+
+        expected = "a.md:3 | nb.md | file not found\na.md:4 | na(b).md | file not found\n"
+        self.assertEqual((code, output), (1, expected))
+
+    def test_intraword_double_underscore_is_not_strong(self):
+        cases = {
+            "x__y__z": "x__y__z",
+            "__strong__ text": "strong-text",
+        }
+
+        for heading, expected in cases.items():
+            with self.subTest(heading=heading):
+                self.assertEqual(check_links.slugify(heading), expected)
+
+    def test_non_ascii_target_prints_on_a_narrow_console(self):
+        self.write("a.md", "[x](a→.md)\n")
+        console = io.TextIOWrapper(io.BytesIO(), encoding="cp1252", errors="strict", write_through=True)
+
+        with contextlib.redirect_stdout(console):
+            code = check_links.main(["--root", self.root])
+
+        self.assertEqual((code, console.buffer.getvalue()), (1, b"a.md:1 | a\\u2192.md | file not found\n"))
 
 
 if __name__ == "__main__":
