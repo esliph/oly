@@ -119,7 +119,7 @@ namespace oly::app {
 
 ## essentials
 
-`plugins/essentials2d/` and `plugins/essentials3d/` give a game, by its `DIMENSION`, `Position`, `Rotation`, `Scale`, `Parent` and `WorldTransform`, a parent-child hierarchy with cascade destroy, and the derivation of `WorldTransform` ([the user view](../guide/concepts/transforms.md)). Each is a plugin with its own `.oly` and a C++ part (`oly::essentials2d::Plugin`, `oly::essentials3d::Plugin`). `essentials2d` has no quaternion code; the 3D one keeps `multiply` and `rotate` in `include/oly/essentials3d/detail/quaternion.hpp`. The engine's test games get no `essentials`, and `fixture.oly` keeps its own `Position`.
+`plugins/essentials2d/` and `plugins/essentials3d/` give a game, by its `DIMENSION`, `Position`, `Rotation`, `Scale`, `Parent` and `WorldTransform`, a parent-child hierarchy with cascade destroy, and the derivation of `WorldTransform` ([the user view](../explanation/concepts/transforms.md)). Each is a plugin with its own `.oly` and a C++ part (`oly::essentials2d::Plugin`, `oly::essentials3d::Plugin`). `essentials2d` has no quaternion code; the 3D one keeps `multiply` and `rotate` in `include/oly/essentials3d/detail/quaternion.hpp`. The engine's test games get no `essentials`, and `fixture.oly` keeps its own `Position`.
 
 At install the plugin:
 

@@ -1,6 +1,6 @@
 # Plugins
 
-[← Performance](performance.md) · [Concepts](README.md) · Next: [Transforms →](../../guide/concepts/transforms.md)
+[← Performance](performance.md) · [Concepts](README.md) · Next: [Transforms →](transforms.md)
 
 A plugin is a unit of engine functionality that games reuse: its own components and events, the systems that act on them and the state those systems keep. A game turns a plugin on with one line of CMake. No line of game code installs it.
 
@@ -34,4 +34,4 @@ A client uses a plugin through its components, which its generated schema lists 
 
 ## Next
 
-[Transforms](../../guide/concepts/transforms.md): the plugin that every game turns on, which places entities and nests them.
+[Transforms](transforms.md): the plugin that every game turns on, which places entities and nests them.

@@ -69,7 +69,7 @@ Read in order the first time. Each page builds on the one before.
 | [States](../explanation/concepts/states.md) | build menu, playing and game over screens that reset cleanly |
 | [Performance](../explanation/concepts/performance.md) | keep the hot path fast |
 | [Plugins](../explanation/concepts/plugins.md) | turn reusable engine functionality on, and write your own |
-| [Transforms](concepts/transforms.md) | place entities with `Position`, nest them with `Parent` and read `WorldTransform` |
+| [Transforms](../explanation/concepts/transforms.md) | place entities with `Position`, nest them with `Parent` and read `WorldTransform` |
 
 ## References
 

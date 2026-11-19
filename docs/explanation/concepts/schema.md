@@ -78,7 +78,7 @@ A plugin can bring its own `.oly` with components, tags and events. When a game 
 - names are flat: a name that a plugin and the game both declare stops the build, and the error names both places (`game.oly:3:11: repeated name "Counter"; first declared at counting.oly:1:11`);
 - the hash covers the merged schema, so a client built with another set of plugins fails to load with a schema mismatch.
 
-`DIMENSION` is the one plugin you never list: it brings `Position`, `Rotation`, `Scale`, `Parent` and `WorldTransform` ([Transforms](../../guide/concepts/transforms.md)), and the game's `.oly` does not declare them.
+`DIMENSION` is the one plugin you never list: it brings `Position`, `Rotation`, `Scale`, `Parent` and `WorldTransform` ([Transforms](transforms.md)), and the game's `.oly` does not declare them.
 
 The game uses a plugin's types like its own: the game's `schema.generated.hpp` includes the plugin's header (`oly/<plugin>/schema.generated.hpp`), and the TS schema lists them.
 

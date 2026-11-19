@@ -62,7 +62,7 @@ add_test(NAME <target>.headless COMMAND <target> --frames 120)
 set_tests_properties(<target>.headless PROPERTIES ENVIRONMENT SDL_VIDEO_DRIVER=dummy)
 ```
 
-`<target>` is the game name with `-` written as `_`. `DIMENSION` is required: `2d` or `3d` turns the matching `essentials` plugin on, which brings `Position` and the other [transform](../../concepts/transforms.md) components, so the game's `.oly` does not declare them. `PLUGINS <plugin>` is optional: it lists the [plugins](../../../explanation/concepts/plugins.md) the game turns on. The test target of [Test your game](#test-your-game) lists the same plugins, so its `setUpGame` installs them too.
+`<target>` is the game name with `-` written as `_`. `DIMENSION` is required: `2d` or `3d` turns the matching `essentials` plugin on, which brings `Position` and the other [transform](../../../explanation/concepts/transforms.md) components, so the game's `.oly` does not declare them. `PLUGINS <plugin>` is optional: it lists the [plugins](../../../explanation/concepts/plugins.md) the game turns on. The test target of [Test your game](#test-your-game) lists the same plugins, so its `setUpGame` installs them too.
 
 A native game has no registry and no `.mjs`: the target is a plain executable in `build/cmake/games/`. `oly.env` carries the engine version; change it with `oly upgrade <version>` ([The `oly` command](../../cli.md#upgrade-the-engine)).
 

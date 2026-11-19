@@ -77,7 +77,7 @@ tag Player
 action move: axis2d
 ```
 
-`Position` is not declared here: `DIMENSION 2d` in `cmake/game.cmake` turns the `essentials2d` plugin on, which brings it ([Transforms](../../concepts/transforms.md)).
+`Position` is not declared here: `DIMENSION 2d` in `cmake/game.cmake` turns the `essentials2d` plugin on, which brings it ([Transforms](../../../explanation/concepts/transforms.md)).
 
 ### `cmake/game.cmake`
 

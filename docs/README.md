@@ -32,6 +32,7 @@
 | [Schedule in C++](reference/cpp/schedule.md) | Which calls run a task after a delay or every interval, cancel it, and carry a payload into it? |
 | [States in C++](reference/cpp/states.md) | Which calls declare states, request a change, restrict systems to states and run hooks on entry and exit? |
 | [Plugins in C++](reference/cpp/plugins.md) | Which calls write a plugin, install it and reach an installed plugin? |
+| [Transforms in C++](reference/cpp/transforms.md) | Which CMake argument turns the transform components on, and which fields does each component have? |
 | [World and entities in C++](reference/cpp/world-and-entities.md) | Which calls create, read, change and destroy entities, record commands and observe changes? |
 | [Glossary](reference/glossary.md) | What does each name mean in C++, the C API and TypeScript? |
 | [Known limitations](reference/limits.md) | What does the engine not do? |

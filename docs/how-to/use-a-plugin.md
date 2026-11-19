@@ -16,7 +16,7 @@ oly_add_game(<game>_game
   PLUGINS lifetime)
 ```
 
-`DIMENSION` is not a plugin you list: it turns the `essentials` plugin of that dimension on, installed before the ones in `PLUGINS` ([Transforms](../guide/concepts/transforms.md)). Listing `essentials2d` or `essentials3d` in `PLUGINS` is a configure error.
+`DIMENSION` is not a plugin you list: it turns the `essentials` plugin of that dimension on, installed before the ones in `PLUGINS` ([Transforms](../explanation/concepts/transforms.md)). Listing `essentials2d` or `essentials3d` in `PLUGINS` is a configure error.
 
 ## 2. Build
 
