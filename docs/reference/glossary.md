@@ -39,7 +39,10 @@ The same verb stands for the same concept in C++, in the C API and in TS.
 | plugin: engine-level functionality a game turns on in its build | `oly::app::Plugin` (`install(engine)`); `oly_add_plugin(NAME <p> ...)` in CMake, turned on with `oly_add_game(... PLUGINS ...)` | — | — |
 | place an entity and nest it | `Position`, `Rotation`, `Scale`, `Parent`, `WorldTransform` (`essentials2d` or `essentials3d`, turned on by `oly_add_game(... DIMENSION 2d\|3d ...)`) | the same names, in the generated schema | the same names |
 | install a plugin / reach an installed plugin | `Engine::installPlugin<P>()` / `Engine::plugin<P>()` | — | — |
-| desktop window and loop | `oly::native_host::Window`, `oly::native_host::run(engine, window, options)` | — | — |
+| desktop window and loop | `oly::native_host::Window` (`WindowConfig`), `oly::native_host::run(engine, window, options)` | — | — |
+| environment: a place where the core runs, with a host that drives the loop and forwards input | `oly_add_game(... ENVIRONMENT web\|native ...)` | — | `runInBrowser`, `attachBrowserInput` (`@oly/web-host`) |
+| client: a language that calls the core through the C API (C++ is not a client) | — | `oly*` | `@oly/core` |
+| game template: the files `oly new` copies into a new game | `templates/game/` | — | — |
 | variant by ID | `ById` suffix: `addById`, `removeById`, `hasById`, `getById`, `tryGetById`, `queryById` | (all by ID) | — |
 
 ## Publishing

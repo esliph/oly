@@ -1,30 +1,30 @@
-# Testing a web game
+# Test a web game
 
-[Guide index](../../README.md)
+[Docs](../README.md#how-to-guides) · Concept: [Web boundary](../explanation/concepts/web-boundary.md)
 
-Because the engine takes time and input from outside, you can run the **real game**, with the **real WASM**, in Node: you choose the time, you press the keys, you read the world. Tests are exact and fast — no browser, no waiting.
+Use this to run the real game, with the real WASM, in Node: you choose the time, you press the keys, you read the world. Tests are exact and fast, with no browser and no waiting. It assumes a web game made by `oly new <game> --environment web` ([Your first web game](../tutorials/first-web-game.md)), whose `web/tests/smoke.test.ts` is the first test.
 
 ## What makes a game testable
 
-1. **`installGame(engine, options)` has no DOM.** It registers systems, handlers and hooks only. The browser shell (`main.ts`) is the only file that touches `document`.
-2. **Everything the outside world provides is injected**: the drawer, the random source, anything that would read the clock.
+1. **`installGame(engine, drawer)` has no DOM.** It registers systems, handlers and hooks only. The browser shell (`main.ts`) is the only file that touches `document`.
+2. **Everything the outside world provides is injected.** The template injects the drawer. Anything else that would read the clock or a random source is a parameter of the same kind.
+
+This is the signature of `web/src/game.ts` (an excerpt):
 
 ```ts
-export interface GameOptions {
-  readonly drawer: Drawer;
-  readonly random: () => number;
+export interface Drawer {
+  clear(): void;
+  square(x: number, y: number, size: number): void;
 }
 
-export function installGame(engine: Engine, options: GameOptions): Score {
-  // ...
-}
+export function installGame(engine: Engine, drawer: Drawer): void {
 ```
 
-In the browser you pass a Canvas drawer and `Math.random`. In tests, a recording drawer and a fixed sequence.
+In the browser, `main.ts` passes a canvas drawer. In a test, you pass a recorder.
 
 ## A test harness
 
-A small helper keeps tests short. Put it in `tests/harness.ts`:
+The smoke test builds everything it needs in one file. A small helper keeps further tests short. Put it in `web/tests/harness.ts`:
 
 ```ts
 import { pathToFileURL } from "node:url";
@@ -34,11 +34,34 @@ import type { ButtonName, Engine, OlyModuleFactory, Runtime, SchemaType } from "
 
 import schema from "../schema.generated.js";
 import { installGame } from "../src/game.js";
+import type { Drawer } from "../src/game.js";
 
 const StepsPerSecond = 60;
 
-function moduleFactory(): OlyModuleFactory {
-  const modulePath = process.env.OLY_GAME_MODULE!;
+interface Square {
+  readonly x: number;
+  readonly y: number;
+  readonly size: number;
+}
+
+/** Keeps the calls made since the last `clear`, which is what one frame drew. */
+export class RecordingDrawer implements Drawer {
+  readonly squares: Square[] = [];
+
+  clear(): void {
+    this.squares.length = 0;
+  }
+
+  square(x: number, y: number, size: number): void {
+    this.squares.push({ x, y, size });
+  }
+}
+
+function gameFactory(): OlyModuleFactory {
+  const modulePath = process.env.OLY_GAME_MODULE;
+  if (!modulePath) {
+    throw new Error("set OLY_GAME_MODULE to the path of the game's .mjs (ctest already does this)");
+  }
 
   return async () => {
     const loaded: { default: OlyModuleFactory } = await import(pathToFileURL(modulePath).href);
@@ -48,11 +71,12 @@ function moduleFactory(): OlyModuleFactory {
 }
 
 export function loadGame(): Promise<Runtime> {
-  return loadRuntime(moduleFactory(), schema);
+  return loadRuntime(gameFactory(), schema);
 }
 
 export interface GameTest {
   readonly engine: Engine;
+  readonly drawer: RecordingDrawer;
   step(count?: number): void;
   tap(button: ButtonName): void;
   count(...types: SchemaType[]): number;
@@ -60,12 +84,14 @@ export interface GameTest {
 
 export function withGame(runtime: Runtime, body: (game: GameTest) => void): void {
   const engine = runtime.createEngine({ fixedHz: StepsPerSecond });
-  installGame(engine, { drawer: new RecordingDrawer(), random: sequence([0.5, 0.25, 0.75]) });
+  const drawer = new RecordingDrawer();
+  installGame(engine, drawer);
   engine.frame(0);
   let stepNumber = 0;
 
   const game: GameTest = {
     engine,
+    drawer,
     step(count = 1) {
       for (let index = 0; index < count; ++index) {
         ++stepNumber;
@@ -100,15 +126,13 @@ export function withGame(runtime: Runtime, body: (game: GameTest) => void): void
 }
 ```
 
-`RecordingDrawer` and `sequence` are defined [further down](#check-what-was-drawn).
-
 Key ideas:
 
 - `engine.frame(stepNumber / 60)` with `fixedHz: 60` runs **exactly one** step per call.
 - `checkInvariants()` after every step catches ECS corruption at the step that caused it.
 - `dispose()` in `finally` frees the WASM memory even when an assertion fails.
 
-## Writing tests
+## Write tests
 
 Tests use `node:test` and `node:assert`, like the engine's own tests.
 
@@ -116,41 +140,32 @@ Tests use `node:test` and `node:assert`, like the engine's own tests.
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { Collider, Enemy, Health, Player, Position, menu, playing } from "../schema.generated.js";
+import { Player, Position } from "../schema.generated.js";
 import { loadGame, withGame } from "./harness.js";
+
+const PlayerSpeed = 200;
+const Tolerance = 1e-3;
 
 const runtime = await loadGame();
 
-test("the game starts in the menu", () => {
+test("the game starts with one player and draws one square", () => {
   withGame(runtime, (game) => {
     game.step();
 
-    assert.equal(game.engine.state, menu);
-    assert.equal(game.count(Player), 0);
+    assert.equal(game.count(Player), 1);
+    assert.equal(game.drawer.squares.length, 1);
   });
 });
 
-test("Enter starts a round with one player at full health", () => {
+test("holding KeyD for one second moves the player right by the player speed", () => {
   withGame(runtime, (game) => {
-    game.step();
+    game.engine.actions.buttonDown("KeyD");
 
-    game.tap("Enter");
-    game.step();
+    game.step(60);
 
-    assert.equal(game.engine.state, playing);
-    const player = game.engine.world.query({ read: [Health], with: [Player] }).single();
-    assert.equal(player.get(Health).value, 3);
-  });
-});
-
-test("a wave arrives after 5 seconds", () => {
-  withGame(runtime, (game) => {
-    game.step();
-    game.tap("Enter");
-
-    game.step(5 * 60);
-
-    assert.ok(game.count(Enemy) > 0);
+    const player = game.engine.world.query({ with: [Player] }).single().entity;
+    const position = game.engine.world.get(player, Position);
+    assert.ok(Math.abs(position.x - (320 + PlayerSpeed)) <= Tolerance, `x is ${position.x}`);
   });
 });
 ```
@@ -160,23 +175,13 @@ test("a wave arrives after 5 seconds", () => {
 Between frames, `engine.world` accepts direct changes. Use it to place entities exactly where the test needs them:
 
 ```ts
-test("touching an enemy costs one health", () => {
+test("a second player is drawn too", () => {
   withGame(runtime, (game) => {
-    game.step();
-    game.tap("Enter");
-    game.step();
-
-    const player = game.engine.world.query({ read: [Position], with: [Player] }).single();
-    const { x, y } = player.get(Position);
-    game.engine.world.spawn([Enemy, Position, Collider, Health], {
-      Position: { x, y },
-      Collider: { radius: 12 },
-      Health: { value: 1 },
-    });
+    game.engine.world.spawn([Player, Position], { Position: { x: 100, y: 100 } });
 
     game.step();
 
-    assert.equal(game.engine.world.get(player.entity, Health).value, 2);
+    assert.equal(game.drawer.squares.length, 2);
   });
 });
 ```
@@ -193,36 +198,22 @@ Entities created with `engine.world.spawn` are never scoped to a state, so they 
 | alt-tab | `engine.actions.releaseAll()` or `engine.setHidden(true)` |
 
 ```ts
-game.engine.actions.pointerMove(800, 270);
-game.engine.actions.buttonDown("MouseLeft");
-game.step(30);                                  // half a second of shooting
-game.engine.actions.buttonUp("MouseLeft");
+game.engine.actions.buttonDown("KeyD");
+game.step(30);                                  // half a second of movement
+game.engine.actions.buttonUp("KeyD");
 ```
 
 ### Check what was drawn
 
-A recording drawer keeps the calls of the last frame:
+`RecordingDrawer` keeps the calls of the last frame. `squares` has one entry per `square` call, with its `x`, `y` and `size`:
 
 ```ts
-class RecordingDrawer implements Drawer {
-  readonly texts: string[] = [];
-
-  clear(): void {
-    this.texts.length = 0;
-  }
-  circle(): void {}
-  rect(): void {}
-  text(_x: number, _y: number, content: string): void {
-    this.texts.push(content);
-  }
-}
-
-assert.ok(drawer.texts.some((text) => text.startsWith("Game over")));
+assert.equal(game.drawer.squares[0]?.size, 16);
 ```
 
 ### Deterministic randomness
 
-Pass a function that cycles over fixed values:
+When the game uses randomness, inject it like the drawer: take a `random: () => number` parameter and pass `Math.random` in `main.ts`. In a test, pass a function that cycles over fixed values:
 
 ```ts
 function sequence(values: readonly number[]): () => number {
@@ -246,10 +237,12 @@ oly test
 ctest --test-dir build/cmake -R '^<target>\.'
 ```
 
-## Testing C++ systems alone
+## Test C++ systems alone
 
-A C++ system with no WASM and no TS is tested on the desktop side: see [Test your game](../guide/environments/native/getting-started.md#test-your-game).
+A C++ system with no WASM and no TS is tested on the desktop side: see [Test a desktop game](test-a-desktop-game.md).
 
-## Next
+## See also
 
-[Keep the hot path fast](keep-the-hot-path-fast.md#typescript): the techniques for the TypeScript side of the WASM boundary. [Troubleshooting](../guide/troubleshooting.md): what each error means.
+- [Keep the hot path fast](keep-the-hot-path-fast.md#typescript): the techniques for the TypeScript side of the WASM boundary.
+- [Troubleshooting](../guide/troubleshooting.md): what each error means.
+- [The game template](../reference/game-template.md#web): the files of the smoke test.

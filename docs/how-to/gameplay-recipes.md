@@ -766,7 +766,7 @@ std::minstd_rand random(42);
 engine.addSystem(oly::app::Phase::Update, "spawnEnemies", spawnEnemies, &random);
 ```
 
-Its sequence is the same in every standard library; the `std::*_distribution` classes are not, so use `random() % n` or your own mapping ([Deterministic randomness](../guide/environments/web/getting-started.md#deterministic-randomness)).
+Its sequence is the same in every standard library; the `std::*_distribution` classes are not, so use `random() % n` or your own mapping.
 
 TypeScript: [Random spawn positions](typescript/gameplay-recipes.md#random-spawn-positions).
 
@@ -814,6 +814,8 @@ oly_add_plugin(NAME lifetime SCHEMA lifetime.oly DEPENDS ecs app)
 ```cmake
 oly_add_game(<game>_game ENVIRONMENT web DIMENSION 2d SCHEMA ${CMAKE_CURRENT_SOURCE_DIR}/<game>.oly SOURCES ${nativeSources} DEPENDS ecs app capi PLUGINS lifetime)
 ```
+
+`${nativeSources}` is the variable of the template's `cmake/game.cmake`: the C++ files in `native/` ([The game template](../reference/game-template.md#web)).
 
 The game's code changes in one place: the types come from the plugin's header, which the game's `schema.generated.hpp` includes. The full walk-through is in [Write a plugin](write-a-plugin.md). A TS game uses the plugin's components through its generated schema and writes no install code.
 

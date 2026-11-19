@@ -12,10 +12,18 @@ A TS system costs at least one crossing per call and runs in the JS engine. A C+
 
 | Work | Where | Why |
 |---|---|---|
-| per entity, every step: movement, collision, AI, weapons | C++ | no crossing per entity, and the compiler sees whole columns |
-| per system, per batch or a few times per step | TypeScript | the crossing is paid once for many entities |
+| per entity, every step: movement, collision, AI, weapons, tight math | C++ | no crossing per entity, and the compiler sees whole columns |
+| per system, per batch or a few times per step: render, HUD, menus | TypeScript | the crossing is paid once for many entities |
+| rules that change often: score, waves | TypeScript | they are not per entity, and a TS change needs no C++ build |
+| bindings and state hooks that talk to the page | TypeScript | they need the browser |
 
-A game can run only TS systems (a prototype or few entities) or only C++. How to assemble a game that splits its work: [Getting started on the web](../../guide/environments/web/getting-started.md#how-to-split-work-between-c-and-a-client).
+Both kinds of system can live in the same phase, in the order you register them. The template uses both: the C++ system `movePlayer` and the TS system `draw` ([Your first web game](../../tutorials/first-web-game.md#7-read-the-typescript-system)).
+
+A game can run only TS systems (a prototype or few entities: the `native/` folder can be empty), or only C++ with no client at all: that is a [desktop game](../../tutorials/first-desktop-game.md) or a tool, with an `oly::app::Engine` over an `oly::ecs::World`.
+
+## Values both languages use
+
+A value that both languages need (world size, bullet speed) lives in a C++ header (`native/constants.hpp`) and a TS module (`src/constants.ts`). Keep them side by side and say in each file that the other one must change with it.
 
 ## Keep the hot path fast
 

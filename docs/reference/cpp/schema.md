@@ -81,4 +81,4 @@ Calls `declareSchema`, then installs the game's [plugins](../../explanation/conc
 oly::app::setUpGame(engine);
 ```
 
-Where you do not own the `Engine`, the host does this for you ([the web host](../../guide/environments/web/getting-started.md), [the desktop host](../../guide/environments/native/getting-started.md)).
+Where you do not own the `Engine`, the host does this for you ([the web host](../typescript/README.md), [the desktop host](../native-host.md)).

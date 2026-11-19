@@ -4,6 +4,8 @@
 
 | Page | What it answers |
 |---|---|
+| [Your first web game](tutorials/first-web-game.md) | How do I make a square that moves in the browser, with C++ movement and TypeScript drawing? |
+| [Your first desktop game](tutorials/first-desktop-game.md) | How do I make a square that moves in a window, in C++ only? |
 
 ## How-to guides
 
@@ -12,6 +14,8 @@
 | [Gameplay recipes](how-to/gameplay-recipes.md) | How do I write a projectile, a cooldown, a spawner, a pickup, a key rebinding, a game flow or a query pattern in C++? |
 | [Gameplay recipes in TypeScript](how-to/typescript/gameplay-recipes.md) | How do I write the same patterns in TypeScript? |
 | [Test a web game](how-to/test-a-web-game.md) | How do I run the real game in Node, press keys and read the world? |
+| [Test a desktop game](how-to/test-a-desktop-game.md) | How do I run a desktop game with no display and check what its gameplay did? |
+| [Export your own C functions](how-to/export-your-own-c-functions.md) | How do I export an extra `extern "C"` function from the WASM module of a web game? |
 | [Debug the world](how-to/debug-the-world.md) | How do I check that a `World` is consistent and look at its shape? |
 | [Drive the loop yourself](how-to/drive-the-loop-yourself.md) | How do I call `frame` from a test or a tool, one step at a time, and press buttons myself? |
 | [Keep the hot path fast](how-to/keep-the-hot-path-fast.md) | How do I keep a system that runs on many entities every step cheap? |
@@ -34,6 +38,8 @@
 | [Plugins in C++](reference/cpp/plugins.md) | Which calls write a plugin, install it and reach an installed plugin? |
 | [Transforms in C++](reference/cpp/transforms.md) | Which CMake argument turns the transform components on, and which fields does each component have? |
 | [World and entities in C++](reference/cpp/world-and-entities.md) | Which calls create, read, change and destroy entities, record commands and observe changes? |
+| [The game template](reference/game-template.md) | Which files does `oly new` write for a web game and for a desktop game, and where does each one go? |
+| [Native host](reference/native-host.md) | Which calls open the window and run the loop, and what does the host do with each window event? |
 | [Glossary](reference/glossary.md) | What does each name mean in C++, the C API and TypeScript? |
 | [Known limitations](reference/limits.md) | What does the engine not do? |
 | [Repository map](reference/contributor/repository.md) | Where is each part of the repository? |
@@ -50,6 +56,7 @@
 | [`input`: actions](explanation/architecture/input.md) | How does the action map decide what is pressed, held and released? |
 | [Schema, `oly-schema` and the WASM module](explanation/architecture/schema-and-codegen.md) | How does a `.oly` file become code in each language? |
 | [Main architectural decisions](explanation/architecture/decisions.md) | Why is the engine built this way, and what does it cost? |
+| [Environments and hosts](explanation/concepts/environments-and-hosts.md) | What are the core, an environment, a host and a client, and how is a game assembled? |
 | [Concepts](explanation/concepts/README.md) | In which order do I read the rules a game relies on, and what does each page explain? |
 | [Architecture index](architecture/README.md) | Where are the other contributor pages, until they move here? |
 

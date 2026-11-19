@@ -88,6 +88,34 @@ engine.setWhilePaused(engine.addSystem(oly::app::Phase::UpdateBefore, "resumeOnP
 
 **On the web**, the client registers it by name: [TypeScript](../typescript/engine-and-systems.md#register-systems).
 
+### Data for a system or a handler
+
+A system is a function pointer with an optional `userData` pointer, and `addSystem` returns an id you can restrict to states. A handler takes a `userData` pointer too, and reads the batch with `context.events<T>()`:
+
+```cpp
+struct Game {
+  uint32_t hits = 0;
+};
+
+void steer(oly::app::SystemContext& context) {
+  Game& game = *static_cast<Game*>(context.userData());
+  // read context.actions(), use game
+}
+
+void countHits(oly::app::HandlerContext& context) {
+  static_cast<Game*>(context.userData())->hits += context.eventCount();
+}
+
+Game game;
+oly::app::SystemId steerId = engine.addSystem(oly::app::Phase::UpdateBefore, "steer", steer, &game);
+
+engine.setSystemStates(steerId, {states::playing});
+engine.on<Hit>("countHits", countHits, &game);
+engine.requestState(states::playing);
+```
+
+The macros (`OLY_SYSTEM`, `OLY_HANDLER`, `OLY_STATE_HOOK`) are only needed when a client registers by name ([C++ systems, handlers and hooks](#c-systems-handlers-and-hooks)). A desktop game with no client can use plain functions, as above, or the macros so that the same code also runs on the web.
+
 ### `Engine::addSystem`
 
 ```cpp

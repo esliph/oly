@@ -38,7 +38,7 @@ oly::ecs::WorldStats statistics = oly::ecs::stats(world);
 
 ## 3. Test the rest
 
-Run `checkInvariants` inside a test of your game: [Testing a desktop game](../guide/environments/native/getting-started.md#test-your-game) in C++, [Test a web game](test-a-web-game.md) in TypeScript.
+Run `checkInvariants` inside a test of your game: [Test a desktop game](test-a-desktop-game.md) in C++, [Test a web game](test-a-web-game.md) in TypeScript.
 
 ## See also
 

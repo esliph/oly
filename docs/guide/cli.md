@@ -42,7 +42,7 @@ oly run
 
 | Option | Meaning |
 |---|---|
-| `--environment web\|native` | where the game runs (required): [web](environments/web/getting-started.md) or [desktop](environments/native/getting-started.md) |
+| `--environment web\|native` | where the game runs (required): [web](../tutorials/first-web-game.md) or [desktop](../tutorials/first-desktop-game.md) |
 | `--version <version>` | the engine release to start from. Default: the latest release |
 
 ## The commands
@@ -129,7 +129,7 @@ A desktop game has no `web/`, `package.json` or `tsconfig.json`. It has `desktop
 
 A web game names the version a second time: the `@oly/core` and `@oly/web-host` URLs in `package.json` carry it. `oly build` stops when the two differ. Do not edit them by hand: use `oly upgrade`.
 
-Commit everything except what `.gitignore` lists. The template game is minimal: a square that moves with the keyboard. [Getting started on the web](environments/web/getting-started.md) and [on the desktop](environments/native/getting-started.md) walk through it.
+Commit everything except what `.gitignore` lists. The template game is minimal: a square that moves with the keyboard. [Your first web game](../tutorials/first-web-game.md) and [Your first desktop game](../tutorials/first-desktop-game.md) walk through it.
 
 ## Upgrade the engine
 
@@ -181,4 +181,4 @@ The messages of `oly` are in [Troubleshooting](troubleshooting.md#the-oly-comman
 
 ## Next
 
-[Getting started on the web](environments/web/getting-started.md) or [on the desktop](environments/native/getting-started.md): the template, file by file.
+[The game template](../reference/game-template.md): every file of a new game, one row each. [Your first web game](../tutorials/first-web-game.md) and [Your first desktop game](../tutorials/first-desktop-game.md) walk through it.

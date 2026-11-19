@@ -1,6 +1,6 @@
 # Use a plugin
 
-Use this to turn on a plugin that already exists, from your game's CMake. It assumes a game that builds with `oly_add_game` ([Getting started on the desktop](../guide/environments/native/getting-started.md) or [on the web](../guide/environments/web/getting-started.md)).
+Use this to turn on a plugin that already exists, from your game's CMake. It assumes a game that builds with `oly_add_game` ([Your first desktop game](../tutorials/first-desktop-game.md) or [Your first web game](../tutorials/first-web-game.md)).
 
 ## 1. List the plugin
 

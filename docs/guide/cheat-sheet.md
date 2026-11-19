@@ -168,12 +168,12 @@ OLY_ENGINE_DIR=<engine checkout> oly build                 # local mode
 
 ## Native host and build
 
-[Getting started on the desktop](environments/native/getting-started.md)
+[Native host](../reference/native-host.md)
 
 ```cpp
 oly::input::isKey(usage);                                 // true if the HID usage is one of Key
 
-oly::native_host::Window window({"Title", 640, 480});     // throws std::runtime_error if SDL cannot open it; the size is the logical size
+oly::native_host::Window window({"Title", 640, 360});     // throws std::runtime_error if SDL cannot open it; the size is the logical size
 window.window();  window.renderer();                      // SDL_Window*, SDL_Renderer*
 oly::native_host::run(engine, window, {.maxFrames = 600, .frameSeconds = 1.0 / 60});   // exit code; maxFrames 0 = until closed
 oly::native_host::keyButtonOf(SDL_SCANCODE_W);            // std::optional<PhysicalButton>

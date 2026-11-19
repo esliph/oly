@@ -27,8 +27,8 @@ Oly does **not** draw, play audio or do physics. You draw with whatever you want
 
 | Environment | Host | Clients | Start here |
 |---|---|---|---|
-| `web` | the web host: WASM, `runInBrowser`, `attachBrowserInput` | [TypeScript](../reference/typescript/README.md) | [Getting started on the web](environments/web/getting-started.md) |
-| `native` | the native host: a window, SDL, `oly::native_host::run` | none: the game is C++ | [Getting started on the desktop](environments/native/getting-started.md) |
+| `web` | the web host: WASM, `runInBrowser`, `attachBrowserInput` | [TypeScript](../reference/typescript/README.md) | [Your first web game](../tutorials/first-web-game.md) |
+| `native` | the native host: a window, SDL, `oly::native_host::run` | none: the game is C++ | [Your first desktop game](../tutorials/first-desktop-game.md) |
 
 ## Choose your path
 
@@ -36,20 +36,20 @@ Pages are not numbered. Each path lists them in the order to read.
 
 **TypeScript on the web**
 
-1. [Getting started on the web](environments/web/getting-started.md)
+1. [Your first web game](../tutorials/first-web-game.md)
 2. Each concept, followed by its TS page: [Schema](../explanation/concepts/schema.md) and [in TS](../reference/typescript/schema.md), [World and entities](../explanation/concepts/world-and-entities.md) and [in TS](../reference/typescript/world-and-entities.md), [Queries](../explanation/concepts/queries.md) and [in TS](../reference/typescript/queries.md), [Engine, loop and systems](../explanation/concepts/engine-and-systems.md) and [in TS](../reference/typescript/engine-and-systems.md), [Events](../explanation/concepts/events.md) and [in TS](../reference/typescript/events.md), [Input](../explanation/concepts/input.md) and [in TS](../reference/typescript/input.md), [Schedule](../explanation/concepts/schedule.md) and [in TS](../reference/typescript/schedule.md), [States](../explanation/concepts/states.md) and [in TS](../reference/typescript/states.md)
 3. [Testing a web game](../how-to/test-a-web-game.md)
 4. [The WASM↔JS boundary](../explanation/concepts/web-boundary.md)
 
 **C++ on the desktop**
 
-1. [Getting started on the desktop](environments/native/getting-started.md)
+1. [Your first desktop game](../tutorials/first-desktop-game.md)
 2. The [concepts](#concepts), in order
-3. [Test your game](environments/native/getting-started.md#test-your-game)
+3. [Test a desktop game](../how-to/test-a-desktop-game.md)
 
 **C++ inside a web game**
 
-1. [Getting started on the web](environments/web/getting-started.md), especially [How to split work between C++ and a client](environments/web/getting-started.md#how-to-split-work-between-c-and-a-client)
+1. [Your first web game](../tutorials/first-web-game.md), then [Web boundary](../explanation/concepts/web-boundary.md)
 2. The [concepts](#concepts), in order
 3. [Systems in C++, registered by name](../reference/cpp/engine-and-systems.md#c-systems-handlers-and-hooks) and [C++ systems, handlers and hooks](../reference/typescript/engine-and-systems.md#c-systems-handlers-and-hooks)
 
@@ -129,7 +129,7 @@ oly::native_host::Window window({"Hello", 640, 360});
 return oly::native_host::run(engine, window);
 ```
 
-**On the web**, the TS client registers the same functions by name and drives the loop from the browser: see the `game.ts` and `main.ts` of [What `oly new` created](environments/web/getting-started.md#what-oly-new-created).
+**On the web**, the TS client registers the same functions by name and drives the loop from the browser: see the `game.ts` and `main.ts` of [The game template](../reference/game-template.md#web).
 
 ## Conventions used in this guide
 

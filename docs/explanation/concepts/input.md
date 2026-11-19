@@ -72,8 +72,8 @@ TypeScript: [The 2D axis](../../reference/typescript/input.md#the-2d-axis).
 
 The engine does not care where input comes from. The **host** of each environment forwards what the player does with `buttonDown`, `buttonUp`, `pointerMove` and `releaseAll` (all on `engine.actions()`):
 
-- the desktop host, from the window ([What the host does with the window](../../guide/environments/native/getting-started.md#what-the-host-does-with-the-window));
-- the web host, from the browser ([Getting started on the web](../../guide/environments/web/getting-started.md)).
+- the desktop host, from the window ([What the host does with the window](../../reference/native-host.md#what-the-host-does-with-the-window));
+- the web host, from the browser ([Environments and hosts](environments-and-hosts.md)).
 
 Key auto-repeat is ignored: holding a key gives one `pressed`. When the window loses focus the host calls `releaseAll`, so nothing stays stuck. When the game is hidden, the engine releases every button too ([Engine, loop and systems](engine-and-systems.md#hidden)).
 

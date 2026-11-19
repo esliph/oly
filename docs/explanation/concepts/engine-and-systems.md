@@ -8,8 +8,8 @@ The `Engine` runs your game: a fixed-step clock, phases of systems, pause, event
 
 Something outside the engine calls `engine.frame(nowSeconds)` once per display frame. That something is the **host** of each environment:
 
-- on the desktop, `oly::native_host::run(engine, window)` ([Getting started on the desktop](../../guide/environments/native/getting-started.md));
-- on the web, `runInBrowser(engine)` ([Getting started on the web](../../guide/environments/web/getting-started.md)).
+- on the desktop, `oly::native_host::run(engine, window)` ([Native host](../../reference/native-host.md));
+- on the web, `runInBrowser(engine)` ([Your first web game](../../tutorials/first-web-game.md)).
 
 Each `frame` runs as many **fixed steps** as the elapsed time allows (at most `maxStepsPerFrame`), then **one render**:
 
@@ -149,7 +149,7 @@ TypeScript: [Pause](../../reference/typescript/engine-and-systems.md#pause).
 
 `engine.setHidden(true)` stops the game: no step runs, every held button is released and, on `setHidden(false)`, the lost time is discarded. The game continues where it stopped, with no jump. This is independent of the game pause.
 
-Each host decides when to call it: the desktop host when the window is minimized or hidden ([What the host does with the window](../../guide/environments/native/getting-started.md#what-the-host-does-with-the-window)), `runInBrowser` when the tab is hidden ([Getting started on the web](../../guide/environments/web/getting-started.md)). The call: [Engine::setHidden](../../reference/cpp/engine-and-systems.md#enginesethidden).
+Each host decides when to call it: the desktop host when the window is minimized or hidden ([What the host does with the window](../../reference/native-host.md#what-the-host-does-with-the-window)), `runInBrowser` when the tab is hidden ([Environments and hosts](environments-and-hosts.md)). The call: [Engine::setHidden](../../reference/cpp/engine-and-systems.md#enginesethidden).
 
 ## When a system throws
 
