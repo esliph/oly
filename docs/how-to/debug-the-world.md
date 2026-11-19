@@ -34,7 +34,7 @@ When the invariants hold but the world is not what you expect, look at its shape
 oly::ecs::WorldStats statistics = oly::ecs::stats(world);
 ```
 
-`statistics.archetypes` lists each archetype with its entity count and its memory, and `statistics.liveEntities` counts the live entities. What archetype churn costs: [Performance](../guide/concepts/performance.md).
+`statistics.archetypes` lists each archetype with its entity count and its memory, and `statistics.liveEntities` counts the live entities. What archetype churn costs: [Performance](../explanation/concepts/performance.md).
 
 ## 3. Test the rest
 

@@ -4,7 +4,7 @@
 
 On the web, the engine runs in WASM and the TS client calls into it. Data in WASM memory is cheap to reach from C++, and cheap from TS only in batches. Each call from TS into WASM (or back) has a fixed cost. Pay it per system, per table or per event batch, never per entity.
 
-The measured numbers are in [performance](../../../architecture/performance.md) and [benchmarks](../../../reference/benchmarks/README.md). The rules that do not depend on the boundary (archetype churn, splitting components, fragmentation) are in [Performance](../../concepts/performance.md).
+The measured numbers are in [performance](../../../architecture/performance.md) and [benchmarks](../../../reference/benchmarks/README.md). The rules that do not depend on the boundary (archetype churn, splitting components, fragmentation) are in [Performance](../../../explanation/concepts/performance.md).
 
 ## Iterate with `eachBlock`, not with `get` per entity
 
@@ -58,4 +58,4 @@ Handlers already receive a whole batch per call. Do the loop inside the handler.
 
 ## Release builds
 
-In release (`wasm-games-release`), asserts are off: a violation inside your **C++** code is not checked and is undefined behaviour. The TS client still validates everything that goes through it and throws `ContractError`. Run your tests in the debug preset ([Debug vs. release](../../concepts/performance.md#debug-vs-release)).
+In release (`wasm-games-release`), asserts are off: a violation inside your **C++** code is not checked and is undefined behaviour. The TS client still validates everything that goes through it and throws `ContractError`. Run your tests in the debug preset ([Debug and release](../../../explanation/concepts/performance.md#debug-and-release)).

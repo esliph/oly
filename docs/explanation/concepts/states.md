@@ -1,6 +1,6 @@
 # States
 
-[← Schedule](schedule.md) · [Concepts](README.md) · Next: [Performance →](../../guide/concepts/performance.md)
+[← Schedule](schedule.md) · [Concepts](README.md) · Next: [Performance →](performance.md)
 
 States split the game into screens or modes: `menu`, `playing`, `gameOver`. Each state can turn systems and handlers on or off, run code on entry and exit, and — the best part — **clean up after itself**.
 
@@ -79,4 +79,4 @@ A menu, a round and a game over screen, put together: [Menu → playing → game
 
 ## Next
 
-[Performance](../../guide/concepts/performance.md): keep the hot path fast.
+[Performance](performance.md): keep the hot path fast.

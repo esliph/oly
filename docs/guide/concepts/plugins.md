@@ -1,6 +1,6 @@
 # Plugins
 
-[← Performance](performance.md) · [Guide index](../README.md)
+[← Performance](../../explanation/concepts/performance.md) · [Guide index](../README.md)
 
 A plugin is a unit of engine functionality that games reuse: its own components and events, the systems that act on them and the state those systems keep. A game turns a plugin on with one line of CMake. No line of game code installs it.
 

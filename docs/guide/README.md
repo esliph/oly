@@ -67,7 +67,7 @@ Read in order the first time. Each page builds on the one before.
 | [Input](../explanation/concepts/input.md) | bind keys and mouse to actions and read them |
 | [Schedule](../explanation/concepts/schedule.md) | run code later or every N seconds on the game clock |
 | [States](../explanation/concepts/states.md) | build menu, playing and game over screens that reset cleanly |
-| [Performance](concepts/performance.md) | keep the hot path fast |
+| [Performance](../explanation/concepts/performance.md) | keep the hot path fast |
 | [Plugins](concepts/plugins.md) | turn reusable engine functionality on, and write your own |
 | [Transforms](concepts/transforms.md) | place entities with `Position`, nest them with `Parent` and read `WorldTransform` |
 

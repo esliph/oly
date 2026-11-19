@@ -14,6 +14,7 @@
 | [Test a web game](how-to/test-a-web-game.md) | How do I run the real game in Node, press keys and read the world? |
 | [Debug the world](how-to/debug-the-world.md) | How do I check that a `World` is consistent and look at its shape? |
 | [Drive the loop yourself](how-to/drive-the-loop-yourself.md) | How do I call `frame` from a test or a tool, one step at a time, and press buttons myself? |
+| [Keep the hot path fast](how-to/keep-the-hot-path-fast.md) | How do I keep a system that runs on many entities every step cheap? |
 | [User guide](guide/README.md) | Where are the other guides for the game user, until they move here? |
 
 ## Reference

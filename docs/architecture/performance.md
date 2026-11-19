@@ -20,8 +20,6 @@ No numeric target:
 - The per-element `get`/`set` accessor is the main cost in TS; `raw()` access is within ~1.1–1.5× of a manual `Float32Array` at N ≥ 10⁴.
 - A C++ → JS callback costs ~40–50 ns per TS system. Interleaving C++ and TS systems in the same phase costs no more than the number of calls explains.
 
-Consequence for game authors: hot per-entity loops stay in C++; TS keeps what runs per system, per batch or a few times per step.
-
 ## Where the results live
 
 | Folder | Contents |
