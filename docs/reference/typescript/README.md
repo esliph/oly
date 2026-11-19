@@ -2,7 +2,7 @@
 
 [Guide index](../../../README.md)
 
-The TypeScript client is the TS API over the [C API](../../architecture/capi.md), inside the `web` environment. It runs wherever the web host runs: a browser tab or Node. It has no DOM code of its own; drawing and sound are yours.
+The TypeScript client is the TS API over the [C API](../c-api.md), inside the `web` environment. It runs wherever the web host runs: a browser tab or Node. It has no DOM code of its own; drawing and sound are yours.
 
 Oly is complete in C++. The client adds TS conveniences (typed accessors, closures, `raw()` arrays) and never engine behaviour. The rules of each concept are in the [concept pages](../../explanation/concepts/README.md); the pages here only show the TS form of the same calls.
 
@@ -22,7 +22,7 @@ Oly is complete in C++. The client adds TS conveniences (typed accessors, closur
 - **Engine**: `Engine`, `SystemContext`, `HandlerContext`, `TaskContext`, `StateContext`, `EventBatch`, `Scheduler` and `ActionMap`.
 - **Errors**: `ContractError` and `SchemaMismatchError` ([Errors](#errors)).
 
-`@oly/web-host` exports `moduleFactoryFromUrl`, `runInBrowser` and `attachBrowserInput`. The public list of `@oly/core` is `engine/environments/web/clients/typescript/core/api/public-exports.txt`; how the packages are built is in [TypeScript packages](../../explanation/architecture/ts-packages.md).
+`@oly/web-host` exports `moduleFactoryFromUrl`, `runInBrowser` and `attachBrowserInput` ([The web host](web-host.md)). The public list of `@oly/core` is `engine/environments/web/clients/typescript/core/api/public-exports.txt`; how the packages are built is in [TypeScript packages](../../explanation/architecture/ts-packages.md).
 
 ## Errors
 
@@ -48,6 +48,7 @@ Each page mirrors the concept page with the same file name.
 | [Schedule](schedule.md) | [Schedule](../../explanation/concepts/schedule.md) |
 | [States](states.md) | [States](../../explanation/concepts/states.md) |
 | [Recipes](../../how-to/typescript/gameplay-recipes.md) | [Recipes](../../how-to/gameplay-recipes.md) |
+| [The web host](web-host.md) | [Environments and hosts](../../explanation/concepts/environments-and-hosts.md) |
 
 ## C++ systems in a web game
 

@@ -59,7 +59,7 @@ The include path repeats the module name (`#include "oly/ecs/world.hpp"`), so th
 
 ## Shape of a plugin
 
-A plugin follows the same shape, with an optional `.oly` ([plugins.md](../../architecture/plugins.md)):
+A plugin follows the same shape, with an optional `.oly` ([plugins.md](../../explanation/architecture/plugins.md)):
 
 ```
 <plugin>/

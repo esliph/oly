@@ -69,6 +69,18 @@ A preset runs in the `wasm` service when its name starts with `wasm` or `native-
 
 Build directories are `build/<preset>/`. Test executables are `build/<preset>/tests/<module>_<suite>` and benchmark executables `build/<preset>/bench/ecs_bench_*`.
 
+## Engine options
+
+The presets set these CMake options. The options a game sets (`OLY_BUILD_NATIVE_HOST`, `OLY_BUILD_TESTS`, `OLY_ENABLE_ASSERTS`) are in [CMake](../cmake.md#options).
+
+| Option | Default | What it does |
+|---|---|---|
+| `OLY_WERROR` | `ON` when the engine is the top-level project, otherwise `OFF` | warnings become errors |
+| `OLY_SANITIZE` | `OFF` | builds with ASan and UBSan, dependencies included. Ignored when the engine is not the top-level project |
+| `OLY_BUILD_BENCH` | `OFF` | builds the benchmarks |
+| `OLY_VEC_REPORT` | `OFF` | adds the compiler's vectorization report to the benchmarks |
+| `OLY_BUILD_GAMES` | `OFF` | builds the engine's test games; run `./spur ts` first. On a native build it also needs `OLY_BUILD_NATIVE_HOST` |
+
 ## Native C++
 
 ```sh

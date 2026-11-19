@@ -1,6 +1,6 @@
 # Plugins
 
-Code in `engine/runtime/app/include/oly/app/{plugin,game}.hpp`, `cmake/OlyPlugin.cmake`, `cmake/OlyGame.cmake` and `engine/schema/codegen/src/merge.cpp`. Spec: `docs/superpowers/specs/2026-11-16-plugins-design.md`. How a game turns a plugin on: [Use a plugin](../how-to/use-a-plugin.md). How to write one: [Write a plugin](../how-to/write-a-plugin.md).
+Code in `engine/runtime/app/include/oly/app/{plugin,game}.hpp`, `cmake/OlyPlugin.cmake`, `cmake/OlyGame.cmake` and `engine/schema/codegen/src/merge.cpp`. Spec: `docs/superpowers/specs/2026-11-16-plugins-design.md`. The rules a game relies on are in the [concept page](../concepts/plugins.md). How a game turns a plugin on: [Use a plugin](../../how-to/use-a-plugin.md). How to write one: [Write a plugin](../../how-to/write-a-plugin.md). The CMake calls: [CMake](../../reference/cmake.md).
 
 A **plugin** is a unit of engine-level functionality, compiled together with the core, that a game turns on in its build. It brings its own data (an optional `.oly`), its systems, handlers, hooks and observers, and its own state. A game uses a plugin through data: it adds and removes the plugin's components.
 
@@ -18,10 +18,10 @@ A plugin has up to three parts. Only the C++ part is required.
 | C API | functions exported to clients | no: shape only |
 | TS package `@oly/<plugin>` | wrappers of the C API part and pure-TS helpers | no: shape only |
 
-The C API and TS parts get build support with the first plugin that needs them. Their shape is fixed now, by rule 2 of the architecture ([Architecture overview](../explanation/architecture/README.md#overview)):
+The C API and TS parts get build support with the first plugin that needs them. Their shape is fixed now, by rule 2 of the architecture ([Architecture overview](README.md#overview)):
 
 - A C++ game calls a plugin's public C++ functions directly, and the compiler inlines them.
-- A client call crosses the WASM boundary at ~40–50 ns ([Benchmark results](../reference/benchmarks/README.md#boundary-costs)), while a helper such as `lerp` costs ~1 ns. So **a plugin's C API part exposes only functions that work per batch or per system** (`raycastBatch`), never per entity.
+- A client call crosses the WASM boundary at ~40–50 ns ([Benchmark results](../../reference/benchmarks/README.md#boundary-costs)), while a helper such as `lerp` costs ~1 ns. So **a plugin's C API part exposes only functions that work per batch or per system** (`raycastBatch`), never per entity.
 - Pure helpers (math) are rewritten in the plugin's TS package, not called through the boundary.
 
 ## Install and ownership
@@ -33,14 +33,15 @@ The C API and TS parts get build support with the first plugin that needs them. 
 | `Engine::plugin<P>()` | returns the installed `P`, so a game can configure it before the first `frame` |
 | `Engine::~Engine()` | discards the pending tasks (their discard may reach a plugin through the payload), then destroys the plugins in reverse install order |
 
-- `P` derives from `Plugin` and is default constructible (`static_assert`).
-- A plugin installs once per `Engine`, before the first `frame` call. Installing twice, or after the first `frame` call, is an `OLY_ASSERT`; so is `plugin<P>()` for a plugin that is not installed. Each message names the type.
-- `install` registers the plugin's systems, handlers, hooks and observers. A plugin installed earlier is reachable from `install` through `plugin<Q>()`.
+The rules of lifetime are in the [concept page](../concepts/plugins.md#lifetime-and-ownership). The reasons behind them:
+
+- `P` derives from `Plugin` and is default constructible (`static_assert`), so `installPlugin` can build it with no arguments.
+- `install` registers the plugin's systems, handlers, hooks and observers. A plugin installed earlier is reachable from `install` through `plugin<Q>()`, which is why the install order follows the dependencies.
 - **The `Engine` owns the plugin instances.** A plugin's state lives in its instance and reaches its systems through `userData`.
 - Each plugin type gets a dense per-process key (`pluginKey<P>()`), the same pattern as `eventKey<T>()`. The lookup walks the installed list; it is a cold path.
-- **Destructor contract.** Systems, handlers and hooks die with the `Engine`. Observers belong to the `World` ([ecs.md](../explanation/architecture/ecs.md)), and the `World` outlives the `Engine` (`OlyEngine` and a native `main` declare it first). So a plugin's destructor removes the observers its `install` registered (`World::removeObserver`); otherwise the `World` would call into a destroyed plugin.
+- **Destructor contract.** Systems, handlers and hooks die with the `Engine`. Observers belong to the `World` ([ecs.md](ecs.md)), and the `World` outlives the `Engine` (`OlyEngine` and a native `main` declare it first). So a plugin's destructor removes the observers its `install` registered (`World::removeObserver`); otherwise the `World` would call into a destroyed plugin.
 
-No game code installs a plugin: the generated `setUpGame` does it, in dependency order ([Build](#build)).
+No game code installs a plugin: the generated `setUpGame` does it, in dependency order ([The build](#the-build)).
 
 ## Order bands
 
@@ -52,11 +53,11 @@ Plugins install before the game registers its systems, so registration order alo
 - **Bands are storage, not a branch.** The `Engine` keeps one vector of systems per phase and band; `runPhase` walks the bands in order. There is no extra check per system.
 - The C API and the TS client register in `Default` only.
 
-Details of the loop: [app.md](../explanation/architecture/app.md).
+Details of the loop: [app.md](app.md).
 
 ## Schema merge
 
-`oly-schema` takes the plugins' `.oly` files with `--plugin <name>=<file.oly>`, one per plugin with a schema, in install order, plus the game's `.oly` ([schema-and-codegen.md](../explanation/architecture/schema-and-codegen.md)).
+`oly-schema` takes the plugins' `.oly` files with `--plugin <name>=<file.oly>`, one per plugin with a schema, in install order, plus the game's `.oly` ([schema-and-codegen.md](schema-and-codegen.md)).
 
 - **Order.** The merged schema holds the plugins' declarations in install order, then the game's. That order gives the `ComponentId` order and the event dispatch order.
 - **Flat names.** There are no namespaces. A name repeated across the merged files is an error that names both locations: `<later file>:<line>:<column>: repeated name "X"; first declared at <earlier file>:<line>:<column>`.
@@ -64,62 +65,21 @@ Details of the loop: [app.md](../explanation/architecture/app.md).
 - **One hash.** The hash covers the merged canonical form. Adding or removing a plugin changes it, so `SchemaMismatchError` catches a TS client built with another plugin set. Without `--plugin`, the output and the hash are the same as before plugins existed.
 - **C++ types are defined once (ODR).** The `cpp-plugin` emitter writes the plugin's own header, `oly/<name>/schema.generated.hpp`, with its types only: no declaration and no registry. The game's header includes each plugin header in install order and defines only the game's own types (`Type::origin` is empty). The declaration (`declareSchema`), the registry and the TS output cover the whole merged set.
 
-## Build
+## The build
 
-### `oly_add_plugin`
+What the CMake calls take and do is in [CMake](../../reference/cmake.md). This section keeps the reasons.
 
-`oly_add_plugin(NAME <p> [SCHEMA <file.oly>] DEPENDS <modules...> [PLUGINS <plugins...>])`, in `cmake/OlyPlugin.cmake`, defines a plugin. Every plugin follows one convention:
-
-| Item | Value |
-|---|---|
-| target / alias | `oly_<name>` (`STATIC`) / `oly::<name>` |
-| namespace | `oly::<name>` |
-| install class | `oly::<name>::Plugin`, in `include/oly/<name>/plugin.hpp` |
-| sources | `src/*.cpp`, by glob, like `oly_add_module`; at least one is required |
-| generated header (with `SCHEMA`) | `oly/<name>/schema.generated.hpp`, written by `oly-schema --emit cpp-plugin=<dir>` |
-| links | `oly::<m>` for each `DEPENDS`, `oly::<p>` for each `PLUGINS` |
-
-It records the plugin's `.oly` and its plugin dependencies (global properties `OLY_PLUGIN_SCHEMA_<name>` and `OLY_PLUGIN_DEPENDENCIES_<name>`), so `oly_add_game` can find them, and registers the plugin in the boundary manifest. A plugin with no `install` (a pure function library) is not supported yet ([limits.md](../reference/limits.md)).
-
-### Install order
-
-`oly_plugin_order(<outputVariable> <plugins...>)` is a depth-first walk over the dependencies: each plugin comes after its dependencies, each plugin appears once, and independent plugins keep the order of the list. A game that lists only `doubling` gets `counting` too, first. An unknown plugin stops the configure with `unknown plugin <p>`; a cycle with `plugin cycle: a -> b -> a`.
-
-### The game: `oly_add_game` and `setUpGame`
-
-`oly_add_game(<target> ENVIRONMENT web|native DIMENSION 2d|3d SCHEMA <file.oly> SOURCES ... DEPENDS ... [PLUGINS <plugins...>] [TYPESCRIPT <file.ts>])`:
-
-1. maps `DIMENSION` with `oly_dimension_plugin` (`2d` to `essentials2d`, `3d` to `essentials3d`; anything else stops the configure with `<value>: DIMENSION is 2d or 3d`, a missing one with `<target>: oly_add_game needs DIMENSION 2d|3d`) and puts the result first in the list; listing `essentials2d` or `essentials3d` in `PLUGINS` is a configure error;
-2. sorts the list with `oly_plugin_order`;
-3. runs `oly-schema` with one `--plugin` per plugin that has a schema;
-4. links the plugin targets;
-5. writes `game_setup.generated.cpp` (with `file(GENERATE)`), which defines `oly::app::setUpGame`.
-
-For `PLUGINS doubling`, the generated function is:
-
-```cpp
-namespace oly::app {
-  void setUpGame(Engine& engine) {
-    declareSchema(engine);
-    engine.installPlugin<oly::counting::Plugin>();
-    engine.installPlugin<oly::doubling::Plugin>();
-  }
-}
-```
-
-- `setUpGame` (`oly/app/game.hpp`) is the game's entry point: it declares the schema, then installs the plugins. `olyEngineCreate` calls it ([capi.md](capi.md)); a native game's `main` calls it right after creating the `Engine`. A TS game writes nothing.
-- CMake writes `game_setup.generated.cpp`, not `oly-schema`: the plugins' C++ types are a build fact, not schema data.
-- Both schema commands depend on `game_setup.generated.cpp`. Make does not rerun a custom command whose command line changed, so a new `PLUGINS` list would leave the schemas stale. `file(GENERATE)` rewrites the file only when the plugin list changes, so it works as the stamp.
-- **TS emission.** With `TYPESCRIPT <file.ts>`, the game's target also writes the merged schema as TS to that file. The custom target `oly_typescript_schemas` depends on every game's TS file; `./spur ts` configures a `wasm-games*` preset and builds it before `tsc`. The plugin list lives only in CMake, and the C++ registry and the TS file always hash the same merged schema.
-- `oly_schema_tool(<toolVariable> <dependencyVariable>)` picks the `oly-schema` that both `oly_add_plugin` and `oly_add_game` run.
-
-### Engine test games
-
-`oly_add_engine_test_game(...)` takes the same arguments as `oly_add_game` and shares its body. It is only for `engine/` (the lint rejects it elsewhere), and its games turn on only the test plugins of `engine/testing/fixture/plugins/`, because `engine/` never depends on `plugins/`. `DIMENSION` and the `essentials` plugins belong to `oly_add_game` alone.
+- **Install order is a depth-first walk.** `oly_plugin_order` puts each plugin after its dependencies and keeps the order of the list among independent plugins. A game that lists only `doubling` gets `counting` too, first. The walk is deterministic, so the install order, the `ComponentId` order and the schema hash are the same on every build.
+- **`DIMENSION` is not a plugin name in the list.** `oly_add_game` maps `2d` to `essentials2d` and `3d` to `essentials3d` with `oly_dimension_plugin` and puts the result first. Listing the plugin in `PLUGINS` is an error, so a game cannot name the dimension twice.
+- **`setUpGame` is the game's entry point.** It declares the schema, then installs the plugins. `olyEngineCreate` calls it ([capi.md](capi.md)); a native game's `main` calls it right after creating the `Engine`. A TS game writes nothing.
+- **CMake writes `game_setup.generated.cpp`, not `oly-schema`.** The plugins' C++ types are a build fact, not schema data.
+- **`game_setup.generated.cpp` is the stamp of the plugin list.** Both schema commands depend on it. Make does not rerun a custom command whose command line changed, so a new `PLUGINS` list would leave the schemas stale. `file(GENERATE)` rewrites the file only when the plugin list changes, so it works as the stamp.
+- **One merged schema in two languages.** With `TYPESCRIPT`, the game's target writes the merged schema as TS. The plugin list lives only in CMake, and the C++ registry and the TS file always hash the same merged schema.
+- **Test games use another function.** `oly_add_engine_test_game` shares the body of `oly_add_game`. It is only for `engine/`, and its games turn on only the test plugins of `engine/testing/fixture/plugins/`, because `engine/` never depends on `plugins/`. `DIMENSION` and the `essentials` plugins belong to `oly_add_game` alone.
 
 ## essentials
 
-`plugins/essentials2d/` and `plugins/essentials3d/` give a game, by its `DIMENSION`, `Position`, `Rotation`, `Scale`, `Parent` and `WorldTransform`, a parent-child hierarchy with cascade destroy, and the derivation of `WorldTransform` ([the user view](../explanation/concepts/transforms.md)). Each is a plugin with its own `.oly` and a C++ part (`oly::essentials2d::Plugin`, `oly::essentials3d::Plugin`). `essentials2d` has no quaternion code; the 3D one keeps `multiply` and `rotate` in `include/oly/essentials3d/detail/quaternion.hpp`. The engine's test games get no `essentials`, and `fixture.oly` keeps its own `Position`.
+`plugins/essentials2d/` and `plugins/essentials3d/` give a game, by its `DIMENSION`, `Position`, `Rotation`, `Scale`, `Parent` and `WorldTransform`, a parent-child hierarchy with cascade destroy, and the derivation of `WorldTransform` ([the user view](../concepts/transforms.md)). Each is a plugin with its own `.oly` and a C++ part (`oly::essentials2d::Plugin`, `oly::essentials3d::Plugin`). `essentials2d` has no quaternion code; the 3D one keeps `multiply` and `rotate` in `include/oly/essentials3d/detail/quaternion.hpp`. The engine's test games get no `essentials`, and `fixture.oly` keeps its own `Position`.
 
 At install the plugin:
 
@@ -152,21 +112,6 @@ Measured with `essentials2d_bench_propagation` (release, Docker, 8 CPUs at 3.1 G
 
 There is no target. What the perf review found and left as is: each child pays six component lookups by entity and a `sincosf` of its parent's angle (2D); the three root queries are looked up each step; any `Parent` change rebuilds the whole child order the next step.
 
-## Boundaries
-
-The rules that keep publishing cheap later hold from day one:
-
-- A plugin includes only public headers of the modules and plugins it declares (no `detail/` of another).
-- A plugin is its own CMake target, with no path relative to the repository root.
-- A plugin's `.oly` reaches `oly-schema` as an argument, never through a fixed path.
-
-The `oly.lint.boundaries` lint checks plugins like modules, and adds rules of its own ([Boundary rules](../reference/contributor/boundary-rules.md)):
-
-- nothing in `engine/` includes a plugin under `plugins/` (`engine cannot depend on plugin <p>`); the test plugins in `engine/testing/fixture/plugins/` are engine code;
-- a plugin includes only what it declares in `DEPENDS` or `PLUGINS`, and no `detail/` of another module or plugin;
-- game names never appear in `plugins/`, in file contents or paths;
-- `oly_add_engine_test_game` appears only under `engine/`.
-
 ## Test plugins
 
 Two test plugins in `engine/testing/fixture/plugins/` prove the mechanism on `native` and `web`:
@@ -180,3 +125,8 @@ Two test plugins in `engine/testing/fixture/plugins/` prove the mechanism on `na
 - `web`: the `fixture_game` WASM module turns on `PLUGINS doubling` and writes `fixture.generated.ts`; `ts.testing.wasm` checks that the plugins' components come first and that their systems run.
 - The fixtures list only `doubling`; `counting` comes in through the dependency.
 - The test-only schemas of `engine/testing/fixture/schemas/` that model a variant of the fixture (all but `foreign_*`) start with `Counter` and `Doubled` (and `Counted` before the events), written by hand, as in the merged schema. A change to a test plugin's `.oly` must be copied there.
+
+## See also
+
+- [Modules and boundaries](modules-and-boundaries.md#plugin-boundaries): the rules that keep plugins publishable.
+- [Known limitations](../../reference/limits.md): what plugins do not do yet.

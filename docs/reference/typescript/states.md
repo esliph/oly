@@ -48,7 +48,7 @@ engine.onExit(playing, "saveBest", (context) => {
 });
 ```
 
-A hook receives a `StateContext`. `fromState` is the state being left (`null` on the first change) and `toState` the one being entered.
+A hook has the type `StateHookFunction`, `(context: StateContext) => void`, and receives a `StateContext`. `fromState` is the state being left (`null` on the first change) and `toState` the one being entered.
 
 A hook written in C++ is registered with `engine.addNativeOnEnter(playing, "name")` and `addNativeOnExit` ([C++ systems, handlers and hooks](engine-and-systems.md#c-systems-handlers-and-hooks)). The same C++ hook can serve both; `context.entering()` tells which side it is on.
 

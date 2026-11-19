@@ -9,15 +9,15 @@
 - **A cycle of observers can loop forever.** Commands an observer records are applied until nothing is pending; observers that always record more commands never stop. Nothing guards it.
 - **An implied component leaves with its last implier**, even when the game added it explicitly before.
 - **With implications, a flush can differ from applying its commands one by one.** The flush works on the net change, which keeps no order between components: an implied component present before and after keeps its value (one by one, losing its last implier and getting a new one value-initializes it), and a component the buffer adds stays even when the buffer removes its implier after it.
-- **`essentials` ends a transform chain at a parent with no `Position`.** A group with no `Position` counts as the identity, and its own `Parent` does not reach its children ([plugins.md](../architecture/plugins.md#essentials)).
+- **`essentials` ends a transform chain at a parent with no `Position`.** A group with no `Position` counts as the identity, and its own `Parent` does not reach its children ([plugins.md](../explanation/architecture/plugins.md#essentials)).
 - **A child can read a parent's zero `WorldTransform`.** If the parent gets its `Position` after the child, in the same command buffer, the child's `WorldTransform` is wrong until the next `Last` band.
 - **The 32-state limit counts the merged schema** (the game's `.oly` and its plugins'). Today only the game declares states, so the limit is the game's.
-- **A plugin `.oly` cannot declare actions or states** ([plugins.md](../architecture/plugins.md#schema-merge)). Their ids are `constexpr` in a header generated once per plugin; the fix, when a plugin needs one, is runtime-resolved handles.
+- **A plugin `.oly` cannot declare actions or states** ([plugins.md](../explanation/architecture/plugins.md#schema-merge)). Their ids are `constexpr` in a header generated once per plugin; the fix, when a plugin needs one, is runtime-resolved handles.
 - **A plugin with no `install` is not supported yet.** `oly_add_plugin` requires `src/*.cpp` and the generated `setUpGame` installs `oly::<name>::Plugin`, so a pure function library (a math plugin) cannot be a plugin until one exists.
-- **The C API and TS parts of a plugin have no build support yet.** Their shape is defined ([plugins.md](../architecture/plugins.md#parts)); the support comes with the first plugin that needs it.
+- **The C API and TS parts of a plugin have no build support yet.** Their shape is defined ([plugins.md](../explanation/architecture/plugins.md#parts)); the support comes with the first plugin that needs it.
 - **NF-P5** is not met at N = 100000 ([Benchmark results](benchmarks/README.md)).
 - **Two `Engine`s on the same `World`** share the scope tag: a state change in one cleans up the scoped entities of the other. `capi` avoids this by creating one `World` per `OlyEngine`.
 - **Publishing supports Linux and Windows in Git Bash only.** No MSVC (a Windows native game builds with MinGW), no macOS, and no PowerShell or `cmd`: `oly` is a shell script ([Publishing](../explanation/architecture/publishing.md)).
-- **A plugin declared by a game is not supported yet.** A game turns on the plugins that come with the engine release it pins ([plugins.md](../architecture/plugins.md)).
+- **A plugin declared by a game is not supported yet.** A game turns on the plugins that come with the engine release it pins ([plugins.md](../explanation/architecture/plugins.md)).
 - **`FetchContent` at a real tag is first exercised by games, after publishing.** The tag is created last, so the consumer test fetches the engine from the commit being released (`OLY_ENGINE_SOURCE_DIR`) instead.
 - **`oly` has no help text of its own.** Bare `oly` inside a game lists the tasks through `spur`; the commands are described in [The `oly` command](cli.md).

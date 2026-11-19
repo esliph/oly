@@ -22,6 +22,8 @@ world.dispose();
 
 During `frame`, the client refuses `spawn`, `destroy`, `add` and `remove` on `engine.world` with `ContractError` (`direct structural change during frame; use context.spawn/destroy/add/remove`): use the context instead. `get`, `set`, `has`, `isAlive` and `query` stay allowed.
 
+`world.handle` is the number the client uses to name the world in calls to the [C API](../c-api.md) (the address of its `OlyWorld`). A game does not need it.
+
 ## Create entities
 
 `spawn` takes the list of types and, optionally, the initial values. Missing fields start at `0`.
@@ -37,6 +39,16 @@ const rock = world.spawn([Position]);           // Position = { x: 0, y: 0 }
 ```
 
 Tags go in the list and take no values.
+
+### `SpawnValues`
+
+```ts
+type SpawnValues<Ts extends readonly SchemaType[]> = {
+  [C in Extract<Ts[number], ComponentType> as C["name"]]?: Partial<ValueOf<C["fields"]>>;
+};
+```
+
+The type of the second argument of `spawn`: an optional object with one optional key per component in the list, named after the component, whose value holds some or all of its fields ([`ValueOf`](schema.md#valueof)). A tag has no key.
 
 ## Read and write values
 

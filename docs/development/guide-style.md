@@ -28,7 +28,7 @@ What to update:
 | removed | every mention; replace examples that depended on it |
 | new or changed error | the table in [Errors](../reference/errors.md) |
 | changed behaviour (order, timing, scope) | the concept page that describes it and any recipe that relied on it |
-| a C API change | [C API](../reference/c-api.md) and [capi.md](../architecture/capi.md) |
+| a C API change | [C API](../reference/c-api.md) and [The C API](../explanation/architecture/capi.md) |
 | a change to the `oly` commands, the template or `toolchain.env` | [The `oly` command](../reference/cli.md), [The game template](../reference/game-template.md) and the messages in [Errors](../reference/errors.md) |
 | new page | the index tables in [docs/README.md](../README.md) and the navigation lines of the neighbouring pages in its folder |
 

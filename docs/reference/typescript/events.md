@@ -34,7 +34,9 @@ engine.on(EnemyDied, "spawnCorpses", (context, batch) => {
 });
 ```
 
-`batch.read()` returns views over the event queue in WASM memory, with no copy. Like query views, they are valid only during the handler call.
+`batch.read()` returns views over the event queue in WASM memory, with no copy. Like query views, they are valid only during the handler call. After the call, `read` throws `ContractError` (`read type=<name>: EventBatch used outside the handler call`).
+
+An `EventBatch` has two more members: `batch.count`, the number of events, and `batch.type`, the `EventType` of the batch, which names the event when one function serves several handlers.
 
 ## Handlers change the world directly
 
@@ -86,3 +88,5 @@ engine.addNativeHandler(EnemyDied, "destroyDead");                       // dest
 ```ts
 engine.on(PlayerDied, "endRound", (context) => context.requestState(gameOver)).inState(playing);
 ```
+
+`on` and `addNativeHandler` return a `HandlerRegistration`. Its `id` is the handler id, and `inState(...states)` restricts the handler to those states, checked every round. An empty list removes the restriction. `inState` throws `ContractError` during a frame, after an interrupted frame and for a state of another schema.

@@ -33,7 +33,7 @@ graph BT
 | `schema` | `oly::schema` | — | `STATIC`, native builds only |
 | `schema_typescript` | `oly::schema_typescript` | `schema` | `OBJECT`, native builds only |
 
-A **plugin** (`oly_add_plugin`, [plugins.md](../../architecture/plugins.md)) is a `STATIC` target `oly::<name>` that links the modules of its `DEPENDS` and the plugins of its `PLUGINS`. A game links the plugins it turns on and their dependencies. Plugins depend on the core; nothing in `engine/` depends on a plugin under `plugins/`. The plugins today are `essentials2d` and `essentials3d` in `plugins/`, and two test plugins that belong to the engine, in `engine/testing/fixture/plugins/`:
+A **plugin** (`oly_add_plugin`, [plugins.md](plugins.md)) is a `STATIC` target `oly::<name>` that links the modules of its `DEPENDS` and the plugins of its `PLUGINS`. A game links the plugins it turns on and their dependencies. Plugins depend on the core; nothing in `engine/` depends on a plugin under `plugins/`. The plugins today are `essentials2d` and `essentials3d` in `plugins/`, and two test plugins that belong to the engine, in `engine/testing/fixture/plugins/`:
 
 | Plugin | CMake target | `DEPENDS` | `PLUGINS` |
 |---|---|---|---|
@@ -57,6 +57,21 @@ The boundaries do not hold by convention alone. Three mechanisms enforce them:
 3. **The TS surface test** (`ts.core.unit`, `surface.test.ts`). It checks the public exports of `@oly/core` against the versioned list `engine/environments/web/clients/typescript/core/api/public-exports.txt`. Adding something to the public API is an explicit change in that file.
 
 Why `detail/` and a lint, and not pimpl: the hot-path templates (`Query<Ts...>::each`, `World::get<T>`, `World::spawn<Ts...>`) need to see `Table` and `Archetype` to inline. Hiding these types behind pimpl or a virtual interface would put indirection in the iteration loop. The compiler sees the details; the build rejects whoever uses them from outside.
+
+## Plugin boundaries
+
+The rules that keep publishing cheap later hold from day one:
+
+- A plugin includes only public headers of the modules and plugins it declares (no `detail/` of another).
+- A plugin is its own CMake target, with no path relative to the repository root.
+- A plugin's `.oly` reaches `oly-schema` as an argument, never through a fixed path.
+
+The `oly.lint.boundaries` lint checks plugins like modules, and adds rules of its own ([Boundary rules](../../reference/contributor/boundary-rules.md)):
+
+- nothing in `engine/` includes a plugin under `plugins/` (`engine cannot depend on plugin <p>`); the test plugins in `engine/testing/fixture/plugins/` are engine code;
+- a plugin includes only what it declares in `DEPENDS` or `PLUGINS`, and no `detail/` of another module or plugin;
+- game names never appear in `plugins/`, in file contents or paths;
+- `oly_add_engine_test_game` appears only under `engine/`.
 
 ## Vocabulary rules
 

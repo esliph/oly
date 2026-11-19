@@ -45,7 +45,7 @@ A `Parent` that points to a dead entity, to the entity itself or to one of its o
 
 ## Cost
 
-Moving a parent costs one pass per fixed step over the roots and one lookup per child. The numbers are in [the plugins architecture page](../../architecture/plugins.md#essentials).
+Moving a parent costs one pass per fixed step over the roots and one lookup per child. The numbers are in [the plugins architecture page](../architecture/plugins.md#essentials).
 
 ## API
 

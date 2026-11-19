@@ -14,6 +14,20 @@ import schema, { Health, shoot } from "../schema.generated.js";
 
 The default export is the schema you pass to `loadRuntime`. You pass the entries to every API call: `world.get(entity, Health)`, `context.emit(EnemyDied, ...)`, `actions.button(shoot)`. There are no string lookups at run time.
 
+### The schema object
+
+The default export is a `Schema`. The runtime keeps it as `runtime.schema`.
+
+| Member | What it holds |
+|---|---|
+| `types` | the components and tags, in declaration order. The index of a type is its `ComponentId` in the WASM |
+| `events` | the events, in declaration order, which is the dispatch order |
+| `actions` | the input actions, in declaration order. The index is the `ActionId` |
+| `states` | the states, in declaration order. The index is the `StateId` |
+| `hash` | the hash of the merged schema, which `loadRuntime` compares with the WASM's ([the schema check](#the-schema-check-at-start-up)) |
+
+Each entry also has `schemaIndex`, its position in its own list.
+
 ## Field types
 
 | Type | TS reads it as |
@@ -23,6 +37,14 @@ The default export is the schema you pass to `loadRuntime`. You pass the entries
 | `entity` | `Entity` |
 
 The schema has no 64-bit integers because they would need `BigInt`.
+
+### `ValueOf`
+
+```ts
+type ValueOf<F extends Fields> = { [K in keyof F]: number };
+```
+
+The type of the values of a component's fields: one `number` per field name. `Partial<ValueOf<C["fields"]>>` is what `spawn`, `add` and `emit` accept for a component or an event `C` ([`SpawnValues`](world-and-entities.md#spawnvalues)).
 
 ## What the build generates
 

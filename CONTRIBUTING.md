@@ -52,7 +52,7 @@ The full rules are in [docs/reference/contributor/code-style.md](docs/reference/
 - Formatting is `.clang-format`, applied by the `dev` image's clang-format. Do not format by hand: `./spur format <files>` formats the `.cpp` and `.hpp` files you changed (with no argument, every tracked one), and `./spur format-check` is the check CI runs.
 - Comments only for the why or for a non-obvious contract. Nothing that repeats the code.
 - `OLY_ASSERT` messages name the operation, the `Entity` and the type.
-- Boundaries ([modules-and-boundaries.md](docs/explanation/architecture/modules-and-boundaries.md), [plugins.md](docs/architecture/plugins.md)): `engine/` never depends on `plugins/`; game concepts never go in `engine/`; game names only in `engine/testing/fixture/`. The boundary lint runs with the tests.
+- Boundaries ([modules-and-boundaries.md](docs/explanation/architecture/modules-and-boundaries.md), [plugins.md](docs/explanation/architecture/plugins.md)): `engine/` never depends on `plugins/`; game concepts never go in `engine/`; game names only in `engine/testing/fixture/`. The boundary lint runs with the tests.
 
 ## Tests
 

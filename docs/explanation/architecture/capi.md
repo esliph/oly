@@ -1,0 +1,29 @@
+# `capi`: the C API
+
+`capi` (`engine/runtime/capi/`) exposes the `extern "C"` C API (`c_api.cpp`, `engine_api.cpp`). It knows no environment: on `web`, the web host (`engine/environments/web/host/native/`) installs the invoker that calls JS. Every function, type and constant is in the [C API reference](../../reference/c-api.md); this page explains the design.
+
+## Design points
+
+- **`OlyWorld` is opaque.** It holds the `World` and a stack of iteration slots. The game's C++ systems reach the `World` through `oly::capi::worldOf(OlyWorld*)`.
+- **`olyQueryBegin` returns an `OlyIteration*`** with its own descriptor buffer (`count`, address of the entities, address of each column). A nested `eachBlock` does not overwrite the outer one. `olyQueryEnd` must close the top slot.
+- **`OlyEngine`** holds an `OlyWorld` and the `Engine` on top of it (one `World` per `OlyEngine`, declared before the `Engine`, so it outlives the `Engine` and its plugins). On creation, `olyEngineCreate` calls `oly::app::setUpGame` ([app.md](app.md#plugins-and-setupgame)), which declares the schema's events, actions and states in schema order, so the index in the TS schema is the id in C++, and then installs the game's plugins. The `capi` test executables are not games, so they define `setUpGame` by hand (`tests/test_schema_registry.cpp`, `tests/contract_death.cpp`).
+- **Native names are resolved at creation.** `OLY_SYSTEM`, `OLY_HANDLER(name, EventType)` and `OLY_STATE_HOOK` register functions by name. An unknown name returns `OLY_INVALID_HANDLER`; a wrong event type, `OLY_HANDLER_TYPE_MISMATCH`.
+- **Current context.** `olyDirectSpawn` and `olyContextPersist` use the context TS is in: direct in a handler, task or hook; deferred in a system.
+- A script call with no invoker installed is a contract violation (`OLY_ASSERT`, with kind and id).
+
+## The script invoker
+
+`olyEngineSetScriptInvoker(engine, invoker, userData)` installs, per engine, the function that runs all script code of that engine; `userData` lets a client pass its own handle. On `web`, `olyWebHostInstallScriptInvoker(engine)` installs an invoker that calls `Module.olyInvokeScript`; the TS `Bridge` calls it right after `olyEngineCreate`. There is no `addFunction` and no growing function table. `kind` says what to call and the meaning of the other parameters:
+
+| `kind` | `id` | `events` / `eventCount` |
+|---|---|---|
+| `OLY_SCRIPT_SYSTEM` | system | null / 0; one call per system per step |
+| `OLY_SCRIPT_HANDLER` | handler | address of the queue in the heap / batch size; one call per batch |
+| `OLY_SCRIPT_TASK` | `scriptId` | null / 1 on the last run, otherwise 0 |
+| `OLY_SCRIPT_TASK_DISCARD` | `scriptId` | null / 0 |
+| `OLY_SCRIPT_STATE_HOOK` | `hookId` | null / the state on the other side of the change (the source in an `onEnter`, the destination in an `onExit`) |
+
+## See also
+
+- [TypeScript packages](ts-packages.md): the TS side that consumes this API.
+- [Schema, `oly-schema` and the WASM module](schema-and-codegen.md): the link contract with the game's generated code.

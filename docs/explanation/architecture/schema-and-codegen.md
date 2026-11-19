@@ -34,7 +34,7 @@ For example, `oly-schema game.oly --plugin counting=counting.oly --emit cpp=<dir
 
 ## Plugin schemas
 
-Each plugin with a schema reaches `oly-schema` as a `--plugin <name>=<file.oly>` argument; CMake passes them in install order ([plugins.md](../../architecture/plugins.md#schema-merge)).
+Each plugin with a schema reaches `oly-schema` as a `--plugin <name>=<file.oly>` argument; CMake passes them in install order ([plugins.md](plugins.md#schema-merge)).
 
 - `mergeSchemas` parses each file with its own validation, then merges them: the plugins' declarations in install order, then the game's. That order gives the `ComponentId` order and the event dispatch order. Each merged type keeps its `origin` (the plugin's name; empty for the game's types), and the schema lists its `plugins` in order.
 - Names are flat. A name repeated across files is an error at the later one: `<file>:<line>:<column>: repeated name "X"; first declared at <file>:<line>:<column>`.
@@ -63,4 +63,4 @@ plugins' .oly ─┐ (--plugin, in install order)
 - **The TS schema comes from the game's CMake target**, the only place that knows the game's plugins. With `oly_add_game(... TYPESCRIPT <file.ts>)`, a custom command writes the merged schema as TS to that file (`web/schema.generated.ts` in a game made by `oly new`), and the custom target `oly_typescript_schemas` depends on every such file. `./spur ts` builds `oly-schema`, configures a `wasm-games*` preset (default `wasm-games`), builds `oly_typescript_schemas`, generates the test-only schemas of `engine/testing/fixture/schemas/` with `oly-schema` directly, then runs `tsc`. `*.generated.ts` is never committed and never edited.
 - Link: `-sMODULARIZE=1 -sEXPORT_ES6=1 -sENVIRONMENT=node,web`, growable memory. The output goes to `build/<preset>/games/<game>_game.{mjs,wasm}`.
 
-See also: [capi.md](../../architecture/capi.md) (how the `OlyEngine` declares the schema on creation) and [TypeScript packages](ts-packages.md) (the TS side: `@oly/core/generated`).
+See also: [capi.md](capi.md) (how the `OlyEngine` declares the schema on creation) and [TypeScript packages](ts-packages.md) (the TS side: `@oly/core/generated`).

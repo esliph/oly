@@ -6,6 +6,16 @@ The loop, the phases and the rules of structural changes are in the [concept pag
 
 ## Create the engine
 
+`runtime.createEngine(config)` creates an `Engine` with its own world. `config` is an optional `EngineConfig`, and every field is optional:
+
+| Field | Default | Meaning |
+|---|---|---|
+| `fixedHz` | `60` | gameplay steps per second; a positive number |
+| `maxStepsPerFrame` | `5` | catch-up limit per frame; a positive integer |
+| `maxEventRounds` | `16` | event round limit per step; a positive integer |
+
+A field that breaks its rule throws `ContractError` (`createEngine fixedHz=<value>: must be a positive number`, and the same for the other two with `a positive integer`). The engine takes the events, actions and states of `runtime.schema` ([Schema](schema.md#the-schema-object)) in schema order.
+
 ```ts
 const runtime = await loadRuntime(factory, schema);
 const engine = runtime.createEngine({
@@ -47,9 +57,9 @@ engine.addSystem(Phase.Update, "spin", (context) => {
 engine.addNativeSystem(Phase.Update, "integrate");   // a C++ OLY_SYSTEM(integrate)
 ```
 
-The name appears in error messages; use a clear one.
+The name appears in error messages; use a clear one. The system has the type `SystemFunction`, `(context: SystemContext) => void`.
 
-Registration returns an object with two options. Both can be chained:
+Registration returns a `SystemRegistration`: its `id` is the system id, and it has two options. Both can be chained:
 
 ```ts
 engine.addSystem(Phase.UpdateBefore, "resumeOnPress", resumeOnPress).whilePaused().inState(playing);

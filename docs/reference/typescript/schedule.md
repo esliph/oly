@@ -20,6 +20,8 @@ engine.schedule.every(5, (task) => {
 
 The same scheduler is available as `engine.schedule` and as `context.schedule` in every system, handler, task and hook.
 
+The callback has the type `TaskFunction`, `(task: TaskContext) => void`. Both calls return a `TaskHandle`, an opaque value that you compare with `===` and pass to `isPending`, `cancel` and `persist`.
+
 ## The task context
 
 | Member | What it is |

@@ -14,5 +14,5 @@ Calling such a function from TypeScript needs the module internals (`@oly/core/i
 
 ## See also
 
-- [C API](../architecture/capi.md): the functions the engine exports.
+- [C API](../reference/c-api.md): the functions the engine exports.
 - [Web boundary](../explanation/concepts/web-boundary.md): why work crosses between C++ and TypeScript by block.

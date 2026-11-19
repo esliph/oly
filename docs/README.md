@@ -90,6 +90,7 @@ Pages are not numbered. Each path lists every page of its environment in the ord
 | [The `oly` command](reference/cli.md) | How do I install `oly`, and which commands, options, Docker modes and variables does it have? |
 | [Errors](reference/errors.md) | What does this message mean, in C++, in TypeScript or from `oly`, and how do I fix it? |
 | [TypeScript client](reference/typescript/README.md) | What does the TypeScript API offer, and where is each part? |
+| [The web host in TypeScript](reference/typescript/web-host.md) | Which calls run the loop in a browser tab, deliver keyboard and mouse input, and load the WASM module? |
 | [Schema in C++](reference/cpp/schema.md) | Which generated files and functions does the build write for a schema, and what do they declare? |
 | [Queries in C++](reference/cpp/queries.md) | Which calls build a query, visit its rows and read its only row? |
 | [Engine, loop and systems in C++](reference/cpp/engine-and-systems.md) | Which calls create the engine, register systems and states, emit from the host and pause or hide the game? |
@@ -101,7 +102,8 @@ Pages are not numbered. Each path lists every page of its environment in the ord
 | [Transforms in C++](reference/cpp/transforms.md) | Which CMake argument turns the transform components on, and which fields does each component have? |
 | [World and entities in C++](reference/cpp/world-and-entities.md) | Which calls create, read, change and destroy entities, record commands and observe changes? |
 | [The game template](reference/game-template.md) | Which files does `oly new` write for a web game and for a desktop game, and where does each one go? |
-| [C API](reference/c-api.md) | Which `oly*` functions can a client in another language call? |
+| [CMake](reference/cmake.md) | Which arguments do `oly_add_game` and `oly_add_plugin` take, and which build options does a game set? |
+| [C API](reference/c-api.md) | Which `oly*` functions, types and constants can a client in another language use, and what does each do? |
 | [Native host](reference/native-host.md) | Which calls open the window and run the loop, and what does the host do with each window event? |
 | [Glossary](reference/glossary.md) | What does each name mean in C++, the C API and TypeScript? |
 | [Known limitations](reference/limits.md) | What does the engine not do? |
@@ -120,8 +122,8 @@ Pages are not numbered. Each path lists every page of its environment in the ord
 | [Main architectural decisions](explanation/architecture/decisions.md) | Why is the engine built this way, and what does it cost? |
 | [Environments and hosts](explanation/concepts/environments-and-hosts.md) | What are the core, an environment, a host and a client, and how is a game assembled? |
 | [Concepts](explanation/concepts/README.md) | In which order do I read the rules a game relies on, and what does each page explain? |
-| [Plugins in the engine](architecture/plugins.md) | How does a plugin install, own its parts and merge its schema? |
-| [`capi`: the C API](architecture/capi.md) | How is the C API designed, and how does the per-engine script invoker work? |
+| [Plugins in the engine](explanation/architecture/plugins.md) | How does a plugin install, own its parts and merge its schema? |
+| [`capi`: the C API](explanation/architecture/capi.md) | How is the C API designed, and how does the per-engine script invoker work? |
 | [TypeScript packages](explanation/architecture/ts-packages.md) | How are `@oly/core`, `@oly/web-host` and `@oly/testing` built? |
 | [Publishing](explanation/architecture/publishing.md) | How does a game outside this repository get the engine, and why is a release built this way? |
 | [Build, tests and tools](explanation/architecture/build-and-tests.md) | How are the build, the tests and the tools organized? |

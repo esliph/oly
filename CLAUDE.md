@@ -12,7 +12,7 @@ Start with `docs/README.md`. It is the index of all documentation: tutorials, ho
 - Commits, comments and assert messages in English.
 - Do not format `.cpp`/`.hpp` by hand: the `.claude/hooks/clang-format.sh` hook formats after each edit (it fails if Docker is stopped).
 - Use the glossary names. No aliases or compatibility `using` with old names. Game concepts never in `engine/`; game names only in `engine/testing/fixture/`.
-- Plugins (`docs/architecture/plugins.md`): `engine/` never depends on `plugins/`; a plugin includes only public headers of the modules and plugins it declares, is its own CMake target with no path relative to the repository root, and its `.oly` reaches `oly-schema` as an argument. Game names never in `plugins/`.
+- Plugins (`docs/explanation/architecture/plugins.md`): `engine/` never depends on `plugins/`; a plugin includes only public headers of the modules and plugins it declares, is its own CMake target with no path relative to the repository root, and its `.oly` reaches `oly-schema` as an argument. Game names never in `plugins/`.
 - When changing `table`, `archetype`, `query*`, `command_buffer` or `world`: keep `checkInvariants` covering the change and run the `spec-conformance-reviewer` and `perf-reviewer` agents.
 - New test: use the `add-test-case` skill.
 - Any change that adds, changes or removes public API (the surfaces listed in `docs/development/guide-style.md`) updates the user documentation in `docs/` in the same change, following that style.
