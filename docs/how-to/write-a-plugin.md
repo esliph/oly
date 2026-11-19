@@ -1,5 +1,7 @@
 # Write a plugin
 
+[Docs](../README.md#how-to-guides) · Concept: [Plugins](../explanation/concepts/plugins.md)
+
 Use this to make engine-level functionality that several games reuse: components, events and the systems that act on them. It assumes you know how a game turns a plugin on ([Use a plugin](use-a-plugin.md)) and how systems and observers work ([Engine, loop and systems](../explanation/concepts/engine-and-systems.md)).
 
 ## 1. Make the folder

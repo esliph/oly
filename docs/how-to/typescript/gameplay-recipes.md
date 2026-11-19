@@ -1,6 +1,6 @@
 # Recipes in TypeScript
 
-[← States](../../reference/typescript/states.md) · [TypeScript client](../../reference/typescript/README.md) · Concept: [Recipes](../gameplay-recipes.md)
+[Docs](../../README.md#how-to-guides) · Reference: [TypeScript client](../../reference/typescript/README.md) · C++: [Recipes](../gameplay-recipes.md)
 
 Ready patterns for common game features, in TypeScript. Each recipe shows the schema entries it needs and the code. Every recipe also has a C++ version in the [recipes page](../gameplay-recipes.md), except the ones marked browser-only, which need the DOM or browser storage.
 

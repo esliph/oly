@@ -1,5 +1,7 @@
 # Debug the world
 
+[Docs](../README.md#how-to-guides) · Concept: [World and entities](../explanation/concepts/world-and-entities.md)
+
 Use this when a test or a game shows a wrong `World`: a missing component, a stale handle or a crash far from its cause. It assumes you have a `World` you can reach, in a test or in a tool.
 
 ## 1. Check the invariants after each step

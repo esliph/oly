@@ -1,5 +1,7 @@
 # Use a plugin
 
+[Docs](../README.md#how-to-guides) · Concept: [Plugins](../explanation/concepts/plugins.md)
+
 Use this to turn on a plugin that already exists, from your game's CMake. It assumes a game that builds with `oly_add_game` ([Your first desktop game](../tutorials/first-desktop-game.md) or [Your first web game](../tutorials/first-web-game.md)).
 
 ## 1. List the plugin

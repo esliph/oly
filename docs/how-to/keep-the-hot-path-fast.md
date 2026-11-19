@@ -1,5 +1,7 @@
 # Keep the hot path fast
 
+[Docs](../README.md#how-to-guides) · Concept: [Performance](../explanation/concepts/performance.md)
+
 Use this when a system runs on many entities every step and you want it cheap. Steps 1 to 4 apply to C++; [TypeScript](#typescript) has its own section. It assumes a game with queries and systems ([Queries](../explanation/concepts/queries.md), [Engine, loop and systems](../explanation/concepts/engine-and-systems.md)) and the cost model of [Performance](../explanation/concepts/performance.md).
 
 ## 1. Split components by who reads them

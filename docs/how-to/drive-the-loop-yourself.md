@@ -1,5 +1,7 @@
 # Drive the loop yourself
 
+[Docs](../README.md#how-to-guides) · Concept: [Engine, loop and systems](../explanation/concepts/engine-and-systems.md)
+
 Use this to run the game without a host, from a test, a tool, a worker or a server: you decide when each frame runs and which input the game sees. It assumes an `Engine` with the game's schema declared and its systems registered.
 
 ## 1. Create the engine and record the first time
