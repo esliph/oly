@@ -40,7 +40,7 @@ You use the entries by name, and the names are checked when you compile. There a
 
 Each entry gets an index inside its group, in the order you write them:
 
-- **Events**: the index is the dispatch order. Earlier events are handled first in each round ([Events](../../guide/concepts/events.md#order)).
+- **Events**: the index is the dispatch order. Earlier events are handled first in each round ([Events](events.md#order)).
 - **Actions** and **states**: the index is the id the game uses (`actions::shoot`, `states::playing` in C++).
 
 Changing the order, adding or removing an entry changes the **schema hash**. Every build that embeds the schema must be rebuilt.

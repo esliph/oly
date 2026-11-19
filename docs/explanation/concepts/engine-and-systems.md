@@ -1,6 +1,6 @@
 # Engine, loop and systems
 
-[← Queries](queries.md) · [Concepts](README.md) · Next: [Events →](../../guide/concepts/events.md)
+[← Queries](queries.md) · [Concepts](README.md) · Next: [Events →](events.md)
 
 The `Engine` runs your game: a fixed-step clock, phases of systems, pause, events, input, schedule and states. It runs on top of one `World` that you give it ([Where the World comes from](world-and-entities.md#where-the-world-comes-from)). This page explains how a frame runs, in which order systems run and what the engine does when the game pauses, hides or fails.
 
@@ -166,4 +166,4 @@ Call `frame` from a test or a tool: [Drive the loop yourself](../../how-to/drive
 
 ## Next
 
-[Events](../../guide/concepts/events.md): let systems react to what other systems did.
+[Events](events.md): let systems react to what other systems did.

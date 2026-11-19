@@ -251,7 +251,7 @@ engine.on<EnemyDied>("countKill", [](oly::app::HandlerContext& context) { countK
 engine.on<EnemyDied>("destroyDead", [](oly::app::HandlerContext& context) { destroyDead(context, context.events<EnemyDied>()); });
 ```
 
-The lambda passes the batch the macro's function expects ([Events](../guide/concepts/events.md#declare-emit-handle)).
+The lambda passes the batch the macro's function expects ([Events](../reference/cpp/events.md#engineon)).
 
 TypeScript: [Health, damage and death](typescript/gameplay-recipes.md#health-damage-and-death).
 

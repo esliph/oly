@@ -89,7 +89,7 @@ All contexts: `time()`, `fixedDeltaTime()`, `paused()`, `pause()`, `resume()`, `
 
 ## Events
 
-[Events](concepts/events.md)
+[Events](../explanation/concepts/events.md)
 
 ```cpp
 context.emit(Event{...});

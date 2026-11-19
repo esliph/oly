@@ -24,6 +24,7 @@
 | [Schema in C++](reference/cpp/schema.md) | Which generated files and functions does the build write for a schema, and what do they declare? |
 | [Queries in C++](reference/cpp/queries.md) | Which calls build a query, visit its rows and read its only row? |
 | [Engine, loop and systems in C++](reference/cpp/engine-and-systems.md) | Which calls create the engine, register systems and states, emit from the host and pause or hide the game? |
+| [Events in C++](reference/cpp/events.md) | Which calls declare an event, emit it, handle it and restrict a handler to states? |
 | [World and entities in C++](reference/cpp/world-and-entities.md) | Which calls create, read, change and destroy entities, record commands and observe changes? |
 | [Glossary](reference/glossary.md) | What does each name mean in C++, the C API and TypeScript? |
 | [Known limitations](reference/limits.md) | What does the engine not do? |

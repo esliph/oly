@@ -1,8 +1,8 @@
 # Events in TypeScript
 
-[← Engine, loop and systems](engine-and-systems.md) · [TypeScript client](README.md) · Concept: [Events](../../guide/concepts/events.md) · Next: [Input →](input.md)
+[TypeScript client](README.md) · Concept: [Events](../../explanation/concepts/events.md) · C++: [Events in C++](../cpp/events.md)
 
-When events are dispatched, in what order, and what rounds are: see the [concept page](../../guide/concepts/events.md). This page shows the TS calls.
+When events are dispatched, in what order, and what rounds are: see the [concept page](../../explanation/concepts/events.md). This page shows the TS calls.
 
 ## Declare, emit, handle
 
@@ -38,7 +38,7 @@ engine.on(EnemyDied, "spawnCorpses", (context, batch) => {
 
 ## Handlers change the world directly
 
-The entity named in an event may already be dead ([why](../../guide/concepts/events.md#handlers-change-the-world-directly)). Check it:
+The entity named in an event may already be dead ([why](../../explanation/concepts/events.md#handlers-change-the-world-directly)). Check it:
 
 ```ts
 engine.on(CoinCollected, "collectCoin", (context, batch) => {
@@ -86,7 +86,3 @@ engine.addNativeHandler(EnemyDied, "destroyDead");                       // dest
 ```ts
 engine.on(PlayerDied, "endRound", (context) => context.requestState(gameOver)).inState(playing);
 ```
-
-## Next
-
-[Input →](input.md): turn keys and mouse into actions.

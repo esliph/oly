@@ -139,7 +139,7 @@ Three macros define the functions a game registers. Each one registers its funct
 | Macro | Defines | Native registration |
 |---|---|---|
 | `OLY_SYSTEM(name)` | `void name(oly::app::SystemContext& context)` | `engine.addSystem(phase, "name", name)` |
-| `OLY_HANDLER(name, Event)` | `void name(HandlerContext& context, std::span<const Event> events)` | `engine.on<Event>("name", lambda)` ([Events](../../guide/concepts/events.md#declare-emit-handle)) |
+| `OLY_HANDLER(name, Event)` | `void name(HandlerContext& context, std::span<const Event> events)` | `engine.on<Event>("name", lambda)` ([Events](events.md#engineon)) |
 | `OLY_STATE_HOOK(name)` | `void name(oly::app::StateContext& context)` | `engine.onEnter(state, "name", name)` / `onExit` |
 
 A system or a state hook is already the plain function that `addSystem`, `onEnter` and `onExit` take. A handler takes its batch as a span, so its native registration is a lambda.
@@ -166,7 +166,7 @@ A system receives a `SystemContext`. It is valid only during that call.
 | check | `context.has<Frozen>(entity)`, `context.isAlive(entity)` |
 | create | `context.spawn(Bullet{}, Position{x, y}, Velocity{vx, vy})` |
 | change structure | `context.add(entity, Frozen{})`, `context.remove<Frozen>(entity)`, `context.destroy(entity)`, `context.persist(entity)` |
-| events | `context.emit(EnemyDied{entity, x, y})` ([Events](../../guide/concepts/events.md)) |
+| events | `context.emit(EnemyDied{entity, x, y})` ([Events](events.md#contextemit)) |
 | input | `context.actions().button(actions::shoot).held` ([Input](../../guide/concepts/input.md)) |
 | time | `context.fixedDeltaTime()`, `context.time()`, `context.interpolation()` |
 | schedule | `context.schedule().after(seconds, function, payload)` ([Schedule](../../guide/concepts/schedule.md)) |

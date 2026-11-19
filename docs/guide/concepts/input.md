@@ -1,6 +1,6 @@
 # Input
 
-[← Events](events.md) · [Guide index](../README.md) · Next: [Schedule →](schedule.md)
+[← Events](../../explanation/concepts/events.md) · [Guide index](../README.md) · Next: [Schedule →](schedule.md)
 
 Gameplay never reads keys directly. It reads **actions** ("shoot", "move", "aim"). You **bind** physical buttons to actions, and you can change the bindings at any time. This gives you key rebinding, several keys per action and fake input in tests for free.
 

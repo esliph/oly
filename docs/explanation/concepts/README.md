@@ -9,7 +9,7 @@ Each page explains the rules a game relies on. Read them in this order; each one
 | [World and entities](world-and-entities.md) | who owns the `World`, what a handle is, which changes are direct and which are deferred, observers and implied components |
 | [Queries](queries.md) | how to visit many entities at once |
 | [Engine, loop and systems](engine-and-systems.md) | how a frame runs the fixed step, the phases and the systems |
-| [Events](../../guide/concepts/events.md) | how systems and handlers talk through batches and rounds |
+| [Events](events.md) | how systems and handlers talk through batches and rounds |
 | [Input](../../guide/concepts/input.md) | how actions turn physical input into pressed, held and released |
 | [Schedule](../../guide/concepts/schedule.md) | how to run code after a delay or every interval |
 | [States](../../guide/concepts/states.md) | how to switch between game states and scope entities to them |
