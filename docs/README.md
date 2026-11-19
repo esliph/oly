@@ -91,6 +91,14 @@ Pages are not numbered. Each path lists every page of its environment in the ord
 | [Errors](reference/errors.md) | What does this message mean, in C++, in TypeScript or from `oly`, and how do I fix it? |
 | [TypeScript client](reference/typescript/README.md) | What does the TypeScript API offer, and where is each part? |
 | [The web host in TypeScript](reference/typescript/web-host.md) | Which calls run the loop in a browser tab, deliver keyboard and mouse input, and load the WASM module? |
+| [Schema in TypeScript](reference/typescript/schema.md) | Which types, functions and files does a schema give TypeScript? |
+| [World and entities in TypeScript](reference/typescript/world-and-entities.md) | Which calls create, read, change and destroy entities, record commands and observe changes in TypeScript? |
+| [Queries in TypeScript](reference/typescript/queries.md) | Which calls build a query and visit its rows in TypeScript? |
+| [Engine, loop and systems in TypeScript](reference/typescript/engine-and-systems.md) | Which calls create the engine, register systems and states and run the loop in TypeScript? |
+| [Events in TypeScript](reference/typescript/events.md) | Which calls declare an event, emit it and handle it in TypeScript? |
+| [Input in TypeScript](reference/typescript/input.md) | Which calls bind buttons to actions and read actions, the axis and the pointer in TypeScript? |
+| [Schedule in TypeScript](reference/typescript/schedule.md) | Which calls run a task after a delay or every interval in TypeScript? |
+| [States in TypeScript](reference/typescript/states.md) | Which calls declare states, request a change and run hooks in TypeScript? |
 | [Schema in C++](reference/cpp/schema.md) | Which generated files and functions does the build write for a schema, and what do they declare? |
 | [Queries in C++](reference/cpp/queries.md) | Which calls build a query, visit its rows and read its only row? |
 | [Engine, loop and systems in C++](reference/cpp/engine-and-systems.md) | Which calls create the engine, register systems and states, emit from the host and pause or hide the game? |
@@ -108,6 +116,7 @@ Pages are not numbered. Each path lists every page of its environment in the ord
 | [Glossary](reference/glossary.md) | What does each name mean in C++, the C API and TypeScript? |
 | [Known limitations](reference/limits.md) | What does the engine not do? |
 | [Benchmark results](reference/benchmarks/README.md) | How fast is the engine, and which targets does it meet? |
+| [WASM and TypeScript boundary results](reference/benchmarks/bridge/README.md) | What did the boundary benchmarks measure, and how? |
 
 ## Explanation
 
@@ -122,6 +131,18 @@ Pages are not numbered. Each path lists every page of its environment in the ord
 | [Main architectural decisions](explanation/architecture/decisions.md) | Why is the engine built this way, and what does it cost? |
 | [Environments and hosts](explanation/concepts/environments-and-hosts.md) | What are the core, an environment, a host and a client, and how is a game assembled? |
 | [Concepts](explanation/concepts/README.md) | In which order do I read the rules a game relies on, and what does each page explain? |
+| [Schema](explanation/concepts/schema.md) | How does a `.oly` file declare components, tags, events, actions and states? |
+| [World and entities](explanation/concepts/world-and-entities.md) | Who owns the `World`, what is a handle, and which changes are direct and which are deferred? |
+| [Queries](explanation/concepts/queries.md) | How do I visit many entities at once, and what are the rules while I iterate? |
+| [Engine, loop and systems](explanation/concepts/engine-and-systems.md) | How does a frame run the fixed step, the phases and the systems? |
+| [Events](explanation/concepts/events.md) | How do systems and handlers talk through batches and rounds? |
+| [Input](explanation/concepts/input.md) | How do actions turn physical input into pressed, held and released? |
+| [Schedule](explanation/concepts/schedule.md) | How do I run code after a delay or every interval? |
+| [States](explanation/concepts/states.md) | How do I switch between game states and scope entities to them? |
+| [Performance](explanation/concepts/performance.md) | What does a change cost, and how do I keep the hot path fast? |
+| [Plugins](explanation/concepts/plugins.md) | How does a game turn on engine-level features? |
+| [Transforms](explanation/concepts/transforms.md) | How do `Position`, `Parent` and `WorldTransform` work together? |
+| [Web boundary](explanation/concepts/web-boundary.md) | Why does work cross between C++ and TypeScript by block? |
 | [Plugins in the engine](explanation/architecture/plugins.md) | How does a plugin install, own its parts and merge its schema? |
 | [`capi`: the C API](explanation/architecture/capi.md) | How is the C API designed, and how does the per-engine script invoker work? |
 | [TypeScript packages](explanation/architecture/ts-packages.md) | How are `@oly/core`, `@oly/web-host` and `@oly/testing` built? |
