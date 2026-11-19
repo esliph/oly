@@ -46,7 +46,7 @@ oly run
 
 ## Minimal example
 
-The `game.oly` file declares the `Player` tag and the `move` action. The C++ system moves every `Player` by the axis of `move`:
+The `<game>.oly` file declares the `Player` tag and the `move` action. The C++ system moves every `Player` by the axis of `move`:
 
 <!-- template: templates/game/common/game.oly -->
 ```
@@ -77,7 +77,7 @@ OLY_SYSTEM(movePlayer) {
 }
 ```
 
-`oly new` writes these files at `<game>/game.oly` and `<game>/native/movement.cpp`. The TypeScript system of a web game is in [Read the TypeScript system](docs/tutorials/first-web-game.md#7-read-the-typescript-system).
+`oly new` writes these files at `<game>/<game>.oly` and `<game>/native/movement.cpp`. The TypeScript system of a web game is in [Read the TypeScript system](docs/tutorials/first-web-game.md#7-read-the-typescript-system).
 
 ## Documentation
 
