@@ -23,14 +23,18 @@ ghcr.io/esliph/oly-{dev,wasm,windows}:0.1.0 ◄── --docker
 
 The tag **is** the C++ package: a game fetches the engine with `FetchContent` at `v<version>`, and no other file holds the C++ source. A tag pushed before the checks would be a published version that did not pass them, so the pipeline (`.github/workflows/release.yml`, started by hand with the version as input) creates the tag only at the end, on the commit it tested.
 
+The pipeline builds the release once and promotes it: the jobs after `build` test the files `build` made, never a rebuild of them, and `publish` pushes the very images and assets they tested.
+
 | Job | What it does |
 |---|---|
 | `check` | the dispatch is on `master`; the input version equals the versions of the tree (`project(Oly VERSION)`, the root and the two web `package.json`, their dependency and the lock file entries); the tag does not exist |
-| `linux` | builds the three images from `toolchain.env`; runs the engine tests in them; stages the release; tests the release scripts and archives; runs the consumer test in local mode and staged; saves the tested images |
+| `build` | builds the three images from `toolchain.env`; stages the release; tests the release scripts and archives; saves the images and the staged tree |
+| `engine` | one job per task, in parallel, each in the saved image it needs: `test`, `games-test`, `native-games-test`, `windows-test`, `subproject-test` |
+| `staged-linux` | runs the staged consumer test (`web`, `native`, `docker`) with the saved images, and saves the images it built over them for `publish` |
 | `windows` | runs the staged consumer test on `windows-latest`, with Git Bash, MSYS2 UCRT64, Ninja and emsdk |
 | `publish` | only without `dry_run`, and only if the others passed: loads the saved images and checks they are the tested ones, pushes them, tags the commit and creates the release |
 
-`dry_run` is on by default: everything runs and nothing is published. One release runs at a time. A failed `publish` is re-run as "Re-run failed jobs": the tag and the release are created only when missing.
+`dry_run` is on by default: everything runs and nothing is published. A dry run may start from any branch, and an existing tag is then only a warning, so a change to the pipeline can run before it reaches `master`. One release runs at a time. A failed `publish` is re-run as "Re-run failed jobs": the tag and the release are created only when missing.
 
 The repository is public, so a game downloads every asset without a token. The first push of each image creates a GHCR package that is private until its visibility is set to public.
 
@@ -136,13 +140,15 @@ A game fetches the engine with `FetchContent`; `oly_add_game` and the `oly::` ta
 
 ## The consumer test
 
-The consumer test creates a game with `oly new`, for `web` and for `native`, builds it and runs its test: a node smoke test against the real WASM for the web game, a headless run (`--frames`, `SDL_VIDEO_DRIVER=dummy`) for the native one. It runs three times, each proving more:
+The consumer test creates a game with `oly new`, for `web` and for `native`, builds it and runs its test: a node smoke test against the real WASM for the web game, a headless run (`--frames`, `SDL_VIDEO_DRIVER=dummy`) for the native one. It runs in three ways:
 
 | Run | Where | What it proves |
 |---|---|---|
-| Local mode | `./spur consumer-test`; the `linux` job | the template, the game tasks and the subproject build work from the checkout |
-| Staged, Linux | `./spur staged-test <version>`; the `linux` job | the files just built work as a game downloads them: launcher, `oly-tools` layout, prebuilt `oly-schema`, npm tarballs |
+| Local mode | `./spur consumer-test`, by hand | the template, the game tasks and the subproject build work from the checkout, and `sync` moves a game between local mode and its pinned version |
+| Staged, Linux | `./spur staged-test <version>`; the `staged-linux` job | the files just built work as a game downloads them: launcher, `oly-tools` layout, prebuilt `oly-schema`, npm tarballs, the images with `--docker` and `--platform windows` |
 | Staged, Windows | the `windows` job | the same on the user's platform: Git Bash path conversion, host MinGW, emsdk on Windows, the `.exe` `oly-schema` |
+
+The pipeline runs only the staged ones. The staged tree is packed from the same checkout, so the template and the game tasks it runs are the checkout's: running them again in local mode would build the same games a second time and prove nothing more about the files the pipeline publishes. Local mode stays a task for changes to local mode itself.
 
 A staged release is the release files written to a folder with GitHub's layout (`./spur stage <version>`). `OLY_RELEASE_URL` points the launcher at it, and the engine source comes from the commit being released (`OLY_ENGINE_SOURCE_DIR`, passed as `FETCHCONTENT_SOURCE_DIR_OLY`), because the tag does not exist yet. The staged run sets the npm `@oly` registry to an address that refuses connections, so a game that tried to fetch an `@oly` package from the registry would fail.
 

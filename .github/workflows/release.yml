@@ -1,7 +1,8 @@
 name: release
 
-# Started by hand on master. It tests the version on Linux and on Windows exactly as a game will download it, and only
-# when everything passed does the publish job tag the commit and publish (spec §4.2). With dry_run, nothing is published.
+# Started by hand on master. The build job makes the release once (the toolchain images and the staged release tree);
+# every later job tests those same files, and only when everything passed does the publish job promote them unchanged:
+# tag the commit and publish (spec §4.2). With dry_run, nothing is published.
 on:
   workflow_dispatch:
     inputs:
@@ -26,16 +27,19 @@ concurrency:
 # The version input reaches the shell through the environment, never through ${{ }} inside a script.
 env:
   VERSION: ${{ inputs.version }}
+  DRY_RUN: ${{ inputs.dry_run }}
   REGISTRY: ghcr.io/esliph
 
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
+      # A dry run publishes nothing, so it may start from another branch: a change to this file runs before it reaches
+      # master, and an already tagged version can be run again.
       - name: Releases are cut from master
         run: |
-          if [ "$GITHUB_REF" != refs/heads/master ]; then
-            echo "::error::dispatched on $GITHUB_REF: releases are cut from refs/heads/master"
+          if [ "$GITHUB_REF" != refs/heads/master ] && [ "$DRY_RUN" != true ]; then
+            echo "::error::dispatched on $GITHUB_REF: releases are cut from refs/heads/master; other branches run only with dry_run"
             exit 1
           fi
       - uses: actions/checkout@v4
@@ -44,14 +48,20 @@ jobs:
       - name: The tag does not exist yet
         run: |
           if [ -n "$(git ls-remote --tags origin "refs/tags/v$VERSION")" ]; then
-            echo "::error::tag v$VERSION already exists"
-            exit 1
+            if [ "$DRY_RUN" = true ]; then
+              echo "::warning::tag v$VERSION already exists: a real release of this version would stop here"
+            else
+              echo "::error::tag v$VERSION already exists"
+              exit 1
+            fi
           fi
 
-  linux:
+  # The one place the release is built. The images and the tree it uploads are the ones every later job tests and the
+  # publish job pushes.
+  build:
     needs: check
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - name: Free disk space
@@ -66,20 +76,119 @@ jobs:
           mkdir -p build
           sudo setfacl -R -m "u:$(id -un):rwX" -m "d:u:$(id -un):rwX" .
       - name: Build the images
-        run: ./spur images
-      - name: Engine tests
-        run: |
-          ./spur test
-          ./spur games-test
-          ./spur native-games-test
-          ./spur windows-test
-          ./spur subproject-test
+        run: ./spur images dev wasm windows
       - name: Stage the release
         run: ./spur stage "$VERSION"
       - name: Tests of the release scripts and archives
         run: ./spur release-test
-      - name: Consumer test, local mode
-        run: ./spur consumer-test
+      - name: Save the images
+        # One file per image: a job that tests in one toolchain downloads only that one.
+        run: |
+          mkdir -p build/images
+          for image in dev wasm windows; do
+            docker save "cpp_services-$image" | zstd -q -T0 -3 -o "build/images/$image.tar.zst"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-tree
+          path: build/release/${{ inputs.version }}
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: image-dev
+          path: build/images/dev.tar.zst
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: image-wasm
+          path: build/images/wasm.tar.zst
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: image-windows
+          path: build/images/windows.tar.zst
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: error
+
+  # One job per preset: run one after another they took 16 minutes (2026-11-19).
+  engine:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      actions: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - task: test
+            images: dev
+          - task: games-test
+            images: wasm
+          - task: native-games-test
+            images: dev
+          - task: windows-test
+            images: windows
+          - task: subproject-test
+            images: dev wasm
+    name: engine (${{ matrix.task }})
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TASK: ${{ matrix.task }}
+      IMAGES: ${{ matrix.images }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Let the runner write what the containers create
+        run: |
+          mkdir -p build
+          sudo setfacl -R -m "u:$(id -un):rwX" -m "d:u:$(id -un):rwX" .
+      - name: Load the images the build job saved
+        run: |
+          for image in $IMAGES; do
+            gh run download "$GITHUB_RUN_ID" --name "image-$image" --dir "build/images/$image"
+            zstd -q -dc "build/images/$image/$image.tar.zst" | docker load
+            rm -rf "build/images/$image"
+          done
+      - name: Engine tests
+        run: ./spur "$TASK"
+
+  # The consumer test against the staged release, the files a game downloads. It also builds, from the saved images and
+  # the staged oly-tools, the images the publish job pushes.
+  staged-linux:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Free disk space
+        # The three saved images, the three built over them and their saved copies; not measured.
+        run: sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android
+      - name: Let the runner write what the containers create
+        run: |
+          mkdir -p build
+          sudo setfacl -R -m "u:$(id -un):rwX" -m "d:u:$(id -un):rwX" .
+      - name: Load the images the build job saved
+        run: |
+          for image in dev wasm windows; do
+            gh run download "$GITHUB_RUN_ID" --name "image-$image" --dir "build/images/$image"
+            zstd -q -dc "build/images/$image/$image.tar.zst" | docker load
+            rm -rf "build/images/$image"
+          done
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-tree
+          path: build/release/${{ inputs.version }}
       - name: Consumer test, staged
         run: ./spur staged-test "$VERSION"
       - name: Save the tested images
@@ -94,18 +203,13 @@ jobs:
           docker save "$REGISTRY/oly-dev:$VERSION" "$REGISTRY/oly-wasm:$VERSION" "$REGISTRY/oly-windows:$VERSION" | gzip > build/publish/images.tar.gz
       - uses: actions/upload-artifact@v4
         with:
-          name: release-tree
-          path: build/release/${{ inputs.version }}
-          if-no-files-found: error
-      - uses: actions/upload-artifact@v4
-        with:
           name: images
           path: build/publish
           compression-level: 0
           if-no-files-found: error
 
   windows:
-    needs: linux
+    needs: build
     runs-on: windows-latest
     timeout-minutes: 120
     defaults:
@@ -160,7 +264,7 @@ jobs:
 
   publish:
     if: ${{ !inputs.dry_run }}
-    needs: [linux, windows]
+    needs: [engine, staged-linux, windows]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -170,7 +274,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Free disk space
-        # The saved images are loaded here, as big as the ones the linux job built; not measured.
+        # The saved images are loaded here, as big as the ones the staged-linux job built; not measured.
         run: sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/lib/android
       - uses: actions/download-artifact@v4
         with:
