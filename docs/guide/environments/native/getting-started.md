@@ -249,7 +249,7 @@ oly test                                          # builds and runs every test
 ctest --test-dir build/cmake -R '^<target>\.'     # only your game, after oly test
 ```
 
-`checkInvariants` after each step catches corruption at the step that caused it ([World and entities](../../concepts/world-and-entities.md#debugging-the-world)). The engine's own C++ tests use doctest with a bare `World` and `Engine` (`engine/runtime/app/tests/`); to add one inside the engine, follow the `add-test-case` skill described in [build and tests](../../../architecture/build-and-tests.md).
+`checkInvariants` after each step catches corruption at the step that caused it ([Debug the world](../../../how-to/debug-the-world.md)). The engine's own C++ tests use doctest with a bare `World` and `Engine` (`engine/runtime/app/tests/`); to add one inside the engine, follow the `add-test-case` skill described in [build and tests](../../../architecture/build-and-tests.md).
 
 ## Inside the engine repository
 

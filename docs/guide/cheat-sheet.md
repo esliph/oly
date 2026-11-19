@@ -30,7 +30,7 @@ oly::app::setUpGame(engine);                              // "oly/app/game.hpp":
 
 ## World
 
-[World and entities](concepts/world-and-entities.md)
+[World and entities](../explanation/concepts/world-and-entities.md)
 
 ```cpp
 oly::ecs::Entity entity = context.spawn(A{...}, Tag{});    // world.spawn(...) where you own the Engine

@@ -1,6 +1,6 @@
 # Queries
 
-[← World and entities](world-and-entities.md) · [Guide index](../README.md) · Next: [Engine, loop and systems →](engine-and-systems.md)
+[← World and entities](../../explanation/concepts/world-and-entities.md) · [Guide index](../README.md) · Next: [Engine, loop and systems →](engine-and-systems.md)
 
 A query visits every entity that has a given set of components. It is the main way to run gameplay over many entities.
 
@@ -65,7 +65,7 @@ Both read and write the stored columns directly: there is no copy.
 ## Rules while iterating
 
 - References and spans are valid **only inside the callback**. Do not keep them for later.
-- A direct structural change on the `World` (`spawn`, `destroy`, `add`, `remove`) while a query iterates is a contract violation (`OLY_ASSERT`). Inside a system, use `context.spawn/destroy/add/remove`: they are deferred to the end of the phase and safe. Outside the loop, collect the entities first and change them after the iteration, or use a `CommandBuffer` ([World and entities](world-and-entities.md#without-the-engine-commandbuffer)).
+- A direct structural change on the `World` (`spawn`, `destroy`, `add`, `remove`) while a query iterates is a contract violation (`OLY_ASSERT`). Inside a system, use `context.spawn/destroy/add/remove`: they are deferred to the end of the phase and safe. Outside the loop, collect the entities first and change them after the iteration, or use a `CommandBuffer` ([World and entities](../../reference/cpp/world-and-entities.md#commandbuffer)).
 
 ```cpp
 OLY_SYSTEM(removeDead) {

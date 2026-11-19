@@ -1,8 +1,8 @@
 # World and entities in TypeScript
 
-[← Schema](schema.md) · [TypeScript client](README.md) · Concept: [World and entities](../../guide/concepts/world-and-entities.md) · Next: [Queries →](queries.md)
+[TypeScript client](README.md) · Concept: [World and entities](../../explanation/concepts/world-and-entities.md) · C++: [World and entities in C++](../cpp/world-and-entities.md)
 
-The rules (deferred and direct changes, what a handle is) are in the [concept page](../../guide/concepts/world-and-entities.md). This page shows the TS calls.
+The rules (deferred and direct changes, what a handle is) are in the [concept page](../../explanation/concepts/world-and-entities.md). This page shows the TS calls.
 
 ## Where the World comes from
 
@@ -20,7 +20,7 @@ const world = runtime.createWorld();
 world.dispose();
 ```
 
-The client refuses operations on `engine.world` during `frame` with `ContractError`: use the context instead.
+During `frame`, the client refuses `spawn`, `destroy`, `add` and `remove` on `engine.world` with `ContractError` (`direct structural change during frame; use context.spawn/destroy/add/remove`): use the context instead. `get`, `set`, `has`, `isAlive` and `query` stay allowed.
 
 ## Create entities
 
@@ -98,7 +98,7 @@ if (!context.isAlive(leader)) {
 
 ## What stays valid
 
-`get` returns copies, so there is nothing to invalidate. The TS-only rule is for views: a typed-array view of the WASM heap is invalidated when the memory grows, which any spawn or add can cause. Read the view again after one, and use views from queries only inside their callback ([Queries](queries.md)).
+`get` returns copies, so there is nothing to invalidate. The TS-only rule is for `raw()`: the arrays it returns go stale when the WASM memory grows, which any spawn or add can cause. Call `raw()` again after one. `ReadField.get`, `WriteField.get` and `WriteField.set` read the heap on every call, so they follow the growth. Use views from queries only inside their callback ([Queries](queries.md)).
 
 ## Debugging the world
 
@@ -109,8 +109,4 @@ if (problem !== null) {
 }
 ```
 
-Call `checkInvariants` in tests after each step ([Testing a web game](../../how-to/test-a-web-game.md)).
-
-## Next
-
-[Queries →](queries.md): visit many entities at once.
+Call `checkInvariants` in tests after each step: [Debug the world](../../how-to/debug-the-world.md).

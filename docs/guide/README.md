@@ -37,7 +37,7 @@ Pages are not numbered. Each path lists them in the order to read.
 **TypeScript on the web**
 
 1. [Getting started on the web](environments/web/getting-started.md)
-2. Each concept, followed by its TS page: [Schema](concepts/schema.md) and [in TS](../reference/typescript/schema.md), [World and entities](concepts/world-and-entities.md) and [in TS](../reference/typescript/world-and-entities.md), [Queries](concepts/queries.md) and [in TS](../reference/typescript/queries.md), [Engine, loop and systems](concepts/engine-and-systems.md) and [in TS](../reference/typescript/engine-and-systems.md), [Events](concepts/events.md) and [in TS](../reference/typescript/events.md), [Input](concepts/input.md) and [in TS](../reference/typescript/input.md), [Schedule](concepts/schedule.md) and [in TS](../reference/typescript/schedule.md), [States](concepts/states.md) and [in TS](../reference/typescript/states.md)
+2. Each concept, followed by its TS page: [Schema](concepts/schema.md) and [in TS](../reference/typescript/schema.md), [World and entities](../explanation/concepts/world-and-entities.md) and [in TS](../reference/typescript/world-and-entities.md), [Queries](concepts/queries.md) and [in TS](../reference/typescript/queries.md), [Engine, loop and systems](concepts/engine-and-systems.md) and [in TS](../reference/typescript/engine-and-systems.md), [Events](concepts/events.md) and [in TS](../reference/typescript/events.md), [Input](concepts/input.md) and [in TS](../reference/typescript/input.md), [Schedule](concepts/schedule.md) and [in TS](../reference/typescript/schedule.md), [States](concepts/states.md) and [in TS](../reference/typescript/states.md)
 3. [Testing a web game](../how-to/test-a-web-game.md)
 4. [The WASM↔JS boundary](environments/web/boundary.md)
 
@@ -60,7 +60,7 @@ Read in order the first time. Each page builds on the one before.
 | Page | You learn to |
 |---|---|
 | [Schema](concepts/schema.md) | declare components, tags, events, actions and states |
-| [World and entities](concepts/world-and-entities.md) | create, change, read and destroy entities |
+| [World and entities](../explanation/concepts/world-and-entities.md) | create, change, read and destroy entities |
 | [Queries](concepts/queries.md) | iterate over entities fast, filter them, find "the only one" |
 | [Engine, loop and systems](concepts/engine-and-systems.md) | run the game loop, register systems, pause, render |
 | [Events](concepts/events.md) | let systems talk without knowing each other |

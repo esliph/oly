@@ -1,6 +1,6 @@
 # Schema
 
-[Guide index](../README.md) · Next: [World and entities →](world-and-entities.md)
+[Guide index](../README.md) · Next: [World and entities →](../../explanation/concepts/world-and-entities.md)
 
 The schema is the **single source** of your game's data. You write it once, in a `<game>.oly` file. The build generates the matching C++ (and the code of each client) from it, so every language agrees on the memory layout.
 
@@ -169,6 +169,6 @@ Include the generated header everywhere: from the game, from the shell and from 
 
 ## Next
 
-[World and entities →](world-and-entities.md): create entities from these types.
+[World and entities →](../../explanation/concepts/world-and-entities.md): create entities from these types.
 
 In other clients: [TypeScript](../../reference/typescript/schema.md).
