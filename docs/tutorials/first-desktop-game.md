@@ -109,50 +109,22 @@ Change `PlayerSpeed` to `400.0f` and run `oly run` again. You see the square cro
 
 ## 6. Read the shell
 
-The shell is `desktop/main.cpp`. It creates the `World` and the `Engine`, opens the window and hands the loop to `run`. This is the whole file:
+The shell is `desktop/main.cpp`. It holds the game as a class, `MyGame`, and starts it with one call, `runGame`. This is the whole file:
 
 ```cpp
 #include <SDL3/SDL.h>
 
-#include <cstdio>
-#include <cstdlib>
-#include <exception>
-#include <string_view>
-
 #include "oly/app/engine.hpp"
-#include "oly/app/game.hpp"
 #include "oly/ecs/query.hpp"
 #include "oly/ecs/world.hpp"
-#include "oly/native_host/run.hpp"
-#include "oly/native_host/window.hpp"
+#include "oly/native_host/game.hpp"
 #include "schema.generated.hpp"
 #include "systems.hpp"
 
 namespace {
-  constexpr int UsageExitCode = 64;
   constexpr int LogicalWidth = 640;
   constexpr int LogicalHeight = 360;
   constexpr float PlayerSize = 16.0f;
-
-  bool parseOptions(int argumentCount, char** arguments, oly::native_host::RunOptions& options) {
-    for (int index = 1; index < argumentCount; ++index) {
-      const std::string_view argument = arguments[index];
-      if (argument != "--frames" || index + 1 >= argumentCount) {
-        return false;
-      }
-
-      const unsigned long long frames = std::strtoull(arguments[++index], nullptr, 10);
-      if (frames == 0) {
-        return false;
-      }
-
-      // Headless runs: a fixed number of frames over a known amount of game time.
-      options.maxFrames = frames;
-      options.frameSeconds = 1.0 / 60;
-    }
-
-    return true;
-  }
 
   void draw(oly::app::SystemContext& context) {
     SDL_Renderer* renderer = static_cast<SDL_Renderer*>(context.userData());
@@ -163,45 +135,34 @@ namespace {
       SDL_RenderFillRect(renderer, &box);
     });
   }
+
+  class MyGame : public oly::native_host::Game {
+   public:
+    MyGame()
+      : Game({"<game>", LogicalWidth, LogicalHeight}) {}
+
+    void onStart(oly::app::Engine& engine, oly::native_host::Window& window) override {
+      engine.actions().bind(actions::move, {oly::input::Key::W, oly::input::Key::S, oly::input::Key::A, oly::input::Key::D});
+      engine.world().spawn(Player{}, Position{LogicalWidth / 2.0f, LogicalHeight / 2.0f});
+      engine.addSystem(oly::app::Phase::Update, "movePlayer", movePlayer);
+      engine.addSystem(oly::app::Phase::Render, "draw", draw, window.renderer());
+    }
+  };
 }
 
 int main(int argumentCount, char** arguments) {
-  oly::native_host::RunOptions options;
-  if (!parseOptions(argumentCount, arguments, options)) {
-    std::fprintf(stderr, "usage: %s [--frames <n>]\n", arguments[0]);
-    return UsageExitCode;
-  }
-
-  try {
-    oly::ecs::World world;
-    oly::app::Engine engine(world);
-    oly::app::setUpGame(engine);
-
-    engine.actions().bind(actions::move, {oly::input::Key::W, oly::input::Key::S, oly::input::Key::A, oly::input::Key::D});
-    world.spawn(Player{}, Position{LogicalWidth / 2.0f, LogicalHeight / 2.0f});
-    engine.addSystem(oly::app::Phase::Update, "movePlayer", movePlayer);
-
-    oly::native_host::Window window({"<game>", LogicalWidth, LogicalHeight});
-    engine.addSystem(oly::app::Phase::Render, "draw", draw, window.renderer());
-
-    return oly::native_host::run(engine, window, options);
-  } catch (const std::exception& error) {
-    std::fprintf(stderr, "<game>: %s\n", error.what());
-    return 1;
-  }
+  return oly::native_host::runGame<MyGame>(argumentCount, arguments);
 }
 ```
 
-In `main`, in order:
+In the file, in order:
 
-- `oly::app::setUpGame(engine)` declares the schema's events, actions and states, then installs the game's plugins. The build generates it. Call it first, on an `Engine` that has declared nothing yet.
-- `engine.actions().bind` ties the keys `W`, `S`, `A` and `D` to the two axes of `move`.
-- `world.spawn` creates the player in the middle of the logical area.
-- `engine.addSystem` adds `movePlayer` to the `Update` phase and `draw` to the `Render` phase. `draw` gets the SDL renderer through `userData`.
-- `Window` opens a resizable window. Its size, `640` by `360`, is the logical size the game draws in: the host scales it to the window and adds bars when the shape differs ([Native host](../reference/native-host.md)).
-- `run` returns when the window is closed, and `main` returns its result as the exit code. `parseOptions` fills `RunOptions` from `--frames <n>`.
+- `draw` is a `Render` system. It gets the SDL renderer through `userData`.
+- `MyGame` derives `oly::native_host::Game`. Its constructor gives the window configuration. The size, `640` by `360`, is the logical size the game draws in: the host scales it to the window and adds bars when the shape differs ([Native host](../reference/native-host.md)).
+- `onStart` is the content of the game. `runGame` calls it once, on an `Engine` that it already set up with `setUpGame`, with the window open. `engine.actions().bind` ties the keys `W`, `S`, `A` and `D` to the two axes of `move`. `engine.world().spawn` creates the player in the middle of the logical area. `engine.addSystem` adds `movePlayer` to the `Update` phase and `draw` to the `Render` phase.
+- `runGame<MyGame>` reads `--frames <n>`, constructs the game, opens the window and runs the loop. It returns the exit code: `0` when the window closes, `64` for a wrong command line and `1` when an exception escapes, after it prints `<title>: <message>`.
 
-Change `PlayerSize` to `32.0f` and run `oly run` again. You see a square twice as wide.
+Rename `MyGame` to fit your game. Change `PlayerSize` to `32.0f` and run `oly run` again. You see a square twice as wide.
 
 ## 7. Run the tests
 

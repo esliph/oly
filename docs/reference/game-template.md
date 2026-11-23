@@ -94,7 +94,7 @@ The overlay `templates/game/native/` runs the game in a window, in C++ only.
 | Template file | In `<game>/` | What it is |
 |---|---|---|
 | `native/cmake/game.cmake` | `cmake/game.cmake` | `oly_add_game` for the desktop, and the ctest test `<target>.headless` |
-| `native/desktop/main.cpp` | `desktop/main.cpp` | the SDL shell: window, drawing, the `--frames <n>` option and the error exit |
+| `native/desktop/main.cpp` | `desktop/main.cpp` | `MyGame` (window, bindings, first entity, systems, drawing) and `main`, which calls `runGame<MyGame>` |
 
 A native game has no registry, no TS and no `.mjs`: the target is a plain executable in `build/cmake/games/`.
 
