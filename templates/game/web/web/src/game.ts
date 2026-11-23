@@ -1,28 +1,29 @@
-import { Phase } from "@oly/core";
 import type { Engine } from "@oly/core";
+import { Game } from "@oly/web-host";
 
-import { Player, Position, move } from "../schema.generated.js";
+import schema from "../schema.generated.js";
+import { startGameplay } from "./gameplay.js";
 
-const PlayerSize = 16;
+const Width = 640;
+const Height = 360;
 
-export interface Drawer {
-  clear(): void;
-  square(x: number, y: number, size: number): void;
-}
+export class MyGame extends Game {
+  constructor() {
+    super({ canvas: "game", module: "./@GAME_TARGET@.mjs", schema, width: Width, height: Height });
+  }
 
-export function installGame(engine: Engine, drawer: Drawer): void {
-  engine.actions.bind(move, { up: "KeyW", down: "KeyS", left: "KeyA", right: "KeyD" });
-  engine.world.spawn([Player, Position], { Position: { x: 320, y: 180 } });
+  onStart(engine: Engine, canvas: HTMLCanvasElement): void {
+    const context = canvas.getContext("2d");
+    if (context === null) {
+      throw new Error("the browser did not provide a 2D context for the canvas");
+    }
 
-  engine.addNativeSystem(Phase.Update, "movePlayer");
-
-  engine.addSystem(Phase.Render, "draw", (context) => {
-    drawer.clear();
-    context.query({ read: [Position], with: [Player] }).eachBlock((block) => {
-      const position = block.read(Position);
-      for (let row = 0; row < block.count; ++row) {
-        drawer.square(position.x.get(row), position.y.get(row), PlayerSize);
-      }
+    startGameplay(engine, {
+      clear: () => context.clearRect(0, 0, canvas.width, canvas.height),
+      square: (x, y, size) => {
+        context.fillStyle = "#ffffff";
+        context.fillRect(x - size / 2, y - size / 2, size, size);
+      },
     });
-  });
+  }
 }

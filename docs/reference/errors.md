@@ -98,7 +98,9 @@ In debug builds, a contract violation stops on `OLY_ASSERT`. `oly build`, `oly t
 | `createEngine fixedHz=<value>: must be a positive number` (and `maxStepsPerFrame`, `maxEventRounds`: a positive integer) | `Runtime` | `Engine: fixedHz=<value> must be positive` | the config has a zero or negative field | pass positive values |
 | `<operation>: Engine already disposed`, `<operation>: World already disposed` | `Engine`, `World` | none | use after `dispose()` | keep the engine alive while the game runs |
 | `dispose: World belongs to the Engine; use engine.dispose()` | `World` | none | `engine.world.dispose()` | dispose the engine instead |
-| `canvas with id "<id>" not found on the page` (`Error`, also written into the page as `Error starting the game: ...`) | `runGame` | none | the `canvas` option is an id that finds no element, or an element that is not a `<canvas>` | give the `<canvas>` that id in the HTML, or pass the element || `stop: game in frame; stop after the frame` | `BrowserGame` | none | `stop()` called from a system, handler, hook or task | set a flag and call `stop()` after the frame, from an event handler of the page |
+| `canvas with id "<id>" not found on the page` (`Error`, also written into the page as `Error starting the game: ...`) | `runGame` | none | the `canvas` option is an id that finds no element, or an element that is not a `<canvas>` | give the `<canvas>` that id in the HTML, or pass the element |
+| `stop: game in frame; stop after the frame` | `BrowserGame` | none | `stop()` called from a system, handler, hook or task | set a flag and call `stop()` after the frame, from an event handler of the page |
+| `the browser did not provide a 2D context for the canvas` (`Error`) | the template's `MyGame.onStart` | none | `canvas.getContext("2d")` returned `null`: the canvas already has another kind of context, or the browser has no Canvas 2D | create one context per canvas; use a browser with Canvas 2D |
 
 ## oly
 

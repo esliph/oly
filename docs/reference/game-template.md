@@ -58,12 +58,13 @@ The overlay `templates/game/web/` runs the game as WASM with a TypeScript client
 | `web/cmake/game.cmake` | `cmake/game.cmake` | `oly_add_game` for the web, and the ctest test `<target>.smoke` |
 | `web/package.json` | `package.json` | the `@oly/core` and `@oly/web-host` tarballs of the engine version, and `esbuild`, `typescript` and `@types/node` |
 | `web/tsconfig.json` | `tsconfig.json` | references the three TS projects below |
-| `web/web/tsconfig.json` | `web/tsconfig.json` | DOM-free code: the schema and the game logic; leaves `src/main.ts` out |
-| `web/web/tsconfig.browser.json` | `web/tsconfig.browser.json` | only `src/main.ts`, with the DOM types |
+| `web/web/tsconfig.json` | `web/tsconfig.json` | DOM-free code: the schema and the gameplay; leaves `src/main.ts` and `src/game.ts` out |
+| `web/web/tsconfig.browser.json` | `web/tsconfig.browser.json` | only `src/main.ts` and `src/game.ts`, with the DOM types |
 | `web/web/tests/tsconfig.json` | `web/tests/tsconfig.json` | the tests; emits them to `web/dist/tests/` |
-| `web/web/src/game.ts` | `web/src/game.ts` | `installGame(engine, drawer)`: binds the action, spawns the player, registers `movePlayer` and a `draw` system; no DOM |
-| `web/web/src/main.ts` | `web/src/main.ts` | the browser shell: canvas, `loadRuntime`, `createEngine`, `installGame`, input and loop |
-| `web/web/index.html` | `web/index.html` | the page with the `<canvas id="game">` that `main.ts` finds |
+| `web/web/src/gameplay.ts` | `web/src/gameplay.ts` | `startGameplay(engine, drawer)`: binds the action, spawns the player, registers `movePlayer` and a `draw` system; no DOM |
+| `web/web/src/game.ts` | `web/src/game.ts` | `MyGame`, the class that derives `Game`: canvas, module and size options, and `onStart`, which gives `startGameplay` a `Drawer` over the 2D context; the DOM is here |
+| `web/web/src/main.ts` | `web/src/main.ts` | one line: `runGame(new MyGame())` |
+| `web/web/index.html` | `web/index.html` | the page with the `<canvas id="game">` that `MyGame` finds |
 | `web/web/tests/smoke.test.ts` | `web/tests/smoke.test.ts` | holds `KeyD` for one second and checks that the player moved by the player speed |
 
 `web/schema.generated.ts` is written by the build from `<game>.oly`, and is not committed. `oly new` runs `npm install` at the end.

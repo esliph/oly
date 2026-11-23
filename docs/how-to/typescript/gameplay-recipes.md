@@ -334,10 +334,10 @@ engine.addSystem(Phase.UpdateAfter, "wrapAsteroids", (context) => {
 
 ## Score and HUD
 
-Game rules that are not per entity (score, wave number, combo) can live in plain TS objects. The render system reads them. This example is from a bigger game: its `Drawer` also has `text`, and `installGame` returns the `score`. The template's `Drawer` has only `clear` and `square` ([Your first web game](../../tutorials/first-web-game.md#7-read-the-typescript-system)).
+Game rules that are not per entity (score, wave number, combo) can live in plain TS objects. The render system reads them. This example is from a bigger game: its `Drawer` also has `text`, and `startGameplay` returns the `score`. The template's `Drawer` has only `clear` and `square` ([Your first web game](../../tutorials/first-web-game.md#7-read-the-typescript-system)).
 
 ```ts
-export function installGame(engine: Engine, drawer: Drawer): Score {   // a bigger game: the template returns void
+export function startGameplay(engine: Engine, drawer: Drawer): Score {   // a bigger game: the template returns void
   const score = { kills: 0, coins: 0 };
 
   engine.on(EnemyDied, "countKill", (_context, batch) => {
@@ -539,7 +539,7 @@ engine.onExit(playing, "saveBest", () => {
 ```
 
 ```ts
-// main.ts
+// game.ts
 const storage = {
   loadBest: () => Number(localStorage.getItem("best") ?? 0),
   saveBest: (value: number) => localStorage.setItem("best", String(value)),
