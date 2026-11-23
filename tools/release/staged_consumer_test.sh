@@ -65,7 +65,9 @@ fi
 
 # The other way to a game: a release other than the latest, read from download/v<version>/.
 (cd "$work" && curl -fsSL "$OLY_RELEASE_URL/download/v$version/oly" | sh -s -- new "pinned-$environment" --environment "$environment" --version "$version") || fail 1 "creating the game from download/v$version/oly failed"
-cmp -s "$work/pinned-$environment/oly" "$game/oly" || fail 1 "the launcher of download/v$version/ is not the latest's"
+curl -fsSL "$OLY_RELEASE_URL/download/v$version/oly" -o "$work/pinned-oly" || fail 1 "could not download download/v$version/oly"
+cmp -s "$work/pinned-oly" "$work/pinned-$environment/oly" || fail 1 "the game made from download/v$version/oly does not hold that asset"
+cmp -s "$work/pinned-oly" "$game/oly" || fail 1 "the launcher of download/v$version/ is not the latest's"
 
 # The file sh is reading is the one upgrade replaces.
 printf '# edited\n' >> "$game/oly"

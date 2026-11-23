@@ -8,7 +8,7 @@ A white square that you move with `W`, `A`, `S` and `D` in the browser. The game
 
 ## Before you start
 
-You need a computer with these tools. In step 2, `oly doctor` checks `cmake`, `ninja` (Windows only), `emcc`, `node` and `npm`. It does not check the other tools in this list.
+You need a computer with these tools. In step 1, `oly doctor` checks `cmake`, `ninja` (Windows only), `emcc`, `node` and `npm`. It does not check the other tools in this list.
 
 - On Linux: `curl`, `tar`, `git`, `make`, CMake, GCC, Node.js with npm, and emsdk.
 - On Windows: Git Bash, MSYS2 UCRT64 (`gcc`, `cmake` and `ninja`), Node.js with npm, and emsdk. Run every command from Git Bash, not from PowerShell or `cmd`.
@@ -16,24 +16,24 @@ You need a computer with these tools. In step 2, `oly doctor` checks `cmake`, `n
 
 The exact versions are in [The `oly` command](../reference/cli.md#install).
 
-## 1. Create the game
+## 1. Check your tools
+
+```sh
+curl -fsSL https://github.com/esliph/oly/releases/latest/download/oly | sh -s -- doctor --environment web
+```
+
+There is nothing to install first: the command downloads the launcher of the latest release and runs its `doctor` outside a game. You see one line per tool. Each line starts with `ok`, `old`, `untested`, `missing` or `wrong`, then the tool and what to install. Fix every line that does not say `ok`, then run the command again.
+
+## 2. Create the game
 
 ```sh
 curl -fsSL https://github.com/esliph/oly/releases/latest/download/oly | sh -s -- new <game> --environment web
 cd <game>
 ```
 
-`<game>` is the name of the folder: lowercase letters, digits and `-`, starting with a letter. There is nothing to install first: the command downloads the launcher, which copies [the game template](../reference/game-template.md) into the folder, installs the npm packages and leaves itself in the game as `./oly`.
+`<game>` is the name of the folder: lowercase letters, digits and `-`, starting with a letter. The command downloads the launcher, which copies [the game template](../reference/game-template.md) into the folder, installs the npm packages and leaves itself in the game as `./oly`.
 
 You see `created <game> (web, oly <version>)`, and a folder with `oly`, `oly.env`, `<game>.oly`, `native/`, `web/` and the other files of the template. Run `./oly` from inside it: it is the launcher of this game.
-
-## 2. Check your tools
-
-```sh
-./oly doctor --environment web
-```
-
-You see one line per tool. Each line starts with `ok`, `old`, `untested`, `missing` or `wrong`, then the tool and what to install. Fix every line that does not say `ok`, then run the command again.
 
 ## 3. Run the test
 

@@ -8,7 +8,7 @@ A white square that you move with `W`, `A`, `S` and `D` in a window on Linux or 
 
 ## Before you start
 
-You need a computer with these tools. In step 2, `oly doctor` checks `cmake`, `ninja` (Windows only) and `g++`. It does not check the other tools in this list.
+You need a computer with these tools. In step 1, `oly doctor` checks `cmake`, `ninja` (Windows only) and `g++`. It does not check the other tools in this list.
 
 - On Linux: `curl`, `tar`, `git`, `make`, CMake, GCC, and the X11 and Wayland development headers that SDL3 needs to open a window.
 - On Windows: Git Bash and MSYS2 UCRT64 (`gcc`, `cmake` and `ninja`). Run every command from Git Bash, not from PowerShell or `cmd`.
@@ -16,24 +16,24 @@ You need a computer with these tools. In step 2, `oly doctor` checks `cmake`, `n
 
 The exact versions are in [The `oly` command](../reference/cli.md#install). To make a game for the browser instead, follow [Your first web game](first-web-game.md).
 
-## 1. Create the game
+## 1. Check your tools
+
+```sh
+curl -fsSL https://github.com/esliph/oly/releases/latest/download/oly | sh -s -- doctor --environment native
+```
+
+There is nothing to install first: the command downloads the launcher of the latest release and runs its `doctor` outside a game. You see one line per tool. Each line starts with `ok`, `old`, `untested`, `missing` or `wrong`, then the tool and what to install. Fix every line that does not say `ok`, then run the command again.
+
+## 2. Create the game
 
 ```sh
 curl -fsSL https://github.com/esliph/oly/releases/latest/download/oly | sh -s -- new <game> --environment native
 cd <game>
 ```
 
-`<game>` is the name of the folder: lowercase letters, digits and `-`, starting with a letter. There is nothing to install first: the command downloads the launcher, which copies [the game template](../reference/game-template.md#native) into the folder and leaves itself in the game as `./oly`.
+`<game>` is the name of the folder: lowercase letters, digits and `-`, starting with a letter. The command downloads the launcher, which copies [the game template](../reference/game-template.md#native) into the folder and leaves itself in the game as `./oly`.
 
 You see `created <game> (native, oly <version>)`, and a folder with `oly`, `oly.env`, `<game>.oly`, `native/`, `desktop/` and the other files of the template. Run `./oly` from inside it: it is the launcher of this game.
-
-## 2. Check your tools
-
-```sh
-./oly doctor --environment native
-```
-
-You see one line per tool. Each line starts with `ok`, `old`, `untested`, `missing` or `wrong`, then the tool and what to install. Fix every line that does not say `ok`, then run the command again.
 
 ## 3. Run the game
 
