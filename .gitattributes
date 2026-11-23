@@ -4,3 +4,4 @@ spur text eol=lf
 Spurfile text eol=lf
 *.env text eol=lf
 tools/oly/oly text eol=lf
+templates/game/common/gitattributes text eol=lf

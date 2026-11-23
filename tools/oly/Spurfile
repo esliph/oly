@@ -543,6 +543,7 @@ new: ## create <name>/ from the template: new <name> --environment web|native
   cp -R "$template/common/." "$name/"
   cp -R "$template/$environment/." "$name/"
   mv "$name/gitignore" "$name/.gitignore"
+  mv "$name/gitattributes" "$name/.gitattributes"
   mv "$name/game.oly" "$name/$name.oly"
 
   find "$name" -type f | while IFS= read -r file; do
@@ -554,6 +555,9 @@ new: ## create <name>/ from the template: new <name> --environment web|native
       "$file" > "$file.oly-new"
     mv "$file.oly-new" "$file"
   done
+
+  # After the loop, which rewrites each file through a temporary one and drops its mode; upgrade compares ./oly byte for byte with the version's launcher.
+  cp "$(_asset oly tools/oly/oly)" "$name/oly" && chmod 755 "$name/oly" || _fail 1 "could not copy the launcher into $name"
 
   if [ "$environment" = web ]; then
     (cd "$name" && _npm install --no-audit --no-fund && printf '%s pinned\n' "$(_platform)" > node_modules/.oly-install)
