@@ -65,6 +65,7 @@ In debug builds, a contract violation stops on `OLY_ASSERT`. `oly build`, `oly t
 | `<operation>: action '<name>' has kind <kind>, expected <kind>` | `input` | `<operation> action=<name>: action of kind <kind>, expected <kind>` | `axis2d(shoot)` on a button action | read with the method of the action's kind |
 | `bind: invalid usage 0 (action '<name>')`, `buttonDown: invalid usage 0`, `buttonUp: invalid usage 0` | `input` | `<operation> button=<name>: button outside the W3C table` | a button with usage `0` | use the `oly::input::Key` and `MouseButton` values (TypeScript: `KeyboardEvent.code` names; check with `isButtonName`) |
 | `SDL_InitSubSystem(video): ...` or `SDL window: ...` (`std::runtime_error` from `Window`) | native host | none | no display or video driver on the machine | run on a desktop session, or set `SDL_VIDEO_DRIVER=dummy` for a headless run |
+| `usage: <program> [--frames <n>]` (exit code 64) | native host | none | `runGame<G>` got an unknown argument, or a `--frames` value that is not a whole number above 0 | pass `--frames <n>` with `n` above 0, or no argument |
 
 ## TypeScript
 
