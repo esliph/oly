@@ -34,12 +34,3 @@ set_latest() {
   mkdir -p "$1/latest/download"
   printf '%s\n' "$2" > "$1/latest/download/VERSION"
 }
-
-# add_launcher_asset <tree> <launcher file> <version> [broken]: the `oly` asset of the latest release, with that launcher version.
-add_launcher_asset() {
-  mkdir -p "$1/latest/download"
-  sed "s/^OLY_LAUNCHER_VERSION=.*/OLY_LAUNCHER_VERSION=$3/" "$2" > "$1/latest/download/oly"
-  if [ "${4:-}" = broken ]; then
-    printf 'if then\n' >> "$1/latest/download/oly"
-  fi
-}

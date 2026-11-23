@@ -313,8 +313,8 @@ jobs:
         run: |
           files=(build/release/"$VERSION"/download/v"$VERSION"/*)
 
-          # A patch of an older line must not take the "latest" release away from a newer one: install.sh and the
-          # launcher read latest/download.
+          # A patch of an older line must not take the "latest" release away from a newer one: the launcher and the
+          # pipe that creates a game read latest/download.
           latest=$(gh release view --json tagName --jq .tagName 2> /dev/null || true)
           flag=--latest
           if [ -n "$latest" ] && [ "$(printf '%s\nv%s\n' "$latest" "$VERSION" | sort -V | tail -n 1)" != "v$VERSION" ]; then

@@ -154,35 +154,6 @@ check "upgrade to a missing version: exit 1" exit_is 1
 check "upgrade to a missing version: oly.env unchanged" grep -qxF OLY_VERSION=0.2.0 "$work/native/oly.env"
 check "upgrade to a missing version: ./oly unchanged" cmp -s "$work/native/oly" "$home/versions/0.2.0/oly"
 
-mkdir "$work/installed"
-add_launcher_asset "$tree" "$launcher" 0.2.0
-install_home=$work/installed
-install_oly() {
-  status=0
-  env -u OLY_HOME HOME="$install_home" SHELL=${1:-/bin/bash} OLY_RELEASE_URL="file://$tree" sh "$repository/tools/oly/install.sh" > "$logs/out" 2> "$logs/err" || status=$?
-}
-
-path_lines() {
-  grep -c 'PATH=".*/.oly/bin:' "$install_home/$1"
-}
-
-install_oly
-check "install: exit 0" exit_is 0
-check "install: the launcher is in place and executable" test -x "$install_home/.oly/bin/oly"
-check "install: .bashrc has one PATH line" test "$(path_lines .bashrc)" -eq 1
-check "install: message names the path" grep -qF "oly installed in $install_home/.oly/bin/oly" "$logs/out"
-
-install_oly
-check "install twice: exit 0" exit_is 0
-check "install twice: still one PATH line" test "$(path_lines .bashrc)" -eq 1
-
-install_home=$work/installed-zsh
-mkdir "$install_home"
-install_oly /usr/bin/zsh
-check "install with zsh: exit 0" exit_is 0
-check "install with zsh: .zshrc has the PATH line" test "$(path_lines .zshrc)" -eq 1
-check "install with zsh: .bashrc is not created" test ! -e "$install_home/.bashrc"
-
 make_game nested-clean 0.1.0
 mkdir -p "$work/nested-clean/build" "$work/nested-clean/a/b/build"
 LOCAL_ENGINE=$repository
@@ -191,15 +162,6 @@ LOCAL_ENGINE=
 check "task from a subfolder: exit 0" exit_is 0
 check "task from a subfolder: runs at the game root" test ! -e "$work/nested-clean/build"
 check "task from a subfolder: leaves the subfolder alone" test -d "$work/nested-clean/a/b/build"
-
-head -n 196 "$launcher" > "$tree/latest/download/oly"
-
-install_home=$work/installed-truncated
-mkdir "$install_home"
-install_oly
-check "install truncated: exit 1" exit_is 1
-check "install truncated: no launcher is installed" test ! -e "$install_home/.oly/bin/oly"
-check "install truncated: no profile is touched" test ! -e "$install_home/.bashrc"
 
 make_game quoted-pin '"0.1.0"'
 run_oly "$work/quoted-pin" build
@@ -242,15 +204,6 @@ run_oly "$work/empty" new demo --environment native
 LOCAL_ENGINE=
 check "local-mode new without a checkout version: exit 1" exit_is 1
 check "local-mode new without a checkout version: message" stderr_has "could not read the version"
-
-add_launcher_asset "$tree" "$launcher" 0.2.0
-install_home=$work/installed-custom
-mkdir "$install_home"
-status=0
-env HOME="$install_home" OLY_HOME="$work/custom-oly-home" SHELL=/bin/bash OLY_RELEASE_URL="file://$tree" sh "$repository/tools/oly/install.sh" > "$logs/out" 2> "$logs/err" || status=$?
-check "install in a custom OLY_HOME: exit 0" exit_is 0
-check "install in a custom OLY_HOME: the launcher is there" test -x "$work/custom-oly-home/bin/oly"
-check "install in a custom OLY_HOME: the profile exports OLY_HOME" grep -qxF "export OLY_HOME=\"$work/custom-oly-home\"" "$install_home/.bashrc"
 
 make_game repair 0.1.0
 cp "$home/versions/0.1.0/oly" "$work/repair/oly"
