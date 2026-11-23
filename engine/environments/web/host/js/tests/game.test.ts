@@ -165,6 +165,21 @@ test("an id that finds no canvas rejects naming the id, writes the page and load
   assert.equal(environment.loadCalls, 0);
 });
 
+test("an element with the id that is not a canvas counts as no canvas, through the page's own lookup", async () => {
+  class NotACanvas {}
+  const body = { textContent: "" };
+  const saved = { document: globalThis.document, HTMLCanvasElement: globalThis.HTMLCanvasElement };
+  Object.assign(globalThis, { document: { getElementById: () => ({}), body }, HTMLCanvasElement: NotACanvas });
+
+  try {
+    await assert.rejects(runGame(new TestGame([])), /canvas with id "game" not found on the page/);
+  } finally {
+    Object.assign(globalThis, saved);
+  }
+
+  assert.equal(body.textContent, 'Error starting the game: canvas with id "game" not found on the page');
+});
+
 test("an onStart that throws disposes the engine, writes the page and rejects with the same error", async () => {
   const { environment } = environmentWithCanvas();
   const error = new Error("boom");
