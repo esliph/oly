@@ -13,7 +13,7 @@ Start with `docs/README.md`. It is the index of all documentation: tutorials, ho
 - Plugins (`docs/explanation/architecture/plugins.md`): `engine/` never depends on `plugins/`; a plugin includes only public headers of the modules and plugins it declares, is its own CMake target with no path relative to the repository root, and its `.oly` reaches `oly-schema` as an argument. Game names never in `plugins/`.
 - When changing `table`, `archetype`, `query*`, `command_buffer` or `world`: keep `checkInvariants` covering the change and run the `spec-conformance-reviewer` and `perf-reviewer` agents.
 - New test: use the `add-test-case` skill.
-- Any change that adds, changes or removes public API (the public surface of `docs/reference/contributor/docs-style.md`) updates `docs/` in the same change, following that page.
+- Any change that adds, changes or removes public API (the public surface of `docs/reference/contributor/docs-style.md`) updates `docs/` and the `## Unreleased` section of `CHANGELOG.md` in the same change, following that page.
 
 ## Code style
 

@@ -8,8 +8,8 @@ The `Engine` runs your game: a fixed-step clock, phases of systems, pause, event
 
 Something outside the engine calls `engine.frame(nowSeconds)` once per display frame. That something is the **host** of each environment:
 
-- on the desktop, `oly::native_host::run(engine, window)` ([Native host](../../reference/native-host.md));
-- on the web, `runInBrowser(engine)` ([Your first web game](../../tutorials/first-web-game.md)).
+- on the desktop, `oly::native_host::run(engine, window)`, which `runGame` calls ([Native host](../../reference/native-host.md));
+- on the web, `runInBrowser`, which `runGame` calls ([Your first web game](../../tutorials/first-web-game.md)).
 
 Each `frame` runs as many **fixed steps** as the elapsed time allows (at most `maxStepsPerFrame`), then **one render**:
 

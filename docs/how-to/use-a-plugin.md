@@ -31,7 +31,7 @@ The build does four things:
 | links the plugin targets | the game includes the plugins' headers |
 | generates `oly::app::setUpGame` | declares the schema, then installs each plugin |
 
-`setUpGame` is the call that sets up an `Engine` for the game. A native `main` calls it once, right after it creates the `Engine`; on the web, the host calls it ([Schema in C++](../reference/cpp/schema.md#olyappsetupgame)). Among plugins that do not need each other, the install order is the order of the `PLUGINS` list.
+`setUpGame` is the call that sets up an `Engine` for the game. On native, `runGame` calls it once, right after it creates the `Engine`; on the web, `createEngine` does ([Schema in C++](../reference/cpp/schema.md#olyappsetupgame)). Among plugins that do not need each other, the install order is the order of the `PLUGINS` list.
 
 ## 3. Use it through data
 

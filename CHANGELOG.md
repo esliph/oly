@@ -10,7 +10,8 @@ Each version of the engine has one section. While Oly is `0.x`, a minor version 
 
 ### Migration
 
-None.
+- Native: a game may derive `oly::native_host::Game`, write its content in `onStart` and start with `runGame<MyGame>(argumentCount, arguments)` in `main`. `runGame` calls `setUpGame`, reads `--frames <n>` and turns a `std::exception` into exit code 1 ([Native host](docs/reference/native-host.md#the-game)). A game that keeps its own `main` works as before.
+- Web: a game may derive `Game` from `@oly/web-host` and start with `runGame(new MyGame())`. `runGame` finds the canvas, loads the runtime, calls `onStart`, attaches the input and starts the loop ([Web host](docs/reference/typescript/web-host.md#game)). A game that calls `loadRuntime`, `attachBrowserInput` and `runInBrowser` itself works as before.
 
 ## 0.1.0
 

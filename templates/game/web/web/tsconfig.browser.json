@@ -13,6 +13,6 @@
     "lib": ["ES2022", "DOM"],
     "types": []
   },
-  "include": ["src/main.ts"],
+  "include": ["src/main.ts", "src/game.ts"],
   "references": [{ "path": "./tsconfig.json" }]
 }

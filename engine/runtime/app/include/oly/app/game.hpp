@@ -5,6 +5,6 @@ namespace oly::app {
 
   // Defined by the code oly_add_game generates (game_setup.generated.cpp): declares the game's schema (declareSchema),
   // then installs the game's plugins in dependency order. Called once per Engine, before the first frame: by
-  // olyEngineCreate, and by a native game's main.
+  // olyEngineCreate, and by runGame on native (a main that drives the loop itself calls it).
   void setUpGame(Engine& engine);
 }
