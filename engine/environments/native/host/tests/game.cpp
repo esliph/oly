@@ -120,7 +120,7 @@ namespace oly::app {
   }
 }
 
-TEST_CASE("runGame with --frames 3starts the game once after setUpGame and steps at the game's fixedHz") {
+TEST_CASE("runGame with --frames 3 starts the game once after setUpGame and steps at the game's fixedHz") {
   Probe::reset();
 
   CHECK(runWith<ProbeGame>({"probe", "--frames", "3"}) == 0);
