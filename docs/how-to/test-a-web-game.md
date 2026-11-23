@@ -228,7 +228,7 @@ function sequence(values: readonly number[]): () => number {
 A game made with `oly new` already registers its tests: `cmake/game.cmake` has the ctest test that runs `node --test web/dist/tests/` with `OLY_GAME_MODULE` set, and `web/tests/tsconfig.json` emits the compiled tests to `web/dist/tests/`. Put a new `*.test.ts` file in `web/tests/` and run:
 
 ```sh
-oly test
+./oly test
 ```
 
 `oly test` builds the game, compiles the TS tests and runs ctest. To run only the tests of the game by their ctest name, use `ctest` on the build `oly test` left:
