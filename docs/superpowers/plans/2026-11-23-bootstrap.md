@@ -420,7 +420,7 @@ Run: `grep -rn "installGame\|native game's .\?main\|native .\?main.\? calls\|own
 Expected after Tasks 1–4 (run on this base while writing the plan, minus the `installGame` and `web-host.md` lines those tasks remove): `docs/explanation/architecture/app.md`, `docs/explanation/architecture/plugins.md`, `docs/explanation/concepts/environments-and-hosts.md`, `docs/how-to/use-a-plugin.md`, `docs/reference/cmake.md`, `cmake/OlyGame.cmake`, `engine/runtime/app/include/oly/app/game.hpp`. After Step 2: only lines that also name `runGame` (a `main` that drives the loop itself). An `installGame` line left there means Task 3 or 4 missed an `installGame`.
 
 - [ ] **Step 2: Edit.**
-  - Wherever a native `main` is said to call `setUpGame`: `runGame` calls it; a `main` that drives the loop itself calls it ([Drive the loop yourself](docs/how-to/drive-the-loop-yourself.md)).
+  - Wherever a native `main` is said to call `setUpGame`: `runGame` calls it; a `main` that drives the loop itself calls it ([Drive the loop yourself](../../how-to/drive-the-loop-yourself.md)).
   - `glossary.md`: a row "the game: the class a game derives, and the call that runs it" — C++ `oly::native_host::Game`, `runGame`; C API none; TS `Game`, `runGame` (`@oly/web-host`). The `setUpGame` row says that `runGame` calls it on native.
   - `environments-and-hosts.md`: the table's web row and the desktop paragraph say how a game starts in each host, through `Game` and `runGame`. `engine-and-systems.md` line 12 area: the web loop starts through `runGame`, which calls `runInBrowser`.
   - `docs/how-to/test-a-desktop-game.md` and `cmake/tests/consumer/native/main.cpp` keep their own `main`: they drive the loop themselves, which the spec keeps (§3).

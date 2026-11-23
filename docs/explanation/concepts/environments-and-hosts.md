@@ -12,7 +12,7 @@ A game is made of three layers. This page names them, shows how a game is assemb
 
 | Environment | Host | Clients | Start here |
 |---|---|---|---|
-| `web` | the web host: WASM, `runInBrowser`, `attachBrowserInput` | [TypeScript](../../reference/typescript/README.md) | [Your first web game](../../tutorials/first-web-game.md) |
+| `web` | the web host: WASM; a game starts with `runGame`, which calls `runInBrowser` and `attachBrowserInput` | [TypeScript](../../reference/typescript/README.md) | [Your first web game](../../tutorials/first-web-game.md) |
 | `native` | the native host: a window, SDL, `oly::native_host::run` | none: the game is C++ | [Your first desktop game](../../tutorials/first-desktop-game.md) |
 
 The engine, the schema and the gameplay code are the same in both environments. Only the shell and the drawing change. Choose `native` when the game does not need a browser, and `web` when it does. Both live in the game's own repository, which pins one engine version ([The game template](../../reference/game-template.md)).
@@ -34,7 +34,7 @@ web/src/*.ts  (your TS systems and the shell) ──tsc + esbuild──► build
 
 At start-up, `loadRuntime` checks that the WASM was built from the same schema as the TS code. If you change the schema and forget to rebuild, you get a `SchemaMismatchError` instead of corrupted data.
 
-On the desktop, the build makes one executable. There is no registry, no `.mjs`, no TypeScript and no C API: your `main` creates the `World` and the `Engine`, opens a `Window` and hands the loop to `run`. The schema and the gameplay are compiled into it, and the shell is the SDL code in `desktop/main.cpp`.
+On the desktop, the build makes one executable. There is no registry, no `.mjs`, no TypeScript and no C API: your `main` is one line, `runGame<MyGame>`: the host creates the `World` and the `Engine`, calls `setUpGame`, opens a `Window`, calls `onStart` of your class derived from `Game`, and runs the loop with `run`. The schema and the gameplay are compiled into it, and the shell is the SDL code in `desktop/main.cpp`.
 
 In both, `<game>.oly` is the single source of the data: the build generates the code of each language from it ([Schema](schema.md)). The files `oly new` writes for each environment are listed in [The game template](../../reference/game-template.md).
 

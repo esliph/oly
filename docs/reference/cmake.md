@@ -36,7 +36,7 @@ What the call does:
 3. Runs `oly-schema` on the game's `.oly` and the `.oly` of each plugin that has one, in that order, and writes the C++ schema.
 4. Writes `game_setup.generated.cpp`, which defines `oly::app::setUpGame`: it declares the schema, then installs the plugins in the sorted order.
 5. Links the modules of `DEPENDS` and the plugins.
-6. With `ENVIRONMENT web`, also writes the schema registry, links `oly::web_host` and makes the target a WASM module with the suffix `.mjs`. With `ENVIRONMENT native`, `SOURCES` bring their own `main`, which calls `setUpGame`.
+6. With `ENVIRONMENT web`, also writes the schema registry, links `oly::web_host` and makes the target a WASM module with the suffix `.mjs`. With `ENVIRONMENT native`, `SOURCES` bring their own `main`, which calls `runGame<G>` (it calls `setUpGame`), or drives the loop itself and calls `setUpGame` first.
 7. With `TYPESCRIPT`, writes the same merged schema as TypeScript to that file, so the TS client and the WASM module hash the same schema.
 
 For `PLUGINS doubling`, the generated function is:
