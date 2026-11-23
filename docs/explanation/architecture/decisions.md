@@ -25,7 +25,7 @@
 | Schedule as a min-heap in `app`, not as entities | tasks do not show up in the game's queries | task scope implemented separately |
 | Input in its own module, without a platform interface | edge rules testable without `Engine`; the host only pushes events | — |
 | C++ first, clients grouped by environment, C++ not a client | the engine is complete in C++; a client only adds language conveniences and each environment has one host | a game in another language depends on the C API, and the guide teaches the concepts in C++ |
-| The native host is a library the game calls (`oly::native_host::run`) | `main` is visible, the order is explicit and a headless test needs no second entry point | some repeated code in each game's `main` |
+| The host is a library the game calls: a game derives `Game` and starts with `runGame` (`oly::native_host::runGame<G>` on native, `runGame(new G())` on the web); `run` and the web loop stay for a game that drives the loop itself | `main` drops to one line and stays the game's; the class gives configuration and state a home, and members reach systems through `userData = this`; the pieces stay usable, so a headless test needs no second entry point | `runGame` hides the order of the steps; a game that wants another order uses the pieces |
 | C API headers as valid C (`.h`) | a C, C#, Rust or Lua client consumes the real ABI | handles need `typedef`s and `struct` tags |
 | `@oly/core` without DOM, `@oly/web-host` with DOM | the TS core runs in node, browser and worker | two packages |
 | One version for the tag, the `oly-tools` archives, the npm tarballs and the images; `0.x` minors may break | a game pins one number and gets a tested set | no partial release; a breaking change in `0.x` is not signalled by the number |

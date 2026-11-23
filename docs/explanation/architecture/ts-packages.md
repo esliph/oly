@@ -23,8 +23,9 @@ Implementation rules:
 
 ## `@oly/web-host`
 
-Thin browser layer (`engine/environments/web/host/js/`). It implements with DOM APIs the ports that `core` receives by injection and has no engine rule:
+Thin browser layer (`engine/environments/web/host/js/`). It implements with DOM APIs the ports that `core` receives by injection and has no engine rule, except the start order that `runGame` fixes:
 
+- `Game` and `runGame(game)`: a game derives `Game` and starts with one call. `runGame` finds the canvas, loads the runtime, creates the engine, calls `onStart`, attaches the input and starts the loop, and undoes the steps already done when one fails. It is the only function here that holds a rule of its own: the order of those steps. It calls the three functions below.
 - `moduleFactoryFromUrl(url)`: loads a game's Emscripten `.mjs`.
 - `runInBrowser(engine)`: loop via `requestAnimationFrame` and `visibilitychange` → `setHidden`.
 - `attachBrowserInput(engine, canvas)`: keyboard and `blur` on `window`, `pointerdown` on the canvas, `pointerup`/`pointermove` on `window`, position converted to canvas pixels. `preventDefault` only for buttons bound to some action.
