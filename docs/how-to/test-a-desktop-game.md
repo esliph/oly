@@ -81,7 +81,7 @@ If the game turns on `PLUGINS`, list the same plugins in this target, so its `se
 ## Run the tests
 
 ```sh
-oly test                                          # builds and runs every test
+./oly test                                          # builds and runs every test
 ctest --test-dir build/cmake -R '^<target>\.'     # only your game, after oly test
 ```
 

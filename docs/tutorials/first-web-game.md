@@ -14,33 +14,31 @@ You need a computer with these tools. In step 1, `oly doctor` checks `cmake`, `n
 - On Windows: Git Bash, MSYS2 UCRT64 (`gcc`, `cmake` and `ninja`), Node.js with npm, and emsdk. Run every command from Git Bash, not from PowerShell or `cmd`.
 - Docker is optional: add `--docker` to a command to build in a container instead.
 
-The exact versions and the install steps are in [The `oly` command](../reference/cli.md#install).
+The exact versions are in [The `oly` command](../reference/cli.md#install).
 
-## 1. Install `oly`
-
-Install the launcher with the command in [The `oly` command](../reference/cli.md#install). Open a new terminal, then check your tools:
+## 1. Check your tools
 
 ```sh
-oly doctor --environment web
+curl -fsSL https://github.com/esliph/oly/releases/latest/download/oly | sh -s -- doctor --environment web
 ```
 
-You see one line per tool. Each line starts with `ok`, `old`, `untested`, `missing` or `wrong`, then the tool and what to install. Fix every line that does not say `ok`, then run the command again.
+There is nothing to install first: the command downloads the launcher of the latest release and runs its `doctor` outside a game. You see one line per tool. Each line starts with `ok`, `old`, `untested`, `missing` or `wrong`, then the tool and what to install. Fix every line that does not say `ok`, then run the command again.
 
 ## 2. Create the game
 
 ```sh
-oly new <game> --environment web
+curl -fsSL https://github.com/esliph/oly/releases/latest/download/oly | sh -s -- new <game> --environment web
 cd <game>
 ```
 
-`<game>` is the name of the folder: lowercase letters, digits and `-`, starting with a letter. `oly new` copies [the game template](../reference/game-template.md) and installs the npm packages.
+`<game>` is the name of the folder: lowercase letters, digits and `-`, starting with a letter. The command downloads the launcher, which copies [the game template](../reference/game-template.md) into the folder, installs the npm packages and leaves itself in the game as `./oly`.
 
-You see `created <game> (web, oly <version>)`, and a folder with `oly.env`, `<game>.oly`, `native/`, `web/` and the other files of the template.
+You see `created <game> (web, oly <version>)`, and a folder with `oly`, `oly.env`, `<game>.oly`, `native/`, `web/` and the other files of the template. Run `./oly` from inside it: it is the launcher of this game.
 
 ## 3. Run the test
 
 ```sh
-oly test
+./oly test
 ```
 
 `oly test` builds the game and runs its tests. The test `<target>.smoke` loads the real WASM in Node, holds `KeyD` for one second and checks that the player moved right.
@@ -50,7 +48,7 @@ You see ctest report `<target>.smoke` as passed.
 ## 4. Run the game
 
 ```sh
-oly run
+./oly run
 ```
 
 `oly run` builds the game and serves `http://localhost:8000`.
@@ -111,7 +109,7 @@ OLY_SYSTEM(movePlayer) {
 void movePlayer(oly::app::SystemContext& context);
 ```
 
-Change `PlayerSpeed` to `400.0f` and run `oly run` again. You see the square cross the page twice as fast.
+Change `PlayerSpeed` to `400.0f` and run `./oly run` again. You see the square cross the page twice as fast.
 
 ## 7. Read the TypeScript system
 
@@ -152,7 +150,7 @@ export function startGameplay(engine: Engine, drawer: Drawer): void {
 
 The drawing system reads positions in blocks with `eachBlock`: one call across the WASM boundary for many entities ([Web boundary](../explanation/concepts/web-boundary.md)).
 
-Change `PlayerSize` to `32` and run `oly run` again. You see a square twice as wide.
+Change `PlayerSize` to `32` and run `./oly run` again. You see a square twice as wide.
 
 ## 8. Read the browser shell
 
@@ -204,7 +202,7 @@ void runGame(new MyGame());
 
 `runGame` does the rest, in order: it finds the canvas and sets its size, loads the WASM, creates the engine, calls `onStart`, attaches the browser input and starts the loop. When a step fails, it writes `Error starting the game: <message>` into the page and rejects with the same error ([Web host](../reference/typescript/web-host.md#rungame)).
 
-Two `tsconfig` files keep the DOM out of the gameplay: `web/tsconfig.json` has no DOM types and leaves out `src/main.ts` and `src/game.ts`, and `web/tsconfig.browser.json` has them for those two files only. You see the rule at work if you write `document` in `gameplay.ts` and run `oly build`: the build stops with a compile error.
+Two `tsconfig` files keep the DOM out of the gameplay: `web/tsconfig.json` has no DOM types and leaves out `src/main.ts` and `src/game.ts`, and `web/tsconfig.browser.json` has them for those two files only. You see the rule at work if you write `document` in `gameplay.ts` and run `./oly build`: the build stops with a compile error.
 
 ## Next steps
 

@@ -26,7 +26,7 @@ engine/
     fixture/plugins/  the engine's test plugins (counting, doubling) and the native plugin fixture
 plugins/          one folder per plugin, beside engine/ (essentials2d, essentials3d)
 tools/
-  oly/            the oly launcher, install.sh, the game Spurfile, docker-compose.yaml for --docker and their shell tests
+  oly/            the oly launcher, the game Spurfile, docker-compose.yaml for --docker and their shell tests
   release/        the release scripts: version check and set, images, oly-tools archive, stage, staged consumer test
   *.py, *.sh      measurement and lint scripts (Python and shell)
 templates/

@@ -6,7 +6,7 @@ Each version of the engine has one section. While Oly is `0.x`, a minor version 
 
 ### Breaking
 
-None.
+- The launcher is committed in each game as `./oly`: `oly new` writes it and `oly upgrade` replaces it. `install.sh` and `oly self-update` are gone, and nothing is installed on the machine or added to the `PATH`.
 
 ### Migration
 

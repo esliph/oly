@@ -53,7 +53,7 @@ These terms have no C API or TS form. Details: [Publishing](../explanation/archi
 | Term | Meaning |
 |---|---|
 | `oly-tools` | the archive of one platform and one version that holds `spur`, the game `Spurfile`, `toolchain.env`, `bin/oly-schema`, `template/` and `docker-compose.yaml` |
-| launcher | the `oly` script (POSIX sh) in `~/.oly/bin`: finds the game, fetches the `oly-tools` of its version and runs that version's `Spurfile` |
+| launcher | the `oly` script (POSIX sh) committed at the root of a game as `./oly`: finds the game, fetches the `oly-tools` of its version and runs that version's `Spurfile` |
 | pinned version | the `OLY_VERSION` of a game's `oly.env`: the engine release the game builds with |
 | local mode | `OLY_ENGINE_DIR` names an engine checkout, and the launcher takes the tools, the C++ source, `oly-schema` and the npm packages from it instead of from a release |
 | `toolchain.env` | the file at the engine root with the toolchain versions; the Dockerfiles, `oly doctor` and the configure check read it |

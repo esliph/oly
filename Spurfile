@@ -317,7 +317,8 @@ consumer-native: ## the native half of consumer-test
   export OLY_ENGINE_DIR=$PWD
   launcher=$PWD/tools/oly/oly
   (cd "$directory" && sh "$launcher" new consumer-game --environment native --version "$version")
-  (cd "$directory/consumer-game" && sh "$launcher" test)
+  cmp -s "$directory/consumer-game/oly" "$launcher" || _fail 1 "$directory/consumer-game/oly is not the checkout's launcher"
+  (cd "$directory/consumer-game" && sh ./oly test)
 
 consumer-web: ## the web half of consumer-test
   _in wasm -- "$@"
@@ -349,7 +350,8 @@ consumer-web: ## the web half of consumer-test
   launcher=$PWD/tools/oly/oly
   game=$PWD/$directory/consumer-game
   (cd "$directory" && sh "$launcher" new consumer-game --environment web --version "$version")
-  (cd "$game" && sh "$launcher" test)
+  cmp -s "$game/oly" "$launcher" || _fail 1 "$game/oly is not the checkout's launcher"
+  (cd "$game" && sh ./oly test)
 
   [ "$(cat "$game/node_modules/.oly-install")" = "linux-x64 local" ] || _fail 1 "local mode left node_modules/.oly-install as: $(cat "$game/node_modules/.oly-install")"
   for file in index.html main.js consumer_game.mjs consumer_game.wasm; do
@@ -380,14 +382,13 @@ consumer-docker: ## the Docker half of consumer-test, on the host
   [ -d "$native" ] && [ -d "$web" ] || _fail 64 "run ./spur consumer-test native and ./spur consumer-test web first"
 
   for image in wasm dev windows; do
-    docker tag "cpp_services-$image" "oly-local/oly-$image:$version"
+    docker tag "oly-engine-$image" "oly-local/oly-$image:$version"
   done
 
   export OLY_IMAGE_REGISTRY=oly-local OLY_ENGINE_DIR=$PWD
-  launcher=$PWD/tools/oly/oly
-  (cd "$native" && sh "$launcher" test --docker)
-  (cd "$web" && sh "$launcher" test --docker)
-  (cd "$native" && sh "$launcher" test --docker --platform windows)
+  (cd "$native" && sh ./oly test --docker)
+  (cd "$web" && sh ./oly test --docker)
+  (cd "$native" && sh ./oly test --docker --platform windows)
 
   # The host build of the same game, from the same folder: its cache must not collide with the Docker one.
   spur dev env OLY_ENGINE_DIR=/app OLY_TOOLS_DIR=/app/tools/oly OLY_GAME_DIR=/app/build/consumer/native/consumer-game sh ./spur -f /app/tools/oly/Spurfile test --host
@@ -498,7 +499,7 @@ staged-docker: ## the Docker half of staged-test, on the host
 
   home=$PWD/build/staged/docker-home
   rm -rf "$home"
-  mkdir -p "$home/profile"
+  mkdir -p "$home"
   # The host may have no Python for _serve, and the containers need no release server: the games already hold their
   # packages. curl reads the staged folder through file://.
   root=$(cygpath -m "$PWD" 2> /dev/null || printf '%s' "$PWD")
@@ -507,12 +508,10 @@ staged-docker: ## the Docker half of staged-test, on the host
     *) url=file:///$root/build/release/$version ;;
   esac
   export OLY_RELEASE_URL=$url OLY_HOME=$home OLY_IMAGE_REGISTRY=oly-local OLY_ENGINE_SOURCE_DIR=$PWD
-  curl -fsSL "$OLY_RELEASE_URL/latest/download/install.sh" -o "$home/install.sh" || _fail 1 "could not download install.sh"
-  HOME=$home/profile sh "$home/install.sh" || _fail 1 "install.sh failed"
 
-  (cd "$native" && "$home/bin/oly" test --docker)
-  (cd "$web" && "$home/bin/oly" test --docker)
-  (cd "$native" && "$home/bin/oly" test --docker --platform windows)
+  (cd "$native" && sh ./oly test --docker)
+  (cd "$web" && sh ./oly test --docker)
+  (cd "$native" && sh ./oly test --docker --platform windows)
 
   # staged-native built the same game in the dev container without --docker: each build keeps its own directory.
   [ -d "$native/build/cmake" ] && [ -d "$native/build/cmake-docker" ] || _fail 1 "the host and Docker builds do not have their own directories"

@@ -20,13 +20,17 @@ Install these before the first command. Versions are in [`toolchain.env`](../../
 
 Not supported: MSVC, macOS and shells other than Git Bash on Windows.
 
-Install the launcher once:
+## Create a game
+
+There is nothing to install first. This line downloads the launcher of the latest release and runs its `new` command:
 
 ```sh
-curl -fsSL https://github.com/esliph/oly/releases/latest/download/install.sh | sh
+curl -fsSL https://github.com/esliph/oly/releases/latest/download/oly | sh -s -- new my-game --environment web
 ```
 
-`install.sh` puts `oly` in `~/.oly/bin` and adds that folder to the `PATH` of your shell profile (`~/.bashrc`, or `~/.zshrc` for zsh). Open a new terminal afterwards. `OLY_INSTALL_VERSION=<version>` installs the launcher of another release; `OLY_HOME` moves `~/.oly`.
+The game then holds the launcher as `./oly`: commit it, and every clone works with no step before it. No step changes the `PATH` or a shell profile. A failed `curl` creates nothing, and the pipe still exits 0: check that `my-game/oly` exists.
+
+A repository committed from Windows does not keep the executable bit of `./oly`. Run it as `sh ./oly`, or set the bit once and commit it: `git update-index --chmod=+x oly`.
 
 ## Commands
 
@@ -42,8 +46,7 @@ Inside a game, `oly` finds the game by walking up from the current folder to `ol
 | `oly clean` | removes `build/` |
 | `oly sync` | installs the npm packages of a web game, as `package.json` and the mode ([local mode](#local-mode)) ask. `oly build` runs it for you |
 | `oly platform` | prints the host platform: `linux-x64` or `windows-x64` |
-| `oly upgrade <version>` | moves the game to another engine release: [Upgrade the engine](../how-to/upgrade-the-engine.md) |
-| `oly self-update` | replaces the launcher with the one of the latest release |
+| `oly upgrade <version>` | moves the game to another engine release and replaces `./oly` with that release's launcher: [Upgrade the engine](../how-to/upgrade-the-engine.md) |
 | `oly --version` | prints the launcher version and, inside a game, the engine version it pins |
 
 ### `oly new`
@@ -76,7 +79,7 @@ They build in `Debug`, so contract errors stop the game ([Errors](errors.md#at-r
 By default `oly` uses the tools of your machine. With `--docker`, it runs the same task in the image `ghcr.io/esliph/oly-<dev|wasm|windows>:<version>`, with the game folder mounted at `/game`. The image brings the compiler, CMake, emsdk and Node.js, so the host needs Docker with the compose plugin. A web game still runs `npm install` on the host in `oly new` and `oly upgrade`, so it needs Node.js with npm there too.
 
 ```sh
-oly test --docker
+./oly test --docker
 ```
 
 To make Docker the default of a game, set `OLY_RUNNER=docker` in `oly.env`. `--host` overrides it. `oly new`, `oly doctor` and `oly upgrade` never start a container.
@@ -96,7 +99,7 @@ A desktop window cannot open in a container: `oly run --docker` on a desktop gam
 To change the engine and a game together, point `OLY_ENGINE_DIR` at a checkout of the engine ([Build with an engine checkout](../how-to/build-with-an-engine-checkout.md)):
 
 ```sh
-OLY_ENGINE_DIR=../oly oly test
+OLY_ENGINE_DIR=../oly ./oly test
 ```
 
 This is **local mode**. The tools, the template, the C++ source, `oly-schema` and the npm packages come from the checkout, and `oly.env` and `package.json` stay as they are. A relative path is relative to the folder where you run `oly`.
@@ -116,9 +119,8 @@ Unset `OLY_ENGINE_DIR` and run `oly build` to go back to the pinned version. A c
 | Variable | Meaning |
 |---|---|
 | `OLY_ENGINE_DIR` | an engine checkout: [local mode](#local-mode) |
-| `OLY_HOME` | where `oly` keeps the launcher and the downloaded versions. Default: `~/.oly` |
+| `OLY_HOME` | where `oly` keeps the downloaded versions. Default: `~/.oly` |
 | `OLY_RELEASE_URL` | where `oly` downloads releases from. Default: `https://github.com/esliph/oly/releases` |
-| `OLY_INSTALL_VERSION` | for `install.sh`: the launcher version to install |
 | `EMSDK` | set by emsdk's `emsdk_env.sh`; a web game needs it on the host |
 
 The keys of `oly.env` are in [The game template](game-template.md#olyenv).

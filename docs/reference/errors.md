@@ -109,7 +109,7 @@ The messages of [`oly`](cli.md) start with `oly:` (the launcher) or `oly <comman
 | Message contains | Origin | Cause | Fix |
 |---|---|---|---|
 | `not inside an Oly game: no oly.env in <folder> or above` | launcher | the current folder is not inside a game | `cd` into the game, or make one with `oly new` |
-| `oly.env has no OLY_VERSION`, `OLY_VERSION in ... is not a valid version` | launcher | `oly.env` lost the line, or the version has characters that are not letters, digits, `.` or `-` | write `OLY_VERSION=<version>`, or run `oly upgrade <version>` |
+| `oly.env has no OLY_VERSION`, `OLY_VERSION in ... is not a valid version` | launcher | `oly.env` lost the line, or the version has characters that are not letters, digits, `.` or `-` | write `OLY_VERSION=<version>`, or run `./oly upgrade <version>` |
 | `could not install oly-tools <version> from <url>` | launcher | the download failed: no network, a version that was never released, or a wrong `OLY_RELEASE_URL` | check the network and that the release `v<version>` exists; run again |
 | `could not read the latest version from <url>` | launcher | `oly new` or `oly doctor` outside a game could not reach the latest release | check the network, or pass `oly new --version <version>` |
 | `oly.env pins <version> but package.json has other @oly tarballs: run oly upgrade <version>` | `oly build` | the two files name different engine versions, after a hand edit or an interrupted upgrade | run `oly upgrade <version>` ([Upgrade the engine](../how-to/upgrade-the-engine.md)) |
@@ -122,7 +122,8 @@ The messages of [`oly`](cli.md) start with `oly:` (the launcher) or `oly <comman
 | `--platform windows is for native games` | `oly build`, `oly test`, `oly run` | `--platform windows` on a web game | build a web game without it |
 | `a desktop window cannot open in the container: run <path> on the host` | `oly run` | `oly run --docker` on a desktop game | run it on the host: `oly run --host` |
 | `OLY_ENGINE_DIR is not a directory` | launcher | the checkout path is wrong | fix the path ([local mode](cli.md#local-mode)) |
-| `this launcher runs from a checkout (version dev)` | `oly self-update` | `oly self-update` on the launcher of an engine checkout | install a release with the `install.sh` line of [Install](cli.md#install) |
+| `oly-tools <version> has no launcher to copy into <folder>` | launcher | `oly upgrade` to a release built before the launcher traveled in `oly-tools` | pick a newer version; the game is left as it was |
+| `could not replace <folder>/oly with the launcher of <version>` | launcher | the copy in `~/.oly/versions/<version>/oly` is cut or does not parse, or the folder is read-only | delete `~/.oly/versions/<version>` and run `./oly upgrade <version>` again; `./oly` is left as it was |
 
 ## See also
 

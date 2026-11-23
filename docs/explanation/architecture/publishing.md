@@ -7,9 +7,9 @@ engine repository                          a game's repository
 ──────────────────                         ──────────────────────────────
 tag v0.1.0 (the C++ package)               oly.env        OLY_VERSION=0.1.0
 GitHub Release v0.1.0                      CMakeLists.txt FetchContent at v0.1.0
-  oly-tools-0.1.0-<platform>.tar.gz   ◄──  oly (launcher, ~/.oly/bin) downloads and runs it
+  oly-tools-0.1.0-<platform>.tar.gz   ◄──  oly           the launcher, committed; downloads and runs it
   oly-core-0.1.0.tgz, oly-web-host-…       package.json   the two tarballs
-  install.sh, oly, VERSION
+  oly, VERSION
 ghcr.io/esliph/oly-{dev,wasm,windows}:0.1.0 ◄── --docker
 ```
 
@@ -44,8 +44,7 @@ The repository is public, so a game downloads every asset without a token. The f
 |---|---|
 | `oly-tools-<version>-linux-x64.tar.gz`, `oly-tools-<version>-windows-x64.tar.gz` | the tools of one platform ([below](#oly-tools)) |
 | `oly-core-<version>.tgz`, `oly-web-host-<version>.tgz` | `npm pack` of the two web packages; a game's `package.json` names their URLs |
-| `install.sh` | puts the launcher on the machine |
-| `oly` | the launcher, stamped with the version |
+| `oly` | the launcher, stamped with the version; the pipe that creates a game and the launcher read it |
 | `VERSION` | the version as text, which `latest/download/VERSION` serves for "the latest release" |
 
 The images are `ghcr.io/esliph/oly-dev`, `oly-wasm` and `oly-windows`, tagged with the version. Each one has the linux-x64 `oly-tools` of its release baked at `/oly-tools` (`tools/release/Dockerfile.tools`).
@@ -56,6 +55,7 @@ One archive per platform. Its root is the contract between the launcher and a ve
 
 ```
 spur                 the runner, pinned per engine version
+oly                  the launcher of this version, which oly new and oly upgrade copy
 Spurfile             the game tasks: new, build, test, run, clean, doctor, sync
 toolchain.env        the toolchain versions of this release
 bin/oly-schema       prebuilt for the platform (.exe on Windows)
@@ -74,17 +74,18 @@ The archives are built in the `dev` container, because Git Bash on Windows canno
 
 ```
 ~/.oly/
-  bin/oly              the launcher
   versions/0.1.0/      an extracted oly-tools archive
 ```
 
+A game holds its own copy as `./oly`: `oly new` copies the launcher of the version from `oly-tools`, and `oly upgrade` replaces it. A game is created by piping `latest/download/oly` into `sh`, so nothing is installed on the machine and nothing touches the `PATH`.
+
 Its contract with a version, for a command inside a game:
 
-1. Walk up from the current folder to `oly.env` and read `OLY_VERSION`. Outside a game only `new`, `self-update`, `--version` and `doctor` run.
+1. Walk up from the current folder to `oly.env` and read `OLY_VERSION`. Outside a game only `new`, `--version` and `doctor` run.
 2. If `~/.oly/versions/<version>/spur` is missing, download `oly-tools-<version>-<platform>.tar.gz` from `$OLY_RELEASE_URL/download/v<version>/` and extract it. The archive is extracted beside its final folder and moved in whole, so an interrupted run never leaves a half-filled version that the next run trusts.
 3. Run `sh <version>/spur -f <version>/Spurfile -C <game root> <task> [arguments]` with `OLY_GAME_DIR`, `OLY_TOOLS_DIR` and `OLY_VERSION` in the environment.
 
-The launcher keeps only four commands that cannot live in a version. `new` needs a version before there is a game, `upgrade` changes which version the game uses, `self-update` replaces the launcher, and `--version` must answer when no tools are installed. `new` and `doctor` outside a game use the latest release, which the launcher reads from `latest/download/VERSION`; in local mode they use the version of `project(Oly VERSION)` in the checkout.
+The launcher keeps only three commands that cannot live in a version. `new` needs a version before there is a game, `upgrade` changes which version the game uses and replaces the launcher, and `--version` must answer when no tools are installed. `new` and `doctor` outside a game use the latest release, which the launcher reads from `latest/download/VERSION`; in local mode they use the version of `project(Oly VERSION)` in the checkout.
 
 `OLY_RELEASE_URL` (default `https://github.com/esliph/oly/releases`) is the base of every download. A folder served over HTTP, or over `file://`, with GitHub's layout (`download/v<version>/...` and `latest/download/...`) works as a release. This is what lets the staged tests run before anything exists on GitHub.
 
