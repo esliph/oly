@@ -8,13 +8,24 @@ printf 'tools=%s version=%s args=%s\n' "$OLY_TOOLS_DIR" "$OLY_VERSION" "$*"
 STUB
 }
 
-# add_release <tree> <version>: download/v<version>/oly-tools-<version>-linux-x64.tar.gz holding a stub spur and an empty Spurfile.
+# add_release <tree> <version> [truncated|no-launcher]: download/v<version>/oly-tools-<version>-linux-x64.tar.gz holding a
+# stub spur, an empty Spurfile and the repository's launcher stamped with the version. truncated keeps its first 200 lines;
+# no-launcher leaves it out.
 add_release() {
   staging=$(mktemp -d)
   write_stub_spur "$staging"
   : > "$staging/Spurfile"
+  files="spur Spurfile"
+  if [ "${3:-}" != no-launcher ]; then
+    sed "s/^OLY_LAUNCHER_VERSION=.*/OLY_LAUNCHER_VERSION=$2/" "$repository/tools/oly/oly" > "$staging/oly"
+    if [ "${3:-}" = truncated ]; then
+      head -n 200 "$staging/oly" > "$staging/oly.cut"
+      mv "$staging/oly.cut" "$staging/oly"
+    fi
+    files="$files oly"
+  fi
   mkdir -p "$1/download/v$2"
-  tar -czf "$1/download/v$2/oly-tools-$2-linux-x64.tar.gz" -C "$staging" spur Spurfile
+  tar -czf "$1/download/v$2/oly-tools-$2-linux-x64.tar.gz" -C "$staging" $files
   rm -rf "$staging"
 }
 

@@ -122,6 +122,8 @@ check "upgrade web: package.json names only the new version" grep -q 0.2.0 "$wor
 check "upgrade web: package.json lost the old version" test -z "$(grep 0.1.0 "$work/web/package.json")"
 check "upgrade web: both tarballs moved" test "$(grep -c "v0.2.0/oly-.*-0.2.0.tgz" "$work/web/package.json")" -eq 2
 check "upgrade web: runs sync of the new version" stdout_is "tools=$home/versions/0.2.0 version=0.2.0 args=-f $home/versions/0.2.0/Spurfile -C $work/web sync"
+check "upgrade web: ./oly is the version's launcher" cmp -s "$work/web/oly" "$home/versions/0.2.0/oly"
+check "upgrade web: ./oly is executable" test -x "$work/web/oly"
 
 make_game native 0.1.0
 run_oly "$work/native" upgrade 0.2.0
@@ -129,15 +131,20 @@ check "upgrade native: exit 0" exit_is 0
 check "upgrade native: oly.env pins the new version" grep -qxF OLY_VERSION=0.2.0 "$work/native/oly.env"
 check "upgrade native: no package.json is created" test ! -e "$work/native/package.json"
 check "upgrade native: no sync" test -z "$(grep sync "$logs/out")"
+check "upgrade native: creates the missing ./oly" cmp -s "$work/native/oly" "$home/versions/0.2.0/oly"
+check "upgrade native: ./oly prints its version" test "$(sh "$work/native/oly" --version | head -n 1)" = "oly 0.2.0"
 
 make_web_game same 0.1.0
 cp "$work/same/oly.env" "$work/same-oly.env"
 cp "$work/same/package.json" "$work/same-package.json"
+cp "$home/versions/0.1.0/oly" "$work/same/oly"
+cp "$work/same/oly" "$work/same-oly"
 run_oly "$work/same" upgrade 0.1.0
 check "upgrade same version: exit 0" exit_is 0
 check "upgrade same version: message" stdout_is "already on 0.1.0"
 check "upgrade same version: oly.env unchanged" cmp -s "$work/same/oly.env" "$work/same-oly.env"
 check "upgrade same version: package.json unchanged" cmp -s "$work/same/package.json" "$work/same-package.json"
+check "upgrade same version: ./oly unchanged" cmp -s "$work/same/oly" "$work/same-oly"
 
 run_oly "$work/empty" upgrade 0.2.0
 check "upgrade outside a game: exit 64" exit_is 64
@@ -145,34 +152,7 @@ check "upgrade outside a game: exit 64" exit_is 64
 run_oly "$work/native" upgrade 9.9.9
 check "upgrade to a missing version: exit 1" exit_is 1
 check "upgrade to a missing version: oly.env unchanged" grep -qxF OLY_VERSION=0.2.0 "$work/native/oly.env"
-
-mkdir -p "$work/bin"
-cp "$launcher" "$work/bin/oly"
-add_launcher_asset "$tree" "$launcher" 0.2.0
-original_launcher=$launcher
-launcher=$work/bin/oly
-cp "$launcher" "$work/dev-oly"
-run_oly "$work" self-update
-check "self-update from a dev launcher: exit 64" exit_is 64
-check "self-update from a dev launcher: message" stderr_has "runs from a checkout"
-check "self-update from a dev launcher: the file stays" cmp -s "$work/bin/oly" "$work/dev-oly"
-sed -i 's/^OLY_LAUNCHER_VERSION=dev$/OLY_LAUNCHER_VERSION=0.1.0/' "$work/bin/oly"
-launcher=$original_launcher
-launcher=$work/bin/oly
-run_oly "$work" self-update
-check "self-update: exit 0" exit_is 0
-run_oly "$work/empty" --version
-check "self-update: the launcher is the release's" stdout_is "oly 0.2.0"
-check "self-update: the launcher is executable" test -x "$work/bin/oly"
-check "self-update: no temporary file is left" test "$(ls "$work/bin")" = oly
-
-cp "$work/bin/oly" "$work/before-oly"
-add_launcher_asset "$tree" "$original_launcher" 0.3.0 broken
-run_oly "$work" self-update
-check "self-update broken: exit 1" exit_is 1
-check "self-update broken: the old launcher stays" cmp -s "$work/bin/oly" "$work/before-oly"
-check "self-update broken: no temporary file is left" test "$(ls "$work/bin")" = oly
-launcher=$original_launcher
+check "upgrade to a missing version: ./oly unchanged" cmp -s "$work/native/oly" "$home/versions/0.2.0/oly"
 
 mkdir "$work/installed"
 add_launcher_asset "$tree" "$launcher" 0.2.0
@@ -212,13 +192,7 @@ check "task from a subfolder: exit 0" exit_is 0
 check "task from a subfolder: runs at the game root" test ! -e "$work/nested-clean/build"
 check "task from a subfolder: leaves the subfolder alone" test -d "$work/nested-clean/a/b/build"
 
-head -n 196 "$original_launcher" > "$tree/latest/download/oly"
-cp "$work/bin/oly" "$work/before-truncated-oly"
-launcher=$work/bin/oly
-run_oly "$work" self-update
-launcher=$original_launcher
-check "self-update truncated: exit 1" exit_is 1
-check "self-update truncated: the old launcher stays" cmp -s "$work/bin/oly" "$work/before-truncated-oly"
+head -n 196 "$launcher" > "$tree/latest/download/oly"
 
 install_home=$work/installed-truncated
 mkdir "$install_home"
@@ -269,7 +243,7 @@ LOCAL_ENGINE=
 check "local-mode new without a checkout version: exit 1" exit_is 1
 check "local-mode new without a checkout version: message" stderr_has "could not read the version"
 
-add_launcher_asset "$tree" "$original_launcher" 0.2.0
+add_launcher_asset "$tree" "$launcher" 0.2.0
 install_home=$work/installed-custom
 mkdir "$install_home"
 status=0
@@ -277,5 +251,47 @@ env HOME="$install_home" OLY_HOME="$work/custom-oly-home" SHELL=/bin/bash OLY_RE
 check "install in a custom OLY_HOME: exit 0" exit_is 0
 check "install in a custom OLY_HOME: the launcher is there" test -x "$work/custom-oly-home/bin/oly"
 check "install in a custom OLY_HOME: the profile exports OLY_HOME" grep -qxF "export OLY_HOME=\"$work/custom-oly-home\"" "$install_home/.bashrc"
+
+make_game repair 0.1.0
+cp "$home/versions/0.1.0/oly" "$work/repair/oly"
+printf '# edited\n' >> "$work/repair/oly"
+launcher=$work/repair/oly
+run_oly "$work/repair" upgrade 0.1.0
+launcher=$repository/tools/oly/oly
+check "repair from the game's own launcher: exit 0" exit_is 0
+check "repair from the game's own launcher: not reported as current" test "$(cat "$logs/out")" != "already on 0.1.0"
+check "repair from the game's own launcher: ./oly is the version's launcher" cmp -s "$work/repair/oly" "$home/versions/0.1.0/oly"
+check "repair from the game's own launcher: no temporary file is left" test ! -e "$work/repair/oly.oly-new"
+
+make_game lost 0.1.0
+run_oly "$work/lost" upgrade 0.1.0
+check "lost launcher, same version: exit 0" exit_is 0
+check "lost launcher, same version: ./oly is back" cmp -s "$work/lost/oly" "$home/versions/0.1.0/oly"
+
+add_release "$tree" 0.6.0 truncated
+make_game cut 0.1.0
+cp "$home/versions/0.1.0/oly" "$work/cut/oly"
+cp "$work/cut/oly" "$work/cut-oly"
+run_oly "$work/cut" upgrade 0.6.0
+check "truncated launcher: exit 1" exit_is 1
+check "truncated launcher: message" stderr_has "could not replace"
+check "truncated launcher: the old ./oly stays" cmp -s "$work/cut/oly" "$work/cut-oly"
+check "truncated launcher: oly.env unchanged" grep -qxF OLY_VERSION=0.1.0 "$work/cut/oly.env"
+check "truncated launcher: no temporary file is left" test ! -e "$work/cut/oly.oly-new"
+
+add_release "$tree" 0.7.0 no-launcher
+make_game old 0.1.0
+cp "$home/versions/0.1.0/oly" "$work/old/oly"
+cp "$work/old/oly" "$work/old-oly"
+cp "$work/old/oly.env" "$work/old-oly.env"
+run_oly "$work/old" upgrade 0.7.0
+check "version without a launcher: exit 1" exit_is 1
+check "version without a launcher: message" stderr_has "has no launcher"
+check "version without a launcher: ./oly unchanged" cmp -s "$work/old/oly" "$work/old-oly"
+check "version without a launcher: oly.env unchanged" cmp -s "$work/old/oly.env" "$work/old-oly.env"
+
+run_oly "$work/empty" self-update
+check "self-update is gone: exit 64" exit_is 64
+check "self-update is gone: message" stderr_has "not inside an Oly game"
 
 finish
