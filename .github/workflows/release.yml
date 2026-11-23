@@ -86,7 +86,7 @@ jobs:
         run: |
           mkdir -p build/images
           for image in dev wasm windows; do
-            docker save "cpp_services-$image" | zstd -q -T0 -3 -o "build/images/$image.tar.zst"
+            docker save "oly-engine-$image" | zstd -q -T0 -3 -o "build/images/$image.tar.zst"
           done
       - uses: actions/upload-artifact@v4
         with:

@@ -153,7 +153,7 @@ git commit -m "feat(release): package oly-tools and stage a release tree"
   `python3 -m http.server` as in phase 2, export `NPM_CONFIG_USERCONFIG=<work dir>/npmrc` holding
   `@oly:registry=http://127.0.0.1:9` (the variable name `npm_config_@oly:registry` is not a valid sh identifier), run
   the script. The Windows job does the same.
-  `docker` (host) — build `oly-local/oly-<image>:<V>` from `Dockerfile.tools` over the local `cpp_services-*` images,
+  `docker` (host) — build `oly-local/oly-<image>:<V>` from `Dockerfile.tools` over the local `oly-engine-*` images,
   then `oly test --docker` with `OLY_IMAGE_REGISTRY=oly-local` in the two games the other runs left.
 
 - [ ] **Step 1: Write the failing test** — the task itself: `./spur staged-test 0.1.0`.

@@ -380,7 +380,7 @@ consumer-docker: ## the Docker half of consumer-test, on the host
   [ -d "$native" ] && [ -d "$web" ] || _fail 64 "run ./spur consumer-test native and ./spur consumer-test web first"
 
   for image in wasm dev windows; do
-    docker tag "cpp_services-$image" "oly-local/oly-$image:$version"
+    docker tag "oly-engine-$image" "oly-local/oly-$image:$version"
   done
 
   export OLY_IMAGE_REGISTRY=oly-local OLY_ENGINE_DIR=$PWD
