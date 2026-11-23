@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.25)
-project(Oly VERSION 0.1.0 LANGUAGES CXX C)
+project(Oly VERSION 0.2.0 LANGUAGES CXX C)
 
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 

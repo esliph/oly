@@ -6,8 +6,8 @@ import { loadRuntime } from "@oly/core";
 import type { OlyModuleFactory } from "@oly/core";
 
 import schema, { Player, Position } from "../schema.generated.js";
-import { installGame } from "../src/game.js";
-import type { Drawer } from "../src/game.js";
+import { startGameplay } from "../src/gameplay.js";
+import type { Drawer } from "../src/gameplay.js";
 
 const StepsPerSecond = 60;
 const PlayerSpeed = 200;
@@ -52,7 +52,7 @@ test("holding KeyD for one second moves the player right by the player speed and
   const drawer = new RecordingDrawer();
 
   try {
-    installGame(engine, drawer);
+    startGameplay(engine, drawer);
     engine.frame(0);
     engine.actions.buttonDown("KeyD");
 

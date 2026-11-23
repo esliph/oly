@@ -172,6 +172,25 @@ package_on_version() {
   grep -qF "oly-core-$1.tgz" "$2/package.json" && grep -qF "oly-web-host-$1.tgz" "$2/package.json"
 }
 
+# The copy is checked before it replaces ./oly: it parses and ends with the closing line, which a cut copy lacks. mv swaps
+# the file whole, so the old one is never half written and the running shell keeps reading it.
+replace_launcher() {
+  version=$1
+  root=$2
+  launcher_file=$oly_home/versions/$version/oly
+  temporary=$root/oly.oly-new
+
+  [ -f "$launcher_file" ] || fail 1 "oly-tools $version has no launcher to copy into $root"
+
+  if cp "$launcher_file" "$temporary" && sh -n "$temporary" && [ "$(tail -n 1 "$temporary")" = "$launcher_end" ] \
+    && chmod +x "$temporary" && mv "$temporary" "$root/oly"; then
+    return 0
+  fi
+
+  rm -f "$temporary"
+  fail 1 "could not replace $root/oly with the launcher of $version"
+}
+
 upgrade_command() {
   target=${1:-}
   [ -n "$target" ] || fail 64 "usage: oly upgrade <version>"
@@ -180,17 +199,21 @@ upgrade_command() {
   root=$(find_game_root)
   [ -n "$root" ] || fail 64 "not inside an Oly game: no oly.env in $PWD or above"
   current=$(pinned_version "$root") || exit $?
-  # oly.env alone does not say the game is on the version: a hand edit or a failed earlier sync leaves package.json behind.
-  if [ "$current" = "$target" ] && { [ ! -f "$root/package.json" ] || package_on_version "$target" "$root"; }; then
-    printf 'already on %s\n' "$target"
-    exit 0
-  fi
-
   # Fetched before anything is rewritten, local mode included: a version that does not exist leaves the game as it was.
+  # It also comes before the test below, which reads the version's launcher from the cache.
   if [ ! -f "$oly_home/versions/$target/spur" ]; then
     install_tools "$target"
   fi
 
+  # oly.env alone does not say the game is on the version: a hand edit or a failed earlier sync leaves package.json behind,
+  # and a lost or edited ./oly differs from the version's launcher.
+  if [ "$current" = "$target" ] && cmp -s "$oly_home/versions/$target/oly" "$root/oly" \
+    && { [ ! -f "$root/package.json" ] || package_on_version "$target" "$root"; }; then
+    printf 'already on %s\n' "$target"
+    exit 0
+  fi
+
+  replace_launcher "$target" "$root"
   rewrite "$root/oly.env" "s/^OLY_VERSION=.*/OLY_VERSION=$target/"
   if [ ! -f "$root/package.json" ]; then
     printf 'oly.env now pins %s\n' "$target"
@@ -203,23 +226,6 @@ upgrade_command() {
   run_version "$target" "$root" sync
 }
 
-# The new launcher is checked before it replaces the running one: it parses and ends with the closing line, which a cut
-# download lacks. mv swaps the file whole, so the old one is never half written.
-self_update() {
-  [ "$OLY_LAUNCHER_VERSION" != dev ] || fail 64 "this launcher runs from a checkout (version dev) and self-update would overwrite the tracked file: install a release with install.sh"
-  url=$release_url/latest/download/oly
-  self=$0
-  temporary=$self.new.$$
-
-  if curl -fsSL "$url" -o "$temporary" && sh -n "$temporary" && [ "$(tail -n 1 "$temporary")" = "$launcher_end" ]; then
-    chmod +x "$temporary" && mv "$temporary" "$self" || { rm -f "$temporary"; fail 1 "could not replace $self"; }
-  else
-    rm -f "$temporary"
-    fail 1 "could not update from $url"
-  fi
-
-  printf 'oly updated\n'
-}
 
 # With -C the Spurfile reads a relative checkout from the game root, not from where oly was run.
 if [ -n "${OLY_ENGINE_DIR:-}" ]; then
@@ -239,10 +245,6 @@ case ${1:-} in
   upgrade)
     shift
     upgrade_command "$@"
-    ;;
-  self-update)
-    self_update
-    exit 0
     ;;
 esac
 

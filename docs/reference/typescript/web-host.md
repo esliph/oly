@@ -2,11 +2,78 @@
 
 [TypeScript client](README.md) · Concept: [Environments and hosts](../../explanation/concepts/environments-and-hosts.md)
 
-The package `@oly/web-host` is the web host: it loads the WASM module, drives the loop in a browser tab and delivers keyboard and mouse input to the engine. It has three functions, which a game calls once at start-up. The template calls all three ([The game template](../game-template.md)).
+The package `@oly/web-host` is the web host: it loads the WASM module, drives the loop in a browser tab and delivers keyboard and mouse input to the engine. A game derives `Game` and starts with one call, `runGame`; the template does this ([The game template](../game-template.md)). Three functions, which `runGame` calls, stay for a game that drives the loop itself.
 
 ```ts
-import { attachBrowserInput, moduleFactoryFromUrl, runInBrowser } from "@oly/web-host";
+import { attachBrowserInput, Game, moduleFactoryFromUrl, runGame, runInBrowser } from "@oly/web-host";
 ```
+
+## `Game`
+
+```ts
+abstract class Game {
+  readonly options: GameOptions;
+  protected constructor(options: GameOptions);
+  abstract onStart(engine: Engine, canvas: HTMLCanvasElement): void;
+}
+```
+
+A game derives one class from `Game`, passes its options to `super` and writes its content in `onStart`. The class holds the game's own state. `runGame` calls `onStart` once, on an engine that is already set up, before the first frame. `onStart` is synchronous: `runGame` does not await it. It receives the canvas, not a drawing context: the engine does not decide whether the game draws with Canvas 2D, WebGL or WebGPU.
+
+```ts
+class MyGame extends Game {
+  constructor() {
+    super({ canvas: "game", module: "./<game>.mjs", schema });
+  }
+
+  onStart(engine: Engine, canvas: HTMLCanvasElement): void {
+    // bind actions, spawn entities, add systems
+  }
+}
+```
+
+## `GameOptions`
+
+| Field | Meaning |
+|---|---|
+| `canvas` | the `<canvas>` element, or the `id` of one in the page |
+| `module` | URL of the game's `.mjs`, relative to the page |
+| `schema` | the schema the build generated (`schema.generated.js`) |
+| `width`, `height` | when given, the canvas size in pixels; otherwise the canvas keeps its own |
+| `engine` | the `EngineConfig` for `createEngine` (`fixedHz`, `maxStepsPerFrame`, `maxEventRounds`) |
+
+## `runGame`
+
+```ts
+function runGame(game: Game): Promise<BrowserGame>;
+```
+
+Starts the game. In this order, it:
+
+1. Finds the canvas. An `id` that finds nothing, or finds an element that is not a `<canvas>`, rejects with `canvas with id "<id>" not found on the page`. Then it sets `width` and `height`, when given.
+2. Loads the runtime with `moduleFactoryFromUrl` and `loadRuntime`, then calls `createEngine(options.engine)`.
+3. Calls `game.onStart(engine, canvas)`.
+4. Calls `attachBrowserInput(engine, canvas)`, then starts the loop with `runInBrowser`.
+5. Resolves with a `BrowserGame`.
+
+When a step throws or rejects, `runGame` undoes what it already did (stops the loop, detaches the input, disposes the engine, in that order), writes `Error starting the game: <message>` into the page (`document.body.textContent`) and rejects with the same value. It does not log: the browser reports the unhandled rejection once in the console.
+
+```ts
+void runGame(new MyGame());
+```
+
+A game that needs another order, or that drives the loop itself, uses the three functions below.
+
+## `BrowserGame`
+
+```ts
+interface BrowserGame {
+  readonly engine: Engine;
+  stop(): void;
+}
+```
+
+`stop()` stops the loop, detaches the input and disposes the engine. Calling it again does nothing. Called during a frame (from a system, a handler, a hook or a task), it throws `ContractError` `stop: game in frame; stop after the frame` and the game keeps running. An exception in a frame does not block a later `stop()`.
 
 ## `moduleFactoryFromUrl`
 

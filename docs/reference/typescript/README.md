@@ -22,7 +22,7 @@ Oly is complete in C++. The client adds TS conveniences (typed accessors, closur
 - **Engine**: `Engine`, `SystemContext`, `HandlerContext`, `TaskContext`, `StateContext`, `EventBatch`, `Scheduler` and `ActionMap`.
 - **Errors**: `ContractError` and `SchemaMismatchError` ([Errors](#errors)).
 
-`@oly/web-host` exports `moduleFactoryFromUrl`, `runInBrowser` and `attachBrowserInput` ([The web host](web-host.md)). The public list of `@oly/core` is `engine/environments/web/clients/typescript/core/api/public-exports.txt`; how the packages are built is in [TypeScript packages](../../explanation/architecture/ts-packages.md).
+`@oly/web-host` exports `Game`, `runGame`, `moduleFactoryFromUrl`, `runInBrowser` and `attachBrowserInput` ([The web host](web-host.md)). The public list of `@oly/core` is `engine/environments/web/clients/typescript/core/api/public-exports.txt`; how the packages are built is in [TypeScript packages](../../explanation/architecture/ts-packages.md).
 
 ## Errors
 

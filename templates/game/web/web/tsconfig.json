@@ -14,5 +14,5 @@
     "types": []
   },
   "include": ["schema.generated.ts", "src"],
-  "exclude": ["src/main.ts"]
+  "exclude": ["src/main.ts", "src/game.ts"]
 }

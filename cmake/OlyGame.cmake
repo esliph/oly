@@ -10,7 +10,7 @@ add_custom_target(oly_typescript_schemas)
 # Generates the schema structs and declaration with oly-schema, merging the .oly of every plugin turned on, and
 # game_setup.generated.cpp, which defines oly::app::setUpGame: declare the schema, then install the plugins in dependency
 # order. Compiles the game with the modules and plugins. On web it also generates the registry and links the WASM module
-# (.mjs) with the web host's script invoker; on native the sources bring their own main, which calls setUpGame, and
+# (.mjs) with the web host's script invoker; on native the sources bring their own main, which calls runGame (it calls setUpGame), and
 # link the native host through DEPENDS. With TYPESCRIPT, oly_typescript_schemas writes the same merged schema as TS to
 # that file, so the TS client hashes what the WASM module hashes.
 function(oly_add_game target)

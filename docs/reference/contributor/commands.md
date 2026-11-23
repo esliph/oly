@@ -9,6 +9,7 @@ The `./spur` tasks of the engine repository, run from Git Bash at the repository
 - `./spur --list` shows the tasks, and `./spur --describe <task>` the help of one.
 - Each task runs in the container its preset needs ([Services](#services)). Typed inside the wrong container, it exits with 64.
 - `PRESET=<name>` chooses the preset of a task that takes one ([Presets](#presets)). The arguments after the task go to the tool the task runs (`ctest` for the test tasks).
+- These host variables reach the container, and one unset on the host stays unset in it: `PRESET`, `OLY_FUZZ_SEED`, `OLY_FUZZ_OPS`, `CCACHE_DIR`, `CCACHE_MAXSIZE`, `CMAKE_C_COMPILER_LAUNCHER`, `CMAKE_CXX_COMPILER_LAUNCHER` and `CTEST_PARALLEL_LEVEL`. CI (`.github/workflows/ci.yml`) sets the last five, to keep a compiler cache in `build/.ccache` between runs and to run ctest in parallel. The `dev` and `wasm` images carry `ccache`; locally, `CMAKE_CXX_COMPILER_LAUNCHER=ccache CCACHE_DIR=/app/build/.ccache ./spur test` uses it the same way.
 - Images built before `./spur` existed lack `OLY_TOOLCHAIN` and stop with exit 69: run `./spur images`.
 - `-x` and `-n` given on the host show only the dispatch to the container. To trace a task, run it inside: `./spur dev ./spur -x test`.
 
@@ -31,7 +32,7 @@ The `./spur` tasks of the engine repository, run from Git Bash at the repository
 | `ts` | `wasm` | builds `oly-schema`, configures `$PRESET` (default `wasm-games`), writes each test game's TS schema from its CMake target (`oly_typescript_schemas`) and the test-only schemas, and compiles the TS |
 | `games-test` | `wasm` | `ts`, then the tests of a `wasm-games*` preset (default `wasm-games`) |
 | `subproject-test` | `dev` and `wasm` | builds `cmake/tests/consumer`, a project outside the engine tree that fetches the engine with `FetchContent` |
-| `oly-tools-test` | `wasm` | the shell tests of `tools/oly/` (launcher, `install.sh`, `new`, build arguments, doctor, Docker dispatch, `npm pack`) |
+| `oly-tools-test` | `wasm` | the shell tests of `tools/oly/` (launcher, `new`, build arguments, doctor, Docker dispatch, `npm pack`) |
 | `consumer-test` | `dev`, `wasm`, host | creates a game from the template in local mode, then builds and tests it |
 | `release-test` | `dev` | the shell tests of `tools/release/` |
 | `release` | host | writes a version into the tree and commits it |
@@ -138,10 +139,10 @@ PRESET=wasm-games-release ./spur games-test -R '^ts\.'   # Release: only the TS 
 ./spur consumer-test docker       # on the host
 ```
 
-`consumer-test` creates a game through the launcher (`sh tools/oly/oly new consumer-game --version <version>`) in `build/consumer/<environment>/`, with `OLY_ENGINE_DIR` set to this checkout (local mode), then builds and tests it as a user of `oly` would.
+`consumer-test` creates a game through the launcher (`sh tools/oly/oly new consumer-game --version <version>`) in `build/consumer/<environment>/`, with `OLY_ENGINE_DIR` set to this checkout (local mode), then builds and tests it as a user of `oly` would. The release pipeline does not run it: it tests the staged release, the files it publishes, with `staged-test`; run `consumer-test` when a change touches local mode.
 
 - `web` first packs `@oly/core` and `@oly/web-host` into `build/consumer/release/download/v<version>/` and serves them on `127.0.0.1:8765`, which the game installs from through `OLY_RELEASE_URL`. It then checks that going back to the pinned version replaces the checkout's packages in `node_modules`.
-- `docker` needs the games the two earlier runs left. It tags the local `cpp_services-*` images as `oly-local/oly-*:<version>` and runs `test --docker` in both games, `test --docker --platform windows` in the native one (MinGW and Wine), and `test --host` of the native game again, so the host and Docker build directories are shown to live side by side.
+- `docker` needs the games the two earlier runs left. It tags the local `oly-engine-*` images as `oly-local/oly-*:<version>` and runs `test --docker` in both games, `test --docker --platform windows` in the native one (MinGW and Wine), and `test --host` of the native game again, so the host and Docker build directories are shown to live side by side.
 
 To run a game task from a checkout, enter through the launcher with `OLY_ENGINE_DIR` set ([Build with an engine checkout](../../how-to/build-with-an-engine-checkout.md)). The launcher makes a relative `OLY_ENGINE_DIR` absolute first.
 
@@ -159,8 +160,8 @@ Nothing here publishes anything: the GitHub Actions workflow `release.yml` does 
 ```
 
 - `./spur release` refuses a working tree with changes. A version that is not `MAJOR.MINOR.PATCH` exits with 64. If npm or the check fails after the files were rewritten, `git checkout .` drops the changes.
-- `./spur stage <version>` fails unless the tree already carries `<version>` (`tools/release/check_version.sh`). `build/release/<version>/` has GitHub's layout: `download/v<version>/` holds `oly-tools-<version>-linux-x64.tar.gz`, `oly-tools-<version>-windows-x64.tar.gz`, `oly-core-<version>.tgz`, `oly-web-host-<version>.tgz`, `install.sh`, `oly` (the launcher stamped with the version) and `VERSION`; `latest/download/` holds copies of the last three, which is what GitHub serves from the assets of the latest release.
-- `staged-test` is the consumer test against the staged tree, not the checkout: it serves `build/release/<version>` on `127.0.0.1:8766`, installs the launcher with `install.sh` into a fresh `OLY_HOME` under `build/staged/<environment>/`, runs `oly doctor`, `oly new` and `oly test`. `OLY_ENGINE_DIR` stays unset, so the tools are the downloaded ones; `OLY_ENGINE_SOURCE_DIR` is this checkout, as the tag does not exist yet. `npm` runs with a user config whose `@oly` registry is `http://127.0.0.1:9`, so a lookup of an `@oly` package in the registry fails the run. `docker` needs the two games `web` and `native` left; it builds `oly-local/oly-<image>:<version>` from the local `cpp_services-*` images plus the staged linux-x64 `oly-tools` (`tools/release/Dockerfile.tools`) and runs `oly test --docker` in both.
+- `./spur stage <version>` fails unless the tree already carries `<version>` (`tools/release/check_version.sh`). `build/release/<version>/` has GitHub's layout: `download/v<version>/` holds `oly-tools-<version>-linux-x64.tar.gz`, `oly-tools-<version>-windows-x64.tar.gz`, `oly-core-<version>.tgz`, `oly-web-host-<version>.tgz`, `oly` (the launcher stamped with the version) and `VERSION`: six assets. `latest/download/` holds copies of the last two, which is what GitHub serves from the assets of the latest release.
+- `staged-test` is the consumer test against the staged tree, not the checkout: it serves `build/release/<version>` on `127.0.0.1:8766`, creates a game through the pipe that reads `latest/download/oly` with a fresh `OLY_HOME` under `build/staged/<environment>/`, then runs the game's own `./oly`: `doctor` and `test`. `OLY_ENGINE_DIR` stays unset, so the tools are the downloaded ones; `OLY_ENGINE_SOURCE_DIR` is this checkout, as the tag does not exist yet. `npm` runs with a user config whose `@oly` registry is `http://127.0.0.1:9`, so a lookup of an `@oly` package in the registry fails the run. `docker` needs the two games `web` and `native` left; it builds `oly-local/oly-<image>:<version>` from the local `oly-engine-*` images plus the staged linux-x64 `oly-tools` (`tools/release/Dockerfile.tools`), runs `oly test --docker` in both and `oly test --docker --platform windows` in the native one, and checks that the native game kept its host, Docker and Windows build directories apart.
 
 ## Benchmarks
 

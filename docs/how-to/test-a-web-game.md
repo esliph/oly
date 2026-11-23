@@ -6,10 +6,10 @@ Use this to run the real game, with the real WASM, in Node: you choose the time,
 
 ## What makes a game testable
 
-1. **`installGame(engine, drawer)` has no DOM.** It registers systems, handlers and hooks only. The browser shell (`main.ts`) is the only file that touches `document`.
+1. **`startGameplay(engine, drawer)` has no DOM.** It registers systems, handlers and hooks only. `gameplay.ts` has no DOM; the class in `game.ts` is the only code that touches the canvas.
 2. **Everything the outside world provides is injected.** The template injects the drawer. Anything else that would read the clock or a random source is a parameter of the same kind.
 
-This is the signature of `web/src/game.ts` (an excerpt):
+This is the signature of `web/src/gameplay.ts` (an excerpt):
 
 ```ts
 export interface Drawer {
@@ -17,10 +17,10 @@ export interface Drawer {
   square(x: number, y: number, size: number): void;
 }
 
-export function installGame(engine: Engine, drawer: Drawer): void {
+export function startGameplay(engine: Engine, drawer: Drawer): void {
 ```
 
-In the browser, `main.ts` passes a canvas drawer. In a test, you pass a recorder.
+In the browser, `MyGame.onStart` in `game.ts` passes a canvas drawer. In a test, you pass a recorder.
 
 ## A test harness
 
@@ -33,8 +33,8 @@ import { loadRuntime } from "@oly/core";
 import type { ButtonName, Engine, OlyModuleFactory, Runtime, SchemaType } from "@oly/core";
 
 import schema from "../schema.generated.js";
-import { installGame } from "../src/game.js";
-import type { Drawer } from "../src/game.js";
+import { startGameplay } from "../src/gameplay.js";
+import type { Drawer } from "../src/gameplay.js";
 
 const StepsPerSecond = 60;
 
@@ -85,7 +85,7 @@ export interface GameTest {
 export function withGame(runtime: Runtime, body: (game: GameTest) => void): void {
   const engine = runtime.createEngine({ fixedHz: StepsPerSecond });
   const drawer = new RecordingDrawer();
-  installGame(engine, drawer);
+  startGameplay(engine, drawer);
   engine.frame(0);
   let stepNumber = 0;
 
@@ -213,7 +213,7 @@ assert.equal(game.drawer.squares[0]?.size, 16);
 
 ### Deterministic randomness
 
-When the game uses randomness, inject it like the drawer: take a `random: () => number` parameter and pass `Math.random` in `main.ts`. In a test, pass a function that cycles over fixed values:
+When the game uses randomness, inject it like the drawer: take a `random: () => number` parameter and pass `Math.random` in `game.ts`. In a test, pass a function that cycles over fixed values:
 
 ```ts
 function sequence(values: readonly number[]): () => number {
@@ -228,7 +228,7 @@ function sequence(values: readonly number[]): () => number {
 A game made with `oly new` already registers its tests: `cmake/game.cmake` has the ctest test that runs `node --test web/dist/tests/` with `OLY_GAME_MODULE` set, and `web/tests/tsconfig.json` emits the compiled tests to `web/dist/tests/`. Put a new `*.test.ts` file in `web/tests/` and run:
 
 ```sh
-oly test
+./oly test
 ```
 
 `oly test` builds the game, compiles the TS tests and runs ctest. To run only the tests of the game by their ctest name, use `ctest` on the build `oly test` left:

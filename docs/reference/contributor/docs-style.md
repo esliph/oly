@@ -146,10 +146,22 @@ A change to the public surface updates the docs in the same change (same commit 
 | a change to how a part of the engine works | its page in `explanation/architecture/` |
 | a change to a `./spur` task, a preset or an engine option | [Commands](commands.md) |
 | a new page | its row in [docs/README.md](../../README.md) and the navigation lines of its neighbours |
+| any change to the public surface | [`CHANGELOG.md`](../../../CHANGELOG.md), `## Unreleased`: see [The changelog](#the-changelog) |
 
 The `oly.lint.readme_example` test checks the template blocks of the README. Nothing checks the tutorial blocks: copy them by hand from the template file.
 
 Before you finish, search `docs/` for the old name and run the link checker.
+
+### The changelog
+
+[`CHANGELOG.md`](../../../CHANGELOG.md) tells a game developer what to do before moving to another release ([Upgrade the engine](../../how-to/upgrade-the-engine.md)). It changes in the same change as the public surface, never at release time alone.
+
+- Every change to the [public surface](#public-surface) adds its entry to `## Unreleased`. A change that a game cannot see (a test, a benchmark, an internal refactor, a page of `docs/`) adds nothing.
+- `### Breaking` lists what stops a game from compiling or changes what it does: a removed or renamed name, a changed signature, a changed behaviour, a new error. One line per change, with the old and the new name.
+- `### Migration` lists what the game developer does, in steps. A change that removes nothing and that a game may adopt (a new call) goes here too, with a line that says the game keeps working without it.
+- A section with no entry holds the word `None.`. The first entry replaces it.
+- An entry uses the glossary names and links to the page that documents the change.
+- [Cut a release](../../how-to/contributor/cut-a-release.md) moves `## Unreleased` under the version heading. It does not write the entries: they already exist.
 
 ## Public surface
 

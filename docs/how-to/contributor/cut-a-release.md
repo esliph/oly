@@ -14,7 +14,7 @@ On a branch, on the host:
 
 This writes `<version>` into `project(Oly VERSION)`, `@oly/core`, `@oly/web-host` and `package-lock.json`, and commits. It creates no tag. It refuses a working tree with changes, and a version that is not `MAJOR.MINOR.PATCH` exits with 64. If npm or the check fails after the files were rewritten, `git checkout .` drops the changes.
 
-Then update [`CHANGELOG.md`](../../../CHANGELOG.md) in the same branch: move the unreleased entries under a `## <version>` heading (with its `### Breaking` and `### Migration` lists filled in), and add a new `(unreleased)` section above it for the next version.
+Then update [`CHANGELOG.md`](../../../CHANGELOG.md) in the same branch. The entries already exist: each change wrote its own under `## Unreleased` ([The changelog](../../reference/contributor/docs-style.md#the-changelog)). Rename `## Unreleased` to `## <version>`, check that each entry is still true, and add a new `## Unreleased` section above it, with `None.` under `### Breaking` and `### Migration`.
 
 Merge the branch into `master`: releases are cut from `master`.
 
@@ -29,7 +29,7 @@ Merge the branch into `master`: releases are cut from `master`.
 
 ## 3. Run the release workflow
 
-In GitHub: Actions, `release`, `Run workflow` on `master`, with the `version` input. `dry_run` starts true: `check`, `linux` and `windows` run and `publish` is skipped.
+In GitHub: Actions, `release`, `Run workflow` on `master`, with the `version` input. `dry_run` starts true: `check`, `build`, `engine`, `staged-linux` and `windows` run and `publish` is skipped. A dry run also starts from another branch, to try a change to the workflow before it reaches `master`.
 
 Run it again with `dry_run` false. `publish` tags `v<version>` on the tested commit, pushes the images (`ghcr.io/esliph/oly-{dev,wasm,windows}:<version>`) and creates the release with its assets.
 
@@ -39,8 +39,8 @@ The first publish of each image creates a GHCR package that is private until its
 
 ## If a step fails
 
-- The `check` job fails when the dispatch is not on `master`, when the version of the tree differs from the input, or when the tag exists.
-- `publish` pushes the images the `linux` job tested and saved. It fails before any push when a loaded image ID differs.
+- The `check` job fails when the version of the tree differs from the input and, without `dry_run`, when the dispatch is not on `master` or the tag exists (with `dry_run`, an existing tag is a warning).
+- `publish` pushes the images the `staged-linux` job tested and saved. It fails before any push when a loaded image ID differs.
 - One release runs at a time. When `publish` fails after pushing the images, use "Re-run failed jobs": the tag and the release are created only if missing, and an existing release gets its assets replaced.
 - A patch of an older line is not made the latest release, so `latest/download` keeps serving the newest version.
 

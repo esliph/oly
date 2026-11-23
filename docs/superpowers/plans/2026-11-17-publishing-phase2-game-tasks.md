@@ -344,7 +344,7 @@ git commit -m "feat(oly): check the host tools against toolchain.env"
   needs no toolchain file. `test` runs ctest (under Wine through the toolchain's emulator in the `windows` image).
 - Produces: template `ci.yml` — on push and pull request, `ubuntu-latest`: checkout; `curl -fsSL
   https://github.com/esliph/oly/releases/latest/download/install.sh | sh`; `~/.oly/bin/oly test --docker`.
-- Produces: `./spur consumer-test docker` (host): tags `cpp_services-wasm`, `cpp_services-dev` as
+- Produces: `./spur consumer-test docker` (host): tags `oly-engine-wasm`, `oly-engine-dev` as
   `oly-local/oly-wasm:<V>`, `oly-local/oly-dev:<V>`; with `OLY_IMAGE_REGISTRY=oly-local` and local mode, runs `test
   --docker` in the native and web games left by the two earlier runs (the web game reuses the `node_modules` the `wasm`
   run installed: same platform, so `sync` makes no network call).

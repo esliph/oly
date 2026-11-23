@@ -10,7 +10,7 @@ run_task() {
   game=$1
   shift
   status=0
-  OLY_GAME_DIR=$game OLY_TOOLS_DIR=$repository/tools/oly OLY_ENGINE_DIR=${TEST_ENGINE_DIR-$repository} \
+  OLY_GAME_DIR=$game OLY_TOOLS_DIR=${TEST_TOOLS_DIR-$repository/tools/oly} OLY_ENGINE_DIR=${TEST_ENGINE_DIR-$repository} \
     OLY_VERSION=${TEST_VERSION-0.1.0} \
     sh "$repository/spur" -f "$repository/tools/oly/Spurfile" "$@" > "$logs/out" 2> "$logs/err" || status=$?
 }

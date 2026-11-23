@@ -14,33 +14,31 @@ You need a computer with these tools. In step 1, `oly doctor` checks `cmake`, `n
 - On Windows: Git Bash and MSYS2 UCRT64 (`gcc`, `cmake` and `ninja`). Run every command from Git Bash, not from PowerShell or `cmd`.
 - Docker is optional. A window cannot open in a container, so `oly run --docker` does not work for a desktop game.
 
-The exact versions and the install steps are in [The `oly` command](../reference/cli.md#install). To make a game for the browser instead, follow [Your first web game](first-web-game.md).
+The exact versions are in [The `oly` command](../reference/cli.md#install). To make a game for the browser instead, follow [Your first web game](first-web-game.md).
 
-## 1. Install `oly`
-
-Install the launcher with the command in [The `oly` command](../reference/cli.md#install). Open a new terminal, then check your tools:
+## 1. Check your tools
 
 ```sh
-oly doctor --environment native
+curl -fsSL https://github.com/esliph/oly/releases/latest/download/oly | sh -s -- doctor --environment native
 ```
 
-You see one line per tool. Each line starts with `ok`, `old`, `untested`, `missing` or `wrong`, then the tool and what to install. Fix every line that does not say `ok`, then run the command again.
+There is nothing to install first: the command downloads the launcher of the latest release and runs its `doctor` outside a game. You see one line per tool. Each line starts with `ok`, `old`, `untested`, `missing` or `wrong`, then the tool and what to install. Fix every line that does not say `ok`, then run the command again.
 
 ## 2. Create the game
 
 ```sh
-oly new <game> --environment native
+curl -fsSL https://github.com/esliph/oly/releases/latest/download/oly | sh -s -- new <game> --environment native
 cd <game>
 ```
 
-`<game>` is the name of the folder: lowercase letters, digits and `-`, starting with a letter. `oly new` copies [the game template](../reference/game-template.md#native).
+`<game>` is the name of the folder: lowercase letters, digits and `-`, starting with a letter. The command downloads the launcher, which copies [the game template](../reference/game-template.md#native) into the folder and leaves itself in the game as `./oly`.
 
-You see `created <game> (native, oly <version>)`, and a folder with `oly.env`, `<game>.oly`, `native/`, `desktop/` and the other files of the template.
+You see `created <game> (native, oly <version>)`, and a folder with `oly`, `oly.env`, `<game>.oly`, `native/`, `desktop/` and the other files of the template. Run `./oly` from inside it: it is the launcher of this game.
 
 ## 3. Run the game
 
 ```sh
-oly run
+./oly run
 ```
 
 `oly run` builds the game and runs it. You see a window with a white square in the middle. Press `W`, `A`, `S` and `D`: the square moves. Close the window to stop the game.
@@ -48,7 +46,7 @@ oly run
 The arguments of `oly run` go to the game. This command runs 60 frames with a fixed clock and exits:
 
 ```sh
-oly run --frames 60
+./oly run --frames 60
 ```
 
 You see no window stay open: the game starts, runs and ends by itself.
@@ -105,54 +103,26 @@ OLY_SYSTEM(movePlayer) {
 void movePlayer(oly::app::SystemContext& context);
 ```
 
-Change `PlayerSpeed` to `400.0f` and run `oly run` again. You see the square cross the window twice as fast.
+Change `PlayerSpeed` to `400.0f` and run `./oly run` again. You see the square cross the window twice as fast.
 
 ## 6. Read the shell
 
-The shell is `desktop/main.cpp`. It creates the `World` and the `Engine`, opens the window and hands the loop to `run`. This is the whole file:
+The shell is `desktop/main.cpp`. It holds the game as a class, `MyGame`, and starts it with one call, `runGame`. This is the whole file:
 
 ```cpp
 #include <SDL3/SDL.h>
 
-#include <cstdio>
-#include <cstdlib>
-#include <exception>
-#include <string_view>
-
 #include "oly/app/engine.hpp"
-#include "oly/app/game.hpp"
 #include "oly/ecs/query.hpp"
 #include "oly/ecs/world.hpp"
-#include "oly/native_host/run.hpp"
-#include "oly/native_host/window.hpp"
+#include "oly/native_host/game.hpp"
 #include "schema.generated.hpp"
 #include "systems.hpp"
 
 namespace {
-  constexpr int UsageExitCode = 64;
   constexpr int LogicalWidth = 640;
   constexpr int LogicalHeight = 360;
   constexpr float PlayerSize = 16.0f;
-
-  bool parseOptions(int argumentCount, char** arguments, oly::native_host::RunOptions& options) {
-    for (int index = 1; index < argumentCount; ++index) {
-      const std::string_view argument = arguments[index];
-      if (argument != "--frames" || index + 1 >= argumentCount) {
-        return false;
-      }
-
-      const unsigned long long frames = std::strtoull(arguments[++index], nullptr, 10);
-      if (frames == 0) {
-        return false;
-      }
-
-      // Headless runs: a fixed number of frames over a known amount of game time.
-      options.maxFrames = frames;
-      options.frameSeconds = 1.0 / 60;
-    }
-
-    return true;
-  }
 
   void draw(oly::app::SystemContext& context) {
     SDL_Renderer* renderer = static_cast<SDL_Renderer*>(context.userData());
@@ -163,50 +133,39 @@ namespace {
       SDL_RenderFillRect(renderer, &box);
     });
   }
+
+  class MyGame : public oly::native_host::Game {
+   public:
+    MyGame()
+      : Game({"<game>", LogicalWidth, LogicalHeight}) {}
+
+    void onStart(oly::app::Engine& engine, oly::native_host::Window& window) override {
+      engine.actions().bind(actions::move, {oly::input::Key::W, oly::input::Key::S, oly::input::Key::A, oly::input::Key::D});
+      engine.world().spawn(Player{}, Position{LogicalWidth / 2.0f, LogicalHeight / 2.0f});
+      engine.addSystem(oly::app::Phase::Update, "movePlayer", movePlayer);
+      engine.addSystem(oly::app::Phase::Render, "draw", draw, window.renderer());
+    }
+  };
 }
 
 int main(int argumentCount, char** arguments) {
-  oly::native_host::RunOptions options;
-  if (!parseOptions(argumentCount, arguments, options)) {
-    std::fprintf(stderr, "usage: %s [--frames <n>]\n", arguments[0]);
-    return UsageExitCode;
-  }
-
-  try {
-    oly::ecs::World world;
-    oly::app::Engine engine(world);
-    oly::app::setUpGame(engine);
-
-    engine.actions().bind(actions::move, {oly::input::Key::W, oly::input::Key::S, oly::input::Key::A, oly::input::Key::D});
-    world.spawn(Player{}, Position{LogicalWidth / 2.0f, LogicalHeight / 2.0f});
-    engine.addSystem(oly::app::Phase::Update, "movePlayer", movePlayer);
-
-    oly::native_host::Window window({"<game>", LogicalWidth, LogicalHeight});
-    engine.addSystem(oly::app::Phase::Render, "draw", draw, window.renderer());
-
-    return oly::native_host::run(engine, window, options);
-  } catch (const std::exception& error) {
-    std::fprintf(stderr, "<game>: %s\n", error.what());
-    return 1;
-  }
+  return oly::native_host::runGame<MyGame>(argumentCount, arguments);
 }
 ```
 
-In `main`, in order:
+In the file, in order:
 
-- `oly::app::setUpGame(engine)` declares the schema's events, actions and states, then installs the game's plugins. The build generates it. Call it first, on an `Engine` that has declared nothing yet.
-- `engine.actions().bind` ties the keys `W`, `S`, `A` and `D` to the two axes of `move`.
-- `world.spawn` creates the player in the middle of the logical area.
-- `engine.addSystem` adds `movePlayer` to the `Update` phase and `draw` to the `Render` phase. `draw` gets the SDL renderer through `userData`.
-- `Window` opens a resizable window. Its size, `640` by `360`, is the logical size the game draws in: the host scales it to the window and adds bars when the shape differs ([Native host](../reference/native-host.md)).
-- `run` returns when the window is closed, and `main` returns its result as the exit code. `parseOptions` fills `RunOptions` from `--frames <n>`.
+- `draw` is a `Render` system. It gets the SDL renderer through `userData`.
+- `MyGame` derives `oly::native_host::Game`. Its constructor gives the window configuration. The size, `640` by `360`, is the logical size the game draws in: the host scales it to the window and adds bars when the shape differs ([Native host](../reference/native-host.md)).
+- `onStart` is the content of the game. `runGame` calls it once, on an `Engine` that it already set up with `setUpGame`, with the window open. `engine.actions().bind` ties the keys `W`, `S`, `A` and `D` to the two axes of `move`. `engine.world().spawn` creates the player in the middle of the logical area. `engine.addSystem` adds `movePlayer` to the `Update` phase and `draw` to the `Render` phase.
+- `runGame<MyGame>` reads `--frames <n>`, constructs the game, opens the window and runs the loop. It returns the exit code: `0` when the window closes, `64` for a wrong command line and `1` when an exception escapes, after it prints `<title>: <message>`.
 
-Change `PlayerSize` to `32.0f` and run `oly run` again. You see a square twice as wide.
+Rename `MyGame` to fit your game. Change `PlayerSize` to `32.0f` and run `./oly run` again. You see a square twice as wide.
 
 ## 7. Run the tests
 
 ```sh
-oly test
+./oly test
 ```
 
 `oly test` builds the game and runs its tests. The test `<target>.headless` runs the game for 120 frames with `SDL_VIDEO_DRIVER=dummy`, so it needs no display ([The game template](../reference/game-template.md#native)).

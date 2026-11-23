@@ -35,7 +35,8 @@ The same verb stands for the same concept in C++, in the C API and in TS.
 | call script code | — (C++ code is called directly) | `olyEngineSetScriptInvoker` (per engine, dispatch by `kind`) | installed by `Runtime.createEngine` |
 | restrict to states | `Engine::setSystemStates/setHandlerStates` (and `*StateMask`) | `olyEngineSetSystemStates/SetHandlerStates` | `registration.inState(...states)` |
 | persist (remove the state scope) | `SystemContext/DirectContext::persist`, `Scheduler::persist` | `olyContextPersist`, `olyEnginePersistTask` | `context.persist`, `schedule.persist` |
-| set up the game: declare the schema (events, actions, states), then install the plugins | `oly::app::setUpGame(engine)` (generated, in `game_setup.generated.cpp`); it calls `oly::app::declareSchema(engine)` (generated, in `schema_declaration.generated.cpp`) | (done by `olyEngineCreate`) | (done by `Runtime.createEngine`) |
+| the game: the class a game derives, and the call that runs it | `oly::native_host::Game`, `runGame` (`oly/native_host/game.hpp`) | none | `Game`, `runGame` (`@oly/web-host`) |
+| set up the game: declare the schema (events, actions, states), then install the plugins | `oly::app::setUpGame(engine)` (generated, in `game_setup.generated.cpp`); it calls `oly::app::declareSchema(engine)` (generated, in `schema_declaration.generated.cpp`); on native, `runGame` calls it | (done by `olyEngineCreate`) | (done by `Runtime.createEngine`) |
 | plugin: engine-level functionality a game turns on in its build | `oly::app::Plugin` (`install(engine)`); `oly_add_plugin(NAME <p> ...)` in CMake, turned on with `oly_add_game(... PLUGINS ...)` | — | — |
 | place an entity and nest it | `Position`, `Rotation`, `Scale`, `Parent`, `WorldTransform` (`essentials2d` or `essentials3d`, turned on by `oly_add_game(... DIMENSION 2d\|3d ...)`) | the same names, in the generated schema | the same names |
 | install a plugin / reach an installed plugin | `Engine::installPlugin<P>()` / `Engine::plugin<P>()` | — | — |
@@ -52,7 +53,7 @@ These terms have no C API or TS form. Details: [Publishing](../explanation/archi
 | Term | Meaning |
 |---|---|
 | `oly-tools` | the archive of one platform and one version that holds `spur`, the game `Spurfile`, `toolchain.env`, `bin/oly-schema`, `template/` and `docker-compose.yaml` |
-| launcher | the `oly` script (POSIX sh) in `~/.oly/bin`: finds the game, fetches the `oly-tools` of its version and runs that version's `Spurfile` |
+| launcher | the `oly` script (POSIX sh) committed at the root of a game as `./oly`: finds the game, fetches the `oly-tools` of its version and runs that version's `Spurfile` |
 | pinned version | the `OLY_VERSION` of a game's `oly.env`: the engine release the game builds with |
 | local mode | `OLY_ENGINE_DIR` names an engine checkout, and the launcher takes the tools, the C++ source, `oly-schema` and the npm packages from it instead of from a release |
 | `toolchain.env` | the file at the engine root with the toolchain versions; the Dockerfiles, `oly doctor` and the configure check read it |

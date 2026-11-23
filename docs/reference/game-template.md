@@ -2,7 +2,7 @@
 
 [Reference](../README.md#reference) · Concept: [Environments and hosts](../explanation/concepts/environments-and-hosts.md)
 
-`oly new <game> --environment web|native` creates `<game>/` from the game template, `templates/game/` in the engine. It copies `common/` first, then the overlay of the environment (`web/` or `native/`) on top, and renames two files: `gitignore` becomes `.gitignore` and `game.oly` becomes `<game>.oly`. The tutorials walk through the result: [Your first web game](../tutorials/first-web-game.md) and [Your first desktop game](../tutorials/first-desktop-game.md).
+`oly new <game> --environment web|native` creates `<game>/` from the game template, `templates/game/` in the engine. It copies `common/` first, then the overlay of the environment (`web/` or `native/`) on top, renames three files: `gitignore` becomes `.gitignore`, `gitattributes` becomes `.gitattributes` and `game.oly` becomes `<game>.oly`. Last, it copies the launcher of the version into the game as `./oly`. The tutorials walk through the result: [Your first web game](../tutorials/first-web-game.md) and [Your first desktop game](../tutorials/first-desktop-game.md).
 
 ## The placeholders
 
@@ -24,13 +24,15 @@ Both environments get these files.
 
 | Template file | In `<game>/` | What it is |
 |---|---|---|
-| `common/oly.env` | `oly.env` | the engine version, the environment, the target name and the runner (`OLY_RUNNER=host`); change the version with `oly upgrade <version>`, not by hand ([Upgrade the engine](../how-to/upgrade-the-engine.md)); the keys are [below](#olyenv) |
+| `common/oly.env` | `oly.env` | the engine version, the environment, the target name and the runner (`OLY_RUNNER=host`); change the version with `./oly upgrade <version>`, not by hand ([Upgrade the engine](../how-to/upgrade-the-engine.md)); the keys are [below](#olyenv) |
 | `common/CMakeLists.txt` | `CMakeLists.txt` | reads the version from `oly.env`, fetches the engine at that version with `FetchContent` and includes `cmake/game.cmake` |
 | `common/game.oly` | `<game>.oly` | the schema: `tag Player` and `action move: axis2d` |
 | `common/gitignore` | `.gitignore` | ignores `build/`, `node_modules/`, `web/dist/`, `web/schema.generated.ts` and `*.tsbuildinfo` |
+| `common/gitattributes` | `.gitattributes` | pins `oly` to LF line endings, so a checkout on Windows does not break the script |
+| not in `common/` | `oly` | the launcher of the engine version, copied from the version's `oly-tools` (from `tools/oly/oly` in local mode), mode 755; `oly upgrade` replaces it |
 | `common/native/movement.cpp` | `native/movement.cpp` | the C++ system `movePlayer`: moves every `Player` by the `move` action |
 | `common/native/systems.hpp` | `native/systems.hpp` | declares `movePlayer` for a shell that adds it with `Engine::addSystem` |
-| `common/.github/workflows/ci.yml` | `.github/workflows/ci.yml` | installs `oly` and runs `oly test --docker` on every push and pull request |
+| `common/.github/workflows/ci.yml` | `.github/workflows/ci.yml` | runs `sh ./oly test --docker` on every push and pull request, and installs nothing |
 
 `Position` is not in `<game>.oly`: `DIMENSION 2d` in `cmake/game.cmake` turns the `essentials2d` plugin on, which brings it ([Transforms](../explanation/concepts/transforms.md)).
 
@@ -58,12 +60,13 @@ The overlay `templates/game/web/` runs the game as WASM with a TypeScript client
 | `web/cmake/game.cmake` | `cmake/game.cmake` | `oly_add_game` for the web, and the ctest test `<target>.smoke` |
 | `web/package.json` | `package.json` | the `@oly/core` and `@oly/web-host` tarballs of the engine version, and `esbuild`, `typescript` and `@types/node` |
 | `web/tsconfig.json` | `tsconfig.json` | references the three TS projects below |
-| `web/web/tsconfig.json` | `web/tsconfig.json` | DOM-free code: the schema and the game logic; leaves `src/main.ts` out |
-| `web/web/tsconfig.browser.json` | `web/tsconfig.browser.json` | only `src/main.ts`, with the DOM types |
+| `web/web/tsconfig.json` | `web/tsconfig.json` | DOM-free code: the schema and the gameplay; leaves `src/main.ts` and `src/game.ts` out |
+| `web/web/tsconfig.browser.json` | `web/tsconfig.browser.json` | only `src/main.ts` and `src/game.ts`, with the DOM types |
 | `web/web/tests/tsconfig.json` | `web/tests/tsconfig.json` | the tests; emits them to `web/dist/tests/` |
-| `web/web/src/game.ts` | `web/src/game.ts` | `installGame(engine, drawer)`: binds the action, spawns the player, registers `movePlayer` and a `draw` system; no DOM |
-| `web/web/src/main.ts` | `web/src/main.ts` | the browser shell: canvas, `loadRuntime`, `createEngine`, `installGame`, input and loop |
-| `web/web/index.html` | `web/index.html` | the page with the `<canvas id="game">` that `main.ts` finds |
+| `web/web/src/gameplay.ts` | `web/src/gameplay.ts` | `startGameplay(engine, drawer)`: binds the action, spawns the player, registers `movePlayer` and a `draw` system; no DOM |
+| `web/web/src/game.ts` | `web/src/game.ts` | `MyGame`, the class that derives `Game`: canvas, module and size options, and `onStart`, which gives `startGameplay` a `Drawer` over the 2D context; the DOM is here |
+| `web/web/src/main.ts` | `web/src/main.ts` | one line: `runGame(new MyGame())` |
+| `web/web/index.html` | `web/index.html` | the page with the `<canvas id="game">` that `MyGame` finds |
 | `web/web/tests/smoke.test.ts` | `web/tests/smoke.test.ts` | holds `KeyD` for one second and checks that the player moved by the player speed |
 
 `web/schema.generated.ts` is written by the build from `<game>.oly`, and is not committed. `oly new` runs `npm install` at the end.
@@ -94,7 +97,7 @@ The overlay `templates/game/native/` runs the game in a window, in C++ only.
 | Template file | In `<game>/` | What it is |
 |---|---|---|
 | `native/cmake/game.cmake` | `cmake/game.cmake` | `oly_add_game` for the desktop, and the ctest test `<target>.headless` |
-| `native/desktop/main.cpp` | `desktop/main.cpp` | the SDL shell: window, drawing, the `--frames <n>` option and the error exit |
+| `native/desktop/main.cpp` | `desktop/main.cpp` | `MyGame` (window, bindings, first entity, systems, drawing) and `main`, which calls `runGame<MyGame>` |
 
 A native game has no registry, no TS and no `.mjs`: the target is a plain executable in `build/cmake/games/`.
 

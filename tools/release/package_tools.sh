@@ -29,10 +29,11 @@ trap 'rm -rf "$staging"' EXIT
 mkdir "$staging/bin" "$staging/cmake"
 cp "$root/spur" "$root/toolchain.env" "$root/tools/oly/docker-compose.yaml" "$staging/"
 cp "$root/tools/oly/Spurfile" "$staging/Spurfile"
+sed "s/^OLY_LAUNCHER_VERSION=.*/OLY_LAUNCHER_VERSION=$version/" "$root/tools/oly/oly" > "$staging/oly" || fail 1 "could not write the launcher"
 cp -R "$root/templates/game" "$staging/template"
 cp "$root/cmake/toolchains/mingw-w64.cmake" "$staging/cmake/"
 cp "$schema_tool" "$staging/bin/$executable"
-chmod 755 "$staging/spur" "$staging/bin/$executable"
+chmod 755 "$staging/spur" "$staging/oly" "$staging/bin/$executable"
 
-tar --owner=0 --group=0 --numeric-owner -czf "$out/oly-tools-$version-$platform.tar.gz" -C "$staging" spur Spurfile toolchain.env bin template docker-compose.yaml cmake \
+tar --owner=0 --group=0 --numeric-owner -czf "$out/oly-tools-$version-$platform.tar.gz" -C "$staging" spur Spurfile oly toolchain.env bin template docker-compose.yaml cmake \
   || fail 1 "could not write the archive"
