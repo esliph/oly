@@ -29,15 +29,15 @@ namespace oly::native_host {
   };
 
   // Builds the World and the Engine, sets up the game, opens the window, calls onStart and runs the loop. Does not
-  // catch: exceptions reach the caller.
+  // catch: whatever the game throws reaches the caller.
   int runGame(Game& game, RunOptions options = {});
 
   namespace detail {
     int runGameFromCommandLine(int argumentCount, char** arguments, std::unique_ptr<Game> (*construct)());
   }
 
-  // Parses --frames, then constructs G and runs it. Returns 64 on a wrong command line and 1 when an exception escapes,
-  // the constructor's included; otherwise what run returns.
+  // Parses --frames, then constructs G and runs it. Returns 64 on a wrong command line and 1 when a std::exception escapes,
+  // the constructor's included; otherwise what run returns. Any other thrown value ends the process.
   template <class G>
   int runGame(int argumentCount, char** arguments) {
     static_assert(std::is_base_of_v<Game, G>, "runGame: the game must derive from oly::native_host::Game");
