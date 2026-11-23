@@ -45,9 +45,9 @@ A game fetches the engine with `FetchContent` ([Publishing](publishing.md#the-en
 |---|---|
 | `./spur subproject-test` | `cmake/tests/consumer`, a CMake project outside the engine tree that fetches it from this checkout (`FETCHCONTENT_SOURCE_DIR_OLY`) and builds one game with `oly_add_game`, native and web. Each run must print `consumer ok`. It covers the subproject defaults: no tests, no benchmarks, no games, no lint, no `-Werror` |
 | `./spur consumer-test` | creates a game through the launcher (`oly new`) in local mode (`OLY_ENGINE_DIR` is this checkout), for `web` and for `native`, builds and tests it. A third run, `docker`, runs `test --docker` in both games, and `--platform windows` for the native one |
-| `./spur staged-test <version>` | the same, against `./spur stage <version>` instead of the checkout: the launcher is installed with `install.sh` into a fresh `OLY_HOME`, and the tools, `oly-schema` and the npm tarballs are the downloaded ones |
+| `./spur staged-test <version>` | the same, against `./spur stage <version>` instead of the checkout: the game is created through the pipe that reads `latest/download/oly`, runs its own `./oly` with a fresh `OLY_HOME`, and the tools, `oly-schema` and the npm tarballs are the downloaded ones |
 
-`OLY_SCHEMA_TOOL` is an input of `oly_add_game` and `oly_schema_tool`: a web game gets the prebuilt `oly-schema` of its version, or the one local mode built (a desktop game builds it with itself), and the in-tree default stays for the engine's own build. `./spur oly-tools-test` runs the shell tests of `tools/oly/` (launcher, `install.sh`, `new`, doctor, Docker dispatch, `npm pack`) and `./spur release-test` those of `tools/release/`. The consumer test and its three runs are explained in [Publishing](publishing.md#the-consumer-test).
+`OLY_SCHEMA_TOOL` is an input of `oly_add_game` and `oly_schema_tool`: a web game gets the prebuilt `oly-schema` of its version, or the one local mode built (a desktop game builds it with itself), and the in-tree default stays for the engine's own build. `./spur oly-tools-test` runs the shell tests of `tools/oly/` (launcher, `new`, doctor, Docker dispatch, `npm pack`) and `./spur release-test` those of `tools/release/`. The consumer test and its three runs are explained in [Publishing](publishing.md#the-consumer-test).
 
 ## Code quality
 

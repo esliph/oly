@@ -25,7 +25,7 @@ The rules behind these rows are in [Engine, loop and systems](../explanation/con
 
 ## 2. Rebuild after a schema change
 
-After you change `<game>.oly`, run `oly build` (or `oly test`) in your game. It regenerates the C++ and TypeScript schemas, builds the WASM or the executable and compiles the TypeScript. Then reload the page or run the game again. A web game that skips this stops at start-up with `SchemaMismatchError` ([Errors](../reference/errors.md#typescript)).
+After you change `<game>.oly`, run `./oly build` (or `./oly test`) in your game. It regenerates the C++ and TypeScript schemas, builds the WASM or the executable and compiles the TypeScript. Then reload the page or run the game again. A web game that skips this stops at start-up with `SchemaMismatchError` ([Errors](../reference/errors.md#typescript)).
 
 ## 3. Turn the asserts on
 

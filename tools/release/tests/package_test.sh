@@ -19,7 +19,7 @@ listing() {
 # expected_listing <executable suffix>
 expected_listing() {
   {
-    printf '%s\n' Spurfile "bin/oly-schema$1" cmake/mingw-w64.cmake docker-compose.yaml spur toolchain.env
+    printf '%s\n' Spurfile "bin/oly-schema$1" cmake/mingw-w64.cmake docker-compose.yaml oly spur toolchain.env
     (cd "$repository/templates/game" && find . -type f | sed 's|^\./|template/|')
   } | LC_ALL=C sort
 }
@@ -48,8 +48,7 @@ assets() {
   (cd "$release" && ls | LC_ALL=C sort)
 }
 
-check "the release holds the seven assets and nothing else" test "$(assets)" = "VERSION
-install.sh
+check "the release holds the six assets and nothing else" test "$(assets)" = "VERSION
 oly
 oly-core-$version.tgz
 oly-tools-$version-linux-x64.tar.gz
@@ -69,13 +68,15 @@ check "the linux-x64 oly-schema runs" the_tool_runs "$extracted/linux/bin/oly-sc
 check "the linux-x64 oly-schema is statically linked" is_static "$extracted/linux/bin/oly-schema"
 check "the windows oly-schema imports no MinGW runtime" names_no_runtime_dll "$extracted/windows/bin/oly-schema.exe"
 check "spur is executable in the archive" test -x "$extracted/linux/spur"
+check "the archive's oly is the release's launcher" cmp -s "$extracted/linux/oly" "$latest/oly"
+check "the archive's oly is executable" test -x "$extracted/linux/oly"
+check "the windows-x64 archive's oly is the release's launcher" cmp -s "$extracted/windows/oly" "$latest/oly"
 rm -rf "$extracted"
 
 check "latest/download/VERSION is the version" test "$(cat "$latest/VERSION")" = "$version"
 check "latest/download/oly carries the version" grep -qx "OLY_LAUNCHER_VERSION=$version" "$latest/oly"
 check "latest/download/oly parses" sh -n "$latest/oly"
 check "latest/download/oly ends with its closing line" test "$(tail -n 1 "$latest/oly")" = "# end of oly"
-check "latest/download/install.sh is the release's" cmp -s "$latest/install.sh" "$release/install.sh"
 
 empty=$(mktemp -d)
 status=0

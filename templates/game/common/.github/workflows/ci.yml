@@ -9,7 +9,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install oly
-        run: curl -fsSL https://github.com/esliph/oly/releases/latest/download/install.sh | sh
       - name: Test in Docker, so the runner installs no toolchain
-        run: ~/.oly/bin/oly test --docker
+        run: sh ./oly test --docker

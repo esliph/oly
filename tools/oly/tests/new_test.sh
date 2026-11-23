@@ -20,12 +20,27 @@ check "native game: the schema is renamed" test -f "$work/meu-jogo/meu-jogo.oly"
 check "native game: no placeholder is left" no_placeholder_left "$work/meu-jogo"
 check "native game: .gitignore exists" test -f "$work/meu-jogo/.gitignore"
 check "native game: the CI workflow exists" test -f "$work/meu-jogo/.github/workflows/ci.yml"
+check "native game: ./oly is the checkout's launcher" cmp -s "$work/meu-jogo/oly" "$repository/tools/oly/oly"
+check "native game: ./oly is executable" test -x "$work/meu-jogo/oly"
+check "native game: .gitattributes pins the launcher to LF" has_line "oly text eol=lf" "$work/meu-jogo/.gitattributes"
+check "native game: gitattributes is renamed" test ! -e "$work/meu-jogo/gitattributes"
 
 touch "$work/meu-jogo/kept"
 run_task "$work" new meu-jogo --environment native
 check "existing folder: exit 64" exit_is 64
 check "existing folder: message" stderr_has "meu-jogo already exists"
 check "existing folder: left unchanged" test -f "$work/meu-jogo/kept"
+
+tools=$work/tools
+work_pinned=$work/pinned
+mkdir -p "$tools" "$work_pinned"
+cp -R "$repository/templates/game" "$tools/template"
+sed "s/^OLY_LAUNCHER_VERSION=.*/OLY_LAUNCHER_VERSION=0.1.0/" "$repository/tools/oly/oly" > "$tools/oly"
+
+TEST_ENGINE_DIR= TEST_TOOLS_DIR=$tools run_task "$work_pinned" new pinned-game --environment native
+check "pinned game: exit 0" exit_is 0
+check "pinned game: ./oly is the version's launcher" cmp -s "$work_pinned/pinned-game/oly" "$tools/oly"
+check "pinned game: ./oly is executable" test -x "$work_pinned/pinned-game/oly"
 
 work_bad=$(mktemp -d)
 trap 'rm -rf "$logs" "$work" "$work_bad"' EXIT

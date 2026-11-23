@@ -2,7 +2,7 @@
 
 [Reference](../README.md#reference) · Concept: [Environments and hosts](../explanation/concepts/environments-and-hosts.md)
 
-`oly new <game> --environment web|native` creates `<game>/` from the game template, `templates/game/` in the engine. It copies `common/` first, then the overlay of the environment (`web/` or `native/`) on top, and renames two files: `gitignore` becomes `.gitignore` and `game.oly` becomes `<game>.oly`. The tutorials walk through the result: [Your first web game](../tutorials/first-web-game.md) and [Your first desktop game](../tutorials/first-desktop-game.md).
+`oly new <game> --environment web|native` creates `<game>/` from the game template, `templates/game/` in the engine. It copies `common/` first, then the overlay of the environment (`web/` or `native/`) on top, renames three files: `gitignore` becomes `.gitignore`, `gitattributes` becomes `.gitattributes` and `game.oly` becomes `<game>.oly`. Last, it copies the launcher of the version into the game as `./oly`. The tutorials walk through the result: [Your first web game](../tutorials/first-web-game.md) and [Your first desktop game](../tutorials/first-desktop-game.md).
 
 ## The placeholders
 
@@ -24,13 +24,15 @@ Both environments get these files.
 
 | Template file | In `<game>/` | What it is |
 |---|---|---|
-| `common/oly.env` | `oly.env` | the engine version, the environment, the target name and the runner (`OLY_RUNNER=host`); change the version with `oly upgrade <version>`, not by hand ([Upgrade the engine](../how-to/upgrade-the-engine.md)); the keys are [below](#olyenv) |
+| `common/oly.env` | `oly.env` | the engine version, the environment, the target name and the runner (`OLY_RUNNER=host`); change the version with `./oly upgrade <version>`, not by hand ([Upgrade the engine](../how-to/upgrade-the-engine.md)); the keys are [below](#olyenv) |
 | `common/CMakeLists.txt` | `CMakeLists.txt` | reads the version from `oly.env`, fetches the engine at that version with `FetchContent` and includes `cmake/game.cmake` |
 | `common/game.oly` | `<game>.oly` | the schema: `tag Player` and `action move: axis2d` |
 | `common/gitignore` | `.gitignore` | ignores `build/`, `node_modules/`, `web/dist/`, `web/schema.generated.ts` and `*.tsbuildinfo` |
+| `common/gitattributes` | `.gitattributes` | pins `oly` to LF line endings, so a checkout on Windows does not break the script |
+| not in `common/` | `oly` | the launcher of the engine version, copied from the version's `oly-tools` (from `tools/oly/oly` in local mode), mode 755; `oly upgrade` replaces it |
 | `common/native/movement.cpp` | `native/movement.cpp` | the C++ system `movePlayer`: moves every `Player` by the `move` action |
 | `common/native/systems.hpp` | `native/systems.hpp` | declares `movePlayer` for a shell that adds it with `Engine::addSystem` |
-| `common/.github/workflows/ci.yml` | `.github/workflows/ci.yml` | installs `oly` and runs `oly test --docker` on every push and pull request |
+| `common/.github/workflows/ci.yml` | `.github/workflows/ci.yml` | runs `sh ./oly test --docker` on every push and pull request, and installs nothing |
 
 `Position` is not in `<game>.oly`: `DIMENSION 2d` in `cmake/game.cmake` turns the `essentials2d` plugin on, which brings it ([Transforms](../explanation/concepts/transforms.md)).
 

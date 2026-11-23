@@ -26,6 +26,6 @@ if command -v cygpath > /dev/null 2>&1; then
 fi
 
 for image in dev wasm windows; do
-  docker build -f "$root/tools/release/Dockerfile.tools" --build-arg "BASE=cpp_services-$image" -t "$registry/oly-$image:$version" "$context" \
+  docker build -f "$root/tools/release/Dockerfile.tools" --build-arg "BASE=oly-engine-$image" -t "$registry/oly-$image:$version" "$context" \
     || fail 1 "could not build $registry/oly-$image:$version"
 done
