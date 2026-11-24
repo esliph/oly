@@ -6,3 +6,7 @@
 void updateFlowField(oly::app::SystemContext& context);
 void rebuildSpatialHash(oly::app::SystemContext& context);
 void moveHorde(oly::app::SystemContext& context);
+
+// Window only: EnxameGame adds them, so no headless run has them.
+void moveCamera(oly::app::SystemContext& context);
+void drawWorld(oly::app::SystemContext& context);

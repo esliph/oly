@@ -58,6 +58,7 @@ namespace enxame {
       simulation->horde = horde;
       simulation->map = TileMap::generate(horde.mapWidth, horde.mapHeight, horde.tileSize, horde.obstacleRate, simulation->random);
       simulation->flowField.build(*simulation->map);
+      simulation->camera = {simulation->map->centerX(simulation->map->base()), simulation->map->centerY(simulation->map->base()), 1.0f};
       simulation->hash.emplace(0.0f, 0.0f, static_cast<float>(horde.mapWidth) * horde.tileSize, static_cast<float>(horde.mapHeight) * horde.tileSize, horde.tileSize);
 
       engine.addSystem(oly::app::Phase::UpdateBefore, "updateFlowField", updateFlowField, simulation.get());
