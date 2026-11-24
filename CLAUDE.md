@@ -2,6 +2,8 @@
 
 Oly: production game engine in C++20 for indie 2D games (3D is expected later), with 3D transforms in `essentials3d`, on top of a single-threaded archetype ECS; games are made outside this repository (`docs/explanation/architecture/publishing.md`). C++ on `native` is the first-class environment; `web` stays supported and may lag one phase behind. The roadmap is `docs/superpowers/specs/2026-11-24-aaa-roadmap-design.md`. The C++ core runs in environments (`web`: WASM with a TS client; `native`: a desktop host), with a C API `oly*` for clients in other languages. Plugins (`oly_add_plugin`) add engine-level features that a game turns on with `oly_add_game(... PLUGINS ...)`; the generated `setUpGame` installs them. Every game also names its `DIMENSION` (`2d|3d`), which turns `essentials2d` or `essentials3d` on (`Position`, `Rotation`, `Scale`, `Parent`, `WorldTransform`). Plugins live in `plugins/`; the engine's own test plugins in `engine/testing/fixture/plugins/`. A game in its own repository uses `oly` (`tools/oly/`: the launcher and the game tasks; `templates/game/`: what `oly new` copies), and `toolchain.env` holds the toolchain versions.
 
+`games/enxame/` is the disposable validation game of the roadmap, built with `oly` in local mode; the engine never names it.
+
 ## Documentation
 
 Start with `docs/README.md`. It is the index of all documentation: tutorials, how-to guides, reference and explanation.
