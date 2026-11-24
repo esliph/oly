@@ -1,2 +1,6 @@
-tag Player
-action move: axis2d
+tag Enemy
+action pan: axis2d
+action zoomIn: button
+action zoomOut: button
+action place: button
+action cursor: pointer
