@@ -16,6 +16,7 @@ export function moduleFactoryFromUrl(url: string | URL, importModule: (href: str
 
   return async () => {
     const loaded = (await importModule(href)) as { default?: unknown };
+
     if (typeof loaded.default !== "function") {
       throw new Error(`${href}: the module does not export an Emscripten factory as default`);
     }

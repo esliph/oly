@@ -149,6 +149,7 @@ export class ActionMap {
   #indexOf(operation: string, action: ActionType, expected: ActionKind): number {
     this.#assertUsable(operation);
     const index = actionIndexOf(this.#runtime, action);
+
     if (action.actionKind !== expected) {
       throw new ContractError(`${operation} action=${action.name}: action of kind ${action.actionKind}, expected ${expected}`);
     }

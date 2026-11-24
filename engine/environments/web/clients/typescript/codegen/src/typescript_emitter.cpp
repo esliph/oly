@@ -33,6 +33,7 @@ namespace oly::schema_typescript {
 
     std::string fieldTypes(const std::vector<oly::schema::Field>& fields) {
       std::string text;
+
       for (const oly::schema::Field& field : fields) {
         text += (text.empty() ? "" : ", ") + field.name + ": \"" + std::string(oly::schema::scalarTypeName(field.type)) + "\"";
       }
@@ -42,6 +43,7 @@ namespace oly::schema_typescript {
 
     std::string fieldOffsets(const std::vector<oly::schema::Field>& fields) {
       std::string text;
+
       for (const oly::schema::Field& field : fields) {
         text += (text.empty() ? "" : ", ") + field.name + ": " + std::to_string(field.offset);
       }
@@ -62,6 +64,7 @@ namespace oly::schema_typescript {
 
     std::string importLine(const std::set<std::string_view>& constructors) {
       std::string names;
+
       for (const std::string_view constructor : constructors) {
         names += (names.empty() ? "" : ", ") + std::string(constructor);
       }
@@ -86,8 +89,10 @@ namespace oly::schema_typescript {
     }
 
     Constants constants;
+
     for (std::size_t index = 0; index < schema.types.size(); ++index) {
       const oly::schema::Type& type = schema.types[index];
+
       if (type.kind == oly::schema::TypeKind::Tag) {
         addConstant(constants, "tagType", type.name, "\"" + type.name + "\", " + std::to_string(index));
       } else {
@@ -110,6 +115,7 @@ namespace oly::schema_typescript {
     }
 
     std::string entries;
+
     for (const std::string& name : constants.names) {
       entries += (entries.empty() ? "" : ", ") + name;
     }

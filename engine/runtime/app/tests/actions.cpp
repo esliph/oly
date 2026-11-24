@@ -42,6 +42,7 @@ namespace {
 
   void resumeOnToggle(SystemContext& context) {
     auto& recorder = *static_cast<Recorder*>(context.userData());
+
     if (context.actions().button(recorder.action).pressed) {
       context.resume();
     }

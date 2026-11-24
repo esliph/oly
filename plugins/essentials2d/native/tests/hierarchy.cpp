@@ -199,6 +199,7 @@ TEST_CASE("removing children in any order keeps the index consistent") {
   Fixture fixture;
   const Entity parent = fixture.world.spawn(Position{0, 0});
   std::vector<Entity> children;
+
   for (uint32_t index = 0; index < 8; ++index) {
     children.push_back(fixture.world.spawn(Position{static_cast<float>(index), 0}, Parent{parent}));
   }

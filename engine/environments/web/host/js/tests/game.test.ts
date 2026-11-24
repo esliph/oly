@@ -79,6 +79,7 @@ class FakeEnvironment implements GameEnvironment {
 
   runInBrowser(target: FrameTarget): BrowserLoop {
     this.log.push("runInBrowser");
+
     if (this.runInBrowserError !== null) {
       throw this.runInBrowserError;
     }

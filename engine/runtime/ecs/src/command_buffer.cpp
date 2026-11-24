@@ -119,11 +119,13 @@ namespace oly::ecs {
 
   void CommandBuffer::grow(size_t need) {
     size_t newCapacity = std::max<size_t>(kInitialBlockBytes, capacity_ * 2);
+
     while (newCapacity < need) {
       newCapacity *= 2;
     }
 
     std::byte* fresh = core::alignedAllocate(newCapacity, kBlockAlignment);
+
     if (!hasNonTrivialPayload_) {
       if (size_ > 0) {
         std::memcpy(fresh, data_, size_);
@@ -133,6 +135,7 @@ namespace oly::ecs {
         detail::CommandView command;
         const size_t next = readAt(offset, command);
         std::memcpy(fresh + offset, data_ + offset, kHeaderSize);
+
         if (command.payload) {
           const TypeInfo& info = typeInfo(command.componentId);
           detail::relocateValue(info, fresh + (static_cast<std::byte*>(command.payload) - data_), command.payload);
@@ -152,6 +155,7 @@ namespace oly::ecs {
   std::byte* CommandBuffer::pushRecord(detail::CommandOperation operation, Entity entity, ComponentId componentId, uint32_t size, uint32_t alignment, bool trivial) {
     const size_t offset = size_;
     size_t payloadOffset = offset + kHeaderSize, next = offset + kHeaderSize;
+
     if (size > 0) {
       payloadOffset = core::alignUp(offset + kHeaderSize, std::max<size_t>(8, alignment));
       next = core::alignUp(payloadOffset + size, 8);
@@ -166,11 +170,13 @@ namespace oly::ecs {
         ++runs_.back().count;
       } else {
         const size_t word = entity.index >> 6;
+
         if (word >= seen_.size()) {
           seen_.resize(std::max(word + 1, seen_.size() * 2), 0);
         }
 
         const uint64_t bit = uint64_t(1) << (entity.index & 63);
+
         if (seen_[word] & bit) {
           grouped_ = false; // entity came back outside the current run: plan() groups by counting sort
           runs_.clear();
@@ -192,6 +198,7 @@ namespace oly::ecs {
 
     size_ = next;
     ++count_;
+
     if (!trivial) {
       hasNonTrivialPayload_ = true;
     }
@@ -213,6 +220,7 @@ namespace oly::ecs {
   void CommandBuffer::addById(Entity entity, ComponentId componentId, void* value) {
     const TypeInfo& info = typeInfo(componentId);
     void* payload = pushRecord(detail::CommandOperation::Add, entity, componentId, info.size, info.tag ? 1 : info.alignment, info.trivial);
+
     if (info.tag) {
       return;
     }
@@ -233,6 +241,7 @@ namespace oly::ecs {
       for (size_t offset = 0; offset < size_;) {
         detail::CommandView command;
         offset = readAt(offset, command);
+
         if (command.payload) {
           detail::destroyValue(typeInfo(command.componentId), command.payload);
         }
@@ -250,6 +259,7 @@ namespace oly::ecs {
 
   detail::CommandPlan CommandBuffer::plan() const {
     detail::CommandPlan result;
+
     if (grouped_) {
       result.entities = runs_;
       return result;
@@ -266,6 +276,7 @@ namespace oly::ecs {
 
       if (entity.index < planBySlot.size()) {
         uint32_t& planIndex = planBySlot[entity.index];
+
         if (planIndex == kNoPlan) {
           planIndex = appendPlan();
         }
@@ -276,6 +287,7 @@ namespace oly::ecs {
 
       const uint64_t key = (uint64_t(entity.generation) << 32) | entity.index;
       auto [it, inserted] = overflow.try_emplace(key, kNoPlan);
+
       if (inserted) {
         it->second = appendPlan();
       }
@@ -290,6 +302,7 @@ namespace oly::ecs {
     }
 
     uint32_t accumulated = 0;
+
     for (detail::EntityPlan& entityPlan : result.owned) {
       entityPlan.begin = accumulated;
       accumulated += entityPlan.count;
@@ -317,8 +330,10 @@ namespace oly::ecs {
     out.operations.clear();
 
     size_t offset = static_cast<size_t>(entityPlan.begin) << 3;
+
     for (uint32_t i = 0; i < entityPlan.count; ++i) {
       detail::CommandView command;
+
       if (plan.contiguous) {
         offset = readAt(offset, command);
       } else {
@@ -340,6 +355,7 @@ namespace oly::ecs {
       }
 
       const detail::NetComponentOperation net{command.componentId, command.operation == detail::CommandOperation::Add, command.operation == detail::CommandOperation::Add ? command.payload : nullptr};
+
       if (out.operations.empty() || out.operations.back().componentId < command.componentId) { // common case: increasing ids
         out.operations.push_back(net);
         continue;
@@ -347,6 +363,7 @@ namespace oly::ecs {
 
       auto it = std::lower_bound(out.operations.begin(), out.operations.end(), command.componentId,
                                  [](const detail::NetComponentOperation& operation, ComponentId componentId) { return operation.componentId < componentId; });
+
       if (it != out.operations.end() && it->componentId == command.componentId) {
         *it = net;
       } else {

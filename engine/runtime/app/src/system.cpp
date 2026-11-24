@@ -32,6 +32,7 @@ namespace oly::app {
 
   ecs::Entity SystemContext::spawn() {
     const ecs::Entity entity = commands_->spawn();
+
     if (spawnsScoped()) {
       commands_->add(entity, detail::StateScoped{});
     }

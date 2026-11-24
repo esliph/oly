@@ -243,6 +243,7 @@ function makeField(heap: Heap, layout: ComponentLayout, field: FieldLayout, colu
 
 export function makeView(heap: Heap, layout: ComponentLayout, columnAddress: number): WriteView<Fields> {
   const view: Record<string, WriteField> = {};
+
   for (const field of layout.fields) {
     view[field.name] = makeField(heap, layout, field, columnAddress);
   }

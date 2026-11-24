@@ -58,6 +58,7 @@ cmp -s "$game/oly" "$OLY_HOME/versions/$version/oly" || fail 1 "the game's ./oly
 (cd "$game" && sh ./oly test) || fail 1 "oly test failed in $game"
 
 [ -f "$OLY_HOME/versions/$version/spur" ] || fail 1 "the launcher did not install oly-tools $version into $OLY_HOME/versions"
+
 if [ "$environment" = web ]; then
   grep -q ' pinned$' "$game/node_modules/.oly-install" || fail 1 "node_modules/.oly-install is not a pinned install: $(cat "$game/node_modules/.oly-install")"
   grep -qF "$(host_path "$OLY_HOME")/versions/$version/bin/oly-schema" "$game/build/cmake/CMakeCache.txt" || fail 1 "the game was not built with the downloaded oly-schema"

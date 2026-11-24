@@ -53,6 +53,7 @@ def section_blocks(text):
 
 def finish(block):
     line_number, marker_line, lines = block
+
     if lines and FENCE_PATTERN.match(lines[-1]):
         lines = lines[:-1]
     return line_number, marker_line, "\n".join(lines)
@@ -66,20 +67,24 @@ def read_text(path):
 def check(root):
     readme_text = read_text(os.path.join(root, README_NAME))
     blocks = section_blocks(readme_text)
+
     if blocks is None:
         return [f"{README_NAME} | {SECTION_HEADING} | section not found"]
     if not blocks:
         return [f"{README_NAME} | {SECTION_HEADING} | section has no code block"]
 
     problems = []
+
     for line_number, marker_line, content in blocks:
         marker = MARKER_PATTERN.match(marker_line)
+
         if marker is None:
             problems.append(f"{README_NAME}:{line_number} | - | block names no template")
             continue
 
         template = marker.group(1)
         template_path = os.path.join(root, template)
+
         if not os.path.isfile(template_path):
             problems.append(f"{README_NAME}:{line_number} | {template} | template not found")
         elif read_text(template_path).strip() != content.strip():
@@ -94,6 +99,7 @@ def main(argv=None):
     arguments = parser.parse_args(argv)
 
     problems = check(arguments.root)
+
     for message in problems:
         print(message)
     return 1 if problems else 0

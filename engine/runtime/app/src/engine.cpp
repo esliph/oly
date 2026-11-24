@@ -98,6 +98,7 @@ namespace oly::app {
 
   void Engine::setHidden(bool hidden) {
     hidden_ = hidden;
+
     if (hidden) {
       actions_.releaseAll();
     }
@@ -144,9 +145,11 @@ namespace oly::app {
 
     const double threshold = fixedDeltaTime_ * (1.0 - StepTolerance);
     uint32_t stepsRun = 0;
+
     while (accumulator_ >= threshold && stepsRun < config_.maxStepsPerFrame) {
       runFixedStep();
       accumulator_ -= fixedDeltaTime_;
+
       if (accumulator_ < 0.0) {
         accumulator_ = 0.0;
       }
@@ -156,6 +159,7 @@ namespace oly::app {
     // Discarding the steps that did not fit avoids the lag spiral (spec game-engine-design §4.3).
     if (accumulator_ >= threshold) {
       accumulator_ = std::fmod(accumulator_, fixedDeltaTime_);
+
       if (accumulator_ >= threshold) {
         accumulator_ = 0.0;
       }
@@ -173,6 +177,7 @@ namespace oly::app {
     eventRoundsThisStep_ = 0;
 
     captureActions();
+
     if (!pausedThisStep_) {
       runDueSchedule();
     }
@@ -203,11 +208,13 @@ namespace oly::app {
 
       for (EventTypeId type = 0; type < queues_.typeCount(); ++type) {
         const uint32_t count = queues_.batchCount(type);
+
         if (count == 0) {
           continue;
         }
 
         const std::byte* data = queues_.batchData(type);
+
         for (HandlerEntry& entry : handlers_[type]) {
           if (!runsInState(entry.states)) {
             continue;
@@ -227,6 +234,7 @@ namespace oly::app {
     const double limit = time() + fixedDeltaTime_ * StepTolerance;
 
     queue.beginRun();
+
     while (std::optional<detail::DueTask> due = queue.popDue(limit)) {
       TaskContext context(*this, world_, due->handle, due->lastRun, due->payload);
       due->function(context);

@@ -19,6 +19,7 @@ fi
 # rewrite <file under the root> <sed -E expression>: through a temporary file, so a failed sed never truncates the file.
 rewrite() {
   file=$root/$1
+
   if ! sed -E "$2" "$file" > "$file.new" || ! mv "$file.new" "$file"; then
     rm -f "$file.new"
     printf 'could not rewrite %s\n' "$file" >&2

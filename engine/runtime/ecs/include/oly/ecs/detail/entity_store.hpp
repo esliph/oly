@@ -29,6 +29,7 @@ namespace oly::ecs::detail {
     // Takes from the end of the freeList (LIFO) or creates a new slot. Leaves archetype = nullptr (reserved, R-EN-3).
     Entity allocate() {
       uint32_t index;
+
       if (!freeList_.empty()) {
         index = freeList_.back();
         freeList_.pop_back();

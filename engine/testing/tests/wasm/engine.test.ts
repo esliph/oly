@@ -29,6 +29,7 @@ function stepper(engine: Engine): () => void {
 
 function withEngine(body: (engine: Engine) => void): void {
   const engine = createEngine();
+
   try {
     body(engine);
     assert.equal(engine.world.checkInvariants(), null);
@@ -60,6 +61,7 @@ test("TS and C++ systems in phase and registration order", () => {
 
 test("frame(k/60) for k = 0..60 runs 60 steps", () => {
   const engine = runtime.createEngine({ fixedHz: 60 });
+
   try {
     let steps = 0;
     engine.addSystem(Phase.Update, "count", () => {
@@ -107,6 +109,7 @@ test("memory grows in a C++ system before a TS system", () => {
     engine.addSystem(Phase.UpdateAfter, "sum", (context) => {
       context.query({ read: [Position] }).eachBlock((block) => {
         const positions = block.read(Position);
+
         for (let row = 0; row < block.count; ++row) {
           sum += positions.x.get(row);
         }
@@ -183,6 +186,7 @@ test("addSystem during frame is ContractError", () => {
 test("two engines in the same module receive only their own systems", () => {
   const first = createEngine();
   const second = createEngine();
+
   try {
     let firstCalls = 0;
     let secondCalls = 0;

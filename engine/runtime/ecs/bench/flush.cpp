@@ -24,6 +24,7 @@ namespace {
       }
 
       auto warmupEntity = world->spawn();
+
       if (coalesced) {
         auto commandBuffer = world->commands();
         commandBuffer.add(warmupEntity, Component<0>{0});
@@ -38,6 +39,7 @@ namespace {
       world->destroy(warmupEntity);
 
       entities.reserve(static_cast<size_t>(entityCount));
+
       for (int64_t i = 0; i < entityCount; ++i) {
         entities.push_back(world->spawn());
       }

@@ -28,6 +28,7 @@ namespace {
   void spawnThenThrowOnce(SystemContext& context) {
     Shared& shared = *static_cast<Shared*>(context.userData());
     ++shared.calls;
+
     if (shared.calls == 1) {
       shared.entity = context.spawn();
       throw std::runtime_error("boom");
@@ -48,6 +49,7 @@ namespace {
   void scheduleChildThenThrowOnce(TaskContext& context) {
     TaskCounts* counts = context.payload<TaskCounts*>();
     ++counts->everyRuns;
+
     if (counts->everyRuns == 1) {
       context.schedule().after(0.0, countChild, counts);
       throw std::runtime_error("boom");
@@ -71,6 +73,7 @@ namespace {
     ++shared.throwerCalls;
 
     context.emit(Echo{0});
+
     if (shared.throwerCalls == 1) {
       throw std::runtime_error("boom");
     }
@@ -88,6 +91,7 @@ namespace {
   void requestThenThrowOnSecondCall(SystemContext& context) {
     StateShared& shared = *static_cast<StateShared*>(context.userData());
     ++shared.calls;
+
     if (shared.calls == 2) {
       context.requestState(shared.target);
       throw std::runtime_error("boom");

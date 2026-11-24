@@ -75,6 +75,7 @@ TEST_CASE("popDue returns in due-time order and, on ties, in creation order") {
   fixture.push(1.0, taskC);
 
   std::vector<TaskFunction> order;
+
   while (auto task = fixture.queue.popDue(5.0)) {
     order.push_back(task->function);
   }

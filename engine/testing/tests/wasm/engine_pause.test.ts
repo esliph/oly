@@ -28,6 +28,7 @@ function stepper(engine: Engine): () => void {
 
 function withEngine(body: (engine: Engine) => void): void {
   const engine = createEngine();
+
   try {
     body(engine);
     assert.equal(engine.world.checkInvariants(), null);
@@ -116,6 +117,7 @@ test("exception inside eachBlock in a TS system reaches the frame caller and the
     let pending = -1;
     engine.addSystem(Phase.Update, "thrower", (context) => {
       ++calls;
+
       if (calls > 1) {
         return;
       }

@@ -41,11 +41,14 @@ def iter_lines(text):
     fence_character = None
     fence_length = 0
     in_list = False
+
     for line_number, line in enumerate(text.split("\n"), start=1):
         line = line.rstrip("\r")
         match = FENCE_PATTERN.match(line)
+
         if fence_character is None:
             indent = len(line) - len(line.lstrip(" "))
+
             if line.strip() and indent < INDENTED_CODE_COLUMNS:
                 in_list = LIST_ITEM_PATTERN.match(line) is not None
             opens = (
@@ -53,6 +56,7 @@ def iter_lines(text):
                 and not (match.group(1)[0] == "`" and "`" in match.group(2))
                 and (indent < INDENTED_CODE_COLUMNS or in_list)
             )
+
             if opens:
                 fence_character = match.group(1)[0]
                 fence_length = len(match.group(1))
@@ -60,6 +64,7 @@ def iter_lines(text):
             continue
 
         closes = match is not None and match.group(1)[0] == fence_character and len(match.group(1)) >= fence_length and not match.group(2).strip()
+
         if closes:
             fence_character = None
         yield line_number, line, True
@@ -91,6 +96,7 @@ def anchors_of(text):
     anchors = set()
     occurrences = {}
     previous_line = ""
+
     for _, line, inside_fence in iter_lines(text):
         if inside_fence:
             previous_line = ""
@@ -99,6 +105,7 @@ def anchors_of(text):
         stripped_line = without_inline_code(line)
         heading = None
         atx_match = ATX_HEADING_PATTERN.match(BLOCKQUOTE_PREFIX_PATTERN.sub("", line))
+
         if atx_match is not None:
             heading = atx_match.group(1)
         elif SETEXT_UNDERLINE_PATTERN.match(line) and previous_line.strip():
@@ -121,12 +128,14 @@ def anchors_of(text):
 
 def links_of(text):
     links = []
+
     for line_number, line, inside_fence in iter_lines(text):
         if inside_fence:
             continue
 
         stripped_line = without_inline_code(line)
         definition = REFERENCE_DEFINITION_PATTERN.match(stripped_line)
+
         if definition is not None:
             links.append((line_number, definition.group(1)))
         for match in INLINE_LINK_PATTERN.finditer(stripped_line):
@@ -145,6 +154,7 @@ def markdown_files(root):
         directories[:] = [
             directory for directory in directories if directory not in IGNORED_DIRECTORIES and not directory.startswith(IGNORED_DIRECTORY_PREFIX)
         ]
+
         for file_name in files:
             if file_name.endswith(MARKDOWN_EXTENSION):
                 yield os.path.join(current, file_name)
@@ -165,12 +175,14 @@ class Resolver:
             joined = os.path.join(os.path.dirname(source_path), target_path)
 
         relative = os.path.relpath(os.path.normpath(joined), self._root)
+
         if relative == os.curdir:
             return self._root
         if relative.split(os.sep)[0] == os.pardir:
             return None
 
         current = self._root
+
         for component in relative.split(os.sep):
             if component not in self._listing(current):
                 return None
@@ -191,8 +203,10 @@ class Resolver:
             return None
 
         listings = {}
+
         for entry in result.stdout.decode("utf-8", errors="replace").split("\0"):
             directory = self._root
+
             for component in filter(None, entry.split("/")):
                 listings.setdefault(directory, set()).add(component)
                 directory = os.path.join(directory, component)
@@ -212,12 +226,14 @@ class Resolver:
 
 def broken_reason(resolver, source_path, raw_target):
     target = raw_target[1:-1] if raw_target.startswith("<") and raw_target.endswith(">") else raw_target
+
     if not target or SCHEME_PATTERN.match(target) or target.startswith("//"):
         return None
 
     path_part, _, fragment = target.partition("#")
     path_part = urllib.parse.unquote(path_part)
     resolved = source_path if not path_part else resolver.resolve(source_path, path_part)
+
     if resolved is None:
         return "file not found"
     if fragment and resolved.endswith(MARKDOWN_EXTENSION) and os.path.isfile(resolved):
@@ -230,10 +246,13 @@ def broken_reason(resolver, source_path, raw_target):
 def check(root):
     resolver = Resolver(root)
     broken = []
+
     for path in markdown_files(root):
         relative_path = os.path.relpath(path, root).replace(os.sep, "/")
+
         for line_number, raw_target in links_of(read_markdown(path)):
             reason = broken_reason(resolver, path, raw_target)
+
             if reason is not None:
                 broken.append((relative_path, line_number, raw_target, reason))
 
@@ -242,6 +261,7 @@ def check(root):
 
 def can_encode(stream, messages):
     encoding = getattr(stream, "encoding", None)
+
     if encoding is None or not hasattr(stream, "reconfigure"):
         return True
 
@@ -263,6 +283,7 @@ def main(argv=None):
         return 1
 
     broken = check(arguments.root)
+
     if not can_encode(sys.stdout, broken):
         sys.stdout.reconfigure(errors="backslashreplace")
     for message in broken:

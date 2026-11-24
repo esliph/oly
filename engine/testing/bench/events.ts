@@ -78,6 +78,7 @@ function measureNanosecondsPerEvent(cases: Case[], eventCount: number, rounds: n
   for (let round = 0; round < rounds; ++round) {
     for (const entry of rotated(cases, round)) {
       const start = performance.now();
+
       for (let step = 0; step < stepsPerSample; ++step) {
         entry.step();
       }
@@ -109,6 +110,7 @@ function measureHandler(runtime: Runtime, module: FixtureModule, rounds: number)
     let scriptSum = 0;
     const sumInScript = (_context: HandlerContext, batch: EventBatch<typeof Ping.fields>) => {
       const view = batch.read();
+
       for (let index = 0; index < batch.count; ++index) {
         scriptSum += view.value.get(index);
       }
@@ -183,6 +185,7 @@ function measureEmission(runtime: Runtime, module: FixtureModule, rounds: number
 
 function printTables(handler: HandlerRow[], emission: EmissionRow[]): void {
   console.log("N\tnone ns/event\tcpp\tts\tts/cpp\t(ts-cpp) ns/batch");
+
   for (const row of handler) {
     const ns = row.nsPerEvent;
     console.log(
@@ -191,6 +194,7 @@ function printTables(handler: HandlerRow[], emission: EmissionRow[]): void {
   }
 
   console.log("\nN\temission cpp ns/event\tts\tts/cpp");
+
   for (const row of emission) {
     console.log(`${row.events}\t${row.nsPerEvent["cpp"]!.median.toFixed(2)}\t${row.nsPerEvent["ts"]!.median.toFixed(2)}\t${row.tsOverCpp.toFixed(2)}`);
   }
@@ -203,6 +207,7 @@ async function main(): Promise<void> {
 
   const handler = measureHandler(runtime, module, options.rounds);
   const emission = measureEmission(runtime, module, options.rounds);
+
   if (!handler.correct || !emission.correct) {
     process.exit(1);
   }

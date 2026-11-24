@@ -29,6 +29,7 @@ function stepper(engine: Engine): () => void {
 
 function withEngine(body: (engine: Engine) => void): void {
   const engine = createEngine();
+
   try {
     body(engine);
     assert.equal(engine.world.checkInvariants(), null);
@@ -90,6 +91,7 @@ test("batch: count and values through the views, entity included", () => {
     engine.on(Ping, "read", (_context, batch) => {
       const view = batch.read();
       seen.count = batch.count;
+
       for (let index = 0; index < batch.count; ++index) {
         seen.values.push(view.value.get(index));
       }
@@ -112,6 +114,7 @@ test("event emitted by a TS handler goes to the next round of the same step", ()
     engine.addSystem(Phase.Update, "emit", (context) => context.emit(Ping, { value: 7 }));
     engine.on(Ping, "ping", (context, batch) => {
       pingCounts.push(batch.count);
+
       if (first) {
         first = false;
         context.emit(Echo, { depth: 1 });
@@ -140,8 +143,10 @@ test("TS handler destroys directly; repeated event does not break", () => {
     });
     engine.on(Ping, "kill", (context, batch) => {
       const view = batch.read();
+
       for (let index = 0; index < batch.count; ++index) {
         const target = view.target.get(index);
+
         if (context.isAlive(target)) {
           context.destroy(target);
         }
@@ -184,6 +189,7 @@ test("memory grows inside the TS handler and the batch stays readable", () => {
       const view = batch.read();
       assert.equal(view.value.get(0), 42);
       const before = module.HEAPU8.buffer;
+
       for (let count = 0; count < 1_000_000 && module.HEAPU8.buffer === before; ++count) {
         context.spawn([Position, Velocity, Mixed, Trace]);
       }
@@ -213,6 +219,7 @@ test("exception in a TS handler reaches the frame caller and the next frame disc
     });
     engine.on(Ping, "thrower", (context) => {
       context.emit(Echo, { depth: 1 });
+
       if (!thrown) {
         thrown = true;
         throw new Error("boom");
@@ -294,6 +301,7 @@ test("emit with an unknown field, with an event from another schema or outside t
     const errors: unknown[] = [];
     engine.addSystem(Phase.Update, "bad", (context) => {
       captured = context;
+
       try {
         context.emit(Ping, { nope: 1 } as never);
       } catch (error) {
@@ -331,6 +339,7 @@ test("on during frame is ContractError; batch.read() and context after the handl
     engine.on(Ping, "capture", (context, batch) => {
       staleContext = context;
       staleRead = () => batch.read();
+
       try {
         engine.on(Echo, "late", () => {});
       } catch (error) {

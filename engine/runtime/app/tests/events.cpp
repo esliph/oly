@@ -125,6 +125,7 @@ namespace {
 
     for (const Echo& echo : context.events<Echo>()) {
       recorder.depths.push_back(echo.depth);
+
       if (echo.depth < 5) {
         context.emit(Echo{echo.depth + 1});
       }
@@ -136,6 +137,7 @@ namespace {
 
     for (const Echo& echo : context.events<Echo>()) {
       recorder.depths.push_back(echo.depth);
+
       if (echo.depth < 2) {
         context.emit(Echo{echo.depth + 1});
       }

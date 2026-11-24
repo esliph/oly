@@ -10,6 +10,7 @@ set_script=$repository/tools/release/set_version.sh
 # path in $root.
 fresh_root() {
   root=$(mktemp -d)
+
   for file in CMakeLists.txt package.json package-lock.json $core $host; do
     mkdir -p "$root/$(dirname "$file")"
     cp "$repository/$file" "$root/$file"

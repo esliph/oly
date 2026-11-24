@@ -29,6 +29,7 @@ function stepper(engine: Engine): () => void {
 
 function withEngine(body: (engine: Engine) => void): void {
   const engine = createEngine();
+
   try {
     body(engine);
     assert.equal(engine.world.checkInvariants(), null);
@@ -125,6 +126,7 @@ test("cancel, isPending and every that cancels itself", () => {
       task.schedule.cancel(task.handle);
     });
     const step = stepper(engine);
+
     for (let count = 0; count < 4; ++count) {
       step();
     }
@@ -175,6 +177,7 @@ test("a TS every that throws stays pending and runs again after recovery", () =>
     let runs = 0;
     const handle = engine.schedule.every(StepSeconds, () => {
       ++runs;
+
       if (runs === 1) {
         throw new Error("boom");
       }
@@ -183,6 +186,7 @@ test("a TS every that throws stays pending and runs again after recovery", () =>
     step();
 
     assert.throws(step, /boom/);
+
     for (let count = 0; count < 4; ++count) {
       step();
     }
@@ -201,6 +205,7 @@ test("memory grows inside the TS task and the context stays valid", () => {
     let value = -1;
     engine.schedule.after(0, (task) => {
       const before = module.HEAPU8.buffer;
+
       for (let count = 0; count < 1_000_000 && module.HEAPU8.buffer === before; ++count) {
         task.spawn([Position, Velocity, Mixed, Trace]);
       }
@@ -276,6 +281,7 @@ test("errors: negative or NaN delay, interval 0, callback that is not a function
     assert.throws(() => engine.schedule.after(1, "not a function" as never), ContractError);
 
     const other = createEngine();
+
     try {
       const foreign = other.schedule.after(1, nothing);
 

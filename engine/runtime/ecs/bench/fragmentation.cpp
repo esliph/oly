@@ -31,6 +31,7 @@ namespace {
     for (auto _ : state) {
       float3* positionData = positions.data();
       const float3* velocityData = velocities.data();
+
       for (size_t i = 0; i < entityCount; ++i) {
         positionData[i].x += velocityData[i].x * kDeltaTime;
         positionData[i].y += velocityData[i].y * kDeltaTime;
@@ -53,9 +54,11 @@ namespace {
     const auto archetypeCount = static_cast<uint32_t>(state.range(0));
     const auto tags = fragmentIds(std::make_index_sequence<kFragmentTags>{});
     oly::ecs::World world;
+
     for (uint32_t i = 0; i < kEntityCount; ++i) {
       oly::ecs::Entity entity = world.spawn(Position{float3{0.f, 0.f, 0.f}}, Velocity{float3{1.f, 2.f, 3.f}});
       const uint32_t mask = i % archetypeCount;
+
       for (int j = 0; j < kFragmentTags; ++j) {
         if (mask & (1u << j)) {
           world.addById(entity, tags[j], nullptr);
@@ -64,11 +67,13 @@ namespace {
     }
 
     auto& query = world.query<Position, const Velocity>();
+
     for (auto _ : state) {
       query.eachBlock([](std::span<Position> positions, std::span<const Velocity> velocities) {
         Position* positionData = positions.data();
         const Velocity* velocityData = velocities.data();
         const size_t count = positions.size();
+
         for (size_t i = 0; i < count; ++i) {
           positionData[i].value.x += velocityData[i].value.x * kDeltaTime;
           positionData[i].value.y += velocityData[i].value.y * kDeltaTime;

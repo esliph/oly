@@ -36,6 +36,7 @@ namespace oly::schema {
   Layout computeLayout(std::vector<Field>& fields) {
     Layout layout;
     uint32_t offset = 0;
+
     for (Field& field : fields) {
       const uint32_t fieldAlignment = scalarAlignment(field.type);
       offset = alignUp(offset, fieldAlignment);

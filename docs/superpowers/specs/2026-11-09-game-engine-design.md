@@ -587,6 +587,7 @@ struct DashTarget {
 
 void dashReady(TaskContext& context) {
   const ecs::Entity player = context.payload<DashTarget>().player;
+
   if (context.isAlive(player)) {
     context.get<Dash>(player).ready = 1;
   }
@@ -820,6 +821,7 @@ function chasePlayerSystem(context: SystemContext) {
   context.query({ read: [Position], write: [Velocity], with: [Enemy] }).eachBlock((block) => {
     const position = block.read(Position);
     const velocity = block.write(Velocity);
+
     for (let row = 0; row < block.count; row++) {
       // generated accessors hide the column stride (§4.2)
     }

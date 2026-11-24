@@ -321,6 +321,7 @@ export class @GAME_CLASS@ extends Game {
 
   onStart(engine: Engine, canvas: HTMLCanvasElement): void {
     const context = canvas.getContext("2d");
+
     if (context === null) {
       throw new Error("the browser did not provide a 2D context for the canvas");
     }

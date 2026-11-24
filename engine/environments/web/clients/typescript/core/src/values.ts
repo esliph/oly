@@ -16,6 +16,7 @@ export function contractError(operation: string, entity: Entity | null, type: { 
 
 export function assertKnownFields(operation: string, entity: Entity | null, type: ComponentType | EventType, value: Partial<Record<string, number>>): void {
   const known = new Set(type.layout.fields.map((field) => field.name));
+
   for (const name of Object.keys(value)) {
     if (!known.has(name)) {
       throw contractError(operation, entity, type, `unknown field "${name}"`);
@@ -29,6 +30,7 @@ export function assertSpawnArguments(
   valuesByName: Readonly<Record<string, Partial<Record<string, number>>>>,
 ): void {
   const seen = new Set<SchemaType>();
+
   for (const type of types) {
     componentIdOf(runtime, type);
     if (seen.has(type)) {
@@ -39,6 +41,7 @@ export function assertSpawnArguments(
 
   for (const [name, value] of Object.entries(valuesByName)) {
     const type = types.find((candidate) => candidate.name === name);
+
     if (type === undefined || type.kind !== "component") {
       throw new ContractError(`spawn type=${name}: value for a component that is not in types`);
     }
@@ -54,8 +57,10 @@ export function writeValue(bridge: Bridge, layout: ComponentLayout | null, value
 
   const address = bridge.valuePointer;
   bridge.heap.u8.fill(0, address, address + layout.size);
+
   for (const field of layout.fields) {
     const fieldValue = value?.[field.name];
+
     if (fieldValue !== undefined) {
       writeScalar(bridge.heap, field.type, address + field.offset, fieldValue);
     }

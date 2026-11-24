@@ -128,6 +128,7 @@ export class Scheduler {
 
   #invoke(scriptId: number, lastRun: boolean): void {
     const task = this.#tasks.get(scriptId);
+
     if (task === undefined) {
       throw new ContractError(`task id=${scriptId}: not a TS task of this Engine`);
     }
@@ -137,6 +138,7 @@ export class Scheduler {
     setTaskLastRun(task.context, lastRun);
     setContextActive(task.context, true);
     setStructureLocked(this.#world, false);
+
     try {
       task.callback(task.context);
     } finally {
@@ -150,6 +152,7 @@ export class Scheduler {
 
   #refOf(operation: string, handle: TaskHandle): TaskRef {
     const ref = this.#refs.get(handle);
+
     if (ref === undefined) {
       throw new ContractError(`${operation}: handle from another Engine or invalid`);
     }

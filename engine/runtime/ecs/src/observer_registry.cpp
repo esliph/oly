@@ -10,6 +10,7 @@ namespace oly::ecs::detail {
     registrations_.push_back({kind, componentId, false});
 
     std::vector<std::vector<ObserverEntry>>& lists = entries_[size_t(kind)];
+
     if (componentId >= lists.size()) {
       lists.resize(size_t(componentId) + 1);
     }
@@ -33,6 +34,7 @@ namespace oly::ecs::detail {
 
   std::span<const ObserverEntry> ObserverRegistry::observers(ObserverKind kind, ComponentId componentId) const noexcept {
     const std::vector<std::vector<ObserverEntry>>& lists = entries_[size_t(kind)];
+
     if (componentId >= lists.size()) {
       return {};
     }
@@ -42,6 +44,7 @@ namespace oly::ecs::detail {
 
   uint8_t ObserverRegistry::signatureMask(const Signature& signature) const noexcept {
     uint8_t observed = 0;
+
     for (ComponentId componentId : signature) {
       observed |= mask(componentId);
     }
@@ -51,6 +54,7 @@ namespace oly::ecs::detail {
 
   uint8_t ObserverRegistry::transitionMask(const Signature& source, const Signature& destination) const noexcept {
     uint8_t observed = 0;
+
     for (ComponentId componentId : destination) {
       if (!std::binary_search(source.begin(), source.end(), componentId)) {
         observed |= mask(componentId) & ObservedOnAdd;
@@ -71,6 +75,7 @@ namespace oly::ecs::detail {
     }
 
     uint8_t observed = 0;
+
     for (ObserverKind kind : {ObserverKind::OnAdd, ObserverKind::OnRemove}) {
       if (!observers(kind, componentId).empty()) {
         observed |= observedBit(kind);

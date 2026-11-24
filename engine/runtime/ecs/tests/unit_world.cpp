@@ -105,6 +105,7 @@ TEST_CASE("remove/destroy of the last and of the only row") {
 TEST_CASE("add with a value read from another entity of the destination table that reallocates") {
   oly::ecs::World world;
   std::vector<oly::ecs::Entity> full;
+
   for (uint64_t i = 0; i < 64; ++i) {
     full.push_back(world.spawn(A{i}, B{i, i})); // capacity 64 full
   }
@@ -292,6 +293,7 @@ TEST_CASE("NF-P4: add/remove with a cached edge stays free with an implication")
   auto lookupsBefore = oly::ecs::signatureLookupCount(world);
 
   bool impliedAfterEachAdd = true;
+
   for (int i = 0; i < 1000; ++i) {
     world.add(entity, C4{uint64_t(i)});
     impliedAfterEachAdd = impliedAfterEachAdd && world.has<C5>(entity);
@@ -323,6 +325,7 @@ TEST_CASE("archetypeCount counts the root and the created archetypes") {
 
 TEST_CASE("stats: counts, histogram and idle memory") {
   oly::ecs::World world;
+
   for (uint64_t i = 0; i < 5; ++i) {
     world.spawn(A{i}); // {A}: 5
   }

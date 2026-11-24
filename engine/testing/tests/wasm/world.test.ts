@@ -10,6 +10,7 @@ const { runtime, fixture } = await loadFixture();
 
 function withWorld(body: (world: World) => void): void {
   const world = runtime.createWorld();
+
   try {
     body(world);
     assert.equal(world.checkInvariants(), null);

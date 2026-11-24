@@ -58,6 +58,7 @@ namespace oly::input {
     OLY_ASSERT(button.usage != 0, "bind: invalid usage 0 (action '%s')", declarations_[action.id].name.c_str());
 
     std::vector<PhysicalButton>& buttons = declarations_[action.id].buttons;
+
     if (!contains(buttons, button)) {
       buttons.push_back(button);
     }
@@ -69,6 +70,7 @@ namespace oly::input {
                "bind: invalid usage 0 (action '%s')", declarations_[action.id].name.c_str());
 
     std::vector<Axis2dBinding>& axes = declarations_[action.id].axes;
+
     if (std::find(axes.begin(), axes.end(), binding) == axes.end()) {
       axes.push_back(binding);
     }
@@ -137,6 +139,7 @@ namespace oly::input {
     for (std::size_t index = 0; index < declarations_.size(); ++index) {
       const Declaration& declaration = declarations_[index];
       ActionState& state = snapshot_[index];
+
       if (declaration.kind == ActionKind::Button) {
         state.flags = anyPressed(declaration.buttons) ? ActionHeld : 0u;
       }
@@ -151,6 +154,7 @@ namespace oly::input {
 
       for (std::size_t index = 0; index < declarations_.size(); ++index) {
         const Declaration& declaration = declarations_[index];
+
         if (declaration.kind != ActionKind::Button || !contains(declaration.buttons, edge.button)) {
           continue;
         }
@@ -158,6 +162,7 @@ namespace oly::input {
         ActionState& state = snapshot_[index];
         const bool held = (state.flags & ActionHeld) != 0;
         const bool now = anyPressed(declaration.buttons);
+
         if (!held && now) {
           state.flags |= ActionPressed;
         }
@@ -175,11 +180,13 @@ namespace oly::input {
     for (std::size_t index = 0; index < declarations_.size(); ++index) {
       const Declaration& declaration = declarations_[index];
       ActionState& state = snapshot_[index];
+
       if (declaration.kind == ActionKind::Axis2d) {
         bool up = false;
         bool down = false;
         bool left = false;
         bool right = false;
+
         for (const Axis2dBinding& binding : declaration.axes) {
           up = up || contains(capturedPressed_, binding.up);
           down = down || contains(capturedPressed_, binding.down);

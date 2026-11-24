@@ -65,6 +65,7 @@ function makeTsEngine(runtime: Runtime, count: number): Variant {
       query.eachBlock((block) => {
         const velocity = block.read(Velocity);
         const position = block.write(Position);
+
         for (let row = 0; row < block.count; ++row) {
           position.x.set(row, position.x.get(row) + velocity.x.get(row) * DeltaTime);
           position.y.set(row, position.y.get(row) + velocity.y.get(row) * DeltaTime);
@@ -92,6 +93,7 @@ function makeTsEngineRaw(runtime: Runtime, count: number): Variant {
         const velocityX = velocity.x.raw();
         const velocityY = velocity.y.raw();
         const rows = block.count;
+
         for (let row = 0; row < rows; ++row) {
           const indexX = positionX.base + row * positionX.stride;
           const indexY = positionY.base + row * positionY.stride;
@@ -149,6 +151,7 @@ async function main(): Promise<void> {
     for (let round = 0; round < options.rounds; ++round) {
       for (const variant of rotated(variants, round)) {
         const start = performance.now();
+
         for (let iteration = 0; iteration < iterations; ++iteration) {
           variant.step();
         }
@@ -161,6 +164,7 @@ async function main(): Promise<void> {
     for (const variant of variants) {
       const expected = expectedPositionX(executed.get(variant.name)!, DeltaTime);
       const actual = variant.positionX();
+
       if (Math.abs(actual - expected) > 1e-3 * Math.abs(expected)) {
         console.error(`variant ${variant.name} N=${size}: x=${actual}, expected ${expected}`);
         failed = true;
@@ -168,6 +172,7 @@ async function main(): Promise<void> {
     }
 
     const medians = new Map<VariantName, number>();
+
     for (const variant of variants) {
       const values = samples.get(variant.name)!;
       const variantMedian = median(values);
@@ -200,6 +205,7 @@ async function main(): Promise<void> {
   writeFileSync(options.outPath, JSON.stringify({ meta, results, ratios }, null, 2));
 
   console.log("N\tts-engine/ts-manual\tts-engine/cpp\tts-engine-raw/ts-manual");
+
   for (const ratio of ratios) {
     console.log(`${ratio.size}\t${ratio.tsEngineOverTsManual.toFixed(2)}\t${ratio.tsEngineOverCpp.toFixed(2)}\t${ratio.tsEngineRawOverTsManual.toFixed(2)}`);
   }

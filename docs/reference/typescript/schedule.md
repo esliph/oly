@@ -49,6 +49,7 @@ let remaining = 3;
 
 engine.schedule.every(1, (task) => {
   remaining -= 1;
+
   if (remaining === 0) {
     task.schedule.cancel(task.handle);
   }

@@ -31,6 +31,7 @@ interface FixtureModule extends OlyModule {
 
 export function fixtureFactory(): OlyModuleFactory {
   const modulePath = process.env.OLY_FIXTURE_MODULE;
+
   if (!modulePath) {
     throw new Error("set OLY_FIXTURE_MODULE to the path of fixture_game.mjs (ctest already does this)");
   }

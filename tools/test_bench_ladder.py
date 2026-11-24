@@ -13,6 +13,7 @@ import bench_ladder
 
 def write_json(directory, medians, unit="ns", error_name=None):
     benchmarks = []
+
     for name, value in medians.items():
         benchmarks.append({"name": name + "_mean", "aggregate_name": "mean", "real_time": value * 100, "time_unit": unit})
         benchmarks.append({"name": name + "_median", "aggregate_name": "median", "real_time": value, "time_unit": unit})

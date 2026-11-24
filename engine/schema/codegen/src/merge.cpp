@@ -24,6 +24,7 @@ namespace oly::schema {
       auto checkFile = [&](const Schema& schema) {
         for (const DeclaredName& declared : namesInSourceOrder(schema)) {
           const auto [found, inserted] = firstDeclarations.try_emplace(declared.name, FirstDeclaration{schema.fileName, declared.location});
+
           if (!inserted) {
             throw SchemaError(schema.fileName, declared.location, "repeated name \"" + std::string(declared.name) + "\"; first declared at " + locationText(found->second.fileName, found->second.location));
           }
@@ -47,6 +48,7 @@ namespace oly::schema {
 
   Schema mergeSchemas(std::span<const PluginSource> plugins, std::string_view gameSource, std::string_view gameFileName) {
     std::vector<Schema> pluginSchemas;
+
     for (const PluginSource& plugin : plugins) {
       Schema schema = parseSchema(plugin.source, plugin.fileName);
       validatePluginSchema(schema);
@@ -58,6 +60,7 @@ namespace oly::schema {
 
     Schema merged;
     merged.fileName = game.fileName;
+
     for (std::size_t index = 0; index < plugins.size(); ++index) {
       appendTypes(merged.types, pluginSchemas[index].types, plugins[index].name);
       appendTypes(merged.events, pluginSchemas[index].events, plugins[index].name);

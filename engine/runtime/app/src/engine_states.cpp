@@ -108,6 +108,7 @@ namespace oly::app {
 
   StateMask Engine::maskOf(const char* operation, std::initializer_list<StateId> states) const {
     StateMask mask = 0;
+
     for (const StateId state : states) {
       checkState(operation, state);
 

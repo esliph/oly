@@ -19,6 +19,7 @@ namespace oly::ecs::detail {
   Table::Table(std::span<const ComponentId> columnTypes)
     : columnTypes_(columnTypes.begin(), columnTypes.end()) {
     columns_.reserve(columnTypes.size());
+
     for (ComponentId id : columnTypes) {
       const TypeInfo& info = typeInfo(id);
       OLY_ASSERT(!info.tag, "Table::Table type=%.*s is a tag", int(info.name.size()), info.name.data());
@@ -99,6 +100,7 @@ namespace oly::ecs::detail {
 
     for (size_t i = 0; i < columns_.size(); ++i) {
       Column& column = columns_[i];
+
       if (column.data) {
         if (column.info->trivial) {
           if (count_ > 0) {
@@ -139,6 +141,7 @@ namespace oly::ecs::detail {
   std::optional<Entity> Table::fillHole(uint32_t row) noexcept {
     const uint32_t last = count_ - 1;
     --count_;
+
     if (row == last) {
       entities_.pop_back();
       return std::nullopt;

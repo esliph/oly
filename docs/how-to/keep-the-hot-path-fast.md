@@ -52,6 +52,7 @@ for (const enemy of enemies) {
 // fast: one crossing per table, no objects
 world.query({ write: [Position], with: [Enemy] }).eachBlock((block) => {
   const position = block.write(Position);
+
   for (let row = 0; row < block.count; ++row) {
     position.x.set(row, position.x.get(row) + 1);
   }
@@ -76,6 +77,7 @@ The C++ side of that registration: [Systems in C++, registered by name](../refer
 
 ```ts
 const x = block.write(Position).x.raw();
+
 for (let row = 0; row < block.count; ++row) {
   x.array[x.base + row * x.stride] += 1;
 }

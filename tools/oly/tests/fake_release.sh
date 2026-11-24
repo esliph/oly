@@ -16,8 +16,10 @@ add_release() {
   write_stub_spur "$staging"
   : > "$staging/Spurfile"
   files="spur Spurfile"
+
   if [ "${3:-}" != no-launcher ]; then
     sed "s/^OLY_LAUNCHER_VERSION=.*/OLY_LAUNCHER_VERSION=$2/" "$repository/tools/oly/oly" > "$staging/oly"
+
     if [ "${3:-}" = truncated ]; then
       head -n 200 "$staging/oly" > "$staging/oly.cut"
       mv "$staging/oly.cut" "$staging/oly"

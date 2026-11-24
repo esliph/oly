@@ -82,6 +82,7 @@ _sed_replacement() {
 # local run would otherwise keep building the checkout.
 _engine_source() {
   _source=${OLY_ENGINE_DIR:-${OLY_ENGINE_SOURCE_DIR:-}}
+
   if [ -n "$_source" ]; then
     _host_path "$_source"
   fi
@@ -101,6 +102,7 @@ _target=
 # and each target platform has its own build directory.
 _cmake_directory() {
   _directory=build/cmake
+
   if [ "$_target" = windows ]; then
     _directory=$_directory-windows
   fi
@@ -147,6 +149,7 @@ _toolchain_value() {
 # oly.env and package.json both carry the version, and must not diverge.
 _check_pins() {
   _pinned=$(_env_value OLY_VERSION)
+
   for _tarball in oly-core oly-web-host; do
     grep -qF "$_tarball-$_pinned.tgz" package.json || _fail 64 "oly.env pins $_pinned but package.json has other @oly tarballs: run oly upgrade $_pinned"
   done
@@ -161,6 +164,7 @@ _overlay_package() {
   _installed=node_modules/@oly/$1
   _config=build/oly-local/tsconfig.$1.json
   _paths=
+
   # The checkout's source resolves @oly/core by walking up from the checkout, which has no node_modules here.
   if [ "$1" = web-host ]; then
     _paths=", \"paths\": { \"@oly/core\": [\"$_game/node_modules/@oly/core/dist/index.d.ts\"] }"
@@ -192,6 +196,7 @@ JSON
 _sync() {
   _want="$(_platform) $(_mode)"
   _marker=node_modules/.oly-install
+
   if [ -f "$_marker" ] && [ "$(cat "$_marker")" != "$_want" ]; then
     rm -rf node_modules
   fi
@@ -237,6 +242,7 @@ _esbuild() {
 _build_web() {
   _check_pins
   _sync
+
   if [ -z "${EMSDK:-}" ]; then
     _fail 64 "EMSDK is not set: install emsdk $(_toolchain_value EMSDK_VERSION) and source emsdk_env.sh"
   fi
@@ -262,6 +268,7 @@ _build_web() {
 # _doctor_report <ok|old|untested|missing|wrong> <message>
 _doctor_report() {
   printf '%-8s %s\n' "$1" "$2"
+
   if [ "$1" != ok ]; then
     _doctor_failed=1
   fi
@@ -296,6 +303,7 @@ _doctor_cmake() {
 
 _doctor_ninja() {
   _needed=$(_toolchain_value NINJA_MINIMUM)
+
   if ! command -v ninja > /dev/null 2>&1; then
     _doctor_report missing "ninja: install Ninja $_needed or newer (MSYS2: pacman -S mingw-w64-ucrt-x86_64-ninja)"
     return 0
@@ -306,10 +314,12 @@ _doctor_ninja() {
 
 _doctor_web() {
   _needed=$(_toolchain_value EMSDK_VERSION)
+
   if ! command -v emcc > /dev/null 2>&1; then
     _doctor_report missing "emcc: install emsdk $_needed and source emsdk_env.sh"
   else
     _found=$(emcc --version | sed -n '1s/.* \([0-9][0-9.]*\) (.*/\1/p')
+
     if [ "$_found" = "$_needed" ]; then
       _doctor_report ok "emcc $_found"
     elif _version_at_least "$_found" "$_needed"; then
@@ -320,6 +330,7 @@ _doctor_web() {
   fi
 
   _doctor_present node "install Node.js"
+
   if command -v npm > /dev/null 2>&1 || { command -v node > /dev/null 2>&1 && [ -x "$(dirname "$(command -v node)")/npm" ]; }; then
     _doctor_report ok npm
   else
@@ -335,6 +346,7 @@ _doctor_native() {
 
   if [ "$(_platform)" = windows-x64 ]; then
     _machine=$(g++ -dumpmachine)
+
     case $_machine in
       *mingw32*) _doctor_minimum "g++ (MinGW)" "$(g++ -dumpversion)" "$(_toolchain_value MINGW_GCC_MINIMUM)" "install MinGW GCC $(_toolchain_value MINGW_GCC_MINIMUM) or newer (MSYS2 UCRT64)" ;;
       *) _doctor_report wrong "g++ targets $_machine, not MinGW: use the MSYS2 UCRT64 shell" ;;
@@ -358,6 +370,7 @@ _doctor() {
   fi
 
   _doctor_cmake
+
   if [ "$(_platform)" = windows-x64 ]; then
     _doctor_ninja
   fi
@@ -374,6 +387,7 @@ _doctor() {
 # _runner_of_game: OLY_RUNNER of oly.env, host when it has none.
 _runner_of_game() {
   _value=
+
   if [ -f oly.env ]; then
     _value=$(sed -n 's/^OLY_RUNNER=//p' oly.env | tr -d '\r' | tail -n 1)
   fi
@@ -405,12 +419,14 @@ _dispatch_docker() {
   set -- "$SPUR_TASK" --host "$@"
   set -- sh "$_spur" -f "$_tools/Spurfile" "$@"
   set -- "$_service" "$@"
+
   if [ -n "${OLY_ENGINE_DIR:-}" ]; then
     set -- -v "$(_host_path "$OLY_ENGINE_DIR"):/oly" -e OLY_ENGINE_DIR=/oly "$@"
   elif [ -n "${OLY_ENGINE_SOURCE_DIR:-}" ]; then
     set -- -v "$(_host_path "$OLY_ENGINE_SOURCE_DIR"):/oly-source" -e OLY_ENGINE_SOURCE_DIR=/oly-source "$@"
   fi
   set -- -e "OLY_TOOLS_DIR=$_tools" "$@"
+
   if [ "$SPUR_TASK" = run ] && [ "$_service" = wasm ]; then
     set -- --service-ports "$@"
   fi
@@ -423,6 +439,7 @@ _dispatch_docker() {
 _start() {
   _runner=
   _consumed=0
+
   while [ "$#" -gt 0 ]; do
     case $1 in
       --docker)
@@ -447,6 +464,7 @@ _start() {
   _runner=${_runner:-$(_runner_of_game)}
 
   _environment=$(_env_value OLY_ENVIRONMENT)
+
   if [ "$_target" = windows ] && [ "$_environment" != native ]; then
     _fail 64 "--platform windows is for native games"
   fi
@@ -455,6 +473,7 @@ _start() {
   fi
 
   _service=dev
+
   if [ "$_environment" = web ]; then
     _service=wasm
   elif [ "$_target" = windows ]; then
@@ -502,6 +521,7 @@ cd "${OLY_GAME_DIR:-$SPUR_INVOCATION_DIR}"
 new: ## create <name>/ from the template: new <name> --environment web|native
   name=
   environment=
+
   while [ "$#" -gt 0 ]; do
     case $1 in
       --environment)
@@ -586,6 +606,7 @@ run: ## build the game and run it
   _start "$@"
   shift "$_consumed"
   _build
+
   case $(_env_value OLY_ENVIRONMENT) in
     native) exec "$(_cmake_directory)/games/$(_env_value OLY_GAME)$(_exe)" "$@" ;;
     web) _esbuild --outfile=build/web/main.js --servedir=build/web --serve=0.0.0.0:8000 ;;
@@ -604,6 +625,7 @@ sync: ## install the npm packages of a web game
 doctor: ## check the host tools against toolchain.env
   environments="web native"
   runner=host
+
   if [ -f oly.env ]; then
     environments=$(_env_value OLY_ENVIRONMENT)
     runner=$(sed -n 's/^OLY_RUNNER=//p' oly.env | tr -d '\r' | tail -n 1)

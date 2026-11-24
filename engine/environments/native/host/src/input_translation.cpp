@@ -100,6 +100,7 @@ namespace oly::native_host::detail {
     engine.actions().pointerMove(event.button.x, event.button.y);
 
     std::optional<MouseButton> button = mouseButtonOf(event.button.button);
+
     if (!button || !insideLogicalArea(renderer, event.button.x, event.button.y)) {
       return;
     }
@@ -110,11 +111,13 @@ namespace oly::native_host::detail {
 
   void InputTranslation::releaseMouse(oly::app::Engine& engine, SDL_Event& event) {
     std::optional<MouseButton> button = mouseButtonOf(event.button.button);
+
     if (!button) {
       return;
     }
 
     auto pressed = std::find(pressedMouseButtons_.begin(), pressedMouseButtons_.end(), *button);
+
     if (pressed == pressedMouseButtons_.end()) {
       return;
     }

@@ -182,6 +182,7 @@ double olyEngineInterpolation(OlyEngine* engine) {
 uint32_t olyEngineAddNativeSystem(OlyEngine* engine, uint32_t phase, const char* name) {
   const oly::app::Phase checkedPhase = oly::capi::phaseOf(phase, "olyEngineAddNativeSystem");
   const oly::app::SystemFunction function = oly::app::findNamedSystem(name);
+
   if (function == nullptr) {
     return OLY_INVALID_SYSTEM;
   }
@@ -205,6 +206,7 @@ void olyEngineEmit(OlyEngine* engine, uint32_t eventType, const void* value) {
 uint32_t olyEngineAddNativeHandler(OlyEngine* engine, uint32_t eventType, const char* name) {
   const uint32_t checkedType = oly::capi::checkedEventType(engine, eventType, "olyEngineAddNativeHandler");
   const oly::app::NamedHandler* named = oly::app::findNamedHandler(name);
+
   if (named == nullptr) {
     return OLY_INVALID_HANDLER;
   }
@@ -259,6 +261,7 @@ void olyEngineSetHandlerStates(OlyEngine* engine, uint32_t handlerId, uint32_t s
 uint32_t olyEngineAddNativeStateHook(OlyEngine* engine, uint32_t when, uint32_t state, const char* name) {
   const uint32_t hookWhen = oly::capi::checkedWhen(when, "olyEngineAddNativeStateHook");
   const oly::app::StateHookFunction function = oly::app::findNamedStateHook(name);
+
   if (function == nullptr) {
     return OLY_INVALID_STATE_HOOK;
   }
@@ -347,6 +350,7 @@ void olyContextPersist(OlyEngine* engine, uint32_t index, uint32_t generation) {
   OLY_ASSERT(engine->directContext != nullptr || engine->currentContext != nullptr, "olyContextPersist: called outside a system, handler, task or hook");
 
   const oly::ecs::Entity entity = oly::capi::entityOf(index, generation);
+
   if (engine->directContext != nullptr) {
     engine->directContext->persist(entity);
   } else {

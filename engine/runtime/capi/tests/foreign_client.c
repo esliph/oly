@@ -111,6 +111,7 @@ int main(void) {
   olyEngineEmit(engine, 0, &event);
 
   olyEngineFrame(engine, 0.0);
+
   for (int step = 1; step <= 60; ++step) {
     olyEngineFrame(engine, step / 60.0);
   }

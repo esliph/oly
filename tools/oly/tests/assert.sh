@@ -19,6 +19,7 @@ run_task() {
 check() {
   description=$1
   shift
+
   if "$@"; then
     printf 'ok   %s\n' "$description"
   else

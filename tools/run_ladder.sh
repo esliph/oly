@@ -15,6 +15,7 @@ rounds=$1
 bench=$2
 shift 2
 variants=("$@")
+
 if [ "${#variants[@]}" -eq 0 ]; then
   variants=(V0 V1 V2 V2S V3 V4 VX)
 fi
@@ -42,11 +43,13 @@ for variant in "${variants[@]}"; do
 done
 
 protocol="--benchmark_repetitions=10 --benchmark_report_aggregates_only=true --benchmark_format=json ${OLY_LADDER_EXTRA_ARGS:-}"
+
 for round in $(seq 1 "$rounds"); do
   for variant in "${variants[@]}"; do
     read -r service command <<< "$(command_for "$variant")"
     target="$output_directory/${variant}_r${round}.json"
     echo "round $round/$rounds: $variant ($bench)" >&2
+
     if ! docker compose --env-file toolchain.env run --rm -T "$service" sh -c "$command $protocol" > "$target.tmp"; then
       rm -f "$target.tmp"
       echo "failed: $variant round $round" >&2

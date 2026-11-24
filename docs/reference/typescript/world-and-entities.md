@@ -105,6 +105,7 @@ let target = NullEntity;             // "no entity"
 ```ts
 // later, in a system
 const leader = follower.leader.get(row);
+
 if (!context.isAlive(leader)) {
   context.destroy(block.entity(row));     // the leader died: remove the follower too
 }
@@ -118,6 +119,7 @@ if (!context.isAlive(leader)) {
 
 ```ts
 const problem = world.checkInvariants();   // null when the world is consistent
+
 if (problem !== null) {
   throw new Error(problem);
 }

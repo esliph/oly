@@ -19,6 +19,7 @@ TEST_CASE("string, unique_ptr, vector and LifeCounter survive reallocation and t
   {
     oly::ecs::World world;
     std::vector<oly::ecs::Entity> entities;
+
     for (uint64_t i = 0; i < 300; ++i) {
       entities.push_back(world.spawn(longString(i), std::make_unique<int>(int(i)), std::vector<int>(i % 7 + 1, int(i)),
                                      LifeCounter{i}));
@@ -44,6 +45,7 @@ TEST_CASE("string, unique_ptr, vector and LifeCounter survive reallocation and t
       CHECK(world.get<std::vector<int>>(entities[i]).size() == i % 7 + 1);
       CHECK(world.get<LifeCounter>(entities[i]).value == i);
       CHECK(world.has<A>(entities[i]) == (i % 4 != 0));
+
       if (i % 4 != 0) {
         CHECK(world.get<A>(entities[i]).value == i);
       }

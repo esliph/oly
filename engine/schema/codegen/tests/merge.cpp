@@ -26,6 +26,7 @@ namespace {
 
   std::vector<std::filesystem::path> entriesIn(const std::filesystem::path& directory) {
     std::vector<std::filesystem::path> entries;
+
     for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(directory)) {
       entries.push_back(entry.path());
     }
@@ -101,6 +102,7 @@ TEST_CASE("every merge corpus case matches the expectation of its game.oly") {
 
   for (const std::filesystem::path& folder : cases) {
     std::vector<oly::schema::PluginSource> plugins;
+
     for (const std::filesystem::path& file : entriesIn(folder)) {
       if (file.filename() != "game.oly") {
         plugins.push_back(pluginSourceOf(file));
@@ -112,6 +114,7 @@ TEST_CASE("every merge corpus case matches the expectation of its game.oly") {
     const std::string expected = game.substr(expectPrefix.size(), game.find('\n') - expectPrefix.size());
 
     INFO(folder.filename().string());
+
     if (expected == "ok") {
       CHECK_NOTHROW(oly::schema::mergeSchemas(plugins, game, "game.oly"));
     } else {

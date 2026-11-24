@@ -62,6 +62,7 @@ namespace {
 
   std::string labels(const Log& log) {
     std::string result;
+
     for (const std::string& call : log.calls) {
       result += call;
     }
@@ -78,6 +79,7 @@ namespace {
   void chainTask(TaskContext& context) {
     const Chain& chain = context.payload<Chain>();
     chain.log->times.push_back(context.time());
+
     if (chain.remaining > 0) {
       context.schedule().after(0.0, chainTask, Chain{chain.log, chain.remaining - 1});
     }
@@ -128,6 +130,7 @@ namespace {
 
   void scheduleOnceFromSystem(SystemContext& context) {
     SchedulingSystem& system = *static_cast<SchedulingSystem*>(context.userData());
+
     if (system.done) {
       return;
     }
@@ -256,6 +259,7 @@ TEST_CASE("every without drift") {
   fixture.steps(60);
 
   REQUIRE(fixture.log.times.size() == 39);
+
   for (size_t index = 0; index < fixture.log.times.size(); ++index) {
     CHECK(fixture.log.times[index] == Approx(std::ceil(1.5 * static_cast<double>(index + 1)) / 60));
   }

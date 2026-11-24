@@ -106,6 +106,7 @@ namespace {
   template <class G>
   int runWith(std::vector<std::string> arguments) {
     std::vector<char*> pointers;
+
     for (std::string& argument : arguments) {
       pointers.push_back(argument.data());
     }

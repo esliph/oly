@@ -20,6 +20,7 @@ export function startGameplay(engine: Engine, drawer: Drawer): void {
     drawer.clear();
     context.query({ read: [Position], with: [Player] }).eachBlock((block) => {
       const position = block.read(Position);
+
       for (let row = 0; row < block.count; ++row) {
         drawer.square(position.x.get(row), position.y.get(row), PlayerSize);
       }

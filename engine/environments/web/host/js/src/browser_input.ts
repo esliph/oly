@@ -85,6 +85,7 @@ export function attachBrowserInput(
   // Returns null when the canvas has no size (hidden): there is no way to convert without dividing by zero.
   const moveToCanvasPosition = (event: PointerInput): { inside: boolean } | null => {
     const rect = canvas.getBoundingClientRect();
+
     if (rect.width === 0 || rect.height === 0) {
       return null;
     }
@@ -100,6 +101,7 @@ export function attachBrowserInput(
   const syncMouseButtons = (buttons: number, allowPress: boolean): void => {
     for (const [bit, button] of mouseButtonBits) {
       const down = (buttons & bit) !== 0;
+
       if (down && allowPress && !heldMouseButtons.has(button)) {
         heldMouseButtons.add(button);
         actions.buttonDown(button);

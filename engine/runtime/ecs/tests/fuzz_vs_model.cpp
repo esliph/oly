@@ -30,6 +30,7 @@ TEST_CASE("fuzz: World == reference model") {
       const uint64_t value = makeValue(oly::ecs::Entity{uint32_t(counter), 0}, counter);
       oly::ecs::Entity entity;
       std::map<oly::ecs::ComponentId, uint64_t> components;
+
       switch (generator() % 6) {
         case 0:
           entity = world.spawn();
@@ -67,6 +68,7 @@ TEST_CASE("fuzz: World == reference model") {
     for (uint64_t operation = 1; operation <= operationCount; ++operation) {
       const unsigned destroyWeight = live.size() > 4096 ? 40 : 10;
       unsigned roll = unsigned(generator() % (20 + destroyWeight + 30 + 20 + 20));
+
       if (roll < 20) {
         spawnRandomEntity();
       } else if (roll < 20 + destroyWeight) {
@@ -77,6 +79,7 @@ TEST_CASE("fuzz: World == reference model") {
           model.erase(entity);
           live[i] = live.back();
           live.pop_back();
+
           if (dead.size() < 1024) {
             dead.push_back(entity);
           } else {
@@ -106,6 +109,7 @@ TEST_CASE("fuzz: World == reference model") {
           auto it = components.find(componentId);
           uint64_t got = 0;
           bool has = readFromWorld(world, entity, componentId, got);
+
           if (has != (it != components.end()) || (has && got != it->second)) {
             FAIL("get diverges at op " << operation << " e=" << entity.index << ":" << entity.generation);
           }
@@ -114,6 +118,7 @@ TEST_CASE("fuzz: World == reference model") {
 
       if (!dead.empty() && generator() % 100 == 0) {
         oly::ecs::Entity old = dead[generator() % dead.size()];
+
         if (world.isAlive(old) || world.tryGet<A>(old) != nullptr) {
           FAIL("stale handle alive: e=" << old.index);
         }
@@ -131,6 +136,7 @@ TEST_CASE("fuzz: World == reference model") {
     CHECK_INVARIANTS(world);
 
     int64_t lifeCounters = 0;
+
     for (auto& [entity, components] : model) {
       lifeCounters += components.count(oly::ecs::componentId<LifeCounter>());
     }

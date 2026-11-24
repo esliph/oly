@@ -93,6 +93,7 @@ inline void requireEqual(oly::ecs::World& world, const Model& model) {
       auto it = components.find(componentId);
       uint64_t got = 0;
       const bool has = readFromWorld(world, entity, componentId, got);
+
       if (has != (it != components.end())) {
         FAIL("presence diverges: e=" << entity.index << ":" << entity.generation << " type=" << oly::ecs::typeInfo(componentId).name);
       }

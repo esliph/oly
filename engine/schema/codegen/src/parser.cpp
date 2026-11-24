@@ -45,13 +45,16 @@ namespace oly::schema {
       Token next() {
         skipTrivia();
         const SourceLocation start = location_;
+
         if (position_ >= source_.size()) {
           return {TokenKind::End, {}, start};
         }
 
         const char character = source_[position_];
+
         if (isWordCharacter(character)) {
           std::string word;
+
           while (position_ < source_.size() && isWordCharacter(source_[position_])) {
             word += source_[position_];
             advance();
@@ -61,6 +64,7 @@ namespace oly::schema {
         }
 
         const std::optional<TokenKind> punctuation = punctuationKind(character);
+
         if (!punctuation) {
           throw SchemaError(fileName_, start, std::string("unexpected character '") + character + "'");
         }
@@ -99,6 +103,7 @@ namespace oly::schema {
       void skipTrivia() {
         while (position_ < source_.size()) {
           const char character = source_[position_];
+
           if (character == '#') {
             while (position_ < source_.size() && source_[position_] != '\n') {
               advance();
@@ -161,6 +166,7 @@ namespace oly::schema {
         }
 
         const std::string keyword = current_.text;
+
         if (keyword == "component") {
           advance();
           parseTypeWithFields(TypeKind::Component, keyword);
@@ -201,6 +207,7 @@ namespace oly::schema {
           take(TokenKind::Colon, "expected \":\" after field " + name.text);
           const Token typeToken = take(TokenKind::Word, "expected a type for field " + name.text);
           type.fields.push_back({name.text, scalarTypeOf(typeToken, name.text, type.name), 0, name.location});
+
           if (current_.kind == TokenKind::Comma) {
             advance();
           } else if (current_.kind != TokenKind::RightBrace) {
@@ -243,6 +250,7 @@ namespace oly::schema {
   Schema parseSchema(std::string_view source, std::string_view fileName) {
     Schema schema = Parser(source, fileName).parse();
     validateSchema(schema);
+
     for (Type& type : schema.types) {
       type.layout = computeLayout(type.fields);
     }

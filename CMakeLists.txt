@@ -25,6 +25,7 @@ if(OLY_BUILD_TESTS)
     "shared_dependency_once|order=\\[a,b,c\\]"
     "cycle|plugin cycle: a -> b -> a"
     "unknown|unknown plugin z")
+
   foreach(pluginOrderCase IN LISTS pluginOrderCases)
     string(REPLACE "|" ";" fields "${pluginOrderCase}")
     list(GET fields 0 caseName)
@@ -38,6 +39,7 @@ if(OLY_BUILD_TESTS)
     "two_d|plugin=essentials2d"
     "three_d|plugin=essentials3d"
     "invalid|DIMENSION is 2d or 3d")
+
   foreach(dimensionCase IN LISTS dimensionCases)
     string(REPLACE "|" ";" fields "${dimensionCase}")
     list(GET fields 0 caseName)
@@ -60,6 +62,7 @@ if(OLY_BUILD_TESTS)
     "missing_key|has no[^A-Z]*NINJA_MINIMUM"
     "real_file|toolchain ok"
     "cmake_minimum_matches|toolchain ok")
+
   foreach(toolchainCase IN LISTS toolchainCases)
     string(REPLACE "|" ";" fields "${toolchainCase}")
     list(GET fields 0 caseName)
@@ -70,6 +73,7 @@ if(OLY_BUILD_TESTS)
   endforeach()
 endif()
 add_subdirectory(engine)
+
 if(NOT EMSCRIPTEN OR OLY_BUILD_GAMES OR NOT PROJECT_IS_TOP_LEVEL)
   add_subdirectory(plugins)
 endif()
@@ -79,11 +83,13 @@ if(PROJECT_IS_TOP_LEVEL)
   function(oly_manifest_entries property outputVariable)
     get_property(entries GLOBAL PROPERTY ${property})
     set(json "")
+
     foreach(entry IN LISTS entries)
       string(REPLACE "|" ";" fields "${entry}")
       list(GET fields 0 name)
       list(GET fields 1 directory)
       list(GET fields 2 dependencies)
+
       if(dependencies STREQUAL "")
         set(dependencyArray "")
       else()
@@ -102,6 +108,7 @@ if(PROJECT_IS_TOP_LEVEL)
 
   if(NOT EMSCRIPTEN OR OLY_BUILD_GAMES)
     find_package(Python3 COMPONENTS Interpreter QUIET)
+
     if(Python3_FOUND)
       add_test(NAME oly.lint.boundaries
         COMMAND ${Python3_EXECUTABLE} -I ${PROJECT_SOURCE_DIR}/tools/check_boundaries.py

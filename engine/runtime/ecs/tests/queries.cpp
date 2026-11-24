@@ -59,8 +59,10 @@ TEST_CASE("each visits exactly the model's entities and allows writing") {
   oly::ecs::World world;
   std::set<uint32_t> expected;
   std::vector<oly::ecs::Entity> withB;
+
   for (uint64_t i = 0; i < 300; ++i) {
     auto entity = (i % 3) ? world.spawn(A{i}, B{i, 0}) : world.spawn(A{i});
+
     if (i % 3) {
       expected.insert(entity.index);
       withB.push_back(entity);
@@ -81,6 +83,7 @@ TEST_CASE("each visits exactly the model's entities and allows writing") {
 
   CHECK(seen == expected);
   CHECK(visits == expected.size()); // each entity exactly once
+
   for (auto entity : withB) {
     CHECK(world.get<A>(entity).value >= 1000);
   }
@@ -88,6 +91,7 @@ TEST_CASE("each visits exactly the model's entities and allows writing") {
 
 TEST_CASE("each without entity in the lambda") {
   oly::ecs::World world;
+
   for (uint64_t i = 0; i < 10; ++i) {
     world.spawn(A{i});
   }
@@ -101,6 +105,7 @@ TEST_CASE("each without entity in the lambda") {
 TEST_CASE("eachBlock hands contiguous spans with count == table size") {
   oly::ecs::World world;
   size_t expected = 0;
+
   for (uint64_t i = 0; i < 200; ++i) {
     if (i % 2) {
       world.spawn(A{i}, B{i, i});
@@ -115,6 +120,7 @@ TEST_CASE("eachBlock hands contiguous spans with count == table size") {
     CHECK(componentsA.size() == componentsB.size());
     total += componentsA.size();
     ++blocks;
+
     for (size_t i = 0; i < componentsA.size(); ++i) {
       CHECK(componentsA[i].value == componentsB[i].first);
     }

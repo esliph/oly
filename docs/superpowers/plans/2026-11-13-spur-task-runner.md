@@ -69,6 +69,7 @@ class SpurfileDispatchTest(unittest.TestCase):
     def test_host_picks_the_image_by_preset(self):
         cases = [("debug-asan", "dev"), ("release", "dev"), ("relwithdebinfo", "dev"), ("wasm-debug", "wasm"),
                  ("wasm-games-release", "wasm"), ("native-clang-32", "wasm"), ("schema-tool", "wasm")]
+
         for preset, service in cases:
             with self.subTest(preset=preset):
                 self.run_spur(["build"], preset=preset)

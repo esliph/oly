@@ -71,6 +71,7 @@ namespace {
 
     context.query<Health, const Position>(oly::ecs::With<Enemy>{}).each([&](oly::ecs::Entity entity, Health& health, const Position& position) {
       health.value -= 10;
+
       if (health.value <= 0) {
         for (int index = 0; index < deaths; ++index) {
           context.emit(EnemyDied{entity, position.x, position.y});

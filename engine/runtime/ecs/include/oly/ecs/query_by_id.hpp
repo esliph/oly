@@ -121,6 +121,7 @@ namespace oly::ecs {
     template <class F>
     void eachBlock(F&& callback) {
       QueryIteration current = iterate();
+
       for (uint32_t index = 0; index < current.blockCount(); ++index) {
         callback(static_cast<const BlockById&>(current.block(index)));
       }
@@ -129,6 +130,7 @@ namespace oly::ecs {
     QueryIteration iterate() {
       ++*iterating_;
       const uint32_t level = depth_++;
+
       if (level >= descriptorPool_.size()) {
         descriptorPool_.emplace_back();
       }
@@ -137,14 +139,17 @@ namespace oly::ecs {
       descriptors.clear();
 
       uint32_t blockCount = 0;
+
       for (const detail::MatchedTableById& matched : matched_) {
         detail::Table& table = matched.archetype->table;
+
         if (table.count() == 0) {
           continue;
         }
 
         descriptors.push_back(table.count());
         descriptors.push_back(reinterpret_cast<uintptr_t>(table.entities().data()));
+
         for (uint16_t column : matched.columns) {
           descriptors.push_back(reinterpret_cast<uintptr_t>(table.column(column).data));
         }
@@ -182,6 +187,7 @@ namespace oly::ecs {
 
       detail::MatchedTableById matched{&archetype, {}};
       matched.columns.reserve(components_.size());
+
       for (ComponentId componentId : components_) {
         matched.columns.push_back(detail::columnOf(archetype, componentId));
       }

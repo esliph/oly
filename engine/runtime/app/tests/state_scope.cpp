@@ -85,6 +85,7 @@ namespace {
 
   void spawnFromSystem(SystemContext& context) {
     Created& created = *static_cast<Created*>(context.userData());
+
     if (created.armed) {
       created.armed = false;
       created.fromSystem = context.spawn();
@@ -122,6 +123,7 @@ namespace {
 
   void spawnPersistAndRequestFromSystem(SystemContext& context) {
     SpawnAndPersist& state = *static_cast<SpawnAndPersist*>(context.userData());
+
     if (!state.armed) {
       return;
     }

@@ -35,6 +35,7 @@ namespace {
     g_kinds.push_back(kind);
     g_eventCounts.push_back(eventCount);
     const auto* batch = static_cast<const CapiTestEvent*>(events);
+
     for (uint32_t index = 0; batch != nullptr && index < eventCount; ++index) {
       g_values.push_back(batch[index].value);
     }
@@ -53,6 +54,7 @@ namespace {
 
   uint32_t discardsOf(uint32_t scriptId) {
     uint32_t count = 0;
+
     for (size_t index = 0; index < g_kinds.size(); ++index) {
       if (g_kinds[index] == OLY_SCRIPT_TASK_DISCARD && g_invocations[index].second == scriptId) {
         ++count;
@@ -130,6 +132,7 @@ namespace {
   // Scans only the first indices and generations: enough for the few spawns in these tests.
   std::vector<OlyEntity> aliveEntities(OlyWorld* world) {
     std::vector<OlyEntity> alive;
+
     for (uint32_t index = 0; index < 4; ++index) {
       for (uint32_t generation = 0; generation < 3; ++generation) {
         if (olyEntityIsAlive(world, index, generation) == 1) {
@@ -148,6 +151,7 @@ OLY_SYSTEM(capiTestNative) {
 
 OLY_HANDLER(capiTestNativeHandler, CapiTestEvent) {
   g_order.push_back("n");
+
   for (const CapiTestEvent& event : events) {
     g_values.push_back(event.value);
   }
@@ -203,6 +207,7 @@ TEST_CASE("two engines in the same process: each calls its own invoker with its 
   other.step();
 
   REQUIRE(!g_invocations.empty());
+
   for (size_t index = 0; index < g_invocations.size(); ++index) {
     CHECK(g_invocations[index].first == other.engine);
     CHECK(g_userData[index] == &other);
@@ -343,6 +348,7 @@ namespace {
 
   uint32_t countKind(uint32_t kind) {
     uint32_t count = 0;
+
     for (const uint32_t recorded : g_kinds) {
       count += recorded == kind ? 1 : 0;
     }
@@ -365,6 +371,7 @@ namespace {
     }
 
     ++g_actionCalls;
+
     if (g_actionKind == OLY_SCRIPT_SYSTEM) {
       olySystemSpawn(engine, &g_created);
       olyContextPersist(engine, g_created.index, g_created.generation);
@@ -446,6 +453,7 @@ TEST_CASE("the snapshot address does not change between frames") {
   const OlyActionState* before = olyEngineActionSnapshot(fixture.engine);
 
   olyEngineBindButton(fixture.engine, 0, SpaceUsage);
+
   for (int step = 0; step < 3; ++step) {
     olyEngineButtonDown(fixture.engine, SpaceUsage);
     fixture.stepOnce();

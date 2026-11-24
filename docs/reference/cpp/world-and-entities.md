@@ -380,6 +380,7 @@ A plain function pointer, so it captures nothing. Pass data through `userData`.
 ```cpp
 void destroyFollower(oly::ecs::ObserverContext& context) {
   const Leader& leader = context.world().get<Leader>(context.entity());
+
   if (context.world().isAlive(leader.follower)) {
     context.commands().destroy(leader.follower);
   }

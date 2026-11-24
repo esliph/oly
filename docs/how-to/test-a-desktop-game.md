@@ -46,6 +46,7 @@ int main() {
   }
 
   std::string why;
+
   if (!oly::ecs::checkInvariants(world, &why)) {
     std::fprintf(stderr, "invariants: %s\n", why.c_str());
     return 1;

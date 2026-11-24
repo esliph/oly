@@ -15,6 +15,7 @@ static void BM_IterateSingle_SoA(benchmark::State& state) {
   for (auto _ : state) {
     float3* positionData = positions.data();
     const float3* velocityData = velocities.data();
+
     for (size_t i = 0; i < entityCount; ++i) {
       positionData[i].x += velocityData[i].x * kDeltaTime;
       positionData[i].y += velocityData[i].y * kDeltaTime;
@@ -34,16 +35,19 @@ BENCHMARK(BM_IterateSingle_SoA)->Arg(1000)->Arg(10000)->Arg(100000)->Arg(1000000
 static void BM_IterateSingle_ECS(benchmark::State& state) {
   const auto entityCount = static_cast<size_t>(state.range(0));
   oly::ecs::World world;
+
   for (size_t i = 0; i < entityCount; ++i) {
     world.spawn(Position{float3{0.f, 0.f, 0.f}}, Velocity{float3{1.f, 2.f, 3.f}});
   }
 
   auto& query = world.query<Position, const Velocity>();
+
   for (auto _ : state) {
     query.eachBlock([](std::span<Position> positions, std::span<const Velocity> velocities) {
       Position* positionData = positions.data();
       const Velocity* velocityData = velocities.data();
       const size_t count = positions.size();
+
       for (size_t i = 0; i < count; ++i) {
         positionData[i].value.x += velocityData[i].value.x * kDeltaTime;
         positionData[i].value.y += velocityData[i].value.y * kDeltaTime;
@@ -64,16 +68,19 @@ BENCHMARK(BM_IterateSingle_ECS)->Arg(1000)->Arg(10000)->Arg(100000)->Arg(1000000
 static void BM_IterateSingle_QueryById(benchmark::State& state) {
   const auto entityCount = static_cast<size_t>(state.range(0));
   oly::ecs::World world;
+
   for (size_t i = 0; i < entityCount; ++i) {
     world.spawn(Position{float3{0.f, 0.f, 0.f}}, Velocity{float3{1.f, 2.f, 3.f}});
   }
 
   auto& query = world.queryById({.read = {oly::ecs::componentId<Velocity>()}, .write = {oly::ecs::componentId<Position>()}});
+
   for (auto _ : state) {
     query.eachBlock([](const oly::ecs::BlockById& block) {
       const Velocity* velocityData = static_cast<const Velocity*>(block.column(0));
       Position* positionData = static_cast<Position*>(block.column(1));
       const size_t count = block.count();
+
       for (size_t i = 0; i < count; ++i) {
         positionData[i].value.x += velocityData[i].value.x * kDeltaTime;
         positionData[i].value.y += velocityData[i].value.y * kDeltaTime;

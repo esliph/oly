@@ -53,6 +53,7 @@ namespace oly::schema {
 
     std::vector<Declaration> inSourceOrder(const Schema& schema) {
       std::vector<Declaration> declarations;
+
       for (const Type& type : schema.types) {
         declarations.push_back({type.kind == TypeKind::Tag ? DeclarationKind::Tag : DeclarationKind::Component, &type, &type.name, type.location});
       }
@@ -78,6 +79,7 @@ namespace oly::schema {
 
     void validateName(const Schema& schema, const Declaration& declaration) {
       const bool isType = declaration.type != nullptr;
+
       if (isType && !isPascalCase(*declaration.name)) {
         throw SchemaError(schema.fileName, declaration.location, "invalid type name \"" + *declaration.name + "\": use PascalCase ([A-Z][A-Za-z0-9]*)");
       }
@@ -90,6 +92,7 @@ namespace oly::schema {
 
     void validateFields(const Schema& schema, const Declaration& declaration) {
       const Type& type = *declaration.type;
+
       if (type.fields.empty() && declaration.kind == DeclarationKind::Component) {
         throw SchemaError(schema.fileName, declaration.location, "component " + type.name + " has no fields: use tag " + type.name);
       }
@@ -99,6 +102,7 @@ namespace oly::schema {
       }
 
       std::set<std::string_view> seen;
+
       for (const Field& field : type.fields) {
         if (!isCamelCase(field.name)) {
           throw SchemaError(schema.fileName, field.location, camelCaseMessage("field", field.name) + " in " + type.name + ": use camelCase ([a-z][A-Za-z0-9]*) and avoid C++ reserved words");
@@ -114,8 +118,10 @@ namespace oly::schema {
   void validateSchema(const Schema& schema) {
     std::set<std::string_view> names;
     std::size_t stateCount = 0;
+
     for (const Declaration& declaration : inSourceOrder(schema)) {
       validateName(schema, declaration);
+
       if (declaration.type != nullptr) {
         validateFields(schema, declaration);
       }
@@ -143,6 +149,7 @@ namespace oly::schema {
 
   std::vector<DeclaredName> namesInSourceOrder(const Schema& schema) {
     std::vector<DeclaredName> names;
+
     for (const Declaration& declaration : inSourceOrder(schema)) {
       names.push_back({*declaration.name, declaration.location});
     }

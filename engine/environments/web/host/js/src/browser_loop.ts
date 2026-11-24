@@ -50,6 +50,7 @@ export function runInBrowser(
   };
 
   environment.document.addEventListener("visibilitychange", onVisibilityChange);
+
   if (environment.document.hidden) {
     target.setHidden(true);
   }

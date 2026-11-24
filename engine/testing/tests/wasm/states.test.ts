@@ -31,6 +31,7 @@ function stepper(engine: Engine): () => void {
 
 function withEngine(body: (engine: Engine) => void): void {
   const engine = createEngine();
+
   try {
     body(engine);
     assert.equal(engine.world.checkInvariants(), null);
@@ -292,6 +293,7 @@ test("memory grows inside the TS hook and the context stays valid", () => {
     let value = -1;
     engine.onEnter(menu, "grow", (context) => {
       const before = module.HEAPU8.buffer;
+
       for (let count = 0; count < 1_000_000 && module.HEAPU8.buffer === before; ++count) {
         context.spawn([Position, Trace]);
       }
@@ -364,6 +366,7 @@ test("errors: state from another schema, registration and inState during frame a
     assert.throws(() => engine.addNativeOnEnter(menu, "doesNotExist"), ContractError);
     assert.throws(() => step(), /boom/);
     assert.equal(duringFrame.length, 4);
+
     for (const error of duringFrame) {
       assert.ok(error instanceof ContractError);
     }

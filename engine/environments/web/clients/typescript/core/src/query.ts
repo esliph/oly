@@ -82,12 +82,14 @@ export class Block {
 
   #viewOf(operation: string, type: ComponentType): WriteView<Fields> {
     const cached = this.#views.get(type);
+
     if (cached) {
       return cached;
     }
 
     // Position of the type among the descriptor columns (read followed by write).
     const position = this.#components.indexOf(type);
+
     if (position < 0) {
       throw new ContractError(`${operation} type=${type.name}: type is not in the query`);
     }
@@ -128,6 +130,7 @@ export class SingleRow {
 
   get<F extends Fields>(type: ComponentType<string, F>): ValueOf<F> {
     const value = this.#values.get(type);
+
     if (value === undefined) {
       throw new ContractError(`get type=${type.name}: type is not in the query`);
     }
@@ -169,6 +172,7 @@ export class Query {
 
     enterIteration(this.#world);
     let current: Block | null = null;
+
     try {
       for (let index = 0; index < blockCount; ++index) {
         const offset = index * stride;
@@ -203,11 +207,14 @@ export class Query {
     const start = descriptors >> 2;
     let rowCount = 0;
     let row: SingleRow | null = null;
+
     try {
       const words = this.#bridge.heap.u32;
       let firstBlockOffset = -1;
+
       for (let index = 0; index < blockCount; ++index) {
         const count = words[start + index * stride]!;
+
         if (count > 0 && firstBlockOffset < 0) {
           firstBlockOffset = start + index * stride;
         }
@@ -237,6 +244,7 @@ export class Query {
     this.#components.forEach((type, position) => {
       const columnAddress = heap.u32[blockOffset + DescriptorHeaderLength + position]!;
       const value: Record<string, number> = {};
+
       for (const field of type.layout.fields) {
         value[field.name] = readScalar(heap, field.type, columnAddress + field.offset);
       }

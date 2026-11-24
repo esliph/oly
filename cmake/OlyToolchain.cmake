@@ -6,6 +6,7 @@ set(_olyToolchainKeys EMSDK_VERSION GCC_VERSION GCC_MINIMUM MINGW_GCC_MINIMUM CM
 # oly_read_toolchain(<file>): sets OLY_TOOLCHAIN_<KEY> in the caller's scope for each KEY=VALUE line of the file.
 function(oly_read_toolchain file)
   file(STRINGS ${file} lines)
+
   foreach(line IN LISTS lines)
     if(line MATCHES "^([A-Z_]+)=(.*)$")
       set(OLY_TOOLCHAIN_${CMAKE_MATCH_1} ${CMAKE_MATCH_2})
@@ -36,6 +37,7 @@ function(oly_check_toolchain)
   if(CHECK_EMSCRIPTEN_VERSION)
     if(NOT CHECK_EMSCRIPTEN_VERSION VERSION_EQUAL OLY_TOOLCHAIN_EMSDK_VERSION)
       set(untested "Emscripten ${CHECK_EMSCRIPTEN_VERSION} is not the tested version ${OLY_TOOLCHAIN_EMSDK_VERSION}")
+
       if(CHECK_ALLOW_UNTESTED)
         message(WARNING "untested ${untested} (toolchain.env)")
       else()

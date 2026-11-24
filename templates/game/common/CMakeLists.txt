@@ -5,6 +5,7 @@ project(@GAME_TARGET@ LANGUAGES CXX C)
 set(olyEnvironmentFile ${CMAKE_CURRENT_SOURCE_DIR}/oly.env)
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${olyEnvironmentFile})
 file(STRINGS ${olyEnvironmentFile} olyVersionLines REGEX "^OLY_VERSION=")
+
 if(NOT olyVersionLines)
   message(FATAL_ERROR "oly.env has no OLY_VERSION")
 endif()

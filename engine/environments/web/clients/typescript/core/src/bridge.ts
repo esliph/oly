@@ -136,6 +136,7 @@ export class Bridge {
 
   sync(): void {
     const buffer = this.module.HEAPU8.buffer as ArrayBuffer;
+
     if (buffer !== this.heap.buffer) {
       this.heap.refresh(buffer);
     }
@@ -463,6 +464,7 @@ export class Bridge {
   // UTF-8 + NUL in a growing scratch area; the pointer is valid until the next call.
   writeString(text: string): number {
     const bytes = new TextEncoder().encode(text);
+
     if (bytes.length + 1 > this.stringCapacity) {
       this.free(this.stringPointer);
       this.stringCapacity = Math.max(bytes.length + 1, this.stringCapacity * 2);
@@ -479,11 +481,13 @@ export class Bridge {
     const message = this.scratch + ValueOffset + this.valueCapacity;
     const consistent = this.module._olyWorldCheckInvariants(world, message, MessageCapacity) === 1;
     this.sync();
+
     if (consistent) {
       return null;
     }
 
     let end = message;
+
     while (this.heap.u8[end] !== 0) {
       ++end;
     }

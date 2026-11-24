@@ -159,6 +159,7 @@ export class Engine {
     this.#lastFrameTime = nowSeconds;
     this.#inFrame = true;
     setStructureLocked(this.world, true);
+
     try {
       this.#bridge.engineFrame(this.#handle, nowSeconds);
       this.#interrupted = false;
@@ -257,6 +258,7 @@ export class Engine {
     this.#assertCanRegister("addNativeSystem", phase, name);
 
     const id = this.#bridge.addNativeSystem(this.#handle, phase, name);
+
     if (id === InvalidSystem) {
       throw new ContractError(`addNativeSystem name=${name}: no native system with that name (declare it with OLY_SYSTEM)`);
     }
@@ -282,6 +284,7 @@ export class Engine {
     const eventType = this.#assertCanRegisterHandler("addNativeHandler", type, name);
 
     const id = this.#bridge.addNativeHandler(this.#handle, eventType, name);
+
     if (id === InvalidHandler) {
       throw new ContractError(`addNativeHandler name=${name}: no native handler with that name (declare it with OLY_HANDLER)`);
     }
@@ -368,6 +371,7 @@ export class Engine {
     const index = this.#assertCanRegisterStateHook(operation, state, name);
 
     const id = this.#bridge.engineAddNativeStateHook(this.#handle, when, index, name);
+
     if (id === InvalidStateHook) {
       throw new ContractError(`${operation} name=${name}: no native state hook with that name (declare it with OLY_STATE_HOOK)`);
     }
@@ -385,6 +389,7 @@ export class Engine {
 
   #invoke(systemId: number): void {
     const entry = this.#scriptSystems.get(systemId);
+
     if (entry === undefined) {
       throw new ContractError(`system id=${systemId}: not a TS system of this Engine`);
     }
@@ -392,6 +397,7 @@ export class Engine {
     // A previous C++ system may have grown the WASM memory.
     this.#bridge.sync();
     setContextActive(entry.context, true);
+
     try {
       entry.function(entry.context);
     } finally {
@@ -401,6 +407,7 @@ export class Engine {
 
   #invokeHandler(id: number, address: number, count: number): void {
     const entry = this.#scriptHandlers.get(id);
+
     if (entry === undefined) {
       throw new ContractError(`handler id=${id}: not a TS handler of this Engine`);
     }
@@ -410,6 +417,7 @@ export class Engine {
     const batch = new EventBatch(entry.type, count, address, this.#bridge);
     setContextActive(entry.context, true);
     setStructureLocked(this.world, false);
+
     try {
       entry.function(entry.context, batch);
     } finally {
@@ -421,6 +429,7 @@ export class Engine {
 
   #invokeStateHook(id: number, otherSide: number): void {
     const entry = this.#scriptStateHooks.get(id);
+
     if (entry === undefined) {
       throw new ContractError(`hook id=${id}: not a TS state hook of this Engine`);
     }
@@ -429,6 +438,7 @@ export class Engine {
     this.#bridge.sync();
     const current = stateAt(this.#runtime, this.#bridge.engineState(this.#handle));
     const other = stateAt(this.#runtime, otherSide >>> 0);
+
     if (entry.entering) {
       setStateContextSides(entry.context, other, current);
     } else {
@@ -436,6 +446,7 @@ export class Engine {
     }
     setContextActive(entry.context, true);
     setStructureLocked(this.world, false);
+
     try {
       entry.function(entry.context);
     } finally {

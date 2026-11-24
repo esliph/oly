@@ -27,6 +27,7 @@ function stepper(engine: Engine): () => void {
 function withEngine(body: (engine: Engine) => void): void {
   const engine = runtime.createEngine({ fixedHz: 60 });
   engine.frame(0);
+
   try {
     body(engine);
     assert.equal(engine.world.checkInvariants(), null);
@@ -146,6 +147,7 @@ test("rebinding from inside a system takes effect on the next capture, without g
     let rebound = false;
     engine.addSystem(Phase.Update, "rebind", (context) => {
       seen.push(context.actions.button(fire));
+
       if (!rebound) {
         rebound = true;
         context.actions.bind(fire, "KeyQ");

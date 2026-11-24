@@ -25,8 +25,10 @@ platform() {
 # The nearest folder from $PWD up that holds oly.env; prints nothing outside a game.
 find_game_root() {
   directory=$PWD
+
   while [ ! -f "$directory/oly.env" ]; do
     parent=$(dirname "$directory")
+
     if [ "$parent" = "$directory" ]; then
       return 0
     fi
@@ -75,6 +77,7 @@ install_tools() {
 
   mkdir -p "$staging/tools" || fail 1 "could not create $staging"
   trap 'rm -rf "$staging"; exit 1' INT TERM HUP
+
   # tar reads the archive by a relative path: an absolute one such as C:/... would be taken for a remote host.
   if curl -fsSL "$url" -o "$staging/$file" \
     && (cd "$staging/tools" && tar -xzf "../$file") \
@@ -105,6 +108,7 @@ run_version() {
   else
     tools=$oly_home/versions/$version
     runner=$tools/spur
+
     if [ ! -f "$runner" ]; then
       install_tools "$version"
     fi
@@ -120,6 +124,7 @@ run_version() {
 print_version() {
   printf 'oly %s\n' "$OLY_LAUNCHER_VERSION"
   root=$(find_game_root)
+
   if [ -z "$root" ]; then
     return 0
   fi
@@ -136,10 +141,12 @@ print_version() {
 new_command() {
   version=
   count=$#
+
   while [ "$count" -gt 0 ]; do
     argument=$1
     shift
     count=$((count - 1))
+
     if [ "$argument" = --version ]; then
       [ "$count" -gt 0 ] || fail 64 "--version needs a value"
       version=$1
@@ -161,6 +168,7 @@ new_command() {
 rewrite() {
   file=$1
   shift
+
   if ! sed "$@" "$file" > "$file.oly-new" || ! mv "$file.oly-new" "$file"; then
     rm -f "$file.oly-new"
     fail 1 "could not rewrite $file"
@@ -199,6 +207,7 @@ upgrade_command() {
   root=$(find_game_root)
   [ -n "$root" ] || fail 64 "not inside an Oly game: no oly.env in $PWD or above"
   current=$(pinned_version "$root") || exit $?
+
   # Fetched before anything is rewritten, local mode included: a version that does not exist leaves the game as it was.
   # It also comes before the test below, which reads the version's launcher from the cache.
   if [ ! -f "$oly_home/versions/$target/spur" ]; then
@@ -215,6 +224,7 @@ upgrade_command() {
 
   replace_launcher "$target" "$root"
   rewrite "$root/oly.env" "s/^OLY_VERSION=.*/OLY_VERSION=$target/"
+
   if [ ! -f "$root/package.json" ]; then
     printf 'oly.env now pins %s\n' "$target"
     exit 0
@@ -249,6 +259,7 @@ case ${1:-} in
 esac
 
 game_root=$(find_game_root)
+
 if [ -n "$game_root" ]; then
   game_version=$(pinned_version "$game_root") || exit $?
 elif [ "${1:-}" = doctor ]; then

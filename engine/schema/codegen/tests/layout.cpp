@@ -7,6 +7,7 @@
 namespace {
   std::vector<oly::schema::Field> fieldsOf(std::vector<oly::schema::ScalarType> types) {
     std::vector<oly::schema::Field> fields;
+
     for (const oly::schema::ScalarType type : types) {
       fields.push_back({"f" + std::to_string(fields.size()), type});
     }
@@ -16,6 +17,7 @@ namespace {
 
   std::vector<uint32_t> offsetsOf(const std::vector<oly::schema::Field>& fields) {
     std::vector<uint32_t> offsets;
+
     for (const oly::schema::Field& field : fields) {
       offsets.push_back(field.offset);
     }

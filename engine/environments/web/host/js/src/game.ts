@@ -70,6 +70,7 @@ function findCanvas(canvas: string | HTMLCanvasElement, environment: GameEnviron
   }
 
   const found = environment.canvasById(canvas);
+
   if (found === null) {
     throw new Error(`canvas with id "${canvas}" not found on the page`);
   }
@@ -90,6 +91,7 @@ export async function runGame(game: Game, environment: GameEnvironment = globalG
   try {
     const { options } = game;
     const canvas = findCanvas(options.canvas, environment);
+
     if (options.width !== undefined) {
       canvas.width = options.width;
     }
@@ -112,6 +114,7 @@ export async function runGame(game: Game, environment: GameEnvironment = globalG
     const startedLoop = environment.runInBrowser({
       frame(nowSeconds) {
         inFrame = true;
+
         try {
           startedEngine.frame(nowSeconds);
         } finally {

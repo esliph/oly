@@ -46,6 +46,7 @@ void olyWorldDestroy(OlyWorld* world) {
 int32_t olyWorldCheckInvariants(OlyWorld* world, char* message, uint32_t capacity) {
   std::string why;
   const bool ok = oly::ecs::checkInvariants(world->world, &why);
+
   if (!ok && capacity > 0) {
     const size_t length = std::min<size_t>(why.size(), capacity - 1);
     std::memcpy(message, why.data(), length);

@@ -43,6 +43,7 @@ namespace {
     g_count.fetch_add(1, std::memory_order_relaxed);
 
     const size_t alignmentBytes = static_cast<size_t>(alignment);
+
     if (void* pointer = alignedMalloc(alignmentBytes, size ? size : alignmentBytes)) {
       return pointer;
     }

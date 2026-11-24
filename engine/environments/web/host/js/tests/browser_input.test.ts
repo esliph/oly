@@ -27,6 +27,7 @@ class FakeEventSource {
 
   count(): number {
     let total = 0;
+
     for (const listeners of this.listeners.values()) {
       total += listeners.length;
     }

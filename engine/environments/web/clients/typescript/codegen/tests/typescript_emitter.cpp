@@ -68,6 +68,7 @@ TEST_CASE("an action or state that cannot be a TypeScript constant is an error a
 
 TEST_CASE("oly-schema lists ts after the C++ emitters when this module is linked") {
   std::vector<std::string_view> names;
+
   for (const oly::schema::Emitter& emitter : oly::schema::emitters()) {
     names.push_back(emitter.name);
   }

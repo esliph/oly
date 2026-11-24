@@ -133,6 +133,7 @@ Like `single`, but returns `std::nullopt` when the query has no row. Stops with 
 ```cpp
 OLY_SYSTEM(drawHealth) {
   auto player = context.query<const Health>(oly::ecs::With<Player>{}).trySingle();
+
   if (!player) {
     return;
   }

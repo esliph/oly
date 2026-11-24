@@ -26,6 +26,7 @@ _in() {
   _image=$1
   _service=$1
   shift
+
   if [ "${1:-}" = --service ]; then
     _service=$2
     shift 2
@@ -45,6 +46,7 @@ _in() {
   fi
 
   _options=0
+
   while [ "$1" != -- ]; do
     set -- "$@" "$1"
     shift
@@ -54,6 +56,7 @@ _in() {
 
   set -- "$_service" ./spur "$SPUR_TASK" "$@"
   _rotate=$(($# - _options))
+
   while [ "$_rotate" -gt 0 ]; do
     set -- "$@" "$1"
     shift
@@ -74,8 +77,10 @@ _serve() {
   _server=$!
   trap 'kill "$_server"' EXIT
   _attempts=0
+
   until python3 -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:$2/')" 2> /dev/null; do
     _attempts=$((_attempts + 1))
+
     if [ "$_attempts" -ge 150 ]; then
       cat "build/staged/server-$2.log"
       _fail 1 "the release server did not answer on port $2"
@@ -127,6 +132,7 @@ test: ## build and run the tests of $PRESET (default debug-asan)
 ##   ./spur native-games-test -R '^native_host\.'
 native-games-test: ## the tests of a native-games* preset
   preset=${PRESET:-native-games}
+
   case $preset in
     native-games*) ;;
     *) _fail 64 "needs a native-games* preset (got: $preset)" ;;
@@ -139,6 +145,7 @@ native-games-test: ## the tests of a native-games* preset
 ##   ./spur windows-test -R '^native_host\.'
 windows-test: ## the tests of a windows* preset, under Wine
   preset=${PRESET:-windows}
+
   case $preset in
     windows*) ;;
     *) _fail 64 "needs a windows* preset (got: $preset)" ;;
@@ -261,6 +268,7 @@ ts: ## generate the schemas from a wasm-games* preset (default wasm-games) and b
   # place that knows its plugins; a test-only schema is generated next to its .oly.
   PRESET=$preset spur configure
   cmake --build --preset "$preset" --target oly_typescript_schemas
+
   for schema in engine/testing/fixture/schemas/*.oly; do
     build/schema-tool/bin/oly-schema "$schema" --emit "ts=${schema%.oly}.generated.ts"
   done
@@ -341,6 +349,7 @@ consumer-web: ## the web half of consumer-test
   python3 -m http.server 8765 --bind 127.0.0.1 --directory "$release" > "$release/server.log" 2>&1 &
   server=$!
   trap 'kill "$server"' EXIT
+
   until python3 -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8765/')" 2> /dev/null; do
     sleep 0.2
   done
@@ -464,6 +473,7 @@ stage: ## build the release assets of <version> into build/release/<version>
 staged-test: ## install, create, build and test a game from the staged release
   [ "$#" -ge 1 ] || _fail 64 "usage: ./spur staged-test <version> [web|native|docker]"
   version=$1
+
   case ${2:-} in
     web) spur staged-web "$version" ;;
     native) spur staged-native "$version" ;;
@@ -503,6 +513,7 @@ staged-docker: ## the Docker half of staged-test, on the host
   # The host may have no Python for _serve, and the containers need no release server: the games already hold their
   # packages. curl reads the staged folder through file://.
   root=$(cygpath -m "$PWD" 2> /dev/null || printf '%s' "$PWD")
+
   case $root in
     /*) url=file://$root/build/release/$version ;;
     *) url=file:///$root/build/release/$version ;;

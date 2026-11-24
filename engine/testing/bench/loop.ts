@@ -67,6 +67,7 @@ function firstEntity(engine: Engine): Entity {
 
 function makeEngineCase(runtime: Runtime, name: string, setup: (engine: Engine) => void, entityCount = 0): Case {
   const engine = runtime.createEngine({ fixedHz: FixedHz, maxStepsPerFrame: 5 });
+
   for (let index = 0; index < entityCount; ++index) {
     engine.world.spawn([Position, Velocity], { Position: { x: 0, y: 0 }, Velocity: { x: 1, y: 2 } });
   }
@@ -91,6 +92,7 @@ function moveTsSystem(context: SystemContext): void {
   context.query({ read: [Velocity], write: [Position] }).eachBlock((block) => {
     const velocity = block.read(Velocity);
     const position = block.write(Position);
+
     for (let row = 0; row < block.count; ++row) {
       position.x.set(row, position.x.get(row) + velocity.x.get(row) * DeltaTime);
       position.y.set(row, position.y.get(row) + velocity.y.get(row) * DeltaTime);
@@ -109,6 +111,7 @@ function makeManualCase(count: number): Case {
     name: "ts-manual",
     step: () => {
       ++executed;
+
       for (let row = 0; row < count; ++row) {
         x[row] = x[row]! + velocityX[row]! * DeltaTime;
         y[row] = y[row]! + velocityY[row]! * DeltaTime;
@@ -136,6 +139,7 @@ function measureNanosecondsPerStep(cases: Case[], stepsPerSample: number, rounds
   for (let round = 0; round < rounds; ++round) {
     for (const entry of rotated(cases, round)) {
       const start = performance.now();
+
       for (let step = 0; step < stepsPerSample; ++step) {
         entry.step();
       }
@@ -148,9 +152,11 @@ function measureNanosecondsPerStep(cases: Case[], stepsPerSample: number, rounds
 
 function verifyPositions(cases: Case[], label: string): boolean {
   let correct = true;
+
   for (const entry of cases) {
     const expected = expectedPositionX(entry.steps(), DeltaTime);
     const actual = entry.positionX();
+
     if (Math.abs(actual - expected) > 1e-3 * Math.abs(expected)) {
       console.error(`${label} ${entry.name}: x=${actual}, expected ${expected}`);
       correct = false;
@@ -255,6 +261,7 @@ function measureBoundaryInLoop(runtime: Runtime, sizes: number[], rounds: number
 
 function printTables(emptySystems: EmptySystemsRow[], interleaving: InterleavingRow[], boundary: BoundaryRow[]): void {
   console.log("K\tzero ns/step\tcpp\tts\tts/cpp\tns/callback");
+
   for (const row of emptySystems) {
     console.log(
       `${row.systems}\t${row.zero.median.toFixed(0)}\t${row.cpp.median.toFixed(0)}\t${row.ts.median.toFixed(0)}\t${row.tsOverCpp.toFixed(2)}\t${row.nsPerCallback.toFixed(1)}`,
@@ -262,11 +269,13 @@ function printTables(emptySystems: EmptySystemsRow[], interleaving: Interleaving
   }
 
   console.log("\nK\talternating\tgrouped\talternating/grouped");
+
   for (const row of interleaving) {
     console.log(`${row.systems}\t${row.alternating.median.toFixed(0)}\t${row.grouped.median.toFixed(0)}\t${row.alternatingOverGrouped.toFixed(2)}`);
   }
 
   console.log("\nN\tts-loop/ts-manual\tts-loop/cpp-loop");
+
   for (const row of boundary) {
     console.log(`${row.size}\t${row.tsLoopOverTsManual.toFixed(2)}\t${row.tsLoopOverCppLoop.toFixed(2)}`);
   }
@@ -282,6 +291,7 @@ async function main(): Promise<void> {
   const emptySystems = measureEmptySystems(runtime, options.rounds);
   const interleaving = measureInterleaving(runtime, options.rounds);
   const boundary = measureBoundaryInLoop(runtime, options.sizes, options.rounds);
+
   if (!boundary.correct) {
     process.exit(1);
   }

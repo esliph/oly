@@ -167,6 +167,7 @@ namespace oly::ecs {
 
       const detail::EntityRecord& record = store_.record(entity.index);
       const uint16_t* column = componentIndex_[componentId].find(record.archetype->id);
+
       if (!column || *column == detail::NoColumn) {
         return nullptr;
       }
@@ -264,12 +265,14 @@ namespace oly::ecs {
     (
       [&] {
         using U = std::remove_cvref_t<Ts>;
+
         if constexpr (!std::is_empty_v<U>) {
           void* slot = archetype->table.column(detail::columnOf(*archetype, componentId<U>())).at(row);
           ::new (slot) U(std::forward<Ts>(components));
         }
       }(),
       ...);
+
     if (hasImplications) {
       initializeImplied(*archetype, row, signature);
     }
@@ -373,6 +376,7 @@ namespace oly::ecs {
 
     QueryKey key{std::vector<uint64_t>{(uint64_t(componentId<std::remove_const_t<Ts>>()) << 1 | uint64_t(std::is_const_v<Ts>))...},
                  with, without};
+
     if (auto it = queryCache_.find(key); it != queryCache_.end()) {
       return static_cast<Q&>(*it->second);
     }

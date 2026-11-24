@@ -58,6 +58,7 @@ const dead: Entity[] = [];
 
 world.query({ read: [Health] }).eachBlock((block) => {
   const health = block.read(Health);
+
   for (let row = 0; row < block.count; ++row) {
     if (health.value.get(row) <= 0) {
       dead.push(block.entity(row));
@@ -93,6 +94,7 @@ Use `trySingle` where the entity may not exist yet, for example in a HUD drawn w
 
 ```ts
 const player = context.query({ read: [Health], with: [Player] }).trySingle();
+
 if (player === null) {
   return;
 }

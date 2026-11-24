@@ -16,6 +16,7 @@
 TEST_CASE("eachBlock hands count, entities and columns in read, write order") {
   oly::ecs::World world;
   std::vector<oly::ecs::Entity> entities;
+
   for (uint64_t i = 0; i < 10; ++i) {
     entities.push_back(world.spawn(A{i}, B{i, 2 * i}));
   }
@@ -29,6 +30,7 @@ TEST_CASE("eachBlock hands count, entities and columns in read, write order") {
     const A* columnA = static_cast<const A*>(block.column(0));
     B* columnB = static_cast<B*>(block.column(1));
     CHECK(block.entities().size() == block.count());
+
     for (uint32_t row = 0; row < block.count(); ++row) {
       sum += columnA[row].value;
       columnB[row].first += 100;
@@ -36,6 +38,7 @@ TEST_CASE("eachBlock hands count, entities and columns in read, write order") {
   });
 
   CHECK(sum == 45);
+
   for (uint64_t i = 0; i < 10; ++i) {
     CHECK(world.get<B>(entities[i]).first == i + 100);
   }
@@ -85,6 +88,7 @@ TEST_CASE("queryById tracks archetypes created later") {
 
 TEST_CASE("queryById filters by with and without") {
   oly::ecs::World world;
+
   for (int i = 0; i < 3; ++i) {
     world.spawn(A{1}, Tag{});
   }
@@ -130,6 +134,7 @@ TEST_CASE("iterate marks the World as iterating until the destructor") {
 
 TEST_CASE("nested iterate keeps the blocks of each level") {
   oly::ecs::World world;
+
   for (uint64_t i = 0; i < 5; ++i) {
     world.spawn(A{i});
     world.spawn(A{i}, B{i, i});
@@ -186,6 +191,7 @@ TEST_CASE("exception in the eachBlock callback ends the iteration") {
 
 TEST_CASE("steady-state iterate does not allocate") {
   oly::ecs::World world;
+
   for (uint64_t i = 0; i < 100; ++i) {
     world.spawn(A{i});
     world.spawn(A{i}, B{i, i});

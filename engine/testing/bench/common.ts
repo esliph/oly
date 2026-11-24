@@ -15,12 +15,14 @@ export interface Options {
 
 export function parseOptions(argv: string[], usage: string): Options {
   const values = new Map<string, string>();
+
   for (let index = 0; index < argv.length; index += 2) {
     values.set(argv[index]!, argv[index + 1] ?? "");
   }
 
   const modulePath = values.get("--module");
   const outPath = values.get("--out");
+
   if (!modulePath || !outPath) {
     console.error(usage);
     process.exit(1);
@@ -55,6 +57,7 @@ export function median(values: number[]): number {
 // Same f32 arithmetic as the variants, so the accumulated value is checked without comparison error.
 export function expectedPositionX(iterations: number, deltaTime: number): number {
   let value = 0;
+
   for (let iteration = 0; iteration < iterations; ++iteration) {
     value = Math.fround(value + deltaTime);
   }

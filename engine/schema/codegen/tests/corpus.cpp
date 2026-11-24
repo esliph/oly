@@ -14,6 +14,7 @@ namespace {
 
   std::vector<std::filesystem::path> schemaFilesIn(const std::filesystem::path& directory) {
     std::vector<std::filesystem::path> files;
+
     for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(directory)) {
       if (entry.path().extension() == ".oly") {
         files.push_back(entry.path());

@@ -51,6 +51,7 @@ TEST_CASE("non-trivial payload survives buffer growth") {
 
   commandBuffer.add(entity, FuzzState{big});
   commandBuffer.add(shortEntity, FuzzState{"abc"}); // SSO: a memcpy would leave the internal pointer pointing into the old block
+
   for (int i = 0; i < 500; ++i) {
     commandBuffer.add(world.spawn(), A{uint64_t(i)}); // forces several reallocations
   }
@@ -142,8 +143,10 @@ TEST_CASE("sequential fuzz == applying directly") {
   while (total < 20000) {
     auto commandBuffer = world.commands();
     const unsigned batchSize = 1 + unsigned(generator() % 64);
+
     for (unsigned commandIndex = 0; commandIndex < batchSize; ++commandIndex, ++total) {
       const unsigned roll = unsigned(generator() % 100);
+
       if (roll < 15 || live.empty()) {
         oly::ecs::Entity entity = commandBuffer.spawn();
         model[entity];
@@ -181,6 +184,7 @@ TEST_CASE("sequential fuzz == applying directly") {
   }
 
   int64_t lifeCounters = 0;
+
   for (auto& [entity, components] : model) {
     lifeCounters += components.count(oly::ecs::componentId<LifeCounter>());
   }
@@ -347,10 +351,12 @@ TEST_CASE("fuzz: coalesced flush == flushSequential") {
       for (auto& [coalescedEntity, sequentialEntity] : live) {
         REQUIRE(coalesced.isAlive(coalescedEntity));
         REQUIRE(sequential.isAlive(sequentialEntity));
+
         for (int i = 0; i < 5; ++i) {
           const auto componentId = fuzz::universe()[i];
           uint64_t coalescedValue = 0, sequentialValue = 0;
           bool coalescedHas = readFromWorld(coalesced, coalescedEntity, componentId, coalescedValue), sequentialHas = readFromWorld(sequential, sequentialEntity, componentId, sequentialValue);
+
           if (coalescedHas != sequentialHas || coalescedValue != sequentialValue) {
             FAIL("divergence in " << oly::ecs::typeInfo(componentId).name << " e1=" << coalescedEntity.index);
           }
@@ -363,8 +369,10 @@ TEST_CASE("fuzz: coalesced flush == flushSequential") {
       auto sequentialCommands = sequential.commands();
       const unsigned batchSize = 1 + unsigned(generator() % 64);
       std::vector<std::pair<oly::ecs::Entity, oly::ecs::Entity>> destroyedNow;
+
       for (unsigned commandIndex = 0; commandIndex < batchSize; ++commandIndex, ++total) {
         const unsigned roll = unsigned(generator() % 100);
+
         if (roll < 15 || live.empty()) {
           live.emplace_back(coalescedCommands.spawn(), sequentialCommands.spawn());
         } else if (roll < 25) {
@@ -396,6 +404,7 @@ TEST_CASE("fuzz: coalesced flush == flushSequential") {
       compare();
       CHECK_INVARIANTS(coalesced);
       CHECK_INVARIANTS(sequential);
+
       for (auto& [coalescedEntity, sequentialEntity] : destroyedNow) {
         CHECK_FALSE(coalesced.isAlive(coalescedEntity));
         CHECK_FALSE(sequential.isAlive(sequentialEntity));

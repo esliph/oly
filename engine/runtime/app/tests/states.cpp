@@ -63,6 +63,7 @@ namespace {
   void requestWhenSeen(SystemContext& context) {
     Probe& probe = *static_cast<Probe*>(context.userData());
     probe.seen.push_back(context.state());
+
     if (context.state() == probe.requestWhen) {
       context.requestState(probe.next);
     }
@@ -408,6 +409,7 @@ TEST_CASE("inState with the state at index 31 uses the highest bit of the mask")
   Engine engine(world);
   Probe probe;
   StateId last = NoState;
+
   for (uint32_t index = 0; index < oly::app::MaxStates; ++index) {
     last = engine.declareState("state" + std::to_string(index));
   }

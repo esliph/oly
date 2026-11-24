@@ -21,6 +21,7 @@ function(oly_add_game target)
   endif()
 
   oly_dimension_plugin(dimensionPlugin ${GAME_DIMENSION})
+
   foreach(listed essentials2d essentials3d)
     if(listed IN_LIST GAME_PLUGINS)
       message(FATAL_ERROR "${target}: ${listed} comes from DIMENSION; do not list it in PLUGINS")
@@ -28,6 +29,7 @@ function(oly_add_game target)
   endforeach()
 
   set(typescript "")
+
   if(GAME_TYPESCRIPT)
     set(typescript TYPESCRIPT ${GAME_TYPESCRIPT})
   endif()
@@ -54,6 +56,7 @@ function(_oly_add_game_target target)
     message(FATAL_ERROR "${target}: oly_add_game needs ENVIRONMENT web|native")
   endif()
   oly_environment(buildEnvironment)
+
   if(NOT GAME_ENVIRONMENT STREQUAL buildEnvironment)
     message(FATAL_ERROR "${target} is a ${GAME_ENVIRONMENT} game, but this build is ${buildEnvironment}")
   endif()
@@ -65,8 +68,10 @@ function(_oly_add_game_target target)
   set(pluginSchemas "")
   set(pluginIncludes "")
   set(pluginInstalls "")
+
   foreach(plugin IN LISTS plugins)
     get_property(pluginSchema GLOBAL PROPERTY OLY_PLUGIN_SCHEMA_${plugin})
+
     if(pluginSchema)
       list(APPEND pluginArguments --plugin ${plugin}=${pluginSchema})
       list(APPEND pluginSchemas ${pluginSchema})
@@ -115,6 +120,7 @@ ${pluginInstalls}  }
 
   add_executable(${target} ${GAME_SOURCES} ${generatedDeclaration} ${generatedHeader} ${gameSetup})
   target_include_directories(${target} PRIVATE ${generatedDirectory})
+
   foreach(dependency IN LISTS GAME_DEPENDS plugins)
     target_link_libraries(${target} PRIVATE oly::${dependency})
   endforeach()

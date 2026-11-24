@@ -10,6 +10,7 @@ const { runtime } = await loadFixture();
 
 function withWorld(body: (world: World) => void): void {
   const world = runtime.createWorld();
+
   try {
     body(world);
     assert.equal(world.checkInvariants(), null);
@@ -46,6 +47,7 @@ test("eachBlock nested in another query keeps the outer block", () => {
     positions.eachBlock((outer) => {
       const outerPosition = outer.read(Position);
       const before: number[] = [];
+
       for (let row = 0; row < outer.count; ++row) {
         before.push(outerPosition.x.get(row));
       }
@@ -65,6 +67,7 @@ test("eachBlock nested in another query keeps the outer block", () => {
 test("query created inside eachBlock (memory may grow) does not corrupt the outer block", () => {
   withWorld((world) => {
     const entities: number[] = [];
+
     for (let index = 0; index < 16; ++index) {
       entities.push(world.spawn([Position, Velocity], { Position: { x: index * 3 }, Velocity: { x: index } }));
     }
@@ -80,6 +83,7 @@ test("query created inside eachBlock (memory may grow) does not corrupt the oute
       bridge.free(pointer);
 
       const position = outer.read(Position);
+
       for (let row = 0; row < outer.count; ++row) {
         assert.equal(position.x.get(row), world.get(outer.entity(row), Position).x);
         assert.equal(position.x.get(row), entities.indexOf(outer.entity(row)) * 3);

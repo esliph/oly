@@ -11,6 +11,7 @@ const { runtime, fixture } = await loadFixture();
 
 function withWorld(body: (world: World) => void): void {
   const world = runtime.createWorld();
+
   try {
     body(world);
     assert.equal(world.checkInvariants(), null);
@@ -21,6 +22,7 @@ function withWorld(body: (world: World) => void): void {
 
 function spawnMovers(world: World, count: number): number[] {
   const entities: number[] = [];
+
   for (let index = 0; index < count; ++index) {
     const types = index % 2 === 0 ? ([Position, Velocity] as const) : ([Position, Velocity, Enemy] as const);
     entities.push(world.spawn(types, { Position: { x: index, y: 0 }, Velocity: { x: 1, y: 2 } }));
@@ -39,6 +41,7 @@ test("movement in TS and in C++ gives the same result", () => {
       tsWorld.query({ read: [Velocity], write: [Position] }).eachBlock((block) => {
         const velocity = block.read(Velocity);
         const position = block.write(Position);
+
         for (let row = 0; row < block.count; ++row) {
           position.x.set(row, position.x.get(row) + velocity.x.get(row) * 0.5);
           position.y.set(row, position.y.get(row) + velocity.y.get(row) * 0.5);
@@ -47,6 +50,7 @@ test("movement in TS and in C++ gives the same result", () => {
       fixture.fixtureMove(cppWorld.handle, 0.5);
 
       let expectedSum = 0;
+
       for (let index = 0; index < count; ++index) {
         assert.deepEqual(tsWorld.get(tsEntities[index]!, Position), { x: index + 0.5, y: 1 });
         assert.deepEqual(cppWorld.get(cppEntities[index]!, Position), tsWorld.get(tsEntities[index]!, Position));
@@ -85,6 +89,7 @@ test("entity(row) identifies the row", () => {
 
     world.query({ read: [Position] }).eachBlock((block) => {
       const position = block.read(Position);
+
       for (let row = 0; row < block.count; ++row) {
         assert.equal(world.get(block.entity(row), Position).x, position.x.get(row));
       }
@@ -153,6 +158,7 @@ test("raw() reads the same as get()", () => {
     world.query({ read: [Position] }).eachBlock((block) => {
       const position = block.read(Position);
       const { array, base, stride } = position.x.raw();
+
       for (let row = 0; row < block.count; ++row) {
         assert.equal(array[base + row * stride], position.x.get(row));
       }
@@ -229,9 +235,11 @@ test("eachBlock nested in the same query", () => {
     const pairs = new Set<string>();
     query.eachBlock((outer) => {
       const outerPosition = outer.read(Position);
+
       for (let outerRow = 0; outerRow < outer.count; ++outerRow) {
         query.eachBlock((inner) => {
           const innerPosition = inner.read(Position);
+
           for (let innerRow = 0; innerRow < inner.count; ++innerRow) {
             pairs.add(`${outerPosition.x.get(outerRow)},${innerPosition.x.get(innerRow)}`);
           }
@@ -247,6 +255,7 @@ test("eachBlock nested in the same query", () => {
 test("memory growth during eachBlock", () => {
   withWorld((world) => {
     const count = 100;
+
     for (let index = 0; index < count; ++index) {
       world.spawn([Position]);
     }
@@ -284,6 +293,7 @@ test("checkInvariants syncs the Bridge heap after calling C++", () => {
     const bridge = bridgeOf(runtime);
     const pointers: number[] = [];
     const before = moduleOf(runtime).HEAPU8.buffer;
+
     while (moduleOf(runtime).HEAPU8.buffer === before) {
       pointers.push(moduleOf(runtime)._malloc(8 * 1024 * 1024));
     }

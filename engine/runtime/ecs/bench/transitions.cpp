@@ -33,11 +33,13 @@ namespace {
     constexpr int kEntityCount = 1024;
     oly::ecs::World world;
     std::vector<oly::ecs::Entity> entities;
+
     for (int i = 0; i < kEntityCount; ++i) {
       entities.push_back(spawnWithComponents<IsNonTrivial>(world, i, std::make_index_sequence<ComponentCount>{}));
     }
 
     using ToggledComponent = decltype(makeComponent<IsNonTrivial, kToggledComponentIndex>(0));
+
     for (auto entity : entities) { // warms up edges and capacities
       world.add(entity, makeComponent<IsNonTrivial, kToggledComponentIndex>(1));
       world.remove<ToggledComponent>(entity);
@@ -71,6 +73,7 @@ namespace {
     oly::ecs::World world;
     world.imply<ToggledComponent, Component<kToggledComponentIndex - 1>>();
     std::vector<oly::ecs::Entity> entities;
+
     for (int i = 0; i < kEntityCount; ++i) {
       entities.push_back(spawnWithComponents<false>(world, i, std::make_index_sequence<4>{}));
     }
@@ -127,13 +130,16 @@ namespace {
     oly::ecs::World world;
     std::vector<oly::ecs::Entity> entities;
     entities.reserve(kGetCount);
+
     for (uint32_t i = 0; i < kGetCount; ++i) {
       entities.push_back(world.spawn(Component<0>{i}, Component<1>{i}, Component<2>{i}, Component<3>{i}));
     }
 
     const auto shuffledIndices = permutation(kGetCount);
+
     for (auto _ : state) {
       uint64_t sum = 0;
+
       for (uint32_t i : shuffledIndices) {
         sum += world.get<Component<2>>(entities[i]).value;
       }
@@ -146,13 +152,16 @@ namespace {
 
   void BM_RandomGet_VectorStruct(benchmark::State& state) {
     std::vector<Record4> records(kGetCount);
+
     for (uint32_t i = 0; i < kGetCount; ++i) {
       records[i] = Record4{i, i, i, i};
     }
 
     const auto shuffledIndices = permutation(kGetCount);
+
     for (auto _ : state) {
       uint64_t sum = 0;
+
       for (uint32_t i : shuffledIndices) {
         sum += records[i].third;
       }
@@ -168,11 +177,13 @@ namespace {
     oly::ecs::World world;
     std::vector<oly::ecs::Entity> entities;
     entities.reserve(kEntityCount);
+
     for (uint32_t i = 0; i < kEntityCount; ++i) {
       entities.push_back(world.spawn(Component<0>{i}, Component<1>{i}, Component<2>{i}, Component<3>{i}));
     }
 
     std::mt19937 generator(99);
+
     for (auto _ : state) {
       for (uint32_t churn = 0; churn < kChurnPerIteration; ++churn) {
         const uint32_t i = generator() % kEntityCount;

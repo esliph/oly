@@ -6,6 +6,7 @@ namespace oly::ecs::detail {
   namespace {
     std::vector<ComponentId> dataTypes(const Signature& signature) {
       std::vector<ComponentId> dataComponents;
+
       for (ComponentId componentId : signature) {
         if (!typeInfo(componentId).tag) {
           dataComponents.push_back(componentId);
@@ -24,6 +25,7 @@ namespace oly::ecs::detail {
 
   uint16_t columnOf(const Archetype& archetype, ComponentId componentId) noexcept {
     auto it = std::lower_bound(archetype.columnTypes.begin(), archetype.columnTypes.end(), componentId);
+
     if (it == archetype.columnTypes.end() || *it != componentId) {
       return NoColumn;
     }
@@ -37,6 +39,7 @@ namespace oly::ecs::detail {
     edge.sourceToDestination.assign(source.columnTypes.size(), -1);
 
     size_t destinationColumn = 0;
+
     for (size_t sourceColumn = 0; sourceColumn < source.columnTypes.size(); ++sourceColumn) {
       while (destinationColumn < destination.columnTypes.size() && destination.columnTypes[destinationColumn] < source.columnTypes[sourceColumn]) {
         ++destinationColumn;
@@ -56,6 +59,7 @@ namespace oly::ecs::detail {
 
     for (uint16_t column = 0; column < destination.columnTypes.size(); ++column) {
       const ComponentId componentId = destination.columnTypes[column];
+
       if (componentId != added && columnOf(source, componentId) == NoColumn) {
         edge.initializedColumns.push_back(column);
       }

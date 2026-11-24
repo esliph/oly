@@ -11,6 +11,7 @@ TEST_CASE("spawn/add/remove/destroy sequence keeps invariants") {
   CHECK_INVARIANTS(world);
 
   std::vector<oly::ecs::Entity> entities;
+
   for (uint64_t i = 0; i < 100; ++i) {
     entities.push_back(world.spawn());
     CHECK_INVARIANTS(world);
@@ -51,6 +52,7 @@ TEST_CASE("I-2: LifeCounter matches live rows") {
     std::vector<bool> hasLifeCounter(kEntityCount, false), dead(kEntityCount, false);
     auto expected = [&] {
       int64_t count = 0;
+
       for (int i = 0; i < kEntityCount; ++i) {
         count += (hasLifeCounter[i] && !dead[i]);
       }

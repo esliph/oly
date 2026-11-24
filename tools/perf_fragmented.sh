@@ -11,6 +11,7 @@ output=$2
 temporary=$(mktemp -d)
 
 echo "A,ns_per_entity,cycles,instructions,cache_misses_per_entity,l1d_misses_per_entity" >"$output"
+
 for archetype_count in 1 8 64 512 4096; do
     perf stat -x, -e cycles,instructions,cache-misses,L1-dcache-load-misses -o "$temporary/perf.csv" \
         "$binary" --benchmark_filter="BM_IterateFragmented/$archetype_count\$" --benchmark_min_time=2s \

@@ -59,6 +59,7 @@ export class RecordingDrawer implements Drawer {
 
 function gameFactory(): OlyModuleFactory {
   const modulePath = process.env.OLY_GAME_MODULE;
+
   if (!modulePath) {
     throw new Error("set OLY_GAME_MODULE to the path of the game's .mjs (ctest already does this)");
   }
@@ -98,6 +99,7 @@ export function withGame(runtime: Runtime, body: (game: GameTest) => void): void
         engine.frame(stepNumber / StepsPerSecond);   // exactly one fixed step
 
         const broken = engine.world.checkInvariants();
+
         if (broken !== null) {
           throw new Error(`invariant broken at step ${stepNumber}: ${broken}`);
         }

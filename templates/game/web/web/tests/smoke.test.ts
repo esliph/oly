@@ -34,6 +34,7 @@ class RecordingDrawer implements Drawer {
 
 function gameFactory(): OlyModuleFactory {
   const modulePath = process.env.OLY_GAME_MODULE;
+
   if (!modulePath) {
     throw new Error("set OLY_GAME_MODULE to the path of the game's .mjs (ctest already does this)");
   }

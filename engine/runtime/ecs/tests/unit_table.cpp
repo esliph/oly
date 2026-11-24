@@ -95,6 +95,7 @@ TEST_CASE("std::string survives reallocation") {
   }
 
   CHECK(table.capacity() == 128); // crossed 64
+
   for (uint32_t i = 0; i < 100; ++i) {
     CHECK(*static_cast<std::string*>(table.column(0).at(i)) == textFor(i));
   }

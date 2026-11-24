@@ -18,6 +18,7 @@ namespace oly::ecs::detail {
 
     void insertSorted(std::vector<ComponentId>& list, ComponentId componentId) {
       auto position = std::lower_bound(list.begin(), list.end(), componentId);
+
       if (position == list.end() || *position != componentId) {
         list.insert(position, componentId);
       }
@@ -26,6 +27,7 @@ namespace oly::ecs::detail {
 
   void ImplicationTable::add(ComponentId implying, ComponentId implied, ValueInitializer initializer) {
     const size_t needed = size_t(std::max(implying, implied)) + 1;
+
     if (needed > implied_.size()) {
       implied_.resize(needed);
       impliers_.resize(needed);
@@ -57,6 +59,7 @@ namespace oly::ecs::detail {
 
     for (bool removed = true; removed;) {
       removed = false;
+
       for (auto it = changed.begin(); it != changed.end();) {
         if (!std::binary_search(added.begin(), added.end(), *it) && leavesWithImpliers(source, changed, *it)) {
           it = changed.erase(it);
@@ -68,9 +71,11 @@ namespace oly::ecs::detail {
     }
 
     std::vector<ComponentId> pending(changed.begin(), changed.end());
+
     while (!pending.empty()) {
       const ComponentId implying = pending.back();
       pending.pop_back();
+
       for (ComponentId implied : implicationsOf(implying)) {
         if (!contains(changed, implied)) {
           insertSorted(changed, implied);
@@ -84,6 +89,7 @@ namespace oly::ecs::detail {
 
   bool ImplicationTable::leavesWithImpliers(const Signature& source, const Signature& changed, ComponentId componentId) const noexcept {
     bool implierInSource = false;
+
     for (ComponentId implier : impliersOf(componentId)) {
       if (contains(changed, implier)) {
         return false;

@@ -21,6 +21,7 @@ run_oly() {
   directory=$1
   shift
   status=0
+
   if [ -n "${LOCAL_ENGINE:-}" ]; then
     (cd "$directory" && env OLY_ENGINE_DIR="$LOCAL_ENGINE" OLY_HOME="$home" OLY_RELEASE_URL="file://$tree" sh "$launcher" "$@") > "$logs/out" 2> "$logs/err" || status=$?
   else

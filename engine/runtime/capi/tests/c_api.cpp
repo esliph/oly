@@ -103,6 +103,7 @@ TEST_CASE("olyEntityDestroy kills the entity and its components stop being acces
 
 TEST_CASE("olyQueryBegin delivers descriptors per block") {
   WorldFixture fixture;
+
   for (uint64_t value = 1; value <= 3; ++value) {
     fixture.ecs().spawn(A{value}, B{0, 0});
   }
@@ -120,11 +121,13 @@ TEST_CASE("olyQueryBegin delivers descriptors per block") {
   CHECK(fixture.ecs().isIterating());
   uint64_t sum = 0;
   uint32_t rows = 0;
+
   for (uint32_t block = 0; block < blockCount; ++block) {
     const uintptr_t* descriptor = descriptors + block * DescriptorStrideReadAWriteB;
     const auto* entities = reinterpret_cast<const oly::ecs::Entity*>(descriptor[1]);
     const auto* columnA = reinterpret_cast<const A*>(descriptor[2]);
     CHECK(descriptor[3] != 0);
+
     for (uint32_t row = 0; row < descriptor[0]; ++row) {
       sum += columnA[row].value;
       CHECK(fixture.ecs().isAlive(entities[row]));
@@ -162,6 +165,7 @@ TEST_CASE("olyQueryCreate is cached") {
 
 TEST_CASE("nested olyQueryBegin preserves the outer descriptors") {
   WorldFixture fixture;
+
   for (uint64_t value = 0; value < 4; ++value) {
     fixture.ecs().spawn(A{value}, B{0, 0});
   }

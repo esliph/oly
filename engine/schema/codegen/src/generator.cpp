@@ -27,6 +27,7 @@ namespace oly::schema {
 
     std::optional<NamedValue> splitNamedValue(std::string_view text) {
       const std::size_t separator = text.find('=');
+
       if (separator == std::string_view::npos || separator == 0) {
         return std::nullopt;
       }
@@ -37,12 +38,14 @@ namespace oly::schema {
     // The order of the --plugin arguments is the install order.
     std::optional<Requests> parseRequests(std::span<const std::string_view> arguments) {
       Requests requests;
+
       for (std::size_t index = 1; index < arguments.size(); index += 2) {
         if (index + 1 >= arguments.size()) {
           return std::nullopt;
         }
 
         std::optional<NamedValue> request = splitNamedValue(arguments[index + 1]);
+
         if (!request) {
           return std::nullopt;
         }
@@ -75,6 +78,7 @@ namespace oly::schema {
 
     std::string availableEmitters() {
       std::string names;
+
       for (const Emitter& emitter : emitters()) {
         if (!names.empty()) {
           names += ", ";
@@ -88,6 +92,7 @@ namespace oly::schema {
 
     std::optional<std::string> readText(const std::string& path) {
       std::ifstream file(path, std::ios::binary);
+
       if (!file) {
         return std::nullopt;
       }
@@ -102,6 +107,7 @@ namespace oly::schema {
       if (!file.path.parent_path().empty()) {
         std::error_code error;
         std::filesystem::create_directories(file.path.parent_path(), error);
+
         if (error) {
           return false;
         }
@@ -117,6 +123,7 @@ namespace oly::schema {
 
   int runGenerator(std::span<const std::string_view> arguments, std::ostream& errors) {
     const std::optional<Requests> requests = arguments.empty() ? std::nullopt : parseRequests(arguments);
+
     if (!requests) {
       errors << usage;
       return 1;
@@ -131,14 +138,17 @@ namespace oly::schema {
 
     const std::string input(arguments[0]);
     const std::optional<std::string> text = readText(input);
+
     if (!text) {
       errors << "cannot read " << input << "\n";
       return 1;
     }
 
     std::vector<PluginSource> plugins;
+
     for (const NamedValue& request : requests->plugins) {
       std::optional<std::string> pluginText = readText(request.value);
+
       if (!pluginText) {
         errors << "cannot read " << request.value << "\n";
         return 1;
@@ -148,8 +158,10 @@ namespace oly::schema {
     }
 
     std::vector<EmittedFile> files;
+
     try {
       const Schema schema = mergeSchemas(plugins, *text, input);
+
       for (const NamedValue& request : requests->emits) {
         for (EmittedFile& file : findEmitter(request.name)->emit(schema, request.value)) {
           files.push_back(std::move(file));

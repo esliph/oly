@@ -40,6 +40,7 @@ repeat them.
 ```bash
 stale_paths() {
   local old relative
+
   for old in $(git diff --cached -M --name-status --diff-filter=RD | awk '{print $2}' | grep -E '\.md$') "$@"; do
     relative=${old#docs/}
     git grep -nE "(^|[^/[:alnum:]_.-])(docs/)?${relative//./\\.}" -- ':!docs/superpowers'
@@ -252,6 +253,7 @@ mkdir -p docs/how-to/typescript docs/reference/typescript docs/reference/contrib
 git mv docs/guide/recipes.md docs/how-to/gameplay-recipes.md
 git mv docs/guide/environments/web/testing.md docs/how-to/test-a-web-game.md
 git mv docs/guide/environments/web/typescript/recipes.md docs/how-to/typescript/gameplay-recipes.md
+
 for page in README schema world-and-entities queries engine-and-systems events input schedule states; do
   git mv docs/guide/environments/web/typescript/$page.md docs/reference/typescript/$page.md
 done

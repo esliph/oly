@@ -63,8 +63,10 @@ namespace oly::ecs {
     template <class F>
     void eachBlock(F&& callback) {
       detail::IterationGuard guard(iterating_);
+
       for (const detail::MatchedTable<Ts...>& matched : matched_) {
         detail::Table& table = matched.archetype->table;
+
         if (table.count() == 0) {
           continue;
         }
@@ -77,9 +79,11 @@ namespace oly::ecs {
     template <class F>
     void each(F&& callback) {
       detail::IterationGuard guard(iterating_);
+
       for (const detail::MatchedTable<Ts...>& matched : matched_) {
         detail::Table& table = matched.archetype->table;
         const uint32_t rowCount = table.count();
+
         if (rowCount == 0) {
           continue;
         }
@@ -115,8 +119,10 @@ namespace oly::ecs {
 
     RowSummary summarizeRows() const {
       RowSummary summary;
+
       for (const detail::MatchedTable<Ts...>& matched : matched_) {
         const uint32_t tableRows = matched.archetype->table.count();
+
         if (tableRows != 0 && summary.firstTable == nullptr) {
           summary.firstTable = &matched;
         }
@@ -160,6 +166,7 @@ namespace oly::ecs {
       }
 
       detail::MatchedTable<Ts...> matched{&archetype, {}};
+
       for (size_t i = 0; i < componentIds_.size(); ++i) {
         matched.columns[i] = detail::columnOf(archetype, componentIds_[i]);
       }

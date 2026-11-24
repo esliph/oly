@@ -46,6 +46,7 @@ export class SystemContext extends EngineContext {
     assertSpawnArguments(this.#runtime, types, valuesByName);
 
     const entity = this.#bridge.systemSpawn(this.#engineHandle);
+
     for (const type of types) {
       this.#queueAdd(entity, type, valuesByName[type.name]);
     }
@@ -70,6 +71,7 @@ export class SystemContext extends EngineContext {
   add(entity: Entity, type: SchemaType): void;
   add(entity: Entity, type: SchemaType, value?: Partial<Record<string, number>>): void {
     assertContextActive(this, "add");
+
     if (type.kind === "component") {
       assertKnownFields("add", entity, type, value ?? {});
     }

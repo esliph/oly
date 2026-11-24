@@ -11,6 +11,7 @@ import sys
 
 def median(benchmarks, name):
     target = name + "_median"
+
     for benchmark in benchmarks:
         if benchmark.get("name") == target:
             return benchmark["real_time"]
@@ -30,6 +31,7 @@ def main():
 
     measured = median(benchmarks, arguments.name)
     baseline = median(benchmarks, arguments.baseline)
+
     for label, value in (("name", measured), ("baseline", baseline)):
         if value is None:
             print(f"benchmark not found ({label})", file=sys.stderr)

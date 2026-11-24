@@ -187,6 +187,7 @@ under test, doctest, standard library):
 namespace {
   std::vector<oly::schema::Field> fieldsOf(std::vector<oly::schema::ScalarType> types) {
     std::vector<oly::schema::Field> fields;
+
     for (const oly::schema::ScalarType type : types) {
       fields.push_back({"f" + std::to_string(fields.size()), type});
     }
@@ -196,6 +197,7 @@ namespace {
 
   std::vector<uint32_t> offsetsOf(const std::vector<oly::schema::Field>& fields) {
     std::vector<uint32_t> offsets;
+
     for (const oly::schema::Field& field : fields) {
       offsets.push_back(field.offset);
     }
@@ -464,6 +466,7 @@ namespace, `uint32_t alignUp(uint32_t value, uint32_t alignment)` returns `(valu
   Layout computeLayout(std::vector<Field>& fields) {
     Layout layout;
     uint32_t offset = 0;
+
     for (Field& field : fields) {
       const uint32_t fieldAlignment = scalarAlignment(field.type);
       offset = alignUp(offset, fieldAlignment);
@@ -482,6 +485,7 @@ namespace, `uint32_t alignUp(uint32_t value, uint32_t alignment)` returns `(valu
 ```cpp
   uint32_t fnv1a32(std::string_view text) {
     uint32_t hash = 0x811c9dc5u;
+
     for (const char character : text) {
       hash = (hash ^ static_cast<uint8_t>(character)) * 0x01000193u;
     }
@@ -596,6 +600,7 @@ namespace {
 
   std::vector<std::filesystem::path> schemaFilesIn(const std::filesystem::path& directory) {
     std::vector<std::filesystem::path> files;
+
     for (const std::filesystem::directory_entry& entry : std::filesystem::directory_iterator(directory)) {
       if (entry.path().extension() == ".oly") {
         files.push_back(entry.path());
@@ -1270,6 +1275,7 @@ TEST_CASE("an action or state that cannot be a TypeScript constant is an error a
 
 TEST_CASE("oly-schema lists ts after cpp when this module is linked") {
   std::vector<std::string_view> names;
+
   for (const oly::schema::Emitter& emitter : oly::schema::emitters()) {
     names.push_back(emitter.name);
   }

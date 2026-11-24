@@ -31,6 +31,7 @@ namespace oly::native_host {
         std::string_view text(arguments[index + 1]);
         uint64_t value = 0;
         auto [end, error] = std::from_chars(text.data(), text.data() + text.size(), value);
+
         if (error != std::errc{} || end != text.data() + text.size() || value == 0) {
           return std::nullopt;
         }
@@ -69,6 +70,7 @@ namespace oly::native_host {
       std::string name = argumentCount > 0 && arguments[0] != nullptr ? arguments[0] : FallbackProgramName;
 
       std::optional<uint64_t> frames = parseFrames(argumentCount, arguments);
+
       if (!frames) {
         std::fprintf(stderr, "usage: %s [--frames <n>]\n", name.c_str());
         return UsageExitCode;
@@ -79,6 +81,7 @@ namespace oly::native_host {
         name = game->windowConfig().title;
 
         RunOptions options;
+
         if (*frames > 0) {
           options.maxFrames = *frames;
           options.frameSeconds = 1.0 / game->engineConfig().fixedHz;

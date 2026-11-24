@@ -34,15 +34,19 @@ def load_medians(path):
         raise LadderError(f"{path}: could not read the JSON ({error})")
 
     failed = [entry.get("name", "?") for entry in benchmarks if entry.get("error_occurred")]
+
     if failed:
         raise LadderError(f"{path}: benchmark with error_occurred: {', '.join(failed)}")
 
     medians = {}
+
     for entry in benchmarks:
         name = entry.get("name", "")
+
         if entry.get("aggregate_name") != "median" or not name.endswith("_median"):
             continue
         unit = entry.get("time_unit", "ns")
+
         if unit not in NANOSECONDS_PER_UNIT:
             raise LadderError(f"{path}: unknown time_unit '{unit}' in {name}")
         medians[name[: -len("_median")]] = entry["real_time"] * NANOSECONDS_PER_UNIT[unit]
@@ -54,6 +58,7 @@ def load_medians(path):
 
 def median_across_rounds(rounds, name):
     values = [round_[name] for round_ in rounds if name in round_]
+
     if len(values) != len(rounds):
         return None
     return statistics.median(values)
@@ -61,6 +66,7 @@ def median_across_rounds(rounds, name):
 
 def spread_across_rounds(rounds, name):
     values = [round_[name] for round_ in rounds if name in round_]
+
     if len(values) != len(rounds):
         return None
     return statistics.median(values), min(values), max(values)
@@ -69,6 +75,7 @@ def spread_across_rounds(rounds, name):
 def ratio_of(rounds_a, name_a, rounds_b, name_b):
     """(median, min, max) of the round-by-round a/b ratios, or None if either side is missing."""
     ratios = []
+
     for round_a, round_b in zip(rounds_a, rounds_b):
         if name_a not in round_a or name_b not in round_b or round_b[name_b] == 0:
             return None
@@ -92,6 +99,7 @@ def format_spread(spread, digits):
 
 def table(title, columns, rows):
     lines = [f"### {title}", "", "| Benchmark | " + " | ".join(columns) + " |", "|---|" + "---|" * len(columns)]
+
     for name, cells in rows:
         lines.append(f"| {name} | " + " | ".join(cells) + " |")
 
@@ -105,6 +113,7 @@ def ordered_variants(runs):
 
 def benchmark_names(runs, variants, name_filter):
     names = []
+
     for variant in variants:
         for round_ in runs[variant]:
             for name in round_:
@@ -124,6 +133,7 @@ def render_markdown(runs, pair=None, name_filter=None):
     sections.append(table(f"Median real_time per variant (ns; median across {rounds_count} rounds [min–max])", variants, rows))
 
     steps = [(variant_a, variant_b) for variant_a, variant_b in STEPS if variant_a in runs and variant_b in runs]
+
     if steps:
         rows = [(name, [format_spread(step_ratio(runs[variant_a], runs[variant_b], name), 2) for variant_a, variant_b in steps]) for name in names]
         sections.append(table("Steps (round-by-round ratio: median [min–max])", [f"{variant_a}/{variant_b}" for variant_a, variant_b in steps], rows))
@@ -131,6 +141,7 @@ def render_markdown(runs, pair=None, name_filter=None):
     if pair is not None:
         numerator, baseline = pair
         rows = []
+
         for name in names:
             if numerator in name:
                 baseline_name = name.replace(numerator, baseline)
@@ -142,6 +153,7 @@ def render_markdown(runs, pair=None, name_filter=None):
 
 def parse_run(text):
     variant, separator, path = text.partition("=")
+
     if not separator or not variant or not path:
         raise argparse.ArgumentTypeError(f"expected VARIANT=file.json, got '{text}'")
     return variant, path
@@ -149,6 +161,7 @@ def parse_run(text):
 
 def parse_pair(text):
     numerator, separator, baseline = text.partition("=")
+
     if not separator or not numerator or not baseline:
         raise argparse.ArgumentTypeError(f"expected ECS=SoA, got '{text}'")
     return numerator, baseline
@@ -163,10 +176,12 @@ def main(argv=None):
 
     try:
         runs = {}
+
         for variant, path in arguments.run:
             runs.setdefault(variant, []).append(load_medians(path))
 
         counts = {variant: len(rounds) for variant, rounds in runs.items()}
+
         if len(set(counts.values())) != 1:
             raise LadderError(f"number of rounds differs between variants: {counts}")
 

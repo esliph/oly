@@ -12,6 +12,7 @@ Use this when a test or a game shows a wrong `World`: a missing component, a sta
 #include "oly/ecs/diagnostics.hpp"
 
 std::string why;
+
 if (!oly::ecs::checkInvariants(world, &why)) {
   FAIL(why);
 }
@@ -23,6 +24,7 @@ In TypeScript the call is a method of the world, and it returns `null` when the 
 
 ```ts
 const problem = world.checkInvariants();
+
 if (problem !== null) {
   throw new Error(problem);
 }

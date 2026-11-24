@@ -61,6 +61,7 @@ namespace oly::schema {
     std::string emitLayoutAsserts(const Type& type) {
       const std::string message = "\"schema: layout of " + type.name + " diverges from oly-schema\"";
       std::string asserts = "static_assert(sizeof(" + type.name + ") == " + std::to_string(type.layout.size) + " && alignof(" + type.name + ") == " + std::to_string(type.layout.alignment) + ", " + message + ");\n";
+
       for (const Field& field : type.fields) {
         asserts += "static_assert(offsetof(" + type.name + ", " + field.name + ") == " + std::to_string(field.offset) + ", " + message + ");\n";
       }
@@ -74,6 +75,7 @@ namespace oly::schema {
       }
 
       std::string fields;
+
       for (const Field& field : type.fields) {
         fields += "  " + std::string(cppType(field.type)) + " " + field.name + ";\n";
       }
@@ -88,6 +90,7 @@ namespace oly::schema {
     // A plugin's types are defined once, in its own header (ODR).
     std::string emitOwnStructs(const Schema& schema) {
       std::string structs;
+
       for (const std::vector<Type>* group : {&schema.types, &schema.events}) {
         for (const Type& type : *group) {
           if (!type.origin.empty()) {
@@ -111,6 +114,7 @@ namespace oly::schema {
       }
 
       std::string handles;
+
       for (std::size_t index = 0; index < actions.size(); ++index) {
         handles += "  inline constexpr oly::input::" + std::string(cppActionHandle(actions[index].kind)) + " " + actions[index].name + "{" + std::to_string(index) + "};\n";
       }
@@ -124,6 +128,7 @@ namespace oly::schema {
       }
 
       std::string handles;
+
       for (std::size_t index = 0; index < states.size(); ++index) {
         handles += "  inline constexpr oly::app::StateId " + states[index].name + "{" + std::to_string(index) + "};\n";
       }
@@ -138,6 +143,7 @@ namespace oly::schema {
     template <typename Item, typename Entry>
     std::string joinEntries(const std::vector<Item>& items, Entry entry) {
       std::string joined;
+
       for (const Item& item : items) {
         if (!joined.empty()) {
           joined += ",\n";
@@ -155,6 +161,7 @@ namespace oly::schema {
 
     std::string emitComponentIdsRegistry(const Schema& schema) {
       constexpr std::string_view signature = "std::span<const oly::ecs::ComponentId> schemaComponentIds()";
+
       if (schema.types.empty()) {
         return emptyRegistryFunction(signature);
       }
@@ -166,6 +173,7 @@ namespace oly::schema {
 
     std::string emitEventsRegistry(const Schema& schema) {
       constexpr std::string_view signature = "std::span<const SchemaEvent> schemaEvents()";
+
       if (schema.events.empty()) {
         return emptyRegistryFunction(signature);
       }
@@ -179,6 +187,7 @@ namespace oly::schema {
 
     std::string emitActionsRegistry(const Schema& schema) {
       constexpr std::string_view signature = "std::span<const SchemaAction> schemaActions()";
+
       if (schema.actions.empty()) {
         return emptyRegistryFunction(signature);
       }
@@ -192,6 +201,7 @@ namespace oly::schema {
 
     std::string emitStatesRegistry(const Schema& schema) {
       constexpr std::string_view signature = "std::span<const SchemaState> schemaStates()";
+
       if (schema.states.empty()) {
         return emptyRegistryFunction(signature);
       }
@@ -204,6 +214,7 @@ namespace oly::schema {
 
   std::string emitCppHeader(const Schema& schema) {
     std::string pluginIncludes;
+
     for (const std::string& plugin : schema.plugins) {
       pluginIncludes += "#include \"oly/" + plugin + "/schema.generated.hpp\"\n";
     }
@@ -222,6 +233,7 @@ namespace oly::schema {
 
   std::string emitCppDeclaration(const Schema& schema) {
     std::string declarations;
+
     for (const Type& event : schema.events) {
       declarations += "    engine.declareEvent<" + event.name + ">(\"" + event.name + "\");\n";
     }

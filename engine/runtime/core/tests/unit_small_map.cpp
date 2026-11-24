@@ -25,6 +25,7 @@ TEST_CASE("SmallMap iterates keys in ascending order") {
   map.insert(5, 50);
 
   std::vector<uint32_t> keys;
+
   for (auto& [key, value] : map) {
     keys.push_back(key);
   }

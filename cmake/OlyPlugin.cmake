@@ -30,6 +30,7 @@ function(oly_add_plugin)
   set(target oly_${name})
 
   file(GLOB pluginSources CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
+
   if(NOT pluginSources)
     message(FATAL_ERROR "plugin ${name}: no src/*.cpp; a plugin defines oly::${name}::Plugin")
   endif()
@@ -39,11 +40,13 @@ function(oly_add_plugin)
   target_include_directories(${target} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
   target_compile_features(${target} PUBLIC cxx_std_20)
   oly_warnings(${target})
+
   foreach(dependency IN LISTS PLUGIN_DEPENDS PLUGIN_PLUGINS)
     target_link_libraries(${target} PUBLIC oly::${dependency})
   endforeach()
 
   set(schemaFile "")
+
   if(PLUGIN_SCHEMA)
     cmake_path(ABSOLUTE_PATH PLUGIN_SCHEMA BASE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} OUTPUT_VARIABLE schemaFile)
     oly_schema_tool(schemaTool schemaToolDependency)
@@ -80,12 +83,14 @@ function(_oly_plugin_visit plugin chain)
   endif()
 
   get_property(known GLOBAL PROPERTY OLY_PLUGIN_DEPENDENCIES_${plugin} SET)
+
   if(NOT known)
     message(FATAL_ERROR "unknown plugin ${plugin}")
   endif()
 
   get_property(dependencies GLOBAL PROPERTY OLY_PLUGIN_DEPENDENCIES_${plugin})
   set(dependencyChain ${chain} ${plugin})
+
   foreach(dependency IN LISTS dependencies)
     _oly_plugin_visit(${dependency} "${dependencyChain}")
   endforeach()
@@ -98,6 +103,7 @@ endfunction()
 # each once, dependencies first; among independent plugins, the order of the list.
 function(oly_plugin_order outputVariable)
   set(_olyPluginOrder "")
+
   foreach(plugin IN LISTS ARGN)
     _oly_plugin_visit(${plugin} "")
   endforeach()

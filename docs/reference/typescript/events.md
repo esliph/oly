@@ -48,6 +48,7 @@ engine.on(CoinCollected, "collectCoin", (context, batch) => {
 
   for (let index = 0; index < batch.count; ++index) {
     const coin = coins.get(index);
+
     if (context.isAlive(coin)) {
       context.destroy(coin);
       score.coins += 1;
@@ -65,6 +66,7 @@ engine.on(EnemyDied, "countKill", (_context, batch) => {
 
   for (let index = 0; index < batch.count; ++index) {
     const enemy = enemies.get(index);
+
     if (!counted.has(enemy)) {
       counted.add(enemy);
       score.kills += 1;

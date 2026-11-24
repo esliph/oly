@@ -84,6 +84,7 @@ namespace oly::lifetime {
 
       context.query<Lifetime>().each([&](ecs::Entity entity, Lifetime& lifetime) {
         lifetime.seconds -= step;
+
         if (lifetime.seconds <= 0) {
           context.destroy(entity);
           ++expiredCount;

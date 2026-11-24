@@ -53,6 +53,7 @@ TEST_CASE("a window gives a renderer with the configured logical size") {
 
 TEST_CASE("the video drivers of a playable build are compiled in") {
   std::vector<std::string> drivers;
+
   for (int index = 0; index < SDL_GetNumVideoDrivers(); ++index) {
     drivers.push_back(SDL_GetVideoDriver(index));
   }

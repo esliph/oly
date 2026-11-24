@@ -18,6 +18,7 @@ function(oly_add_module)
     set(visibility INTERFACE)
   else()
     file(GLOB moduleSources CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
+
     if(MODULE_OBJECT)
       add_library(${target} OBJECT ${moduleSources})
     else()
@@ -30,6 +31,7 @@ function(oly_add_module)
   endif()
 
   add_library(oly::${MODULE_NAME} ALIAS ${target})
+
   foreach(dependency IN LISTS MODULE_DEPENDS)
     target_link_libraries(${target} ${visibility} oly::${dependency})
   endforeach()
@@ -46,6 +48,7 @@ function(oly_add_test)
   target_link_libraries(${target} PRIVATE oly::${TEST_MODULE} doctest::doctest)
 
   target_include_directories(${target} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/support)
+
   foreach(supportDirectory IN LISTS TEST_SUPPORT)
     cmake_path(ABSOLUTE_PATH supportDirectory BASE_DIRECTORY ${PROJECT_SOURCE_DIR})
     target_include_directories(${target} PRIVATE ${supportDirectory})
@@ -63,6 +66,7 @@ endfunction()
 # Death tests: a dedicated executable, only with asserts enabled; one ctest test per case.
 function(oly_add_contract_death)
   cmake_parse_arguments(DEATH "" "MODULE;SOURCE" "CASES" ${ARGN})
+
   if(NOT OLY_ASSERTS_ENABLED)
     return()
   endif()

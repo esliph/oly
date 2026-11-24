@@ -95,6 +95,7 @@ export class World {
   add(entity: Entity, type: SchemaType, value?: Partial<Record<string, number>>): void {
     this.#assertStructuralChangeAllowed("add", entity, type);
     this.#assertAlive("add", entity, type);
+
     if (type.kind === "component") {
       assertKnownFields("add", entity, type, value ?? {});
     }
@@ -112,6 +113,7 @@ export class World {
   get<F extends Fields>(entity: Entity, type: ComponentType<string, F>): ValueOf<F> {
     const address = this.#addressOf("get", entity, type);
     const result: Record<string, number> = {};
+
     for (const field of type.layout.fields) {
       result[field.name] = readScalar(this.#bridge.heap, field.type, address + field.offset);
     }
@@ -125,6 +127,7 @@ export class World {
 
     for (const field of type.layout.fields) {
       const fieldValue = (value as Partial<Record<string, number>>)[field.name];
+
       if (fieldValue !== undefined) {
         writeScalar(this.#bridge.heap, field.type, address + field.offset, fieldValue);
       }
@@ -144,6 +147,7 @@ export class World {
     const withoutTypes = spec.without ?? [];
 
     const seen = new Set<SchemaType>();
+
     for (const type of [...read, ...write] as SchemaType[]) {
       componentIdOf(this.#runtime, type);
       if (type.kind === "tag") {
@@ -165,6 +169,7 @@ export class World {
 
     const key = [read, write].map((types) => types.map((type) => type.schemaIndex).join(",")).join("|") + `|${withIndexes}|${withoutIndexes}`;
     const cached = this.#queries.get(key);
+
     if (cached) {
       return cached;
     }
@@ -213,6 +218,7 @@ export class World {
 
     const componentId = componentIdOf(this.#runtime, type);
     const address = this.#bridge.get(this.handle, entity, componentId);
+
     if (address === 0) {
       throw contractError(operation, entity, type, "entity does not have the component");
     }
@@ -233,6 +239,7 @@ export class World {
     assertSpawnArguments(this.#runtime, types, valuesByName);
 
     const entity = create();
+
     for (const type of types) {
       this.#addToEntity(entity, type, valuesByName[type.name]);
     }

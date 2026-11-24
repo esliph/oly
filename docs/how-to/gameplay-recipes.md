@@ -183,6 +183,7 @@ OLY_SYSTEM(dash) {
   }
 
   auto player = context.query<Dash>(oly::ecs::With<Player>{}).trySingle();
+
   if (!player || std::get<1>(*player).ready == 0) {
     return;
   }
@@ -319,6 +320,7 @@ event CoinCollected { coin: entity }
 ```cpp
 OLY_SYSTEM(touchCoins) {
   auto player = context.query<const Position, const Collider>(oly::ecs::With<Player>{}).trySingle();
+
   if (!player) {
     return;
   }
@@ -783,6 +785,7 @@ tag Player
 ```cpp
 OLY_SYSTEM(followPlayer) {
   auto player = context.query<const Position>(oly::ecs::With<Player>{}).trySingle();
+
   if (!player) {
     return;
   }

@@ -23,8 +23,10 @@ function hex(value: number): string {
 
 function firstDivergentEvent(module: OlyModule, schema: Schema): string | null {
   const count = Math.min(module._olySchemaEventCount(), schema.events.length);
+
   for (let index = 0; index < count; ++index) {
     const type = schema.events[index]!;
+
     if (module._olySchemaEventSize(index) !== type.layout.size || module._olySchemaEventAlignment(index) !== type.layout.alignment) {
       return type.name;
     }
@@ -37,8 +39,10 @@ const actionKindCodes: readonly ActionKind[] = ["button", "axis2d", "pointer"];
 
 function firstDivergentAction(module: OlyModule, schema: Schema): string | null {
   const count = Math.min(module._olySchemaActionCount(), schema.actions.length);
+
   for (let index = 0; index < count; ++index) {
     const action = schema.actions[index]!;
+
     if (actionKindCodes.indexOf(action.actionKind) !== module._olySchemaActionKind(index)) {
       return action.name;
     }
@@ -53,11 +57,13 @@ function firstDivergentType(module: OlyModule, schema: Schema): string | null {
 
 function firstDivergentComponent(module: OlyModule, schema: Schema): string | null {
   const count = Math.min(module._olySchemaComponentCount(), schema.types.length);
+
   for (let index = 0; index < count; ++index) {
     const type = schema.types[index]!;
     const componentId = module._olySchemaComponentId(index);
     const expectedSize = type.kind === "component" ? type.layout.size : 0;
     const expectedAlignment = type.kind === "component" ? type.layout.alignment : 1;
+
     if (module._olyComponentSize(componentId) !== expectedSize || module._olyComponentAlignment(componentId) !== expectedAlignment) {
       return type.name;
     }
@@ -121,6 +127,7 @@ export class Runtime {
 
     module.olyInvokeScript = (engineHandle, kind, id, events, eventCount) => {
       const engine = this.#engines.get(engineHandle);
+
       if (engine === undefined) {
         throw new ContractError(`olyInvokeScript engine=${engineHandle}: unknown or already disposed Engine`);
       }
@@ -133,6 +140,7 @@ export class Runtime {
     const fixedHz = config.fixedHz ?? 60;
     const maxStepsPerFrame = config.maxStepsPerFrame ?? 5;
     const maxEventRounds = config.maxEventRounds ?? 16;
+
     if (!Number.isFinite(fixedHz) || fixedHz <= 0) {
       throw new ContractError(`createEngine fixedHz=${fixedHz}: must be a positive number`);
     }
@@ -194,6 +202,7 @@ export function stateAt(runtime: Runtime, index: number): State | null {
  */
 export async function loadRuntime(factory: OlyModuleFactory, schema: Schema): Promise<Runtime> {
   const module = await factory();
+
   if (typeof module._olyWebHostInstallScriptInvoker !== "function") {
     throw new ContractError("the WASM module does not export olyWebHostInstallScriptInvoker: link the game with oly::web_host");
   }
@@ -203,6 +212,7 @@ export async function loadRuntime(factory: OlyModuleFactory, schema: Schema): Pr
   const countMatches =
     module._olySchemaComponentCount() === schema.types.length && module._olySchemaEventCount() === schema.events.length &&
     module._olySchemaActionCount() === schema.actions.length && module._olySchemaStateCount() === schema.states.length;
+
   if (wasmHash !== schema.hash || !countMatches || divergent !== null) {
     throw new SchemaMismatchError(
       `WASM schema (${hex(wasmHash)}) differs from the TS schema (${hex(schema.hash)}); ` +

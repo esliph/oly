@@ -37,6 +37,7 @@ namespace {
   template <class T>
   void record(const char* kind, oly::ecs::ObserverContext& context) {
     std::string value = "-";
+
     if constexpr (!std::is_empty_v<T>) {
       value = std::to_string(context.world().get<T>(context.entity()).value);
     }
@@ -68,6 +69,7 @@ namespace {
   void throwOnFirstCall(oly::ecs::ObserverContext& context) {
     int& calls = *static_cast<int*>(context.userData());
     ++calls;
+
     if (calls == 1) {
       throw ObserverFailure{};
     }
@@ -476,6 +478,7 @@ TEST_CASE("R-OB-7: on add runs in the order of each entity's first command, then
   auto first = world.spawn(A{1});
   const bool healthFirst = oly::ecs::componentId<Health>() < oly::ecs::componentId<Armor>();
   auto commandBuffer = world.commands();
+
   if (healthFirst) {
     commandBuffer.add(first, Armor{3});
     commandBuffer.add(second, Health{2});

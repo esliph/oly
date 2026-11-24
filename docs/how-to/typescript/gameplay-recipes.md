@@ -46,9 +46,11 @@ engine.addSystem(Phase.Update, "expire", (context) => {
 
   context.query({ write: [Lifetime] }).eachBlock((block) => {
     const lifetime = block.write(Lifetime);
+
     for (let row = 0; row < block.count; ++row) {
       const remaining = lifetime.seconds.get(row) - deltaTime;
       lifetime.seconds.set(row, remaining);
+
       if (remaining <= 0) {
         context.destroy(block.entity(row));
       }
@@ -90,6 +92,7 @@ engine.onEnter(playing, "startWaves", (context) => {
     wave += 1;
     const enemyCount = 2 + wave;
     const speed = 80 + wave * 10;
+
     for (let index = 0; index < enemyCount; ++index) {
       task.spawn([Enemy, Position, Velocity, Chaser], { Position: edgePoint(random), Chaser: { speed } });
     }
@@ -113,6 +116,7 @@ engine.addSystem(Phase.UpdateBefore, "dash", (context) => {
   }
 
   const player = context.query({ read: [Dash], with: [Player] }).trySingle();
+
   if (player === null || player.get(Dash).ready === 0) {
     return;
   }
@@ -161,8 +165,10 @@ engine.addNativeHandler(EnemyDied, "dropCoin");                       // reacts:
 engine.on(EnemyDied, "countKill", (_context, batch) => countKill(score, batch));
 engine.on(EnemyDied, "destroyDead", (context, batch) => {             // destroys: registered last
   const enemies = batch.read().entity;
+
   for (let index = 0; index < batch.count; ++index) {
     const enemy = enemies.get(index);
+
     if (context.isAlive(enemy)) {
       context.destroy(enemy);
     }
@@ -210,6 +216,7 @@ event CoinCollected { coin: entity }
 ```ts
 engine.addSystem(Phase.UpdateAfter, "touchCoins", (context) => {
   const player = context.query({ read: [Position, Collider], with: [Player] }).trySingle();
+
   if (player === null) {
     return;
   }
@@ -220,10 +227,12 @@ engine.addSystem(Phase.UpdateAfter, "touchCoins", (context) => {
   context.query({ read: [Position, Collider], with: [Coin] }).eachBlock((block) => {
     const position = block.read(Position);
     const collider = block.read(Collider);
+
     for (let row = 0; row < block.count; ++row) {
       const deltaX = position.x.get(row) - x;
       const deltaY = position.y.get(row) - y;
       const radii = reach + collider.radius.get(row);
+
       if (deltaX * deltaX + deltaY * deltaY <= radii * radii) {
         context.emit(CoinCollected, { coin: block.entity(row) });
       }
@@ -233,8 +242,10 @@ engine.addSystem(Phase.UpdateAfter, "touchCoins", (context) => {
 
 engine.on(CoinCollected, "collect", (context, batch) => {
   const coins = batch.read().coin;
+
   for (let index = 0; index < batch.count; ++index) {
     const coin = coins.get(index);
+
     if (context.isAlive(coin)) {
       context.destroy(coin);
       score.coins += 1;
@@ -256,8 +267,10 @@ engine.addSystem(Phase.Update, "home", (context) => {
     const position = block.read(Position);
     const homing = block.read(Homing);
     const velocity = block.write(Velocity);
+
     for (let row = 0; row < block.count; ++row) {
       const target = homing.target.get(row);
+
       if (!context.isAlive(target)) {
         context.destroy(block.entity(row));
         continue;
@@ -291,8 +304,10 @@ engine.addSystem(Phase.UpdateAfter, "followParent", (context) => {
   context.query({ read: [Attached], write: [Position] }).eachBlock((block) => {
     const attached = block.read(Attached);
     const position = block.write(Position);
+
     for (let row = 0; row < block.count; ++row) {
       const parent = attached.parent.get(row);
+
       if (!context.isAlive(parent)) {
         context.destroy(block.entity(row));     // the owner is gone: so is the attachment
         continue;
@@ -313,6 +328,7 @@ engine.addSystem(Phase.UpdateAfter, "confinePlayer", (context) => {
   context.query({ read: [Collider], write: [Position], with: [Player] }).eachBlock((block) => {
     const collider = block.read(Collider);
     const position = block.write(Position);
+
     for (let row = 0; row < block.count; ++row) {
       const radius = collider.radius.get(row);
       position.x.set(row, Math.min(Math.max(position.x.get(row), radius), WorldWidth - radius));
@@ -324,6 +340,7 @@ engine.addSystem(Phase.UpdateAfter, "confinePlayer", (context) => {
 engine.addSystem(Phase.UpdateAfter, "wrapAsteroids", (context) => {
   context.query({ write: [Position], with: [Asteroid] }).eachBlock((block) => {
     const position = block.write(Position);
+
     for (let row = 0; row < block.count; ++row) {
       position.x.set(row, (position.x.get(row) + WorldWidth) % WorldWidth);
       position.y.set(row, (position.y.get(row) + WorldHeight) % WorldHeight);
@@ -346,6 +363,7 @@ export function startGameplay(engine: Engine, drawer: Drawer): Score {   // a bi
 
   engine.addSystem(Phase.Render, "hud", (context) => {
     const player = context.query({ read: [Health], with: [Player] }).trySingle();
+
     if (player === null) {
       return;
     }
@@ -637,10 +655,12 @@ function nearestEnemy(context: SystemContext, x: number, y: number): Entity | nu
 
   context.query({ read: [Position], with: [Enemy] }).eachBlock((block) => {
     const position = block.read(Position);
+
     for (let row = 0; row < block.count; ++row) {
       const deltaX = position.x.get(row) - x;
       const deltaY = position.y.get(row) - y;
       const distance = deltaX * deltaX + deltaY * deltaY;
+
       if (distance < nearestDistance) {
         nearestDistance = distance;
         nearest = block.entity(row);
@@ -665,6 +685,7 @@ context.query({ read: [Position, Chaser], write: [Velocity], with: [Enemy] }).ea
   const position = block.read(Position);
   const chaser = block.read(Chaser);
   const velocity = block.write(Velocity);
+
   for (let row = 0; row < block.count; ++row) {
     const deltaX = target.x - position.x.get(row);
     const deltaY = target.y - position.y.get(row);
@@ -688,6 +709,7 @@ function drawCircles(context: SystemContext, drawer: Drawer, filter: Filter, col
   context.query({ read: [Position, Collider], ...filter }).eachBlock((block) => {
     const position = block.read(Position);
     const collider = block.read(Collider);
+
     for (let row = 0; row < block.count; ++row) {
       drawer.circle(position.x.get(row), position.y.get(row), collider.radius.get(row), color);
     }

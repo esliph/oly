@@ -18,6 +18,7 @@ latest=$out/latest/download
 
 linux_tool=$root/build/schema-tool-linux/bin/oly-schema
 windows_tool=$root/build/schema-tool-windows/bin/oly-schema.exe
+
 for file in "$linux_tool" "$windows_tool" "$release/oly-core-$version.tgz" "$release/oly-web-host-$version.tgz"; do
   [ -f "$file" ] || fail 1 "missing $file"
 done

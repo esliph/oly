@@ -48,6 +48,7 @@ import { Phase } from "@oly/core";
 engine.addSystem(Phase.Update, "spin", (context) => {
   context.query({ write: [Rotation] }).eachBlock((block) => {
     const rotation = block.write(Rotation);
+
     for (let row = 0; row < block.count; ++row) {
       rotation.angle.set(row, rotation.angle.get(row) + Math.PI * context.fixedDeltaTime);
     }
@@ -132,6 +133,7 @@ engine.addSystem(Phase.Update, "explodeDead", (context) => {
   context.query({ read: [Health, Position], with: [Enemy] }).eachBlock((block) => {
     const health = block.read(Health);
     const position = block.read(Position);
+
     for (let row = 0; row < block.count; ++row) {
       if (health.value.get(row) > 0) {
         continue;
@@ -154,6 +156,7 @@ engine.addSystem(Phase.UpdateBefore, "rememberPosition", (context) => {
   context.query({ read: [Position], write: [PreviousPosition] }).eachBlock((block) => {
     const position = block.read(Position);
     const previous = block.write(PreviousPosition);
+
     for (let row = 0; row < block.count; ++row) {
       previous.x.set(row, position.x.get(row));
       previous.y.set(row, position.y.get(row));
@@ -167,6 +170,7 @@ engine.addSystem(Phase.Render, "draw", (context) => {
   context.query({ read: [Position, PreviousPosition] }).eachBlock((block) => {
     const position = block.read(Position);
     const previous = block.read(PreviousPosition);
+
     for (let row = 0; row < block.count; ++row) {
       const x = previous.x.get(row) + (position.x.get(row) - previous.x.get(row)) * alpha;
       const y = previous.y.get(row) + (position.y.get(row) - previous.y.get(row)) * alpha;

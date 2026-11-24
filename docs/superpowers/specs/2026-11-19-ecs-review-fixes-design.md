@@ -108,6 +108,7 @@ Sketch of the fast path (names are the builder's to settle):
 template <class... Ts, class... Filters>
 Query<Ts...>& World::query(Filters... filters) {
   const uint32_t slot = detail::querySlot<detail::TypeList<Ts...>, detail::TypeList<Filters...>>();
+
   if (slot < querySlots_.size() && querySlots_[slot]) [[likely]] {
     return static_cast<Query<Ts...>&>(*querySlots_[slot]);
   }

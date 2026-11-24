@@ -23,6 +23,7 @@ namespace oly::ecs {
     for (const auto& owned : world.archetypes_) {
       const detail::Archetype& archetype = *owned;
       size_t rowBytes = sizeof(Entity);
+
       for (uint16_t i = 0; i < archetype.table.columnCount(); ++i) {
         rowBytes += archetype.table.column(i).info->size;
       }
@@ -38,6 +39,7 @@ namespace oly::ecs {
       archetypeStats.signatureBytes = (archetype.signature.capacity() + archetype.columnTypes.capacity()) * sizeof(ComponentId);
 
       archetypeStats.edgeBytes = archetype.addEdges.capacityBytes() + archetype.removeEdges.capacityBytes();
+
       for (const auto* edges : {&archetype.addEdges, &archetype.removeEdges}) {
         for (const auto& [componentId, edge] : *edges) {
           archetypeStats.edgeBytes += edge.sourceToDestination.capacity() * sizeof(int16_t) + edge.initializedColumns.capacity() * sizeof(uint16_t);

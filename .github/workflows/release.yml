@@ -85,6 +85,7 @@ jobs:
         # One file per image: a job that tests in one toolchain downloads only that one.
         run: |
           mkdir -p build/images
+
           for image in dev wasm windows; do
             docker save "oly-engine-$image" | zstd -q -T0 -3 -o "build/images/$image.tar.zst"
           done
@@ -196,6 +197,7 @@ jobs:
         run: |
           mkdir -p build/publish
           : > build/publish/image-ids.txt
+
           for image in dev wasm windows; do
             docker tag "oly-local/oly-$image:$VERSION" "$REGISTRY/oly-$image:$VERSION"
             printf '%s %s\n' "$REGISTRY/oly-$image:$VERSION" "$(docker image inspect --format '{{.Id}}' "$REGISTRY/oly-$image:$VERSION")" >> build/publish/image-ids.txt
@@ -247,8 +249,10 @@ jobs:
           server=$!
           trap 'kill "$server"' EXIT
           attempts=0
+
           until curl -fsS http://127.0.0.1:8766/ > /dev/null 2>&1; do
             attempts=$((attempts + 1))
+
             if [ "$attempts" -ge 120 ]; then
               cat server.log
               echo "::error::the release server did not answer on port 8766"
@@ -258,6 +262,7 @@ jobs:
           done
 
           export OLY_RELEASE_URL=http://127.0.0.1:8766 OLY_ENGINE_SOURCE_DIR="$PWD"
+
           for environment in web native; do
             sh tools/release/staged_consumer_test.sh "$VERSION" "$environment" "$PWD/build/staged/$environment"
           done
@@ -287,8 +292,10 @@ jobs:
       - name: Load the tested images and check they are the ones saved
         run: |
           gunzip -c build/publish/images.tar.gz | docker load
+
           while read -r name id; do
             loaded=$(docker image inspect --format '{{.Id}}' "$name")
+
             if [ "$loaded" != "$id" ]; then
               echo "::error::$name is $loaded after loading, tested as $id"
               exit 1
@@ -297,6 +304,7 @@ jobs:
       - name: Push the images
         run: |
           echo "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+
           for image in dev wasm windows; do
             docker push "$REGISTRY/oly-$image:$VERSION"
           done
@@ -317,6 +325,7 @@ jobs:
           # pipe that creates a game read latest/download.
           latest=$(gh release view --json tagName --jq .tagName 2> /dev/null || true)
           flag=--latest
+
           if [ -n "$latest" ] && [ "$(printf '%s\nv%s\n' "$latest" "$VERSION" | sort -V | tail -n 1)" != "v$VERSION" ]; then
             flag=--latest=false
           fi

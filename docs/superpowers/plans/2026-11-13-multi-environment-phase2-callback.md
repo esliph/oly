@@ -157,6 +157,7 @@ TEST_CASE("two engines in the same process: each calls its own invoker with its 
   other.step();
 
   REQUIRE(!g_invocations.empty());
+
   for (size_t index = 0; index < g_invocations.size(); ++index) {
     CHECK(g_invocations[index].first == other.engine);
     CHECK(g_userData[index] == &other);
