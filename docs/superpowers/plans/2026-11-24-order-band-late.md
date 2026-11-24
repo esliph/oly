@@ -1,5 +1,7 @@
 # A `Late` order band between `Default` and `Last` — Implementation Plan
 
+> **Status: suspended.** Phase 1 of the roadmap replaces the order bands with system sets: `../specs/2026-11-24-aaa-roadmap-design.md`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** `OrderBand::Late` runs inside each phase after the `Default` band and before the `Last` band, so a plugin

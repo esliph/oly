@@ -1,5 +1,7 @@
 # Oly — a `Late` order band between `Default` and `Last` — design
 
+> **Status: suspended.** Phase 1 of the roadmap replaces the order bands with system sets: `2026-11-24-aaa-roadmap-design.md`.
+
 Date: 2026-11-24. Written on `develop` at `e4f00d5`. Short design: gap M1 of the plugin gap list.
 
 Marking: **[user decision]** was decided in the conversation; **[author decision]** was my choice during the design,
