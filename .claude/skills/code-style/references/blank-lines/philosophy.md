@@ -125,7 +125,7 @@ async function importLevel(path: string): Promise<Level> {
 
 ### Guard clauses: a single block
 
-Several guards in a row form a single step ("reject invalid cases") and so they stay together.
+Several guards in a row form a single step ("reject invalid cases") and so they stay together. This also holds when each guard is a braced block whose body only leaves (`return`, `throw`, `continue`, `break`): the group gets the blank line before and after, not each guard.
 
 ```python
 def can_attack(attacker, target):
@@ -141,26 +141,47 @@ def can_attack(attacker, target):
 
 ### Control structures: space before and after
 
-A multi-line loop or condition marks a change in flow, so it gets a blank line before and after. A variable that exists only for that loop stays next to it.
+A multi-line loop or condition opens a scope, so it gets a blank line right before the line that opens it and right after the line that closes it. Here the rule follows the keyword, not the step: opening a scope is where the reader changes indentation level, and the blank line makes every scope visible in the first scan of the function's shape.
 
-The "before" applies to the step, not to the keyword: the step starts where its preparations start. Declarations that exist only to feed the condition or the loop — the expected value the `if` compares, the accumulator the `for` fills, the uninitialized variable an `if/else` chain assigns, the `clear()` before rebuilding a vector — are part of it, and the blank line goes before them. Applying the rule mechanically, with a line before every `if`/`for`, produces visual symmetry and splits each step between the preparation and the use. Inseparable pairs (destroying a row and filling the hole, opening and checking) also beat this rule.
+Declarations that exist only to feed the block — the expected value the `if` compares, the accumulator the `for` fills, the uninitialized variable an `if/else` chain assigns, the `clear()` before rebuilding a vector — form the step that prepares it. They stay right above the blank line: still next to their use, so the block above reads as "prepare" and the block below as "do". Inseparable pairs whose second half is a block (opening a file and the `if` that checks it) follow this rule too.
+
+Exceptions:
+
+- No blank line right after `{` or right before `}` (principle 5): a block that is the first or the last statement of its parent stays attached to the brace.
+- `else`, `catch` and `finally` continue the same structure.
+- Consecutive guards stay together as one block; the group gets the space before and after.
+- Single-line statements without braces are not covered: they follow the step rule.
 
 ```cpp
-// Wrong: the preparation was separated from the comparison that is its reason to exist
+// Wrong: the block is glued to its preparation
 const int16_t expected = column == NoColumn ? -1 : column;
-
 if (mapping[i] != expected) {
     return false;
 }
 
-// Correct: computing the expected value and comparing is a single step
+// Correct: the preparation is its own step, and the block opens after a blank line
 const int16_t expected = column == NoColumn ? -1 : column;
+
 if (mapping[i] != expected) {
     return false;
 }
 ```
 
-On the other hand, a declaration shared by several following steps (a label used by several guards, a pointer read by the whole rest of the function) is a preparation step of its own and can stay separate.
+Nested blocks follow the same rule, with principle 5 at the opening brace:
+
+```cpp
+const Order& order = orders.at(id);
+
+if (order.isOpen()) {
+    double total = 0.0;
+
+    for (const Item& item : order.items) {
+        total += item.price * item.quantity;
+    }
+
+    return total;
+}
+```
 
 ### Result: the `return` as a step
 
@@ -237,23 +258,22 @@ Each anti-pattern is a blank line that states something false, or the absence of
 - **Wall.** Validation, I/O and computation in a row, with no separation at all. The reader has to rebuild alone where each step starts and ends.
 - **Uniform spacing.** A blank line between every statement. If everything is separated, nothing is grouped, and the space stops communicating.
 - **Empty frame.** A blank line right after opening a block or before closing it, which duplicates the information of the brace or the indentation.
-- **Split block.** A pair that only makes sense together, separated by a blank line: a `lock` and its `unlock`, a declaration and its single use, a file open and its error check.
-- **Space by syntax.** A blank line before every `if`, `for` or `return` because "it looks more organized", separating it from the declaration that feeds it. It is symmetry, not structure: the criterion must be the change of step, not the kind of the next statement.
+- **Split block.** A pair that only makes sense together, separated by a blank line: a `lock` and its `unlock`, a declaration and its single use in the next statement, an operation and its counterpart.
+- **Space by syntax.** A blank line before every single-line `if` or `return`, or after every declaration, because "it looks more organized". It is symmetry, not structure: outside multi-line control blocks, the criterion is the change of step, not the kind of the next statement.
+- **Glued block.** A multi-line `if`, `for` or `while` attached to the line above or below it. The scope disappears in the first scan, and the preparation reads as part of the block.
 - **Hierarchy by quantity.** Two or three blank lines to signal a "more important section", outside a formal language convention.
 - **Title comments inside functions.** Lines like `// --- Validation ---` dividing a long body. The need for titles indicates that each section should be a function with that name.
 - **Whitespace diff.** Changing blank lines in code you are not modifying. It pollutes the history and makes review harder.
 
 ```python
-# Split block: opening and check separated
-handle = open_device(path)
+# Split block: the path and its single use separated
+path = os.path.join(root, name)
 
-if handle is None:
-    raise DeviceError(path)
+handle = open_device(path)
 
 # Correct: the two lines form a single step
+path = os.path.join(root, name)
 handle = open_device(path)
-if handle is None:
-    raise DeviceError(path)
 ```
 
 ## Blank lines and refactoring
@@ -311,8 +331,8 @@ Configure the formatter in the project and run it in CI. That way review discuss
 - [ ] At most 1 blank line in a row (except where the language convention defines another value)
 - [ ] No blank line right after opening a block or before closing it
 - [ ] Variables declared next to the block that consumes them
-- [ ] Inseparable pairs (open/check, lock/unlock, declare/use) stay together
-- [ ] Multi-line loops and conditions have space before (their preparations) and after
+- [ ] Inseparable pairs (lock/unlock, declare/single use, operation/counterpart) stay together
+- [ ] Multi-line control blocks have a blank line right before the opening line and right after the closing one (except after `{`, before `}`, and between consecutive guards)
 - [ ] The final `return` is separated only when it delivers the product of earlier steps
 - [ ] Consecutive guards form a single block
 - [ ] Tests follow exactly three blocks: Arrange, Act, Assert
