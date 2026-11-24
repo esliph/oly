@@ -11,6 +11,15 @@ _image_for() {
   esac
 }
 
+# _list_tracked_sources <file>: writes the tracked .cpp and .hpp files to <file>, NUL-separated. Fails when git cannot
+# list them (a git worktree: the container mounts only the checkout) or lists none, so a check never passes on nothing.
+_list_tracked_sources() {
+  # The mounted checkout belongs to another user than the container's, and git refuses to read it without this.
+  git -c safe.directory='*' ls-files -z '*.cpp' '*.hpp' > "$1" || _fail 1 "git cannot list the tracked files here: pass them, as in ./spur $SPUR_TASK \$(git ls-files '*.cpp' '*.hpp')"
+
+  [ -s "$1" ] || _fail 1 "git lists no tracked .cpp or .hpp file"
+}
+
 _require_games_preset() {
   case $1 in
     wasm-games*) ;;
@@ -194,13 +203,24 @@ format: ## clang-format the given files, or every tracked .cpp/.hpp
     exec clang-format -i "$@"
   fi
 
-  # The mounted checkout belongs to another user than the container's, and git refuses to read it without this.
-  git -c safe.directory='*' ls-files -z '*.cpp' '*.hpp' | xargs -0 clang-format -i
+  list=$(mktemp)
+  trap 'rm -f "$list"' EXIT
 
-format-check: ## fail when a tracked .cpp/.hpp is not clang-formatted
+  _list_tracked_sources "$list"
+  xargs -0 clang-format -i < "$list"
+
+format-check: ## fail when the given files, or a tracked .cpp/.hpp, are not clang-formatted
   _in dev -- "$@"
 
-  git -c safe.directory='*' ls-files -z '*.cpp' '*.hpp' | xargs -0 clang-format --dry-run --Werror
+  if [ "$#" -gt 0 ]; then
+    exec clang-format --dry-run --Werror "$@"
+  fi
+
+  list=$(mktemp)
+  trap 'rm -f "$list"' EXIT
+
+  _list_tracked_sources "$list"
+  xargs -0 clang-format --dry-run --Werror < "$list"
 
 schema-tool: ## build oly-schema for the machine
   _in wasm -- "$@"

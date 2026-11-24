@@ -58,4 +58,4 @@ A game fetches the engine with `FetchContent` ([Publishing](publishing.md#the-en
 
 - Project skills: `add-test-case` (register a suite, a `TEST_CASE` or a `contract_death` case) and `bench-compare` (manual only, `/bench-compare <prefix>`: measures NF-P1/P2/P5 and records into `docs/reference/benchmarks/`).
 - Agents: `spec-conformance-reviewer` (spec, invariants and `checkInvariants` coverage) and `perf-reviewer` (hot-path cost, checked in the assembly).
-- `PostToolUse` hook `.claude/hooks/clang-format.sh`: runs `clang-format -i` in the `dev` container after every edit of a `.cpp` or `.hpp` file. If Docker is stopped, the hook fails. The same formatter is the one `./spur format-check` runs in CI.
+- `PostToolUse` hook `.claude/hooks/clang-format.sh`: runs `clang-format -i` in the `dev` container after every edit of a `.cpp` or `.hpp` file. If Docker is stopped, the hook fails. The same formatter is the one `./spur format-check` runs in CI. From a git worktree, pass the files: `./spur format-check $(git ls-files '*.cpp' '*.hpp')`.

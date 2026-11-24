@@ -26,8 +26,8 @@ The `./spur` tasks of the engine repository, run from Git Bash at the repository
 | `dev` | `dev` | a command, or a shell, in the `dev` container |
 | `wasm` | `wasm` | a command, or a shell, in the `wasm` container |
 | `windows` | `windows` | a command, or a shell, in the `windows` container |
-| `format` | `dev` | clang-formats the given files, or every tracked `.cpp` and `.hpp` with no argument |
-| `format-check` | `dev` | fails when a tracked `.cpp` or `.hpp` is not formatted (CI runs it) |
+| `format` | `dev` | clang-formats the given files, or every tracked `.cpp` and `.hpp` with no argument; with no argument it fails when git cannot list the files (a git worktree), so pass them there |
+| `format-check` | `dev` | fails when a given file, or a tracked `.cpp` or `.hpp`, is not formatted (CI runs it); with no argument it fails when git cannot list the files (a git worktree), so pass them there |
 | `schema-tool` | `wasm` | builds `oly-schema` for the machine (preset `schema-tool`) |
 | `ts` | `wasm` | builds `oly-schema`, configures `$PRESET` (default `wasm-games`), writes each test game's TS schema from its CMake target (`oly_typescript_schemas`) and the test-only schemas, and compiles the TS |
 | `games-test` | `wasm` | `ts`, then the tests of a `wasm-games*` preset (default `wasm-games`) |
@@ -93,6 +93,7 @@ PRESET=release ./spur build       # builds tests + benchmarks in Release, assert
 ./spur dev ./build/debug-asan/tests/ecs_unit_world -tc="case name"   # one specific doctest TEST_CASE
 ./spur format <files>             # clang-format the given files; with no argument, every tracked .cpp/.hpp
 ./spur format-check               # fails when a tracked .cpp/.hpp is not formatted
+./spur format-check $(git ls-files '*.cpp' '*.hpp')   # from a git worktree, git fails in the container: pass the files
 ```
 
 The fuzz tests (`fuzz_vs_model`, parts of `command_buffer`) read the seed and the number of operations from `OLY_FUZZ_SEED` and `OLY_FUZZ_OPS` (`engine/runtime/ecs/tests/support/model.hpp`). The seed used is printed to stderr, to reproduce a failure.
