@@ -44,7 +44,7 @@ docs/
 - A fact has one home. Every other page links to it and does not copy it. The rules a game relies on (deferred or direct, event rounds, scope, validity) are written only in `explanation/concepts/`.
 - A rule appears in a language page only when it exists only in that language (TypeScript: `raw()` arrays, views invalidated by memory growth, `ContractError`).
 - Links are relative. Anchors follow GitHub's rule: lowercase, punctuation removed, spaces become `-` (`## Systems in C++` is `#systems-in-c`).
-- The link checker (`tools/check_links.py`) runs with the lint tests. It reports a broken file, a broken anchor and a link whose case differs from the file.
+- The link checker (`tools/check_links.py`) is neither a test nor a CI step: run it by hand, locally, with `./spur dev python3 -I tools/check_links.py --root .`. It reports a broken file, a broken anchor and a link whose case differs from the file. Its own test is `./spur dev python3 -I tools/test_check_links.py`.
 
 ## Page contracts
 
