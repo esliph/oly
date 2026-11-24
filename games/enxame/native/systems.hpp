@@ -15,3 +15,7 @@ void drawWorld(oly::app::SystemContext& context);
 void placeTurret(oly::app::SystemContext& context);
 void fireTurrets(oly::app::SystemContext& context);
 void moveProjectiles(oly::app::SystemContext& context);
+
+// S2.
+void moveBeltItems(oly::app::SystemContext& context);
+void runAssemblers(oly::app::SystemContext& context);

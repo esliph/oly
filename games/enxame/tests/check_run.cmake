@@ -1,5 +1,5 @@
 # Runs COMMAND (a ; list), requires exit 0 and checks the JSON in OUT: scenario is SCENARIO, step.p50 exists and, when
-# TIMING is on, systems has at least one entry.
+# TIMING is on, systems has at least one entry; for S2, measures.allocationsPerStep.total exists.
 execute_process(
   COMMAND ${COMMAND}
   RESULT_VARIABLE exitCode
@@ -25,4 +25,8 @@ if(TIMING STREQUAL on)
   if(systemCount LESS 1)
     message(FATAL_ERROR "timing is on and systems is empty")
   endif()
+endif()
+
+if(SCENARIO STREQUAL S2)
+  string(JSON allocationTotal GET "${json}" measures allocationsPerStep total)
 endif()

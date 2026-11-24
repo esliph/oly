@@ -32,6 +32,8 @@ namespace enxame {
     std::optional<SpatialHash> hash;
     HordeParameters horde{};
     CombatParameters combat{};
+    FactoryParameters factory{};
+    std::vector<oly::ecs::Entity> assemblerOfBelt; // [belt]: an item reaches its assembler with get
     std::vector<oly::ecs::Entity> gatheredEntities;
     std::vector<float> gatheredXs;
     std::vector<float> gatheredYs;

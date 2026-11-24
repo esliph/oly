@@ -20,6 +20,8 @@ namespace enxame {
     constexpr float EnemySize = 4.0f;
     constexpr float TurretSize = 8.0f;
     constexpr float ProjectileSize = 2.0f;
+    constexpr float BeltItemSize = 3.0f;
+    constexpr float AssemblerSize = 8.0f;
 
     ScenarioId windowScenario = ScenarioId::Playable;
     uint32_t windowSize = 0;
@@ -58,6 +60,10 @@ namespace enxame {
     }
 
     void drawMap(const WorldView& view) {
+      if (!view.simulation->map) {
+        return;
+      }
+
       const Camera& camera = view.simulation->camera;
       const TileMap& map = *view.simulation->map;
       const float halfWidth = LogicalWidth / 2.0f / camera.zoom;
@@ -136,4 +142,6 @@ OLY_SYSTEM(drawWorld) {
   enxame::drawEntities<Enemy>(context, view, {220, 60, 60}, enxame::EnemySize);
   enxame::drawEntities<Turret>(context, view, {80, 140, 255}, enxame::TurretSize);
   enxame::drawEntities<Projectile>(context, view, {255, 220, 80}, enxame::ProjectileSize);
+  enxame::drawEntities<BeltItem>(context, view, {170, 170, 170}, enxame::BeltItemSize);
+  enxame::drawEntities<Assembler>(context, view, {230, 140, 40}, enxame::AssemblerSize);
 }

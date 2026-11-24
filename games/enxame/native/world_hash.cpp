@@ -14,6 +14,8 @@ namespace enxame {
     static_assert(sizeof(Position) == 2 * sizeof(float));
     static_assert(sizeof(Turret) == sizeof(float));
     static_assert(sizeof(Projectile) == 3 * sizeof(float));
+    static_assert(sizeof(BeltItem) == sizeof(uint32_t) + sizeof(float));
+    static_assert(sizeof(Assembler) == 2 * sizeof(uint32_t) + sizeof(float));
 
     template <class T>
     uint64_t foldBytes(uint64_t hash, const T& value) {
@@ -58,6 +60,8 @@ namespace enxame {
       hash = foldComponent<Enemy>(hash, world, entity);
       hash = foldComponent<Turret>(hash, world, entity);
       hash = foldComponent<Projectile>(hash, world, entity);
+      hash = foldComponent<BeltItem>(hash, world, entity);
+      hash = foldComponent<Assembler>(hash, world, entity);
     }
 
     return hash;

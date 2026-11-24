@@ -9,6 +9,7 @@
 #include "schema.generated.hpp"
 #include "systems.hpp"
 #include "workloads/s1_horde.hpp"
+#include "workloads/s2_factory.hpp"
 #include "workloads/s5_replay.hpp"
 
 namespace enxame {
@@ -17,7 +18,7 @@ namespace enxame {
     constexpr std::array<ScenarioInfo, 9> Table{{
       {"", workloads::S5Sizes, workloads::S5Seed, workloads::S5Run, ""},
       {"S1", workloads::S1Sizes, workloads::S1Seed, workloads::S1Run, ""},
-      {"", {}, 0, {0, 0}, ""},
+      {"S2", workloads::S2Sizes, workloads::S2Seed, workloads::S2Run, ""},
       {"", {}, 0, {0, 0}, ""},
       {"S4", {}, 0, {0, 0}, "needs stable ids"},
       {"S5", workloads::S5Sizes, workloads::S5Seed, workloads::S5Run, ""},
@@ -26,7 +27,7 @@ namespace enxame {
       {"", {}, 0, {0, 0}, ""},
     }};
 
-    constexpr std::array<ScenarioId, 4> Listed{ScenarioId::S1, ScenarioId::S4, ScenarioId::S5, ScenarioId::S7};
+    constexpr std::array<ScenarioId, 5> Listed{ScenarioId::S1, ScenarioId::S2, ScenarioId::S4, ScenarioId::S5, ScenarioId::S7};
 
     std::string sizesText(std::span<const uint32_t> sizes) {
       std::string text;
@@ -77,6 +78,32 @@ namespace enxame {
 
       addHordeSystems(*simulation, engine);
       spawnHorde(*simulation, engine, size);
+
+      return simulation;
+    }
+
+    // Belt b runs along y = beltSpacing * b from x = 0; its assembler sits one tile after the belt's end.
+    std::unique_ptr<Simulation> setUpFactory(uint32_t size, oly::app::Engine& engine) {
+      const ScenarioInfo& info = scenarioInfo(ScenarioId::S2);
+      std::unique_ptr<Simulation> simulation = std::make_unique<Simulation>(info.seed);
+      simulation->factory = workloads::S2Factory;
+      const FactoryParameters& factory = simulation->factory;
+      const float beltLength = static_cast<float>(factory.beltTiles) * factory.tileSize;
+      const uint32_t itemsPerBelt = size / factory.assemblers;
+
+      for (uint32_t belt = 0; belt < factory.assemblers; ++belt) {
+        const float y = static_cast<float>(belt) * factory.beltSpacing;
+        simulation->assemblerOfBelt.push_back(engine.world().spawn(Assembler{belt, 0, 0.0f}, Position{beltLength + factory.tileSize, y}));
+
+        for (uint32_t item = 0; item < itemsPerBelt; ++item) {
+          const float offset = beltLength / static_cast<float>(itemsPerBelt) * static_cast<float>(item);
+          engine.world().spawn(BeltItem{belt, offset}, Position{offset, y});
+        }
+      }
+
+      simulation->camera = {(beltLength + factory.tileSize) / 2.0f, static_cast<float>(factory.assemblers - 1) * factory.beltSpacing / 2.0f, 1.0f};
+      engine.addSystem(oly::app::Phase::Update, "moveBeltItems", moveBeltItems, simulation.get());
+      engine.addSystem(oly::app::Phase::Update, "runAssemblers", runAssemblers, simulation.get());
 
       return simulation;
     }
@@ -141,12 +168,16 @@ namespace enxame {
   }
 
   std::unique_ptr<Simulation> setUpScenario(ScenarioId scenario, uint32_t size, oly::app::Engine& engine) {
-    OLY_ASSERT(scenario == ScenarioId::S1 || scenario == ScenarioId::S5 || scenario == ScenarioId::Playable, "setUpScenario: scenario %u is not implemented yet", static_cast<unsigned>(scenario));
+    OLY_ASSERT(scenario == ScenarioId::S1 || scenario == ScenarioId::S2 || scenario == ScenarioId::S5 || scenario == ScenarioId::Playable, "setUpScenario: scenario %u is not implemented yet", static_cast<unsigned>(scenario));
 
     engine.actions().bind(actions::place, oly::input::MouseButton::Left);
 
     if (scenario == ScenarioId::S1) {
       return setUpHorde(scenarioInfo(scenario), workloads::S1Horde, size, engine);
+    }
+
+    if (scenario == ScenarioId::S2) {
+      return setUpFactory(size, engine);
     }
 
     return setUpPlayableWorld(size, engine);

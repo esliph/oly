@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include "allocation_counter.hpp"
 #include "oly/app/engine.hpp"
 #include "oly/app/game.hpp"
 #include "oly/ecs/world.hpp"
@@ -53,6 +54,7 @@ namespace enxame {
     // What one run of a scenario measured: wall time per step, and per system and per flush when timing is on.
     struct Measurements {
       std::vector<uint64_t> stepNanoseconds;
+      std::vector<uint64_t> allocationsPerStep; // operator new calls inside one frame
       std::vector<std::vector<uint64_t>> systemNanoseconds; // [system slot]: only the steps where it ran
       std::vector<std::vector<uint64_t>> flushNanoseconds; // [phase]
     };
@@ -110,15 +112,29 @@ namespace enxame {
       return count;
     }
 
-    std::string measuresOf(ScenarioId scenario, oly::ecs::World& world) {
-      if (scenario != ScenarioId::S5) {
-        return "{}";
+    std::string measuresOf(ScenarioId scenario, oly::ecs::World& world, const Measurements& measurements) {
+      char text[200];
+
+      if (scenario == ScenarioId::S5) {
+        std::snprintf(text, sizeof(text), "{ \"worldHash\": \"0x%016llx\", \"enemiesLeft\": %zu, \"turrets\": %zu }", static_cast<unsigned long long>(worldHash(world)), countOf<Enemy>(world), countOf<Turret>(world));
+
+        return text;
       }
 
-      char text[160];
-      std::snprintf(text, sizeof(text), "{ \"worldHash\": \"0x%016llx\", \"enemiesLeft\": %zu, \"turrets\": %zu }", static_cast<unsigned long long>(worldHash(world)), countOf<Enemy>(world), countOf<Turret>(world));
+      if (scenario == ScenarioId::S2) {
+        std::vector<uint64_t> perStep = measurements.allocationsPerStep;
+        uint64_t total = 0;
 
-      return text;
+        for (const uint64_t allocated : perStep) {
+          total += allocated;
+        }
+
+        std::snprintf(text, sizeof(text), "{ \"allocationsPerStep\": { \"p50\": %llu, \"max\": %llu, \"total\": %llu } }", static_cast<unsigned long long>(percentile(perStep, 50.0)), static_cast<unsigned long long>(percentile(perStep, 100.0)), static_cast<unsigned long long>(total));
+
+        return text;
+      }
+
+      return "{}";
     }
   }
 
@@ -156,9 +172,11 @@ namespace enxame {
         engine.actions().buttonDown(oly::input::MouseButton::Left);
       }
 
+      const uint64_t allocationsBefore = allocationCount();
       const auto start = std::chrono::steady_clock::now();
       engine.frame(static_cast<double>(frame) / 60.0);
       const uint64_t elapsed = nanosecondsSince(start);
+      const uint64_t allocated = allocationCount() - allocationsBefore;
 
       if (clicking) {
         engine.actions().buttonUp(oly::input::MouseButton::Left);
@@ -166,6 +184,7 @@ namespace enxame {
 
       if (frame > run.warmup) {
         measurements.stepNanoseconds.push_back(elapsed);
+        measurements.allocationsPerStep.push_back(allocated);
 
         if (options.timing) {
           record(engine, measurements);
@@ -173,7 +192,7 @@ namespace enxame {
       }
     }
 
-    writeJson(file.get(), options, info, run, engine, measurements, measuresOf(*options.scenario, world));
+    writeJson(file.get(), options, info, run, engine, measurements, measuresOf(*options.scenario, world, measurements));
     std::printf("wrote %s\n", options.out.c_str());
 
     return 0;

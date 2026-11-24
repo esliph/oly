@@ -18,6 +18,16 @@ namespace enxame {
     float separationStrength; // world units per second at distance 0
   };
 
+  struct FactoryParameters {
+    uint32_t assemblers; // one belt each
+    uint32_t beltTiles;
+    float tileSize;
+    float itemSpeed; // world units per second
+    float craftSeconds;
+    uint32_t assemblerCapacity;
+    float beltSpacing; // distance between two belts, along y
+  };
+
   struct CombatParameters {
     float reloadSeconds;
     float range;
