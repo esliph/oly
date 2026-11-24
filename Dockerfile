@@ -4,7 +4,7 @@ FROM gcc:${GCC_VERSION}
 # clang-format-22 and not Debian's default (19): .clang-format uses keys that 19 rejects
 # (BinPackParameters: OnePerLine, SortIncludes as a map, BinPackLongBracedList).
 # Headers for SDL3's X11 and Wayland video backends; SDL loads the libraries at run time.
-# ccache: CI keeps the compiler cache between runs (ci.yml); it is off unless CMAKE_CXX_COMPILER_LAUNCHER names it.
+# ccache: ./spur turns it on in this image, with the cache in build/.ccache; CI keeps that folder between runs (ci.yml).
 RUN apt-get update \
   && apt-get install -y --no-install-recommends cmake git python3 linux-perf clang-format-22 ccache \
     pkg-config libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxfixes-dev libxi-dev libxss-dev \

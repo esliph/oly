@@ -9,7 +9,9 @@ The `./spur` tasks of the engine repository, run from Git Bash at the repository
 - `./spur --list` shows the tasks, and `./spur --describe <task>` the help of one.
 - Each task runs in the container its preset needs ([Services](#services)). Typed inside the wrong container, it exits with 64.
 - `PRESET=<name>` chooses the preset of a task that takes one ([Presets](#presets)). The arguments after the task go to the tool the task runs (`ctest` for the test tasks).
-- These host variables reach the container, and one unset on the host stays unset in it: `PRESET`, `OLY_FUZZ_SEED`, `OLY_FUZZ_OPS`, `CCACHE_DIR`, `CCACHE_MAXSIZE`, `CMAKE_C_COMPILER_LAUNCHER`, `CMAKE_CXX_COMPILER_LAUNCHER` and `CTEST_PARALLEL_LEVEL`. CI (`.github/workflows/ci.yml`) sets the last five, to keep a compiler cache in `build/.ccache` between runs and to run ctest in parallel. The `dev` and `wasm` images carry `ccache`; locally, `CMAKE_CXX_COMPILER_LAUNCHER=ccache CCACHE_DIR=/app/build/.ccache ./spur test` uses it the same way.
+- These host variables reach the container, and one unset on the host stays unset in it: `PRESET`, `OLY_FUZZ_SEED`, `OLY_FUZZ_OPS` and `CTEST_PARALLEL_LEVEL`. CI (`.github/workflows/ci.yml`) sets the last one, to run ctest in parallel.
+- The compiler cache is on by default in the `dev` and `wasm` containers, which carry `ccache`: `CCACHE_DIR` is `/app/build/.ccache`, `CCACHE_MAXSIZE` is `500M` and `CMAKE_C_COMPILER_LAUNCHER` and `CMAKE_CXX_COMPILER_LAUNCHER` are `ccache`. A host variable of the same name replaces the default, and CI sets the same values to keep the cache between runs. The `windows` container has no `ccache` and gets none of them.
+- Every build task runs at most 6 jobs. An unbounded `-j` used the 12 cores and 5.8 GiB of the 6.7 GiB of Docker Desktop in a `wasm-games` build (measured 2026-11-24).
 - Images built before `./spur` existed lack `OLY_TOOLCHAIN` and stop with exit 69: run `./spur images`.
 - `-x` and `-n` given on the host show only the dispatch to the container. To trace a task, run it inside: `./spur dev ./spur -x test`.
 

@@ -18,6 +18,10 @@ _require_games_preset() {
   esac
 }
 
+# An unbounded -j peaked at about 330 processes and 5.8 GiB of the 6.7 GiB of Docker Desktop in a wasm-games build
+# (measured 2026-11-24, 12 cores).
+_build_jobs=6
+
 # _in IMAGE [--service SERVICE] [compose run options...] -- [task args...]
 # Returns when this is the IMAGE toolchain; on the host, re-runs the task in
 # the compose service. The compose options must end up before the service, and
@@ -64,11 +68,20 @@ _in() {
     _rotate=$((_rotate - 1))
   done
 
+  # The compiler cache is on by default, with the values of ci.yml, in the images that carry ccache: the windows image
+  # does not, and a launcher it cannot run would break its build.
+  case $_image in
+    dev | wasm)
+      set -- -e CCACHE_DIR="${CCACHE_DIR:-/app/build/.ccache}" -e CCACHE_MAXSIZE="${CCACHE_MAXSIZE:-500M}" \
+        -e CMAKE_C_COMPILER_LAUNCHER="${CMAKE_C_COMPILER_LAUNCHER:-ccache}" \
+        -e CMAKE_CXX_COMPILER_LAUNCHER="${CMAKE_CXX_COMPILER_LAUNCHER:-ccache}" "$@"
+      ;;
+  esac
+
   # Git Bash would rewrite arguments such as '^ecs\.' as Windows paths. A variable unset on the host stays unset in the
-  # container: the compiler cache and the ctest parallelism are on only where CI turns them on (ci.yml).
+  # container: the ctest parallelism is on only where CI turns it on (ci.yml).
   export MSYS_NO_PATHCONV=1
-  exec docker compose --env-file toolchain.env run --rm -e PRESET -e OLY_FUZZ_SEED -e OLY_FUZZ_OPS \
-    -e CCACHE_DIR -e CCACHE_MAXSIZE -e CMAKE_C_COMPILER_LAUNCHER -e CMAKE_CXX_COMPILER_LAUNCHER -e CTEST_PARALLEL_LEVEL "$@"
+  exec docker compose --env-file toolchain.env run --rm -e PRESET -e OLY_FUZZ_SEED -e OLY_FUZZ_OPS -e CTEST_PARALLEL_LEVEL "$@"
 }
 
 # _serve <directory> <port>: serves a staged tree the way GitHub serves a release; stops when the task ends.
@@ -117,7 +130,7 @@ build: ## configure and build $PRESET (default debug-asan)
   _in "$(_image_for "$preset")" -- "$@"
 
   PRESET=$preset spur configure
-  cmake --build --preset "$preset" -j
+  cmake --build --preset "$preset" -j "$_build_jobs"
 
 ## Run ctest on $PRESET after building it; the arguments go to ctest.
 ##
@@ -208,7 +221,7 @@ schema-tool: ## build oly-schema for the machine
   # Built for the machine: a WASM build cannot run the oly-schema it compiles. Only in the wasm image; native presets
   # build oly-schema with the tree.
   cmake --preset schema-tool
-  cmake --build --preset schema-tool -j
+  cmake --build --preset schema-tool -j "$_build_jobs"
 
 ## Build cmake/tests/consumer, a project outside this tree that fetches the engine with FetchContent (here: this
 ## checkout), and run it. No argument: native, then web.
@@ -232,7 +245,7 @@ subproject-native: ## the native half of subproject-test
   # An incremental build skips the compile that prints the warning the check below looks for.
   rm -rf "$directory"
   cmake -S cmake/tests/consumer -B "$directory" -DFETCHCONTENT_SOURCE_DIR_OLY="$PWD"
-  cmake --build "$directory" -j > "$directory/build.log" 2>&1 || { cat "$directory/build.log"; _fail 1 "the native consumer did not build"; }
+  cmake --build "$directory" -j "$_build_jobs" > "$directory/build.log" 2>&1 || { cat "$directory/build.log"; _fail 1 "the native consumer did not build"; }
   cat "$directory/build.log"
   grep -q 'warning: unused variable' "$directory/build.log" || _fail 1 "the consumer's own warning is gone: a subproject must not add -Werror to a game"
 
@@ -253,7 +266,7 @@ subproject-web: ## the web half of subproject-test
   cmake -S cmake/tests/consumer -B "$directory" \
     -DCMAKE_TOOLCHAIN_FILE=/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake \
     -DFETCHCONTENT_SOURCE_DIR_OLY="$PWD" -DOLY_SCHEMA_TOOL="$PWD/build/schema-tool/bin/oly-schema"
-  cmake --build "$directory" -j --verbose > "$directory/build.log" 2>&1 || { cat "$directory/build.log"; _fail 1 "the web consumer did not build"; }
+  cmake --build "$directory" -j "$_build_jobs" --verbose > "$directory/build.log" 2>&1 || { cat "$directory/build.log"; _fail 1 "the web consumer did not build"; }
   cat "$directory/build.log"
   grep -q -- '-sALLOW_MEMORY_GROWTH=1' "$directory/build.log" || _fail 1 "the web consumer links without -sALLOW_MEMORY_GROWTH=1"
 
