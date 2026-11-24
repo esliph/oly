@@ -121,4 +121,28 @@ unset OLY_IN_DOCKER
 check "windows in the container: its own build directory" sh -c "grep -q -- '-B build/cmake-windows-docker ' '$CMAKE_LOG'"
 check "windows in the container: the MinGW toolchain file" sh -c "grep -q -- '-DCMAKE_TOOLCHAIN_FILE=.*mingw-w64.cmake' '$CMAKE_LOG'"
 
+: > "$DOCKER_LOG"
+run_task "$work/native-game" build --docker --release
+check "release: passes --release on, after --host" docker_line_has " build --host --release"
+
+: > "$DOCKER_LOG"
+run_task "$work/native-game" run --docker --release
+check "native run --release: exit 64" exit_is 64
+check "native run --release: names the release directory" stderr_has "run build/cmake-release-docker/games/native_game on the host"
+
+: > "$CMAKE_LOG"
+OLY_IN_DOCKER=1
+export OLY_IN_DOCKER
+run_task "$work/native-game" build --host --release --platform windows
+unset OLY_IN_DOCKER
+check "release windows in the container: its own build directory" sh -c "grep -q -- '-B build/cmake-release-windows-docker ' '$CMAKE_LOG'"
+
+: > "$CMAKE_LOG"
+run_task "$work/native-game" build --host --platform windows --release
+check "release after --platform: the same directory" sh -c "grep -q -- '-B build/cmake-release-windows ' '$CMAKE_LOG'"
+
+run_task "$work/web-game" build --release
+check "web --release: exit 64" exit_is 64
+check "web --release: message" stderr_has "--release is for native games"
+
 finish

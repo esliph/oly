@@ -100,10 +100,17 @@ _generator_arguments() {
 # Set by _start: windows, or empty for the host platform.
 _target=
 
+# Set by _start: 1 for --release, or empty.
+_release=
+
 # The container sees the game at /game, the host at its own path: one CMake cache cannot serve both, so each runner
 # and each target platform has its own build directory.
 _cmake_directory() {
   _directory=build/cmake
+
+  if [ -n "$_release" ]; then
+    _directory=$_directory-release
+  fi
 
   if [ "$_target" = windows ]; then
     _directory=$_directory-windows
@@ -129,10 +136,18 @@ _toolchain_arguments() {
   fi
 }
 
+_build_type() {
+  if [ -n "$_release" ]; then
+    echo Release
+  else
+    echo Debug
+  fi
+}
+
 _build_native() {
   _source=$(_engine_source)
   _directory=$(_cmake_directory)
-  cmake -S . -B "$_directory" $(_generator_arguments) $(_toolchain_arguments) -DCMAKE_BUILD_TYPE=Debug -DOLY_BUILD_NATIVE_HOST=ON "-DFETCHCONTENT_SOURCE_DIR_OLY=$_source"
+  cmake -S . -B "$_directory" $(_generator_arguments) $(_toolchain_arguments) -DCMAKE_BUILD_TYPE=$(_build_type) -DOLY_BUILD_NATIVE_HOST=ON "-DFETCHCONTENT_SOURCE_DIR_OLY=$_source"
   cmake --build "$_directory" -j
 }
 
@@ -424,6 +439,10 @@ _dispatch_docker() {
     set -- --platform "$_target" "$@"
   fi
 
+  if [ -n "$_release" ]; then
+    set -- --release "$@"
+  fi
+
   set -- "$SPUR_TASK" --host "$@"
   set -- sh "$_spur" -f "$_tools/Spurfile" "$@"
   set -- "$_service" "$@"
@@ -467,6 +486,11 @@ _start() {
         _consumed=$((_consumed + 2))
         shift 2
         ;;
+      --release)
+        _release=1
+        _consumed=$((_consumed + 1))
+        shift
+        ;;
       *) break ;;
     esac
   done
@@ -478,6 +502,11 @@ _start() {
   if [ "$_target" = windows ] && [ "$_environment" != native ]; then
     _fail 64 "--platform windows is for native games"
   fi
+
+  if [ -n "$_release" ] && [ "$_environment" != native ]; then
+    _fail 64 "--release is for native games"
+  fi
+
   if [ "$_runner" != docker ]; then
     return 0
   fi
@@ -491,7 +520,7 @@ _start() {
   fi
 
   if [ "$SPUR_TASK" = run ] && [ "$_environment" = native ]; then
-    _fail 64 "a desktop window cannot open in the container: run build/cmake-docker/games/$(_env_value OLY_GAME) on the host"
+    _fail 64 "a desktop window cannot open in the container: run $(_cmake_directory)-docker/games/$(_env_value OLY_GAME) on the host"
   fi
 
   _dispatch_docker "$_service" "$@"

@@ -11,6 +11,7 @@ None.
 ### Migration
 
 - `Engine::setTimingEnabled`, `systemTimings` and `flushTimings` record the time of each system and flush of the last step ([Time per system](docs/reference/cpp/engine-and-systems.md#time-per-system)). A game keeps working without them.
+- `oly build`, `oly test` and `oly run` accept `--release`, a `Release` build in `build/cmake-release` for measuring ([The `oly` command](docs/reference/cli.md#oly-build-oly-test-and-oly-run)). A game keeps working without it.
 
 ## 0.2.0
 

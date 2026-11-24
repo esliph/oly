@@ -125,7 +125,7 @@ With `--docker` the launcher's `Spurfile` runs again inside the container with `
 
 ## Game builds are `Debug`
 
-`oly build`, `oly test` and `oly run` configure with `CMAKE_BUILD_TYPE=Debug`, so `OLY_ASSERT` stops a contract violation in a game. The engine's release presets are for measuring, not for the game's everyday loop.
+`oly build`, `oly test` and `oly run` configure with `CMAKE_BUILD_TYPE=Debug`, so `OLY_ASSERT` stops a contract violation in a game. Debug stays the default. `--release` configures `Release` in its own directory (`build/cmake-release`), for measuring and not for shipping: shipping builds are phase 7 of the roadmap. The engine's release presets are for measuring, not for the game's everyday loop.
 
 ## The engine as a subproject
 

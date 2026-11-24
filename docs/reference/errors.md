@@ -39,7 +39,7 @@ The CMake and `oly-schema` messages are the same for every environment: a web ga
 
 ### At run time
 
-In debug builds, a contract violation stops on `OLY_ASSERT`. `oly build`, `oly test` and `oly run` build in `Debug`, so a game made by `oly new` has the asserts on. In release builds (`release`, `native-games-release`, `wasm-games-release`) the contract is **not checked** and a violation is undefined behaviour. The `debug-asan`, `native-games` and `wasm-games` presets keep the asserts.
+In debug builds, a contract violation stops on `OLY_ASSERT`. `oly build`, `oly test` and `oly run` build in `Debug`, so a game made by `oly new` has the asserts on. In release builds (`release`, `native-games-release`, `wasm-games-release`, and `oly build --release`) the contract is **not checked** and a violation is undefined behaviour. The `debug-asan`, `native-games` and `wasm-games` presets keep the asserts.
 
 | Message contains | Origin | In TypeScript | Cause | Fix |
 |---|---|---|---|---|
@@ -121,6 +121,7 @@ The messages of [`oly`](cli.md) start with `oly:` (the launcher) or `oly <comman
 | `game name must match [a-z][a-z0-9-]*` | `oly new` | the name has capitals, spaces or `_`, or starts with a digit | rename the game |
 | `is a CMake or engine target name: pick another game name` | `oly new` | `test`, `all`, `clean`, `help`, `install`, `package`, `oly` and `oly-*` are targets | pick another game name |
 | `--platform windows is for native games` | `oly build`, `oly test`, `oly run` | `--platform windows` on a web game | build a web game without it |
+| `--release is for native games` | `oly build`, `oly test`, `oly run` | `--release` on a web game | build a web game without it |
 | `a desktop window cannot open in the container: run <path> on the host` | `oly run` | `oly run --docker` on a desktop game | run it on the host: `oly run --host` |
 | `OLY_ENGINE_DIR is not a directory` | launcher | the checkout path is wrong | fix the path ([local mode](cli.md#local-mode)) |
 | `oly-tools <version> has no launcher to copy into <folder>` | launcher | `oly upgrade` to a release built before the launcher traveled in `oly-tools` | pick a newer version; the game is left as it was |

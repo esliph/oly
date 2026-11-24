@@ -33,6 +33,13 @@ check "pinned: native host is on" sh -c "grep -q -- '-DOLY_BUILD_NATIVE_HOST=ON'
 check "pinned: the build type is Debug" sh -c "grep -q -- '-DCMAKE_BUILD_TYPE=Debug' \"\$CMAKE_LOG\""
 
 : > "$CMAKE_LOG"
+run_task "$work/meu-jogo" build --release
+check "release: build succeeds" exit_is 0
+check "release: the build type is Release" sh -c "grep -q -- '-DCMAKE_BUILD_TYPE=Release' \"\$CMAKE_LOG\""
+check "release: its own build directory" sh -c "grep -q -- '-B build/cmake-release ' \"\$CMAKE_LOG\""
+check "release: the native host is on" sh -c "grep -q -- '-DOLY_BUILD_NATIVE_HOST=ON' \"\$CMAKE_LOG\""
+
+: > "$CMAKE_LOG"
 TEST_ENGINE_DIR=/x
 run_task "$work/meu-jogo" build
 check "local: build succeeds" exit_is 0
