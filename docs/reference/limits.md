@@ -1,6 +1,8 @@
-# Known limitations and out of scope
+# Known limitations, not yet and out of scope
 
-- **Out of the engine's scope**: render, physics, audio, camera, UI, assets, networking, serialization, editor, threads and gamepad. Render and collision belong to the game.
+- **Not yet**, with the phase of the [roadmap](../superpowers/specs/2026-11-24-aaa-roadmap-design.md): physics (`physics2d`, phase 1), save and load with stable ids and the in-game inspector (phase 2), camera (`camera2d`, phase 2), threads (phase 3), assets (phase 5), render (`render2d`, phase 6). Render and collision belong to the game until their phase.
+- **Not planned yet**: audio, UI and gamepad. No phase of the roadmap plans them.
+- **Out of scope**: networking, a 3D render and an editor beyond the in-game inspector.
 - **No shared library for foreign clients yet.** The C API headers are valid C and a C test drives an engine through them (`capi.foreign_client`), but nothing builds a `.so` or `.dll` that another language could load.
 - **Windows is checked under Wine and by hand only.** The whole test suite runs under Wine (`./spur windows-test`), but no real Windows machine runs it, and the `.exe` is opened by hand only.
 - **The Linux window is checked by hand only.** The tests use SDL's dummy video driver; the X11 and Wayland backends are checked to be compiled in, not to open a window.

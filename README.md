@@ -1,6 +1,6 @@
 # Oly
 
-Oly is a game engine in C++20 for 2D games, built on an archetype ECS (*Entity Component System*). A game runs in the browser (WebAssembly with a TypeScript client) or on the desktop (a native host in a window). Oly is a study project, published for the author's own games: every performance target has a benchmark and a recorded result ([Benchmark results](docs/reference/benchmarks/README.md)).
+Oly is a game engine in C++20 for 2D games, built on an archetype ECS (*Entity Component System*). A game runs in the browser (WebAssembly with a TypeScript client) or on the desktop (a native host in a window). Oly is a production engine for indie 2D games; 3D is expected later. C++ on `native` is the first-class environment, and `web` stays supported and may lag one phase behind. Every performance target has a benchmark and a recorded result ([Benchmark results](docs/reference/benchmarks/README.md)).
 
 > **Status:** version `0.x`, in development. The API may change. The packages are not published on npm: a release carries them.
 

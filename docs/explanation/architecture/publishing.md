@@ -1,6 +1,6 @@
 # Publishing
 
-How a game outside this repository gets the engine: a versioned release, the `oly` launcher that fetches it, local mode for engine work, and the file that fixes the toolchain. The commands are in [The `oly` command](../../reference/cli.md) and in [Commands](../../reference/contributor/commands.md); the steps of a release are in [Cut a release](../../how-to/contributor/cut-a-release.md). This page says why they are shaped this way.
+How a game outside this repository gets the engine: a versioned release, the `oly` launcher that fetches it, local mode for engine work, and the file that fixes the toolchain. The commands are in [The `oly` command](../../reference/cli.md) and in [Commands](../../reference/contributor/commands.md); the steps of a release are in [Cut a release](../../how-to/contributor/cut-a-release.md). This page says why they are shaped this way. Releases serve indie 2D games made outside this repository.
 
 ```
 engine repository                          a game's repository

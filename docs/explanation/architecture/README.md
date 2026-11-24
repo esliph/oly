@@ -4,7 +4,7 @@ This section describes Oly as it is today: what each part does, how the parts co
 
 ## Overview
 
-Oly is a game engine written in C++20 for 2D games, with 3D transforms in `essentials3d`, in the browser and on the desktop. It is a study and benchmark project, published for the author's own games ([Publishing](publishing.md)): every data representation decision has a measured cost.
+Oly is a game engine written in C++20 for 2D games, with 3D transforms in `essentials3d`, in the browser and on the desktop. It is a production engine for indie 2D games, published for games made outside this repository ([Publishing](publishing.md)); 3D is expected later. C++ on `native` is the first-class environment, and `web` stays supported and may lag one phase behind. Every data representation decision has a measured cost.
 
 The pieces:
 

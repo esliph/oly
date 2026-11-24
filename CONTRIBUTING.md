@@ -1,6 +1,6 @@
 # Contributing to Oly
 
-Thank you for your interest. Oly is a study and benchmark project, published for the author's own games: every data representation decision has a measured cost, and contributions are judged by that same rule. This page says what is welcome, how to set up the toolchain and what a pull request needs to be merged.
+Thank you for your interest. Oly is a production engine for indie 2D games, with C++ on `native` as the first-class environment: every data representation decision has a measured cost, and contributions are judged by that same rule. This page says what is welcome, how to set up the toolchain and what a pull request needs to be merged.
 
 By taking part you agree to follow the [code of conduct](CODE_OF_CONDUCT.md). Security problems are never reported in a public issue: see [SECURITY.md](SECURITY.md).
 
