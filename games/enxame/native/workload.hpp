@@ -28,6 +28,20 @@ namespace enxame {
     float beltSpacing; // distance between two belts, along y
   };
 
+  struct VehicleParameters {
+    uint32_t columns; // vehicle centres sit on a grid this wide
+    float spacing;
+    float radius; // of the circle each vehicle drives
+    float angularSpeed; // radians per second
+    float turretOffset; // each turret sits at local (+-offset, +-offset)
+  };
+
+  struct WaveParameters {
+    uint32_t stepsPerWave;
+    float modifierProbability; // each of the eight modifier tags, per enemy
+    float areaSide; // the spawn area is a square of this side centred on the origin
+  };
+
   struct CombatParameters {
     float reloadSeconds;
     float range;

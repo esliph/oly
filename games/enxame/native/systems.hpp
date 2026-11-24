@@ -19,3 +19,8 @@ void moveProjectiles(oly::app::SystemContext& context);
 // S2.
 void moveBeltItems(oly::app::SystemContext& context);
 void runAssemblers(oly::app::SystemContext& context);
+
+// S3, S6 and S8.
+void toggleStatus(oly::app::SystemContext& context);
+void moveVehicles(oly::app::SystemContext& context);
+void runWaves(oly::app::SystemContext& context);

@@ -33,6 +33,13 @@ namespace enxame {
     HordeParameters horde{};
     CombatParameters combat{};
     FactoryParameters factory{};
+    VehicleParameters vehicles{};
+    WaveParameters waves{};
+    float toggleProbability = 0.0f;
+    uint32_t statusTogglesLastStep = 0;
+    uint32_t waveSize = 0; // enemies per wave
+    uint32_t stepInWave = 0;
+    uint32_t wavesCompleted = 0;
     std::vector<oly::ecs::Entity> assemblerOfBelt; // [belt]: an item reaches its assembler with get
     std::vector<oly::ecs::Entity> gatheredEntities;
     std::vector<float> gatheredXs;

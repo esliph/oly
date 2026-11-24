@@ -7,9 +7,14 @@
 #include <string>
 #include <vector>
 
+#ifdef __linux__
+#include <unistd.h>
+#endif
+
 #include "allocation_counter.hpp"
 #include "oly/app/engine.hpp"
 #include "oly/app/game.hpp"
+#include "oly/ecs/diagnostics.hpp"
 #include "oly/ecs/world.hpp"
 #include "oly/input/physical_button.hpp"
 #include "scenario.hpp"
@@ -52,9 +57,19 @@ namespace enxame {
     }
 
     // What one run of a scenario measured: wall time per step, and per system and per flush when timing is on.
+    struct WaveRecord {
+      uint32_t wave;
+      uint32_t archetypes;
+      uint32_t liveEntities;
+      uint64_t columnBytes;
+      int64_t residentBytes; // -1 where unknown
+    };
+
     struct Measurements {
       std::vector<uint64_t> stepNanoseconds;
       std::vector<uint64_t> allocationsPerStep; // operator new calls inside one frame
+      std::vector<uint64_t> transitionsPerStep; // S3: status toggles of the last step of each frame
+      std::vector<WaveRecord> waves; // S8: one per completed wave
       std::vector<std::vector<uint64_t>> systemNanoseconds; // [system slot]: only the steps where it ran
       std::vector<std::vector<uint64_t>> flushNanoseconds; // [phase]
     };
@@ -112,13 +127,102 @@ namespace enxame {
       return count;
     }
 
-    std::string measuresOf(ScenarioId scenario, oly::ecs::World& world, const Measurements& measurements) {
+    // Resident memory of the process, in bytes; -1 where /proc is not there.
+    int64_t residentBytes() {
+#ifdef __linux__
+      std::FILE* file = std::fopen("/proc/self/statm", "r");
+
+      if (file == nullptr) {
+        return -1;
+      }
+
+      long totalPages = 0;
+      long residentPages = 0;
+      const int fields = std::fscanf(file, "%ld %ld", &totalPages, &residentPages);
+      std::fclose(file);
+
+      return fields == 2 ? static_cast<int64_t>(residentPages) * sysconf(_SC_PAGESIZE) : -1;
+#else
+      return -1;
+#endif
+    }
+
+    WaveRecord waveRecordOf(oly::ecs::World& world, uint32_t wave) {
+      const oly::ecs::WorldStats stats = oly::ecs::stats(world);
+      uint64_t columnBytes = 0;
+
+      for (const oly::ecs::ArchetypeStats& archetype : stats.archetypes) {
+        columnBytes += archetype.columnBytes;
+      }
+
+      return {wave, stats.archetypeCount, stats.liveEntities, columnBytes, residentBytes()};
+    }
+
+    std::string wavesJson(const std::vector<WaveRecord>& waves) {
+      std::string json = "[";
+
+      for (size_t index = 0; index < waves.size(); ++index) {
+        const WaveRecord& wave = waves[index];
+        char text[200];
+        std::snprintf(text, sizeof(text), "%s\n    { \"wave\": %u, \"archetypes\": %u, \"liveEntities\": %u, \"columnBytes\": %llu, \"residentBytes\": ", index == 0 ? "" : ",", wave.wave, wave.archetypes, wave.liveEntities, static_cast<unsigned long long>(wave.columnBytes));
+        json += text;
+        json += wave.residentBytes < 0 ? "null" : std::to_string(wave.residentBytes);
+        json += " }";
+      }
+
+      return json + "\n  ]";
+    }
+
+    std::string measuresOf(ScenarioId scenario, oly::ecs::World& world, const oly::app::Engine& engine, const Measurements& measurements) {
       char text[200];
 
       if (scenario == ScenarioId::S5) {
         std::snprintf(text, sizeof(text), "{ \"worldHash\": \"0x%016llx\", \"enemiesLeft\": %zu, \"turrets\": %zu }", static_cast<unsigned long long>(worldHash(world)), countOf<Enemy>(world), countOf<Turret>(world));
 
         return text;
+      }
+
+      if (scenario == ScenarioId::S3) {
+        std::vector<uint64_t> transitions = measurements.transitionsPerStep;
+        std::string flushMedian = "null";
+        const auto flushes = engine.flushTimings();
+
+        for (size_t slot = 0; slot < flushes.size() && slot < measurements.flushNanoseconds.size(); ++slot) {
+          if (flushes[slot].phase == oly::app::Phase::UpdateAfter) {
+            flushMedian = std::to_string(medianOf(measurements.flushNanoseconds[slot]));
+          }
+        }
+
+        std::snprintf(text, sizeof(text), "{ \"transitionsPerStep\": { \"p50\": %llu, \"max\": %llu }, \"updateAfterFlushMedian\": %s }", static_cast<unsigned long long>(percentile(transitions, 50.0)), static_cast<unsigned long long>(percentile(transitions, 100.0)), flushMedian.c_str());
+
+        return text;
+      }
+
+      if (scenario == ScenarioId::S6) {
+        size_t visited = 0;
+
+        world.query<const Position>().each([&](const Position&) {
+          ++visited;
+        });
+
+        std::string perEntity = "null";
+        const auto systems = engine.systemTimings();
+
+        for (size_t slot = 0; slot < systems.size() && slot < measurements.systemNanoseconds.size(); ++slot) {
+          if (systems[slot].name == "propagateTransforms") {
+            char number[32];
+            std::snprintf(number, sizeof(number), "%.3f", static_cast<double>(medianOf(measurements.systemNanoseconds[slot])) / static_cast<double>(visited));
+            perEntity = number;
+          }
+        }
+
+        std::snprintf(text, sizeof(text), "{ \"visitedEntities\": %zu, \"propagateTransformsNanosecondsPerEntity\": %s }", visited, perEntity.c_str());
+
+        return text;
+      }
+
+      if (scenario == ScenarioId::S8) {
+        return "{ \"waves\": " + wavesJson(measurements.waves) + " }";
       }
 
       if (scenario == ScenarioId::S2) {
@@ -186,13 +290,21 @@ namespace enxame {
         measurements.stepNanoseconds.push_back(elapsed);
         measurements.allocationsPerStep.push_back(allocated);
 
+        if (*options.scenario == ScenarioId::S3) {
+          measurements.transitionsPerStep.push_back(simulation->statusTogglesLastStep);
+        }
+
         if (options.timing) {
           record(engine, measurements);
         }
       }
+
+      if (*options.scenario == ScenarioId::S8 && simulation->wavesCompleted > measurements.waves.size()) {
+        measurements.waves.push_back(waveRecordOf(world, simulation->wavesCompleted));
+      }
     }
 
-    writeJson(file.get(), options, info, run, engine, measurements, measuresOf(*options.scenario, world, measurements));
+    writeJson(file.get(), options, info, run, engine, measurements, measuresOf(*options.scenario, world, engine, measurements));
     std::printf("wrote %s\n", options.out.c_str());
 
     return 0;

@@ -51,6 +51,9 @@ enxame_check_run(S1 S1 on --headless --scenario S1 --size 1000 --steps 5 --commi
 enxame_check_run(S1_untimed S1 off --headless --scenario S1 --size 1000 --steps 5 --commit test --timing off)
 enxame_check_run(S5 S5 on --headless --scenario S5 --size 2000 --steps 5 --commit test)
 enxame_check_run(S2 S2 on --headless --scenario S2 --size 50000 --steps 5 --commit test)
+enxame_check_run(S3 S3 on --headless --scenario S3 --size 10000 --steps 5 --commit test)
+enxame_check_run(S6 S6 on --headless --scenario S6 --size 1000 --steps 5 --commit test)
+enxame_check_run(S8 S8 on --headless --scenario S8 --size 2000 --steps 120 --commit test)
 
 add_test(NAME enxame.replay_determinism
   COMMAND ${CMAKE_COMMAND} "-DCOMMAND=$<TARGET_FILE:enxame>;--headless;--scenario;S5;--size;2000;--steps;2500;--commit;test"

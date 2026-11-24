@@ -16,6 +16,7 @@ namespace enxame {
     static_assert(sizeof(Projectile) == 3 * sizeof(float));
     static_assert(sizeof(BeltItem) == sizeof(uint32_t) + sizeof(float));
     static_assert(sizeof(Assembler) == 2 * sizeof(uint32_t) + sizeof(float));
+    static_assert(sizeof(VehicleMotion) == 5 * sizeof(float));
 
     template <class T>
     uint64_t foldBytes(uint64_t hash, const T& value) {
@@ -58,10 +59,24 @@ namespace enxame {
       hash = fnv1a(hash, &entity.generation, sizeof(entity.generation));
       hash = foldBytes(hash, world.get<Position>(entity));
       hash = foldComponent<Enemy>(hash, world, entity);
+      hash = foldComponent<Burning>(hash, world, entity);
+      hash = foldComponent<Slowed>(hash, world, entity);
+      hash = foldComponent<Stunned>(hash, world, entity);
+      hash = foldComponent<Vehicle>(hash, world, entity);
+      hash = foldComponent<VehicleTurret>(hash, world, entity);
+      hash = foldComponent<Armored>(hash, world, entity);
+      hash = foldComponent<Swift>(hash, world, entity);
+      hash = foldComponent<Regenerating>(hash, world, entity);
+      hash = foldComponent<Shielded>(hash, world, entity);
+      hash = foldComponent<Explosive>(hash, world, entity);
+      hash = foldComponent<Splitting>(hash, world, entity);
+      hash = foldComponent<Cloaked>(hash, world, entity);
+      hash = foldComponent<Enraged>(hash, world, entity);
       hash = foldComponent<Turret>(hash, world, entity);
       hash = foldComponent<Projectile>(hash, world, entity);
       hash = foldComponent<BeltItem>(hash, world, entity);
       hash = foldComponent<Assembler>(hash, world, entity);
+      hash = foldComponent<VehicleMotion>(hash, world, entity);
     }
 
     return hash;

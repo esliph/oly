@@ -10,7 +10,10 @@
 #include "systems.hpp"
 #include "workloads/s1_horde.hpp"
 #include "workloads/s2_factory.hpp"
+#include "workloads/s3_status.hpp"
 #include "workloads/s5_replay.hpp"
+#include "workloads/s6_hierarchy.hpp"
+#include "workloads/s8_waves.hpp"
 
 namespace enxame {
   namespace {
@@ -19,15 +22,15 @@ namespace enxame {
       {"", workloads::S5Sizes, workloads::S5Seed, workloads::S5Run, ""},
       {"S1", workloads::S1Sizes, workloads::S1Seed, workloads::S1Run, ""},
       {"S2", workloads::S2Sizes, workloads::S2Seed, workloads::S2Run, ""},
-      {"", {}, 0, {0, 0}, ""},
+      {"S3", workloads::S3Sizes, workloads::S3Seed, workloads::S3Run, ""},
       {"S4", {}, 0, {0, 0}, "needs stable ids"},
       {"S5", workloads::S5Sizes, workloads::S5Seed, workloads::S5Run, ""},
-      {"", {}, 0, {0, 0}, ""},
+      {"S6", workloads::S6Sizes, workloads::S6Seed, workloads::S6Run, ""},
       {"S7", {}, 0, {0, 0}, "needs assets"},
-      {"", {}, 0, {0, 0}, ""},
+      {"S8", workloads::S8Sizes, workloads::S8Seed, workloads::S8Run, ""},
     }};
 
-    constexpr std::array<ScenarioId, 5> Listed{ScenarioId::S1, ScenarioId::S2, ScenarioId::S4, ScenarioId::S5, ScenarioId::S7};
+    constexpr std::array<ScenarioId, 8> Listed{ScenarioId::S1, ScenarioId::S2, ScenarioId::S3, ScenarioId::S4, ScenarioId::S5, ScenarioId::S6, ScenarioId::S7, ScenarioId::S8};
 
     std::string sizesText(std::span<const uint32_t> sizes) {
       std::string text;
@@ -78,6 +81,54 @@ namespace enxame {
 
       addHordeSystems(*simulation, engine);
       spawnHorde(*simulation, engine, size);
+
+      return simulation;
+    }
+
+    // S3 is S1's horde plus the status toggles of toggleStatus.
+    std::unique_ptr<Simulation> setUpStatusHorde(uint32_t size, oly::app::Engine& engine) {
+      const ScenarioInfo& info = scenarioInfo(ScenarioId::S3);
+      std::unique_ptr<Simulation> simulation = makeHordeSimulation(info, workloads::S3Horde);
+      simulation->toggleProbability = workloads::S3ToggleProbability;
+
+      addHordeSystems(*simulation, engine);
+      engine.addSystem(oly::app::Phase::UpdateAfter, "toggleStatus", toggleStatus, simulation.get());
+      spawnHorde(*simulation, engine, size);
+
+      return simulation;
+    }
+
+    // Vehicle i drives a circle around the i-th point of a grid; its four turrets are children at local (+-offset, +-offset).
+    std::unique_ptr<Simulation> setUpHierarchy(uint32_t size, oly::app::Engine& engine) {
+      std::unique_ptr<Simulation> simulation = std::make_unique<Simulation>(scenarioInfo(ScenarioId::S6).seed);
+      simulation->vehicles = workloads::S6Vehicles;
+      const VehicleParameters& vehicles = simulation->vehicles;
+
+      for (uint32_t index = 0; index < size; ++index) {
+        const float centerX = static_cast<float>(index % vehicles.columns) * vehicles.spacing;
+        const float centerY = static_cast<float>(index / vehicles.columns) * vehicles.spacing;
+        const oly::ecs::Entity vehicle = engine.world().spawn(Vehicle{}, Position{centerX + vehicles.radius, centerY}, Rotation{0.0f}, VehicleMotion{centerX, centerY, vehicles.radius, 0.0f, vehicles.angularSpeed});
+
+        for (const float signX : {-1.0f, 1.0f}) {
+          for (const float signY : {-1.0f, 1.0f}) {
+            engine.world().spawn(VehicleTurret{}, Position{signX * vehicles.turretOffset, signY * vehicles.turretOffset}, Parent{vehicle});
+          }
+        }
+      }
+
+      const uint32_t rows = (size + vehicles.columns - 1) / vehicles.columns;
+      simulation->camera = {static_cast<float>(vehicles.columns - 1) * vehicles.spacing / 2.0f, static_cast<float>(rows - 1) * vehicles.spacing / 2.0f, 0.2f};
+      engine.addSystem(oly::app::Phase::Update, "moveVehicles", moveVehicles, simulation.get());
+
+      return simulation;
+    }
+
+    std::unique_ptr<Simulation> setUpWaves(uint32_t size, oly::app::Engine& engine) {
+      std::unique_ptr<Simulation> simulation = std::make_unique<Simulation>(scenarioInfo(ScenarioId::S8).seed);
+      simulation->waves = workloads::S8Waves;
+      simulation->waveSize = size;
+      simulation->camera = {0.0f, 0.0f, 0.3f};
+      engine.addSystem(oly::app::Phase::UpdateBefore, "runWaves", runWaves, simulation.get());
 
       return simulation;
     }
@@ -168,18 +219,23 @@ namespace enxame {
   }
 
   std::unique_ptr<Simulation> setUpScenario(ScenarioId scenario, uint32_t size, oly::app::Engine& engine) {
-    OLY_ASSERT(scenario == ScenarioId::S1 || scenario == ScenarioId::S2 || scenario == ScenarioId::S5 || scenario == ScenarioId::Playable, "setUpScenario: scenario %u is not implemented yet", static_cast<unsigned>(scenario));
+    OLY_ASSERT(scenarioInfo(scenario).blockedReason.empty(), "setUpScenario: scenario %u is blocked", static_cast<unsigned>(scenario));
 
     engine.actions().bind(actions::place, oly::input::MouseButton::Left);
 
-    if (scenario == ScenarioId::S1) {
-      return setUpHorde(scenarioInfo(scenario), workloads::S1Horde, size, engine);
+    switch (scenario) {
+      case ScenarioId::S1:
+        return setUpHorde(scenarioInfo(scenario), workloads::S1Horde, size, engine);
+      case ScenarioId::S2:
+        return setUpFactory(size, engine);
+      case ScenarioId::S3:
+        return setUpStatusHorde(size, engine);
+      case ScenarioId::S6:
+        return setUpHierarchy(size, engine);
+      case ScenarioId::S8:
+        return setUpWaves(size, engine);
+      default:
+        return setUpPlayableWorld(size, engine);
     }
-
-    if (scenario == ScenarioId::S2) {
-      return setUpFactory(size, engine);
-    }
-
-    return setUpPlayableWorld(size, engine);
   }
 }

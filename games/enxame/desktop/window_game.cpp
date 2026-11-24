@@ -22,6 +22,8 @@ namespace enxame {
     constexpr float ProjectileSize = 2.0f;
     constexpr float BeltItemSize = 3.0f;
     constexpr float AssemblerSize = 8.0f;
+    constexpr float VehicleSize = 6.0f;
+    constexpr float VehicleTurretSize = 3.0f;
 
     ScenarioId windowScenario = ScenarioId::Playable;
     uint32_t windowSize = 0;
@@ -144,4 +146,6 @@ OLY_SYSTEM(drawWorld) {
   enxame::drawEntities<Projectile>(context, view, {255, 220, 80}, enxame::ProjectileSize);
   enxame::drawEntities<BeltItem>(context, view, {170, 170, 170}, enxame::BeltItemSize);
   enxame::drawEntities<Assembler>(context, view, {230, 140, 40}, enxame::AssemblerSize);
+  enxame::drawEntities<Vehicle>(context, view, {80, 200, 120}, enxame::VehicleSize);
+  enxame::drawEntities<VehicleTurret>(context, view, {160, 240, 170}, enxame::VehicleTurretSize);
 }
