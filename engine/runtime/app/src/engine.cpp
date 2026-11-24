@@ -1,12 +1,20 @@
 #include "oly/app/engine.hpp"
 
+#include <chrono>
 #include <cmath>
 #include <optional>
+#include <ranges>
 
 #include "oly/app/task_context.hpp"
 #include "oly/core/assert.hpp"
 
 namespace oly::app {
+  namespace {
+    uint64_t elapsedNanoseconds(std::chrono::steady_clock::time_point start) {
+      return static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - start).count());
+    }
+  }
+
   Engine::Engine(ecs::World& world, EngineConfig config)
     : world_(world),
       config_(config),
@@ -52,6 +60,10 @@ namespace oly::app {
 
     systemLocations_.push_back(SystemLocation{phase, band, static_cast<uint32_t>(entries.size())});
     entries.push_back(SystemEntry{function, userData, std::string(name), id, false, 0});
+
+    if (timingEnabled_) {
+      rebuildTimingSlots();
+    }
 
     return id;
   }
@@ -248,9 +260,21 @@ namespace oly::app {
     queue.endRun();
   }
 
-  void Engine::runPhase(Phase phase) {
-    for (std::vector<SystemEntry>& band : phases_[static_cast<uint32_t>(phase)]) {
+  template <bool Timed>
+  void Engine::runSystems(Phase phase) {
+    const uint32_t phaseIndex = static_cast<uint32_t>(phase);
+    uint32_t slot = Timed ? firstTimingSlot_[phaseIndex] : 0;
+
+    for (std::vector<SystemEntry>& band : phases_[phaseIndex]) {
       for (SystemEntry& entry : band) {
+        SystemTiming* timing = nullptr;
+
+        if constexpr (Timed) {
+          timing = &systemTimings_[slot++];
+          timing->ran = false;
+          timing->nanoseconds = 0;
+        }
+
         if (isGameplayPhase(phase) && entry.whilePaused != pausedThisStep_) {
           continue;
         }
@@ -260,10 +284,61 @@ namespace oly::app {
         }
 
         SystemContext context(*this, world_, commands_, phase, entry.id, entry.name, entry.userData);
-        entry.function(context);
+
+        if constexpr (Timed) {
+          const auto start = std::chrono::steady_clock::now();
+          entry.function(context);
+          timing->ran = true;
+          timing->nanoseconds = elapsedNanoseconds(start);
+        } else {
+          entry.function(context);
+        }
       }
     }
 
-    world_.flush(commands_);
+    if constexpr (Timed) {
+      const auto start = std::chrono::steady_clock::now();
+      world_.flush(commands_);
+      flushTimings_[phaseIndex].nanoseconds = elapsedNanoseconds(start);
+    } else {
+      world_.flush(commands_);
+    }
+  }
+
+  void Engine::runPhase(Phase phase) {
+    if (timingEnabled_) {
+      runSystems<true>(phase);
+    } else {
+      runSystems<false>(phase);
+    }
+  }
+
+  void Engine::setTimingEnabled(bool enabled) {
+    OLY_ASSERT(!inFrame_, "setTimingEnabled: called during frame");
+
+    timingEnabled_ = enabled;
+
+    if (enabled) {
+      rebuildTimingSlots();
+    } else {
+      systemTimings_.clear();
+      flushTimings_.clear();
+    }
+  }
+
+  void Engine::rebuildTimingSlots() {
+    systemTimings_.clear();
+    flushTimings_.clear();
+
+    for (uint32_t phaseIndex = 0; phaseIndex < PhaseCount; ++phaseIndex) {
+      const Phase phase = static_cast<Phase>(phaseIndex);
+      firstTimingSlot_[phaseIndex] = static_cast<uint32_t>(systemTimings_.size());
+
+      for (const SystemEntry& entry : std::views::join(phases_[phaseIndex])) {
+        systemTimings_.push_back(SystemTiming{entry.id, entry.name, phase, false, 0});
+      }
+
+      flushTimings_.push_back(FlushTiming{phase, 0});
+    }
   }
 }

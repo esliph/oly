@@ -1,5 +1,7 @@
 #include <doctest/doctest.h>
 
+#include <span>
+
 #include "oly/app/engine.hpp"
 #include "oly/app/game.hpp"
 #include "oly/counting/plugin.hpp"
@@ -47,4 +49,21 @@ TEST_CASE("the Last-band system of a plugin sees the step's Default-band changes
 
   CHECK(world.get<Counter>(entity).value == 11);
   CHECK(world.get<Doubled>(entity).value == 22);
+}
+
+TEST_CASE("the Engine times a plugin's systems like the game's") {
+  oly::ecs::World world;
+  Engine engine(world);
+  oly::app::setUpGame(engine);
+  engine.setTimingEnabled(true);
+  engine.frame(0.0);
+
+  engine.frame(1.0 / 60);
+
+  const std::span<const oly::app::SystemTiming> timings = engine.systemTimings();
+  REQUIRE(timings.size() == 2);
+  CHECK(timings[0].name == "count");
+  CHECK(timings[0].ran);
+  CHECK(timings[1].name == "writeDoubles");
+  CHECK(timings[1].ran);
 }

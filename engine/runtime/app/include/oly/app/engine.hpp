@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <initializer_list>
 #include <memory>
+#include <span>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -18,6 +19,7 @@
 #include "oly/app/scheduler.hpp"
 #include "oly/app/state.hpp"
 #include "oly/app/system.hpp"
+#include "oly/app/timing.hpp"
 #include "oly/core/assert.hpp"
 #include "oly/core/type_name.hpp"
 #include "oly/ecs/world.hpp"
@@ -102,6 +104,12 @@ namespace oly::app {
     double interpolation_ = 0.0;
 
     std::vector<std::pair<PluginKey, std::unique_ptr<Plugin>>> plugins_; // install order
+
+    // Slot i is the i-th system in dispatch order; each runPhase overwrites the slots of its phase in place.
+    std::vector<SystemTiming> systemTimings_;
+    std::array<uint32_t, PhaseCount> firstTimingSlot_{}; // [Phase]
+    std::vector<FlushTiming> flushTimings_; // [Phase]
+    bool timingEnabled_ = false;
 
     bool pauseRequested_ = false;
     bool pausedThisStep_ = false;
@@ -267,6 +275,25 @@ namespace oly::app {
       return inFrame_;
     }
 
+    // Off by default. Cannot be called during frame (OLY_ASSERT). On, each fixed step and each Render records the time of
+    // every system that runs and of the flush that ends each phase; off, the record is empty and a frame pays one branch
+    // per phase. Event handlers and scheduled tasks are not timed. The clock is std::chrono::steady_clock.
+    void setTimingEnabled(bool enabled);
+    bool timingEnabled() const noexcept {
+      return timingEnabled_;
+    }
+    // One entry per registered system, in dispatch order (phase, then band, then registration), each with ran false and
+    // 0 ns until its phase runs. Each runPhase overwrites the entries of its phase, so after a frame the gameplay entries
+    // hold the last fixed step and the Render entries the last Render; a frame with no fixed step keeps the last step's.
+    // Empty while timing is off. The span, and the names in it, stay valid until the next addSystem or setTimingEnabled.
+    std::span<const SystemTiming> systemTimings() const noexcept {
+      return systemTimings_;
+    }
+    // Four entries, in Phase order, while timing is on; empty otherwise. Same validity as systemTimings.
+    std::span<const FlushTiming> flushTimings() const noexcept {
+      return flushTimings_;
+    }
+
    private:
     EventTypeId declareEventType(EventKey key, std::string_view name, uint32_t size);
     SystemEntry& systemEntry(SystemId system);
@@ -276,6 +303,9 @@ namespace oly::app {
     void recoverFromInterruptedFrame();
     void runFixedStep();
     void runPhase(Phase phase);
+    template <bool Timed>
+    void runSystems(Phase phase);
+    void rebuildTimingSlots();
     void dispatchEvents();
     void runDueSchedule();
 

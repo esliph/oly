@@ -281,3 +281,58 @@ Register a system that resumes the game with `setWhilePaused`: [Engine::setWhile
 engine.addSystem(oly::app::Phase::UpdateBefore, "pauseOnPress", pauseOnPress);
 engine.setWhilePaused(engine.addSystem(oly::app::Phase::UpdateBefore, "resumeOnPress", resumeOnPress), true);
 ```
+
+## Time per system
+
+### `Engine::setTimingEnabled`
+
+```cpp
+void setTimingEnabled(bool enabled);
+bool timingEnabled() const noexcept;
+```
+
+Timing is off by default. While it is on, each fixed step and each `Render` records the time of every system that runs and of the flush that ends each phase. Event handlers and scheduled tasks are not timed. The clock is `std::chrono::steady_clock`: it is coarse on MinGW under Wine and on WASM, so a system that ran may measure 0 ns. Off, a frame pays one branch per phase.
+
+`setTimingEnabled` cannot be called during `frame`: it stops with `OLY_ASSERT` (`setTimingEnabled: called during frame`) ([Errors](../errors.md)).
+
+```cpp
+engine.setTimingEnabled(true);
+engine.frame(nowSeconds);
+
+for (const oly::app::SystemTiming& timing : engine.systemTimings()) {
+  if (timing.ran) {
+    std::printf("%.*s: %llu ns\n", static_cast<int>(timing.name.size()), timing.name.data(), static_cast<unsigned long long>(timing.nanoseconds));
+  }
+}
+```
+
+### `Engine::systemTimings`
+
+```cpp
+std::span<const SystemTiming> systemTimings() const noexcept;
+std::span<const FlushTiming> flushTimings() const noexcept;
+```
+
+- Timing off: both spans are empty.
+- Timing on: `systemTimings()` has one entry per registered system, in dispatch order (phase, then band, then registration), each with `ran = false` and 0 ns until its phase runs. `flushTimings()` has four entries, in `Phase` order.
+- Each phase overwrites the entries of its phase. After a frame, the gameplay entries hold the last fixed step and the `Render` entries the last `Render`. A frame with no fixed step keeps the last step's entries.
+- The spans, and the names in them, stay valid until the next `addSystem` or `setTimingEnabled` call. Adding a system while timing is on resets every entry to `ran = false` and 0 ns.
+
+### `SystemTiming` and `FlushTiming`
+
+```cpp
+struct SystemTiming {
+  SystemId system;
+  std::string_view name;
+  Phase phase;
+  bool ran;
+  uint64_t nanoseconds;
+};
+
+struct FlushTiming {
+  Phase phase;
+  uint64_t nanoseconds;
+};
+```
+
+`ran` is false when the pause or the system's states skipped it. Both types are in `oly/app/timing.hpp`, which `oly/app/engine.hpp` includes.

@@ -10,7 +10,7 @@ None.
 
 ### Migration
 
-None.
+- `Engine::setTimingEnabled`, `systemTimings` and `flushTimings` record the time of each system and flush of the last step ([Time per system](docs/reference/cpp/engine-and-systems.md#time-per-system)). A game keeps working without them.
 
 ## 0.2.0
 

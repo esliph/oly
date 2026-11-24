@@ -55,6 +55,20 @@ namespace {
     engine.frame(1.0 / 60);
   }
 
+  void enableTimingFromSystem(SystemContext& context) {
+    Engine& engine = *static_cast<Engine*>(context.userData());
+    engine.setTimingEnabled(true);
+  }
+
+  void setTimingEnabledDuringFrame() {
+    oly::ecs::World world;
+    Engine engine(world);
+    engine.addSystem(Phase::Update, "enabler", enableTimingFromSystem, &engine);
+
+    engine.frame(0.0);
+    engine.frame(1.0 / 60);
+  }
+
   void whilePausedRender() {
     oly::ecs::World world;
     Engine engine(world);
@@ -385,6 +399,7 @@ namespace {
 int main(int argumentCount, char** arguments) {
   static const std::vector<Case> cases = {
     {"add_system_during_frame", addSystemDuringFrame, {"addSystem", "during frame"}},
+    {"set_timing_enabled_during_frame", setTimingEnabledDuringFrame, {"setTimingEnabled", "during frame"}},
     {"while_paused_render", whilePausedRender, {"whilePaused", "render"}},
     {"frame_time_backwards", frameTimeBackwards, {"frame", "time"}},
     {"emit_undeclared_event", emitUndeclaredEvent, {"emit", "not declared"}},
