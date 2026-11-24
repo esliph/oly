@@ -30,6 +30,7 @@ if(OLY_BUILD_NATIVE_HOST)
   foreach(subsystem AUDIO CAMERA JOYSTICK HAPTIC HIDAPI SENSOR POWER)
     set(SDL_${subsystem} OFF CACHE BOOL "" FORCE)
   endforeach()
+
   FetchContent_Declare(SDL3
     GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
     GIT_TAG release-3.2.30

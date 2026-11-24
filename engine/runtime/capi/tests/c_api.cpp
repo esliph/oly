@@ -107,9 +107,11 @@ TEST_CASE("olyQueryBegin delivers descriptors per block") {
   for (uint64_t value = 1; value <= 3; ++value) {
     fixture.ecs().spawn(A{value}, B{0, 0});
   }
+
   for (uint64_t value = 10; value <= 20; value += 10) {
     fixture.ecs().spawn(A{value}, B{0, 0}, Tag{});
   }
+
   const uint32_t ids[] = {oly::ecs::componentId<A>(), oly::ecs::componentId<B>()};
   OlyQuery* query = olyQueryCreate(fixture.world, ids, 1, 1, 0, 0);
   uint32_t blockCount = 0;
@@ -134,6 +136,7 @@ TEST_CASE("olyQueryBegin delivers descriptors per block") {
       ++rows;
     }
   }
+
   CHECK(rows == 5);
   CHECK(sum == 36);
   olyQueryEnd(fixture.world, iteration);
@@ -169,6 +172,7 @@ TEST_CASE("nested olyQueryBegin preserves the outer descriptors") {
   for (uint64_t value = 0; value < 4; ++value) {
     fixture.ecs().spawn(A{value}, B{0, 0});
   }
+
   fixture.ecs().spawn(A{9}, B{0, 0}, Tag{});
   const uint32_t ids[] = {oly::ecs::componentId<A>(), oly::ecs::componentId<B>()};
   OlyQuery* query = olyQueryCreate(fixture.world, ids, 1, 1, 0, 0);

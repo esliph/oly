@@ -143,6 +143,7 @@ function measureNanosecondsPerStep(cases: Case[], stepsPerSample: number, rounds
       for (let step = 0; step < stepsPerSample; ++step) {
         entry.step();
       }
+
       samples.get(entry.name)!.push(((performance.now() - start) * 1e6) / stepsPerSample);
     }
   }

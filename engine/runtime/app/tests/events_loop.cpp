@@ -152,6 +152,7 @@ namespace {
     if (log.calls.empty()) {
       context.emit(Ping{1});
     }
+
     log.calls.push_back("render");
   }
 

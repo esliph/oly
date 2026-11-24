@@ -69,6 +69,7 @@ try {
   if (error instanceof SchemaMismatchError) {
     console.error("rebuild the WASM:", error.message);
   }
+
   throw error;
 }
 ```

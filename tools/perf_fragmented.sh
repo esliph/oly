@@ -25,11 +25,14 @@ ENTITY_COUNT = 1_000_000  # kEntityCount from engine/runtime/ecs/bench/fragmenta
 archetype_count, perf_path, benchmark_path = sys.argv[1:4]
 
 events = {}
+
 for line in open(perf_path):
     fields = line.strip().split(",")
+
     if len(fields) > 2 and not line.startswith("#"):
         if not fields[0].replace(".", "").isdigit():
             sys.exit("unsupported event: " + line.strip())
+
         events[fields[2].split(":")[0]] = float(fields[0])
 
 benchmark = json.load(open(benchmark_path))["benchmarks"][0]

@@ -55,6 +55,7 @@ TEST_CASE("push, destroyRow, fillHole with swap and reallocation") {
       construct(table, row, i);
       checkI1I2(table);
     }
+
     CHECK(table.capacity() == 256); // 64 → 128 → 256
 
     table.destroyRow(10);

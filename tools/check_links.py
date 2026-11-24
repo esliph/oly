@@ -51,6 +51,7 @@ def iter_lines(text):
 
             if line.strip() and indent < INDENTED_CODE_COLUMNS:
                 in_list = LIST_ITEM_PATTERN.match(line) is not None
+
             opens = (
                 match is not None
                 and not (match.group(1)[0] == "`" and "`" in match.group(2))
@@ -60,6 +61,7 @@ def iter_lines(text):
             if opens:
                 fence_character = match.group(1)[0]
                 fence_length = len(match.group(1))
+
             yield line_number, line, opens
             continue
 
@@ -67,6 +69,7 @@ def iter_lines(text):
 
         if closes:
             fence_character = None
+
         yield line_number, line, True
 
 
@@ -138,6 +141,7 @@ def links_of(text):
 
         if definition is not None:
             links.append((line_number, definition.group(1)))
+
         for match in INLINE_LINK_PATTERN.finditer(stripped_line):
             links.append((line_number, match.group(1)))
 
@@ -186,6 +190,7 @@ class Resolver:
         for component in relative.split(os.sep):
             if component not in self._listing(current):
                 return None
+
             current = os.path.join(current, component)
 
         return current
@@ -193,6 +198,7 @@ class Resolver:
     def has_anchor(self, path, fragment):
         if path not in self._anchors:
             self._anchors[path] = anchors_of(read_markdown(path))
+
         return fragment in self._anchors[path] or fragment.lower() in self._anchors[path]
 
     def _tracked_listings(self):
@@ -216,11 +222,13 @@ class Resolver:
     def _listing(self, directory):
         if self._tracked is not None:
             return self._tracked.get(directory, set())
+
         if directory not in self._listings:
             try:
                 self._listings[directory] = set(os.listdir(directory))
             except OSError:
                 self._listings[directory] = set()
+
         return self._listings[directory]
 
 
@@ -236,6 +244,7 @@ def broken_reason(resolver, source_path, raw_target):
 
     if resolved is None:
         return "file not found"
+
     if fragment and resolved.endswith(MARKDOWN_EXTENSION) and os.path.isfile(resolved):
         if not resolver.has_anchor(resolved, urllib.parse.unquote(fragment)):
             return "anchor not found"
@@ -286,8 +295,10 @@ def main(argv=None):
 
     if not can_encode(sys.stdout, broken):
         sys.stdout.reconfigure(errors="backslashreplace")
+
     for message in broken:
         print(message)
+
     return 1 if broken else 0
 
 

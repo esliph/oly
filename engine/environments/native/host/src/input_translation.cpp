@@ -45,11 +45,13 @@ namespace oly::native_host::detail {
         if (std::optional<oly::input::PhysicalButton> button = keyButtonOf(event.key.scancode); button && !event.key.repeat) {
           actions.buttonDown(*button);
         }
+
         break;
       case SDL_EVENT_KEY_UP:
         if (std::optional<oly::input::PhysicalButton> button = keyButtonOf(event.key.scancode)) {
           actions.buttonUp(*button);
         }
+
         break;
       case SDL_EVENT_MOUSE_MOTION:
         SDL_ConvertEventToRenderCoordinates(renderer, &event);

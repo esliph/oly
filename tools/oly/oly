@@ -32,8 +32,10 @@ find_game_root() {
     if [ "$parent" = "$directory" ]; then
       return 0
     fi
+
     directory=$parent
   done
+
   printf '%s\n' "$directory"
 }
 
@@ -88,11 +90,13 @@ install_tools() {
       rm -rf "${oly_home:?}/versions/$version"
       mv "$staging/tools" "$oly_home/versions/$version" || { rm -rf "$staging"; fail 1 "could not move oly-tools $version into $oly_home/versions"; }
     fi
+
     rm -rf "$staging"
   else
     rm -rf "$staging"
     fail 1 "could not install oly-tools $version from $url"
   fi
+
   trap - INT TERM HUP
 }
 
@@ -160,6 +164,7 @@ new_command() {
   if [ -z "$version" ]; then
     version=$(default_version) || exit $?
   fi
+
   valid_version "$version" || fail 64 "$version is not a valid version"
   run_version "$version" "$PWD" new "$@"
 }

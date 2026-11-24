@@ -243,6 +243,7 @@ test("setHidden that grows memory does not leave the action read on the old heap
       original.call(module, handle, hidden);
       module._free(module._malloc(256 * 1024 * 1024));
     };
+
     try {
       engine.setHidden(true);
     } finally {

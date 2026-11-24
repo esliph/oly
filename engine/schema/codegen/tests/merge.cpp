@@ -108,6 +108,7 @@ TEST_CASE("every merge corpus case matches the expectation of its game.oly") {
         plugins.push_back(pluginSourceOf(file));
       }
     }
+
     const std::string game = readText(folder / "game.oly");
     const std::string expectPrefix = "# expect: ";
     REQUIRE(game.rfind(expectPrefix, 0) == 0);

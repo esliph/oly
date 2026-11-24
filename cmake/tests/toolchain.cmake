@@ -47,6 +47,7 @@ elseif(CASE STREQUAL "cmake_minimum_matches")
       message(FATAL_ERROR "cmake_minimum_required says ${CMAKE_MATCH_1}, toolchain.env says ${OLY_TOOLCHAIN_CMAKE_MINIMUM} (${listsFile})")
     endif()
   endforeach()
+
   file(READ ${ROOT}/CMakePresets.json presets)
   string(JSON presetMajor GET "${presets}" cmakeMinimumRequired major)
   string(JSON presetMinor GET "${presets}" cmakeMinimumRequired minor)

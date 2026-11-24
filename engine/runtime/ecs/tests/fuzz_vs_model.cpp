@@ -127,6 +127,7 @@ TEST_CASE("fuzz: World == reference model") {
       if (operation % 1000 == 0) {
         requireEqual(world, model);
       }
+
       if (operation % 100000 == 0) {
         CHECK_INVARIANTS(world);
       }
@@ -140,6 +141,7 @@ TEST_CASE("fuzz: World == reference model") {
     for (auto& [entity, components] : model) {
       lifeCounters += components.count(oly::ecs::componentId<LifeCounter>());
     }
+
     CHECK(LifeCounter::alive == lifeCounters);
   }
   CHECK(LifeCounter::alive == 0);

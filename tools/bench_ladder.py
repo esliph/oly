@@ -45,14 +45,17 @@ def load_medians(path):
 
         if entry.get("aggregate_name") != "median" or not name.endswith("_median"):
             continue
+
         unit = entry.get("time_unit", "ns")
 
         if unit not in NANOSECONDS_PER_UNIT:
             raise LadderError(f"{path}: unknown time_unit '{unit}' in {name}")
+
         medians[name[: -len("_median")]] = entry["real_time"] * NANOSECONDS_PER_UNIT[unit]
 
     if not medians:
         raise LadderError(f"{path}: no median found (missing --benchmark_report_aggregates_only?)")
+
     return medians
 
 
@@ -61,6 +64,7 @@ def median_across_rounds(rounds, name):
 
     if len(values) != len(rounds):
         return None
+
     return statistics.median(values)
 
 
@@ -69,6 +73,7 @@ def spread_across_rounds(rounds, name):
 
     if len(values) != len(rounds):
         return None
+
     return statistics.median(values), min(values), max(values)
 
 
@@ -79,10 +84,12 @@ def ratio_of(rounds_a, name_a, rounds_b, name_b):
     for round_a, round_b in zip(rounds_a, rounds_b):
         if name_a not in round_a or name_b not in round_b or round_b[name_b] == 0:
             return None
+
         ratios.append(round_a[name_a] / round_b[name_b])
 
     if not ratios:
         return None
+
     return statistics.median(ratios), min(ratios), max(ratios)
 
 
@@ -93,6 +100,7 @@ def step_ratio(rounds_a, rounds_b, name):
 def format_spread(spread, digits):
     if spread is None:
         return DASH
+
     middle, low, high = spread
     return f"{middle:.{digits}f} [{low:.{digits}f}–{high:.{digits}f}]"
 
@@ -146,6 +154,7 @@ def render_markdown(runs, pair=None, name_filter=None):
             if numerator in name:
                 baseline_name = name.replace(numerator, baseline)
                 rows.append((name, [format_spread(ratio_of(runs[variant], name, runs[variant], baseline_name), 2) for variant in variants]))
+
         sections.append(table(f"{numerator}/{baseline} ratio per variant (same round)", variants, rows))
 
     return "\n\n".join(sections) + "\n"
@@ -156,6 +165,7 @@ def parse_run(text):
 
     if not separator or not variant or not path:
         raise argparse.ArgumentTypeError(f"expected VARIANT=file.json, got '{text}'")
+
     return variant, path
 
 
@@ -164,6 +174,7 @@ def parse_pair(text):
 
     if not separator or not numerator or not baseline:
         raise argparse.ArgumentTypeError(f"expected ECS=SoA, got '{text}'")
+
     return numerator, baseline
 
 

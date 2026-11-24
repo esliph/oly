@@ -52,6 +52,7 @@ _in() {
     shift
     _options=$((_options + 1))
   done
+
   shift
 
   set -- "$_service" ./spur "$SPUR_TASK" "$@"
@@ -85,6 +86,7 @@ _serve() {
       cat "build/staged/server-$2.log"
       _fail 1 "the release server did not answer on port $2"
     fi
+
     sleep 0.2
   done
 }
@@ -363,6 +365,7 @@ consumer-web: ## the web half of consumer-test
   (cd "$game" && sh ./oly test)
 
   [ "$(cat "$game/node_modules/.oly-install")" = "linux-x64 local" ] || _fail 1 "local mode left node_modules/.oly-install as: $(cat "$game/node_modules/.oly-install")"
+
   for file in index.html main.js consumer_game.mjs consumer_game.wasm; do
     [ -f "$game/build/web/$file" ] || _fail 1 "build/web has no $file"
   done
@@ -518,6 +521,7 @@ staged-docker: ## the Docker half of staged-test, on the host
     /*) url=file://$root/build/release/$version ;;
     *) url=file:///$root/build/release/$version ;;
   esac
+
   export OLY_RELEASE_URL=$url OLY_HOME=$home OLY_IMAGE_REGISTRY=oly-local OLY_ENGINE_SOURCE_DIR=$PWD
 
   (cd "$native" && sh ./oly test --docker)

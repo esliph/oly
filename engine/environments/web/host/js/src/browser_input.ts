@@ -115,6 +115,7 @@ export function attachBrowserInput(
     if (!isButtonName(event.code)) {
       return;
     }
+
     if (actions.isBound(event.code)) {
       event.preventDefault();
     }

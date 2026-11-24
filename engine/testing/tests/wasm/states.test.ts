@@ -190,6 +190,7 @@ test("persist in a TS system, in a direct context and in a task context", () => 
         fromSystem = context.spawn([Position]);
         context.persist(fromSystem);
       }
+
       if (context.state === menu && !emitted) {
         emitted = true;
         context.emit(Ping, { value: 1 });
@@ -297,6 +298,7 @@ test("memory grows inside the TS hook and the context stays valid", () => {
       for (let count = 0; count < 1_000_000 && module.HEAPU8.buffer === before; ++count) {
         context.spawn([Position, Trace]);
       }
+
       grew = module.HEAPU8.buffer !== before;
       value = context.get(entity, Trace).value;
     });
@@ -346,6 +348,7 @@ test("errors: state from another schema, registration and inState during frame a
           duringFrame.push(error);
         }
       }
+
       if (!thrown) {
         thrown = true;
         throw new Error("boom");
@@ -370,6 +373,7 @@ test("errors: state from another schema, registration and inState during frame a
     for (const error of duringFrame) {
       assert.ok(error instanceof ContractError);
     }
+
     assert.throws(() => engine.onEnter(menu, "afterInterrupted", nothing), ContractError);
     assert.throws(() => registration.inState(menu), ContractError);
 

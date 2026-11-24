@@ -55,10 +55,12 @@ _version_at_least() {
     foundCount = split(found, foundFields, ".")
     minimumCount = split(minimum, minimumFields, ".")
     count = foundCount > minimumCount ? foundCount : minimumCount
+
     for (field = 1; field <= count; field++) {
       if (foundFields[field] + 0 > minimumFields[field] + 0) exit 0
       if (foundFields[field] + 0 < minimumFields[field] + 0) exit 1
     }
+
     exit 0
   }'
 }
@@ -106,9 +108,11 @@ _cmake_directory() {
   if [ "$_target" = windows ]; then
     _directory=$_directory-windows
   fi
+
   if [ -n "${OLY_IN_DOCKER:-}" ]; then
     _directory=$_directory-docker
   fi
+
   echo "$_directory"
 }
 
@@ -366,6 +370,7 @@ _doctor() {
     else
       _doctor_report missing "docker compose: install Docker with the compose plugin"
     fi
+
     return "$_doctor_failed"
   fi
 
@@ -374,6 +379,7 @@ _doctor() {
   if [ "$(_platform)" = windows-x64 ]; then
     _doctor_ninja
   fi
+
   for _checked in $1; do
     case $_checked in
       web) _doctor_web ;;
@@ -391,6 +397,7 @@ _runner_of_game() {
   if [ -f oly.env ]; then
     _value=$(sed -n 's/^OLY_RUNNER=//p' oly.env | tr -d '\r' | tail -n 1)
   fi
+
   echo "${_value:-host}"
 }
 
@@ -416,6 +423,7 @@ _dispatch_docker() {
   if [ -n "$_target" ]; then
     set -- --platform "$_target" "$@"
   fi
+
   set -- "$SPUR_TASK" --host "$@"
   set -- sh "$_spur" -f "$_tools/Spurfile" "$@"
   set -- "$_service" "$@"
@@ -425,6 +433,7 @@ _dispatch_docker() {
   elif [ -n "${OLY_ENGINE_SOURCE_DIR:-}" ]; then
     set -- -v "$(_host_path "$OLY_ENGINE_SOURCE_DIR"):/oly-source" -e OLY_ENGINE_SOURCE_DIR=/oly-source "$@"
   fi
+
   set -- -e "OLY_TOOLS_DIR=$_tools" "$@"
 
   if [ "$SPUR_TASK" = run ] && [ "$_service" = wasm ]; then
@@ -461,6 +470,7 @@ _start() {
       *) break ;;
     esac
   done
+
   _runner=${_runner:-$(_runner_of_game)}
 
   _environment=$(_env_value OLY_ENVIRONMENT)
@@ -479,6 +489,7 @@ _start() {
   elif [ "$_target" = windows ]; then
     _service=windows
   fi
+
   if [ "$SPUR_TASK" = run ] && [ "$_environment" = native ]; then
     _fail 64 "a desktop window cannot open in the container: run build/cmake-docker/games/$(_env_value OLY_GAME) on the host"
   fi
@@ -497,6 +508,7 @@ _build() {
   else
     _doctor "$_environment" host || _fail 1 "the host tools do not match toolchain.env (see above)"
   fi
+
   case $_environment in
     native) _build_native ;;
     web) _build_web ;;

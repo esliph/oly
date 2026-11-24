@@ -101,6 +101,7 @@ namespace oly::input {
 
   void ActionMap::buttonDown(PhysicalButton button) {
     OLY_ASSERT(button.usage != 0, "buttonDown: invalid usage 0");
+
     if (contains(hostPressed_, button)) {
       return;
     }
@@ -111,6 +112,7 @@ namespace oly::input {
 
   void ActionMap::buttonUp(PhysicalButton button) {
     OLY_ASSERT(button.usage != 0, "buttonUp: invalid usage 0");
+
     if (!contains(hostPressed_, button)) {
       return;
     }

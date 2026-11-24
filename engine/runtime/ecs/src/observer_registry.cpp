@@ -14,6 +14,7 @@ namespace oly::ecs::detail {
     if (componentId >= lists.size()) {
       lists.resize(size_t(componentId) + 1);
     }
+
     lists[componentId].push_back({function, userData, observer});
 
     refreshMask(componentId);
@@ -60,6 +61,7 @@ namespace oly::ecs::detail {
         observed |= mask(componentId) & ObservedOnAdd;
       }
     }
+
     for (ComponentId componentId : source) {
       if (!std::binary_search(destination.begin(), destination.end(), componentId)) {
         observed |= mask(componentId) & ObservedOnRemove;
@@ -81,6 +83,7 @@ namespace oly::ecs::detail {
         observed |= observedBit(kind);
       }
     }
+
     masks_[componentId] = observed;
   }
 }

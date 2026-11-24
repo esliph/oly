@@ -33,9 +33,11 @@ export function assertSpawnArguments(
 
   for (const type of types) {
     componentIdOf(runtime, type);
+
     if (seen.has(type)) {
       throw new ContractError(`spawn type=${type.name}: type repeated in types`);
     }
+
     seen.add(type);
   }
 
@@ -45,6 +47,7 @@ export function assertSpawnArguments(
     if (type === undefined || type.kind !== "component") {
       throw new ContractError(`spawn type=${name}: value for a component that is not in types`);
     }
+
     assertKnownFields("spawn", null, type, value);
   }
 }

@@ -56,6 +56,7 @@ TEST_CASE("I-2: LifeCounter matches live rows") {
       for (int i = 0; i < kEntityCount; ++i) {
         count += (hasLifeCounter[i] && !dead[i]);
       }
+
       return count;
     };
 
@@ -67,18 +68,21 @@ TEST_CASE("I-2: LifeCounter matches live rows") {
       world.add(entities[i], LifeCounter{uint64_t(i)});
       hasLifeCounter[i] = true;
     }
+
     CHECK(LifeCounter::alive == expected());
 
     for (int i = 0; i < kEntityCount; i += 4) {
       world.remove<LifeCounter>(entities[i]);
       hasLifeCounter[i] = false;
     }
+
     CHECK(LifeCounter::alive == expected());
 
     for (int i = 0; i < kEntityCount; i += 3) {
       world.destroy(entities[i]);
       dead[i] = true;
     }
+
     CHECK(LifeCounter::alive == expected());
     CHECK_INVARIANTS(world);
   }

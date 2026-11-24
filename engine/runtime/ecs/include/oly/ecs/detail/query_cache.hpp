@@ -29,6 +29,7 @@ namespace oly::ecs::detail {
     if (!std::includes(signature.begin(), signature.end(), with.begin(), with.end())) {
       return false;
     }
+
     for (ComponentId componentId : without) {
       if (std::binary_search(signature.begin(), signature.end(), componentId)) {
         return false;

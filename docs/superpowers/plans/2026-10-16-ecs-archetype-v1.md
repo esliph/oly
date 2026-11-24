@@ -360,6 +360,7 @@ TEST_CASE("columns aligned to 64, including alignas(64)") {
     ecs::ComponentId ids[] = {ecs::componentId<A>(), ecs::componentId<Wide>()};
     std::sort(std::begin(ids), std::end(ids));
     ecs::Table t(ids); t.pushUninit({0, 0});
+
     for (uint16_t c = 0; c < t.columnCount(); ++c)
         CHECK(reinterpret_cast<uintptr_t>(t.column(c).data) % 64 == 0);
 }

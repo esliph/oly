@@ -20,6 +20,7 @@ TEST_CASE("eachBlock hands count, entities and columns in read, write order") {
   for (uint64_t i = 0; i < 10; ++i) {
     entities.push_back(world.spawn(A{i}, B{i, 2 * i}));
   }
+
   CHECK_INVARIANTS(world);
 
   auto& query = world.queryById({.read = {oly::ecs::componentId<A>()}, .write = {oly::ecs::componentId<B>()}});
@@ -42,6 +43,7 @@ TEST_CASE("eachBlock hands count, entities and columns in read, write order") {
   for (uint64_t i = 0; i < 10; ++i) {
     CHECK(world.get<B>(entities[i]).first == i + 100);
   }
+
   CHECK_INVARIANTS(world);
 }
 
@@ -92,6 +94,7 @@ TEST_CASE("queryById filters by with and without") {
   for (int i = 0; i < 3; ++i) {
     world.spawn(A{1}, Tag{});
   }
+
   for (int i = 0; i < 2; ++i) {
     world.spawn(A{1});
   }
@@ -139,6 +142,7 @@ TEST_CASE("nested iterate keeps the blocks of each level") {
     world.spawn(A{i});
     world.spawn(A{i}, B{i, i});
   }
+
   auto& query = world.queryById({.read = {oly::ecs::componentId<A>()}});
 
   oly::ecs::QueryIteration outer = query.iterate();
@@ -196,6 +200,7 @@ TEST_CASE("steady-state iterate does not allocate") {
     world.spawn(A{i});
     world.spawn(A{i}, B{i, i});
   }
+
   auto& query = world.queryById({.read = {oly::ecs::componentId<A>()}});
 
   {

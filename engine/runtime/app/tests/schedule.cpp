@@ -263,6 +263,7 @@ TEST_CASE("every without drift") {
   for (size_t index = 0; index < fixture.log.times.size(); ++index) {
     CHECK(fixture.log.times[index] == Approx(std::ceil(1.5 * static_cast<double>(index + 1)) / 60));
   }
+
   CHECK_INVARIANTS(fixture.world);
 }
 

@@ -20,6 +20,7 @@ class CheckBoundariesTest(unittest.TestCase):
     def write(self, relativePath, content):
         path = os.path.join(self.root, relativePath)
         os.makedirs(os.path.dirname(path), exist_ok=True)
+
         with open(path, "w", encoding="utf-8") as handle:
             handle.write(content)
 
@@ -30,12 +31,15 @@ class CheckBoundariesTest(unittest.TestCase):
             "games": [{"name": name, "directory": directory, "depends": depends} for name, directory, depends in games],
         }
         manifestPath = os.path.join(self.root, "manifest.json")
+
         with open(manifestPath, "w", encoding="utf-8") as handle:
             json.dump(manifest, handle)
 
         output = io.StringIO()
+
         with contextlib.redirect_stdout(output):
             code = check_boundaries.main(["--root", self.root, "--manifest", manifestPath])
+
         return code, output.getvalue()
 
     def test_declared_include_passes(self):

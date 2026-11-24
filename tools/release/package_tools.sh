@@ -14,11 +14,13 @@ fail() {
 }
 
 [ "$#" -eq 4 ] || fail 64 "usage: package_tools.sh <version> <linux-x64|windows-x64> <oly-schema file> <out dir>"
+
 case $platform in
   linux-x64) executable=oly-schema ;;
   windows-x64) executable=oly-schema.exe ;;
   *) fail 64 "platform is linux-x64 or windows-x64: $platform" ;;
 esac
+
 [ -f "$schema_tool" ] || fail 1 "no oly-schema at $schema_tool"
 
 mkdir -p "$out" || fail 1 "could not create $out"

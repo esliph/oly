@@ -73,9 +73,11 @@ export class Scheduler {
   /** Fires once, in the step whose start reaches `time + delaySeconds`. Delay finite and ≥ 0. */
   after(delaySeconds: number, callback: TaskFunction): TaskHandle {
     this.#assertUsable("after");
+
     if (!Number.isFinite(delaySeconds) || delaySeconds < 0) {
       throw new ContractError(`after: delay=${delaySeconds} negative or not finite`);
     }
+
     this.#assertCallback("after", callback);
 
     return this.#schedule(delaySeconds, 0, callback);
@@ -84,9 +86,11 @@ export class Scheduler {
   /** First firing at `time + intervalSeconds`, then every interval, without drift. Interval finite and > 0. */
   every(intervalSeconds: number, callback: TaskFunction): TaskHandle {
     this.#assertUsable("every");
+
     if (!Number.isFinite(intervalSeconds) || intervalSeconds <= 0) {
       throw new ContractError(`every: interval=${intervalSeconds} must be positive and finite`);
     }
+
     this.#assertCallback("every", callback);
 
     return this.#schedule(intervalSeconds, intervalSeconds, callback);
@@ -145,6 +149,7 @@ export class Scheduler {
       if (lastRun) {
         this.#tasks.delete(scriptId);
       }
+
       setContextActive(task.context, false);
       setStructureLocked(this.#world, true);
     }

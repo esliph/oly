@@ -35,6 +35,7 @@ export class DirectContext extends EngineContext {
   /** Removes the entity's state scope. Throws ContractError for a dead entity. */
   persist(entity: Entity): void {
     assertContextActive(this, "persist");
+
     if (!this.#world.isAlive(entity)) {
       throw new ContractError(`persist entity=${formatEntity(entity)}: dead entity`);
     }

@@ -55,6 +55,7 @@ TEST_CASE("non-trivial payload survives buffer growth") {
   for (int i = 0; i < 500; ++i) {
     commandBuffer.add(world.spawn(), A{uint64_t(i)}); // forces several reallocations
   }
+
   oly::ecs::detail::WorldTestAccess::flushSequential(world, commandBuffer);
 
   CHECK(world.get<FuzzState>(entity).text == big);
@@ -188,6 +189,7 @@ TEST_CASE("sequential fuzz == applying directly") {
   for (auto& [entity, components] : model) {
     lifeCounters += components.count(oly::ecs::componentId<LifeCounter>());
   }
+
   CHECK(LifeCounter::alive == lifeCounters);
 }
 

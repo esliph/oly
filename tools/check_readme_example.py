@@ -38,6 +38,7 @@ def section_blocks(text):
             block = (line_number, previous_line, [])
         elif in_section and inside_fence:
             block[2].append(line)
+
         if block is not None and not inside_fence:
             blocks.append(finish(block))
             block = None
@@ -56,6 +57,7 @@ def finish(block):
 
     if lines and FENCE_PATTERN.match(lines[-1]):
         lines = lines[:-1]
+
     return line_number, marker_line, "\n".join(lines)
 
 
@@ -102,6 +104,7 @@ def main(argv=None):
 
     for message in problems:
         print(message)
+
     return 1 if problems else 0
 
 

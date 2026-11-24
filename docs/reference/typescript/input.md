@@ -51,12 +51,15 @@ engine.addSystem(Phase.UpdateBefore, "readInput", (context) => {
   if (jumpButton.pressed) {
     // first step of the press
   }
+
   if (jumpButton.held) {
     // every step while it is down
   }
+
   if (jumpButton.released) {
     // the step it went up
   }
+
   if (pointer.valid) {
     // a pointer position has arrived at least once
   }

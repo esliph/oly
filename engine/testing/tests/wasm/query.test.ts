@@ -56,6 +56,7 @@ test("movement in TS and in C++ gives the same result", () => {
         assert.deepEqual(cppWorld.get(cppEntities[index]!, Position), tsWorld.get(tsEntities[index]!, Position));
         expectedSum += index + 0.5;
       }
+
       assert.equal(fixture.fixtureSumPositionX(cppWorld.handle), expectedSum);
       assert.equal(fixture.fixtureSumPositionX(tsWorld.handle), expectedSum);
     });
@@ -230,6 +231,7 @@ test("eachBlock nested in the same query", () => {
     for (let index = 0; index < 10; ++index) {
       world.spawn([Position], { Position: { x: index } });
     }
+
     const query = world.query({ read: [Position] });
 
     const pairs = new Set<string>();
@@ -269,6 +271,7 @@ test("memory growth during eachBlock", () => {
       for (let row = 0; row < block.count; ++row) {
         position.x.set(row, 42);
       }
+
       bridgeOf(runtime).free(pointer);
     });
 
@@ -297,6 +300,7 @@ test("checkInvariants syncs the Bridge heap after calling C++", () => {
     while (moduleOf(runtime).HEAPU8.buffer === before) {
       pointers.push(moduleOf(runtime)._malloc(8 * 1024 * 1024));
     }
+
     assert.notEqual(bridge.heap.buffer, moduleOf(runtime).HEAPU8.buffer);
 
     assert.equal(world.checkInvariants(), null);

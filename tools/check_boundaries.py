@@ -45,6 +45,7 @@ def owner_of(relative_path, owners):
     for directory, name, depends in owners:
         if relative_path.startswith(directory):
             return name, depends
+
     return None, set()
 
 
@@ -59,12 +60,14 @@ def repository_layout(root):
 
         if module_match is not None:
             module_directories[module_match.group(2)] = module_match.group(1) + "/"
+
         if "package.json" in files:
             try:
                 with open(os.path.join(current, "package.json"), encoding="utf-8") as handle:
                     name = json.load(handle).get("name")
             except ValueError:
                 name = None
+
             if name:
                 package_directories[name] = relative_directory + "/"
 
@@ -74,23 +77,28 @@ def repository_layout(root):
 def environment_of(relative_path):
     if not relative_path.startswith(ENVIRONMENTS_PREFIX):
         return None
+
     return relative_path[len(ENVIRONMENTS_PREFIX):].split("/")[0]
 
 
 def environment_violation(relative_path, target_directory, target_name):
     if target_directory is None:
         return None
+
     target_environment = environment_of(target_directory)
 
     if target_environment is None:
         return None
+
     for prefix in CORE_PREFIXES:
         if relative_path.startswith(prefix):
             return f"{prefix.rstrip('/')} cannot depend on environment {target_environment} ({target_name})"
+
     source_environment = environment_of(relative_path)
 
     if source_environment is not None and source_environment != target_environment:
         return f"environment {source_environment} cannot depend on environment {target_environment} ({target_name})"
+
     return None
 
 
@@ -99,6 +107,7 @@ def plugin_violation(relative_path, target_directory, target_name):
         return None
     if relative_path.startswith(ENGINE_PREFIX):
         return f"engine cannot depend on plugin {target_name}"
+
     return None
 
 
@@ -107,16 +116,19 @@ def game_names_pattern(root):
 
     if not os.path.isdir(games_directory):
         return None
+
     names = sorted(name for name in os.listdir(games_directory) if os.path.isdir(os.path.join(games_directory, name)))
 
     if not names:
         return None
+
     # Whole words in any identifier style: "arena_game" names the game, "arenas" does not.
     return re.compile(r"(?<![A-Za-z0-9])(" + "|".join(re.escape(name) for name in names) + r")(?![A-Za-z0-9])")
 
 
 def check_game_names(path, relative_path, pattern):
     violations = [f"{relative_path}: game name {name} in plugins/" for name in sorted(set(pattern.findall(relative_path)))]
+
     with open(path, encoding="utf-8", errors="replace") as handle:
         for line_number, line in enumerate(handle, start=1):
             for name in sorted(set(pattern.findall(line))):
@@ -127,6 +139,7 @@ def check_game_names(path, relative_path, pattern):
 
 def check_engine_test_game(path, relative_path):
     violations = []
+
     with open(path, encoding="utf-8", errors="replace") as handle:
         for line_number, line in enumerate(handle, start=1):
             if ENGINE_TEST_GAME_PATTERN.search(line):
@@ -138,6 +151,7 @@ def check_engine_test_game(path, relative_path):
 def emscripten_violation(relative_path, line):
     if relative_path.startswith(EMSCRIPTEN_ALLOWED_PREFIX) or relative_path == OLY_API_HEADER:
         return None
+
     matches = [match.group(0) for match in EMSCRIPTEN_PATTERN.finditer(line)]
 
     if not matches:
@@ -145,6 +159,7 @@ def emscripten_violation(relative_path, line):
     # A test or a benchmark may skip a case on WASM, but never calls Emscripten.
     if ("/tests/" in relative_path or "/bench/" in relative_path) and all(match == "__EMSCRIPTEN__" for match in matches):
         return None
+
     return f"Emscripten ({matches[0]}) is allowed only in engine/environments/web/ and OLY_API"
 
 
@@ -159,29 +174,35 @@ def repository_files(root):
 def check_cpp_file(path, relative_path, owners, module_directories):
     violations = []
     owner, depends = owner_of(relative_path, owners)
+
     with open(path, encoding="utf-8", errors="replace") as handle:
         for line_number, line in enumerate(handle, start=1):
             emscripten_message = emscripten_violation(relative_path, line)
 
             if emscripten_message is not None:
                 violations.append(f"{relative_path}:{line_number}: {emscripten_message}")
+
             match = INCLUDE_PATTERN.match(line)
 
             if match is None:
                 continue
+
             included_module, included_path = match.group(1), match.group(2)
 
             if owner is not None and included_module != owner and included_module not in depends:
                 violations.append(f"{relative_path}:{line_number}: {owner} includes oly/{included_module} without declaring {included_module} in DEPENDS")
+
             included_directory = module_directories.get(included_module)
             inside_included_module = owner == included_module or (included_directory is not None and relative_path.startswith(included_directory))
 
             if included_path.startswith("detail/") and not inside_included_module:
                 violations.append(f"{relative_path}:{line_number}: oly/{included_module}/detail is internal to module {included_module}")
+
             environment_message = environment_violation(relative_path, module_directories.get(included_module), f"oly/{included_module}")
 
             if environment_message is not None:
                 violations.append(f"{relative_path}:{line_number}: {environment_message}")
+
             plugin_message = plugin_violation(relative_path, included_directory, included_module)
 
             if plugin_message is not None:
@@ -196,7 +217,9 @@ def package_root(path, root):
     while os.path.abspath(current) != os.path.abspath(root):
         if os.path.exists(os.path.join(current, "package.json")):
             return current
+
         current = os.path.dirname(current)
+
     return None
 
 
@@ -205,6 +228,7 @@ def check_ts_file(path, relative_path, root, package_directories):
     inside_engine = relative_path.startswith("engine/")
     inside_core = relative_path.startswith("engine/environments/web/clients/typescript/core/")
     package_directory = package_root(path, root)
+
     with open(path, encoding="utf-8", errors="replace") as handle:
         for line_number, line in enumerate(handle, start=1):
             for match in TS_IMPORT_PATTERN.finditer(line):
@@ -212,16 +236,20 @@ def check_ts_file(path, relative_path, root, package_directories):
 
                 if specifier.startswith("@oly/core/internal") and not inside_engine:
                     violations.append(f"{relative_path}:{line_number}: @oly/core/internal can only be used inside engine/")
+
                 if specifier.startswith("@oly/core/generated") and not relative_path.endswith(".generated.ts") and not inside_core:
                     violations.append(f"{relative_path}:{line_number}: @oly/core/generated can only be imported by generated code (*.generated.ts)")
+
                 if specifier.startswith("@oly/web-host") and inside_core:
                     violations.append(f"{relative_path}:{line_number}: @oly/core cannot depend on @oly/web-host")
+
                 if specifier.startswith("@oly/"):
                     package_name = "/".join(specifier.split("/")[:2])
                     environment_message = environment_violation(relative_path, package_directories.get(package_name), package_name)
 
                     if environment_message is not None:
                         violations.append(f"{relative_path}:{line_number}: {environment_message}")
+
                 if specifier.startswith(".") and package_directory is not None:
                     resolved = os.path.abspath(os.path.join(os.path.dirname(path), specifier))
 
@@ -266,6 +294,7 @@ def main(argv=None):
 
     for violation in violations:
         print(violation)
+
     return 1 if violations else 0
 
 

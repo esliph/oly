@@ -413,6 +413,7 @@ TEST_CASE("inState with the state at index 31 uses the highest bit of the mask")
   for (uint32_t index = 0; index < oly::app::MaxStates; ++index) {
     last = engine.declareState("state" + std::to_string(index));
   }
+
   const auto system = engine.addSystem(Phase::Update, "lastOnly", recordName, &probe.log);
   engine.setSystemStates(system, {last});
   engine.frame(0.0);

@@ -15,6 +15,7 @@ def median(benchmarks, name):
     for benchmark in benchmarks:
         if benchmark.get("name") == target:
             return benchmark["real_time"]
+
     return None
 
 

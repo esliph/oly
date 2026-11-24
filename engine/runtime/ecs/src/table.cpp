@@ -85,6 +85,7 @@ namespace oly::ecs::detail {
 
     // Allocates everything before moving anything: if an allocation throws, nothing was touched.
     std::vector<std::byte*> fresh(columns_.size(), nullptr);
+
     try {
       for (size_t i = 0; i < columns_.size(); ++i) {
         fresh[i] = core::alignedAllocate(size_t(newCapacity) * columns_[i].info->size, columnAlignment(*columns_[i].info));
@@ -95,6 +96,7 @@ namespace oly::ecs::detail {
           core::alignedFree(fresh[i], columnAlignment(*columns_[i].info));
         }
       }
+
       throw;
     }
 

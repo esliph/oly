@@ -209,6 +209,7 @@ test("memory grows inside the TS task and the context stays valid", () => {
       for (let count = 0; count < 1_000_000 && module.HEAPU8.buffer === before; ++count) {
         task.spawn([Position, Velocity, Mixed, Trace]);
       }
+
       grew = module.HEAPU8.buffer !== before;
       task.set(entity, Trace, { value: 5 });
       value = task.get(entity, Trace).value;

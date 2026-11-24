@@ -235,6 +235,7 @@ namespace oly::ecs {
             onRemove.push_back(componentId);
           }
         }
+
         for (ComponentId componentId : destinationSignature) {
           const bool arrives = !std::binary_search(sourceSignature.begin(), sourceSignature.end(), componentId);
 
@@ -350,6 +351,7 @@ namespace oly::ecs {
       if (componentId >= componentIndex_.size()) {
         componentIndex_.resize(size_t(componentId) + 1);
       }
+
       componentIndex_[componentId].insert(id, detail::columnOf(*archetype, componentId));
     }
 
@@ -440,6 +442,7 @@ namespace oly::ecs {
       if (info.tag) {
         return;
       }
+
       if (source.observed) [[unlikely]] {
         replaceNotifying(entity, componentId, value);
         return;
@@ -485,6 +488,7 @@ namespace oly::ecs {
       detail::IterationGuard guard(&iterating_);
       runObservers(ObserverKind::OnAdd, entity, componentId);
     }
+
     if (observed) {
       applyDeferred();
     }
@@ -498,6 +502,7 @@ namespace oly::ecs {
       void* slot = destination.table.column(static_cast<uint16_t>(edge.addedColumn)).at(destinationRow);
       constructValue(typeInfo(componentId), slot, value);
     }
+
     for (uint16_t column : edge.initializedColumns) {
       implications_.initializerOf(destination.columnTypes[column])(destination.table.column(column).at(destinationRow));
     }
@@ -581,6 +586,7 @@ namespace oly::ecs {
       const ComponentId implier = implierStaying(implications_, source, resolved, added, componentId);
       OLY_ASSERT(implier == detail::NoComponent, "remove e=%u:%u type=%.*s implied by %.*s", entity.index, entity.generation,
                  int(typeInfo(componentId).name.size()), typeInfo(componentId).name.data(), int(typeInfo(implier).name.size()), typeInfo(implier).name.data());
+
       if (implier != detail::NoComponent) {
         return changed; // asserts off: the removal proceeds and I-13 reports the archetype
       }
@@ -899,9 +905,11 @@ namespace oly::ecs {
     for (ComponentId componentId : spec.read) {
       key.components.push_back(uint64_t(componentId) << 1 | 1);
     }
+
     for (ComponentId componentId : spec.write) {
       key.components.push_back(uint64_t(componentId) << 1);
     }
+
     if (auto it = queryByIdCache_.find(key); it != queryByIdCache_.end()) {
       return *it->second;
     }
@@ -975,6 +983,7 @@ namespace oly::ecs {
           if (store_.isReserved(command.entity)) {
             materialize(command.entity);
           }
+
           break;
         case detail::CommandOperation::Destroy:
           if (store_.isAlive(command.entity)) {
@@ -982,16 +991,19 @@ namespace oly::ecs {
           } else if (store_.isReserved(command.entity)) {
             store_.release(command.entity.index);
           }
+
           break;
         case detail::CommandOperation::Add:
           if (store_.isAlive(command.entity)) {
             addById(command.entity, command.componentId, command.payload);
           }
+
           break;
         case detail::CommandOperation::Remove:
           if (store_.isAlive(command.entity)) {
             removeById(command.entity, command.componentId);
           }
+
           break;
       }
     });

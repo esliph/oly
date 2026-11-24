@@ -54,6 +54,7 @@ export function runInBrowser(
   if (environment.document.hidden) {
     target.setHidden(true);
   }
+
   pendingHandle = environment.requestAnimationFrame(onAnimationFrame);
 
   return {

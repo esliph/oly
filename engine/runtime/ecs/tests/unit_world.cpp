@@ -329,6 +329,7 @@ TEST_CASE("stats: counts, histogram and idle memory") {
   for (uint64_t i = 0; i < 5; ++i) {
     world.spawn(A{i}); // {A}: 5
   }
+
   world.spawn(A{0}, B{0, 0}); // {A,B}: 1
 
   auto stats = oly::ecs::stats(world);

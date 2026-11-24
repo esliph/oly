@@ -72,6 +72,7 @@ if(OLY_BUILD_TESTS)
     set_tests_properties(oly.cmake.toolchain.${caseName} PROPERTIES PASS_REGULAR_EXPRESSION "${expected}")
   endforeach()
 endif()
+
 add_subdirectory(engine)
 
 if(NOT EMSCRIPTEN OR OLY_BUILD_GAMES OR NOT PROJECT_IS_TOP_LEVEL)
@@ -95,8 +96,10 @@ if(PROJECT_IS_TOP_LEVEL)
       else()
         string(REPLACE "," "\", \"" dependencyArray "\"${dependencies}\"")
       endif()
+
       list(APPEND json "{\"name\": \"${name}\", \"directory\": \"${directory}\", \"depends\": [${dependencyArray}]}")
     endforeach()
+
     list(JOIN json ", " joined)
     set(${outputVariable} "${joined}" PARENT_SCOPE)
   endfunction()

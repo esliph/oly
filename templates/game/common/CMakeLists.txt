@@ -9,6 +9,7 @@ file(STRINGS ${olyEnvironmentFile} olyVersionLines REGEX "^OLY_VERSION=")
 if(NOT olyVersionLines)
   message(FATAL_ERROR "oly.env has no OLY_VERSION")
 endif()
+
 list(GET olyVersionLines -1 olyVersionLine)
 string(REGEX REPLACE "^OLY_VERSION=" "" OLY_VERSION "${olyVersionLine}")
 string(STRIP "${OLY_VERSION}" OLY_VERSION)

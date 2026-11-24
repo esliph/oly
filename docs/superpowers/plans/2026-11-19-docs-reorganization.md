@@ -152,8 +152,10 @@ only V1 available; the three broken links are fixed in the same commit, so it re
 ```python
 def run_check(self):
     output = io.StringIO()
+
     with contextlib.redirect_stdout(output):
         code = check_links.main(["--root", self.root])
+
     return code, output.getvalue()
 
 def test_valid_relative_link_passes(self):
@@ -257,9 +259,11 @@ git mv docs/guide/environments/web/typescript/recipes.md docs/how-to/typescript/
 for page in README schema world-and-entities queries engine-and-systems events input schedule states; do
   git mv docs/guide/environments/web/typescript/$page.md docs/reference/typescript/$page.md
 done
+
 for page in app ecs input schema-and-codegen decisions; do
   git mv docs/architecture/$page.md docs/explanation/architecture/$page.md
 done
+
 git mv docs/architecture/glossary.md docs/reference/glossary.md
 git mv docs/architecture/limits.md docs/reference/limits.md
 git mv docs/architecture/repository.md docs/reference/contributor/repository.md

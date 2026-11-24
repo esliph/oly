@@ -95,6 +95,7 @@ export async function runGame(game: Game, environment: GameEnvironment = globalG
     if (options.width !== undefined) {
       canvas.width = options.width;
     }
+
     if (options.height !== undefined) {
       canvas.height = options.height;
     }

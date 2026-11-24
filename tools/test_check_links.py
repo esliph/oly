@@ -21,13 +21,16 @@ class CheckLinksTest(unittest.TestCase):
     def write(self, relativePath, content):
         path = os.path.join(self.root, relativePath)
         os.makedirs(os.path.dirname(path), exist_ok=True)
+
         with open(path, "w", encoding="utf-8", newline="") as handle:
             handle.write(content)
 
     def run_check(self):
         output = io.StringIO()
+
         with contextlib.redirect_stdout(output):
             code = check_links.main(["--root", self.root])
+
         return code, output.getvalue()
 
     def test_valid_relative_link_passes(self):
@@ -231,6 +234,7 @@ class CheckLinksTest(unittest.TestCase):
     def test_link_to_untracked_file_fails_in_a_git_repository(self):
         if shutil.which("git") is None:
             self.skipTest("git is not installed")
+
         self.write(".gitignore", "ignored.txt\n")
         self.write("tracked.md", "# Tracked\n")
         self.write("untracked.md", "# Untracked\n")

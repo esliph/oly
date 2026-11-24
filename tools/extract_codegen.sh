@@ -32,6 +32,7 @@ list_functions='
     name = $0
     sub(/^[0-9a-f]+ </, "", name)
     sub(/>:$/, "", name)
+
     if (name ~ ENVIRON["PATTERN"] && !(name in seen)) {
       seen[name] = 1
       print name

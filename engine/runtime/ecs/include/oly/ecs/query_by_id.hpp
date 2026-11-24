@@ -153,6 +153,7 @@ namespace oly::ecs {
         for (uint16_t column : matched.columns) {
           descriptors.push_back(reinterpret_cast<uintptr_t>(table.column(column).data));
         }
+
         ++blockCount;
       }
 

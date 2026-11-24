@@ -73,6 +73,7 @@ export class Block {
 
   write<F extends Fields>(type: ComponentType<string, F>): WriteView<F> {
     this.#assertValid("write", type);
+
     if (!this.#writeTypes.includes(type)) {
       throw new ContractError(`write type=${type.name}: type is not in the query's write (only in read or outside it)`);
     }
@@ -184,6 +185,7 @@ export class Query {
       if (current !== null) {
         invalidateBlock(current);
       }
+
       leaveIteration(this.#world);
       this.#bridge.queryEnd(this.#world.handle, iteration);
     }

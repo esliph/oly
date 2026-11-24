@@ -24,8 +24,10 @@ add_release() {
       head -n 200 "$staging/oly" > "$staging/oly.cut"
       mv "$staging/oly.cut" "$staging/oly"
     fi
+
     files="$files oly"
   fi
+
   mkdir -p "$1/download/v$2"
   tar -czf "$1/download/v$2/oly-tools-$2-linux-x64.tar.gz" -C "$staging" $files
   rm -rf "$staging"

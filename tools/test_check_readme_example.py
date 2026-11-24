@@ -22,13 +22,16 @@ class CheckReadmeExampleTest(unittest.TestCase):
     def write(self, relativePath, content):
         path = os.path.join(self.root, relativePath)
         os.makedirs(os.path.dirname(path), exist_ok=True)
+
         with open(path, "w", encoding="utf-8", newline="") as handle:
             handle.write(content)
 
     def run_check(self):
         output = io.StringIO()
+
         with contextlib.redirect_stdout(output):
             code = check_readme_example.main(["--root", self.root])
+
         return code, output.getvalue()
 
     def example_readme(self, body, marker=TEMPLATE_PATH):

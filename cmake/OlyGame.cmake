@@ -55,6 +55,7 @@ function(_oly_add_game_target target)
   if(NOT GAME_ENVIRONMENT)
     message(FATAL_ERROR "${target}: oly_add_game needs ENVIRONMENT web|native")
   endif()
+
   oly_environment(buildEnvironment)
 
   if(NOT GAME_ENVIRONMENT STREQUAL buildEnvironment)
@@ -76,6 +77,7 @@ function(_oly_add_game_target target)
       list(APPEND pluginArguments --plugin ${plugin}=${pluginSchema})
       list(APPEND pluginSchemas ${pluginSchema})
     endif()
+
     string(APPEND pluginIncludes "#include \"oly/${plugin}/plugin.hpp\"\n")
     string(APPEND pluginInstalls "    engine.installPlugin<oly::${plugin}::Plugin>();\n")
   endforeach()
@@ -124,6 +126,7 @@ ${pluginInstalls}  }
   foreach(dependency IN LISTS GAME_DEPENDS plugins)
     target_link_libraries(${target} PRIVATE oly::${dependency})
   endforeach()
+
   oly_warnings(${target})
   set_target_properties(${target} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/games)
 

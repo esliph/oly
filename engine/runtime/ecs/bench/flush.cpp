@@ -36,6 +36,7 @@ namespace {
         world->add(warmupEntity, Component<1>{0});
         world->add(warmupEntity, Component<2>{0});
       }
+
       world->destroy(warmupEntity);
 
       entities.reserve(static_cast<size_t>(entityCount));

@@ -82,6 +82,7 @@ function measureNanosecondsPerEvent(cases: Case[], eventCount: number, rounds: n
       for (let step = 0; step < stepsPerSample; ++step) {
         entry.step();
       }
+
       samples.get(entry.name)!.push(((performance.now() - start) * 1e6) / (stepsPerSample * eventCount));
     }
   }

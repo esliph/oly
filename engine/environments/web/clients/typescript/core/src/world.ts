@@ -150,12 +150,14 @@ export class World {
 
     for (const type of [...read, ...write] as SchemaType[]) {
       componentIdOf(this.#runtime, type);
+
       if (type.kind === "tag") {
         throw new ContractError(`query type=${type.name}: a tag cannot go in read or write; use with/without`);
       }
       if (seen.has(type)) {
         throw new ContractError(`query type=${type.name}: type repeated in read/write`);
       }
+
       seen.add(type);
     }
 
@@ -249,6 +251,7 @@ export class World {
 
   #assertStructuralChangeAllowed(operation: string, entity: Entity | null = null, type: SchemaType | null = null): void {
     this.#assertUsable(operation);
+
     if (this.#structureLocked) {
       throw contractError(operation, entity, type, "direct structural change during frame; use context.spawn/destroy/add/remove");
     }

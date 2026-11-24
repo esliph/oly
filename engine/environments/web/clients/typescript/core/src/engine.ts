@@ -146,6 +146,7 @@ export class Engine {
    */
   frame(nowSeconds: number): void {
     this.#assertUsable("frame");
+
     if (this.#inFrame) {
       throw new ContractError("frame: called from inside a system or handler (frame is not reentrant)");
     }
@@ -314,6 +315,7 @@ export class Engine {
       id,
       whilePaused: () => {
         this.#assertUsable("whilePaused");
+
         if (phase === Phase.Render) {
           throw new ContractError(`whilePaused system=${name}: not valid for a system in the render phase`);
         }
@@ -351,9 +353,11 @@ export class Engine {
 
   #restrictToStates(operation: string, subject: string, states: readonly State[], apply: (mask: number) => void): void {
     this.#assertUsable(operation);
+
     if (this.#inFrame) {
       throw new ContractError(`${operation} ${subject}: state restriction during frame`);
     }
+
     this.#assertNotInterrupted(operation, subject);
 
     apply(stateMaskOf(states.map((state) => stateIndexOf(this.#runtime, state))));
@@ -379,9 +383,11 @@ export class Engine {
 
   #assertCanRegisterStateHook(operation: string, state: State, name: string): number {
     this.#assertUsable(operation);
+
     if (this.#inFrame) {
       throw new ContractError(`${operation} hook=${name}: registration during frame`);
     }
+
     this.#assertNotInterrupted(operation, `hook=${name}`);
 
     return stateIndexOf(this.#runtime, state);
@@ -444,6 +450,7 @@ export class Engine {
     } else {
       setStateContextSides(entry.context, current, other);
     }
+
     setContextActive(entry.context, true);
     setStructureLocked(this.world, false);
 
@@ -457,9 +464,11 @@ export class Engine {
 
   #assertCanRegisterHandler(operation: string, type: EventType, name: string): number {
     this.#assertUsable(operation);
+
     if (this.#inFrame) {
       throw new ContractError(`${operation} handler=${name}: registration during frame`);
     }
+
     this.#assertNotInterrupted(operation, `handler=${name}`);
 
     return eventIndexOf(this.#runtime, type);
@@ -473,10 +482,13 @@ export class Engine {
 
   #assertCanRegister(operation: string, phase: Phase, name: string): void {
     this.#assertUsable(operation);
+
     if (this.#inFrame) {
       throw new ContractError(`${operation} system=${name}: registration during frame`);
     }
+
     this.#assertNotInterrupted(operation, `system=${name}`);
+
     if (!Object.values(Phase).includes(phase)) {
       throw new ContractError(`${operation} system=${name}: invalid phase=${String(phase)}`);
     }

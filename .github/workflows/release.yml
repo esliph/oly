@@ -202,6 +202,7 @@ jobs:
             docker tag "oly-local/oly-$image:$VERSION" "$REGISTRY/oly-$image:$VERSION"
             printf '%s %s\n' "$REGISTRY/oly-$image:$VERSION" "$(docker image inspect --format '{{.Id}}' "$REGISTRY/oly-$image:$VERSION")" >> build/publish/image-ids.txt
           done
+
           docker save "$REGISTRY/oly-dev:$VERSION" "$REGISTRY/oly-wasm:$VERSION" "$REGISTRY/oly-windows:$VERSION" | gzip > build/publish/images.tar.gz
       - uses: actions/upload-artifact@v4
         with:
@@ -258,6 +259,7 @@ jobs:
               echo "::error::the release server did not answer on port 8766"
               exit 1
             fi
+
             sleep 0.5
           done
 

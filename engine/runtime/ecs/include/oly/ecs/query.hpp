@@ -104,6 +104,7 @@ namespace oly::ecs {
     std::optional<std::tuple<Entity, Ts&...>> trySingle() {
       const RowSummary summary = summarizeRows();
       OLY_ASSERT(summary.rowCount <= 1, "trySingle: %.*s with %u rows; expected 0 or 1", static_cast<int>(core::typeName<Query<Ts...>>().size()), core::typeName<Query<Ts...>>().data(), summary.rowCount);
+
       if (summary.rowCount == 0) {
         return std::nullopt;
       }

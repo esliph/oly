@@ -44,6 +44,7 @@ namespace oly::ecs::detail {
       while (destinationColumn < destination.columnTypes.size() && destination.columnTypes[destinationColumn] < source.columnTypes[sourceColumn]) {
         ++destinationColumn;
       }
+
       if (destinationColumn < destination.columnTypes.size() && destination.columnTypes[destinationColumn] == source.columnTypes[sourceColumn]) {
         edge.sourceToDestination[sourceColumn] = static_cast<int16_t>(destinationColumn);
       }

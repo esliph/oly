@@ -140,6 +140,7 @@ namespace oly::ecs {
           const TypeInfo& info = typeInfo(command.componentId);
           detail::relocateValue(info, fresh + (static_cast<std::byte*>(command.payload) - data_), command.payload);
         }
+
         offset = next;
       }
     }
@@ -280,6 +281,7 @@ namespace oly::ecs {
         if (planIndex == kNoPlan) {
           planIndex = appendPlan();
         }
+
         if (result.owned[planIndex].entity == entity) {
           return planIndex;
         }
@@ -291,6 +293,7 @@ namespace oly::ecs {
       if (inserted) {
         it->second = appendPlan();
       }
+
       return it->second;
     };
 
@@ -310,12 +313,14 @@ namespace oly::ecs {
 
     // `begin` serves as the write cursor and is restored right below.
     result.order.resize(accumulated);
+
     for (size_t offset = 0; offset < size_;) {
       detail::CommandView command;
       const size_t next = readAt(offset, command);
       result.order[result.owned[planOf(command.entity)].begin++] = static_cast<uint32_t>(offset >> 3);
       offset = next;
     }
+
     for (detail::EntityPlan& entityPlan : result.owned) {
       entityPlan.begin -= entityPlan.count;
     }
@@ -344,10 +349,12 @@ namespace oly::ecs {
         out.spawned = true;
         continue;
       }
+
       if (out.destroyed) {
         OLY_ASSERT(recordedByObservers_, "command after destroy e=%u:%u", command.entity.index, command.entity.generation);
         continue; // without asserts: ignored (R-CB-4)
       }
+
       if (command.operation == detail::CommandOperation::Destroy) {
         out.operations.clear();
         out.destroyed = true;

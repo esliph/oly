@@ -143,6 +143,7 @@ namespace {
       for (uint32_t i : shuffledIndices) {
         sum += world.get<Component<2>>(entities[i]).value;
       }
+
       benchmark::DoNotOptimize(sum);
     }
 
@@ -165,6 +166,7 @@ namespace {
       for (uint32_t i : shuffledIndices) {
         sum += records[i].third;
       }
+
       benchmark::DoNotOptimize(sum);
     }
 

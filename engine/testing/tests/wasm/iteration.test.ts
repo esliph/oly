@@ -41,6 +41,7 @@ test("eachBlock nested in another query keeps the outer block", () => {
     for (let index = 0; index < 8; ++index) {
       world.spawn([Position, Velocity], { Position: { x: index }, Velocity: { x: 100 + index } });
     }
+
     const positions = world.query({ read: [Position] });
     const velocities = world.query({ read: [Velocity] });
 

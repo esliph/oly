@@ -126,16 +126,19 @@ namespace oly::app {
     if (inFrame_) {
       recoverFromInterruptedFrame();
     }
+
     started_ = true;
 
     if (hidden_) {
       return;
     }
+
     if (!hasLastTime_) {
       lastTime_ = nowSeconds;
       hasLastTime_ = true;
       return;
     }
+
     OLY_ASSERT(nowSeconds >= lastTime_, "frame: time %f less than the previous %f", nowSeconds, lastTime_);
 
     inFrame_ = true;
@@ -153,6 +156,7 @@ namespace oly::app {
       if (accumulator_ < 0.0) {
         accumulator_ = 0.0;
       }
+
       ++stepsRun;
     }
 
@@ -204,6 +208,7 @@ namespace oly::app {
         queues_.clear();
         return;
       }
+
       ++eventRoundsThisStep_;
 
       for (EventTypeId type = 0; type < queues_.typeCount(); ++type) {

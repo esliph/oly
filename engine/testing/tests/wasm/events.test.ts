@@ -95,6 +95,7 @@ test("batch: count and values through the views, entity included", () => {
       for (let index = 0; index < batch.count; ++index) {
         seen.values.push(view.value.get(index));
       }
+
       seen.target = view.target.get(0);
     });
 
@@ -193,6 +194,7 @@ test("memory grows inside the TS handler and the batch stays readable", () => {
       for (let count = 0; count < 1_000_000 && module.HEAPU8.buffer === before; ++count) {
         context.spawn([Position, Velocity, Mixed, Trace]);
       }
+
       grew = module.HEAPU8.buffer !== before;
       value = view.value.get(0);
       target = view.target.get(0);
@@ -282,6 +284,7 @@ test("direct structural change on the World inside the handler is allowed; insid
       } catch (error) {
         systemError = error;
       }
+
       context.emit(Ping, { value: 1 });
     });
     engine.on(Ping, "spawn", () => {

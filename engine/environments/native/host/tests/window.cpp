@@ -57,6 +57,7 @@ TEST_CASE("the video drivers of a playable build are compiled in") {
   for (int index = 0; index < SDL_GetNumVideoDrivers(); ++index) {
     drivers.push_back(SDL_GetVideoDriver(index));
   }
+
   auto has = [&](const char* name) { return std::find(drivers.begin(), drivers.end(), name) != drivers.end(); };
 
   CHECK(has("dummy"));

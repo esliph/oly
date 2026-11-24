@@ -24,6 +24,7 @@ function(oly_add_module)
     else()
       add_library(${target} STATIC ${moduleSources})
     endif()
+
     target_include_directories(${target} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
     target_compile_features(${target} PUBLIC cxx_std_20)
     oly_warnings(${target})

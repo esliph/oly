@@ -55,6 +55,7 @@ for round in $(seq 1 "$rounds"); do
       echo "failed: $variant round $round" >&2
       exit 1
     fi
+
     mv "$target.tmp" "$target"
   done
 done

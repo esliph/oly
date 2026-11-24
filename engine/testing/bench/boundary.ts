@@ -145,6 +145,7 @@ async function main(): Promise<void> {
       for (let warmup = 0; warmup < WarmupIterations; ++warmup) {
         variant.step();
       }
+
       executed.set(variant.name, WarmupIterations);
     }
 
@@ -155,6 +156,7 @@ async function main(): Promise<void> {
         for (let iteration = 0; iteration < iterations; ++iteration) {
           variant.step();
         }
+
         const elapsedMilliseconds = performance.now() - start;
         samples.get(variant.name)!.push((elapsedMilliseconds * 1e6) / (iterations * size));
         executed.set(variant.name, executed.get(variant.name)! + iterations);

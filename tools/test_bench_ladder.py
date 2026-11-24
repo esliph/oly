@@ -17,20 +17,25 @@ def write_json(directory, medians, unit="ns", error_name=None):
     for name, value in medians.items():
         benchmarks.append({"name": name + "_mean", "aggregate_name": "mean", "real_time": value * 100, "time_unit": unit})
         benchmarks.append({"name": name + "_median", "aggregate_name": "median", "real_time": value, "time_unit": unit})
+
     if error_name is not None:
         benchmarks.append({"name": error_name, "error_occurred": True, "error_message": "out of memory"})
 
     path = tempfile.mktemp(suffix=".json", dir=directory)
+
     with open(path, "w", encoding="utf-8") as handle:
         json.dump({"benchmarks": benchmarks}, handle)
+
     return path
 
 
 def run_main(arguments):
     output = io.StringIO()
     errors = io.StringIO()
+
     with contextlib.redirect_stdout(output), contextlib.redirect_stderr(errors):
         code = bench_ladder.main(arguments)
+
     return code, output.getvalue(), errors.getvalue()
 
 
@@ -87,6 +92,7 @@ class BenchLadderTest(unittest.TestCase):
 
     def test_unreadable_json_exits_2(self):
         path = os.path.join(self.directory.name, "broken.json")
+
         with open(path, "w", encoding="utf-8") as handle:
             handle.write("{not json")
 

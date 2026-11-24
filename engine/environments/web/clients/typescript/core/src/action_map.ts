@@ -133,6 +133,7 @@ export class ActionMap {
 
   pointerMove(x: number, y: number): void {
     this.#assertUsable("pointerMove");
+
     if (!Number.isFinite(x) || !Number.isFinite(y)) {
       throw new ContractError(`pointerMove x=${x} y=${y}: non-finite value`);
     }

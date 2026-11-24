@@ -10,6 +10,7 @@ namespace oly::app::detail {
     if (typeByKey_.size() <= key) {
       typeByKey_.resize(key + 1, InvalidEventType);
     }
+
     typeByKey_[key] = type;
     queues_.push_back(Queue{std::string(name), size, {}, {}});
 
@@ -82,6 +83,7 @@ namespace oly::app::detail {
       if (!names.empty()) {
         names += ", ";
       }
+
       names += queue.name;
     }
 

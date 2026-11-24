@@ -94,6 +94,7 @@ namespace oly::ecs::detail {
       if (contains(changed, implier)) {
         return false;
       }
+
       implierInSource = implierInSource || contains(source, implier);
     }
 

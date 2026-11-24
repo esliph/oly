@@ -140,6 +140,7 @@ TEST_CASE("--plugin is accepted before and after --emit, and a malformed --plugi
     CHECK(run(arguments, errors) == 0);
     CHECK(errors.str().empty());
   }
+
   CHECK(readText(directory / "before" / "schema_registry.generated.cpp") == expected);
   CHECK(readText(directory / "after" / "schema_registry.generated.cpp") == expected);
 

@@ -39,6 +39,7 @@ namespace {
     for (uint32_t index = 0; batch != nullptr && index < eventCount; ++index) {
       g_values.push_back(batch[index].value);
     }
+
     if (g_action && kind == g_actionKind) {
       g_action(engine, id);
     }
