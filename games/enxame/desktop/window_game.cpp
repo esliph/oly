@@ -13,15 +13,15 @@ namespace enxame {
   namespace {
     constexpr int WindowWidth = 1280;
     constexpr int WindowHeight = 720;
-    constexpr int LogicalWidth = 640;
-    constexpr int LogicalHeight = 360;
     constexpr float PanSpeed = 400.0f;
     constexpr float ZoomRate = 1.5f;
     constexpr float MinimumZoom = 0.05f;
     constexpr float MaximumZoom = 8.0f;
     constexpr float EnemySize = 4.0f;
+    constexpr float TurretSize = 8.0f;
+    constexpr float ProjectileSize = 2.0f;
 
-    ScenarioId windowScenario = ScenarioId::S1;
+    ScenarioId windowScenario = ScenarioId::Playable;
     uint32_t windowSize = 0;
 
     float screenX(const Camera& camera, float worldX) {
@@ -36,6 +36,25 @@ namespace enxame {
       const SDL_FRect rectangle{centerX - side / 2.0f, centerY - side / 2.0f, side, side};
 
       SDL_RenderFillRect(renderer, &rectangle);
+    }
+
+    struct Color {
+      uint8_t red;
+      uint8_t green;
+      uint8_t blue;
+    };
+
+    // Every entity with Tag, from its WorldTransform (it already holds the parent chain), at least one pixel wide.
+    template <class Tag>
+    void drawEntities(oly::app::SystemContext& context, const WorldView& view, Color color, float size) {
+      const Camera& camera = view.simulation->camera;
+      const float side = std::max(1.0f, size * camera.zoom);
+
+      SDL_SetRenderDrawColor(view.renderer, color.red, color.green, color.blue, 255);
+
+      context.query<const WorldTransform>(oly::ecs::With<Tag>{}).each([&](const WorldTransform& transform) {
+        fillSquare(view.renderer, screenX(camera, transform.x), screenY(camera, transform.y), side);
+      });
     }
 
     void drawMap(const WorldView& view) {
@@ -112,14 +131,9 @@ OLY_SYSTEM(moveCamera) {
 
 OLY_SYSTEM(drawWorld) {
   const enxame::WorldView& view = *static_cast<enxame::WorldView*>(context.userData());
-  const enxame::Camera& camera = view.simulation->camera;
-  const float enemySide = std::max(1.0f, enxame::EnemySize * camera.zoom);
 
   enxame::drawMap(view);
-
-  SDL_SetRenderDrawColor(view.renderer, 220, 60, 60, 255);
-
-  context.query<const WorldTransform>(oly::ecs::With<Enemy>{}).each([&](const WorldTransform& transform) {
-    enxame::fillSquare(view.renderer, enxame::screenX(camera, transform.x), enxame::screenY(camera, transform.y), enemySide);
-  });
+  enxame::drawEntities<Enemy>(context, view, {220, 60, 60}, enxame::EnemySize);
+  enxame::drawEntities<Turret>(context, view, {80, 140, 255}, enxame::TurretSize);
+  enxame::drawEntities<Projectile>(context, view, {255, 220, 80}, enxame::ProjectileSize);
 }

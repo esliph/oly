@@ -17,4 +17,12 @@ namespace enxame {
     float separationRadius;
     float separationStrength; // world units per second at distance 0
   };
+
+  struct CombatParameters {
+    float reloadSeconds;
+    float range;
+    float projectileSpeed; // world units per second
+    float projectileLife; // seconds
+    float hitRadius;
+  };
 }

@@ -29,8 +29,7 @@ int main(int argumentCount, char** arguments) {
     return enxame::runHeadless(*options);
   }
 
-  // Until the playable world, the window shows the first runnable scenario.
-  const enxame::ScenarioId scenario = options->scenario.value_or(enxame::ScenarioId::S1);
+  const enxame::ScenarioId scenario = options->scenario.value_or(enxame::ScenarioId::Playable);
 
   if (!enxame::checkScenario(scenario, options->size)) {
     return 64;

@@ -4,13 +4,18 @@
 #include <cstdint>
 #include <cstdio>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "oly/app/engine.hpp"
 #include "oly/app/game.hpp"
 #include "oly/ecs/world.hpp"
+#include "oly/input/physical_button.hpp"
 #include "scenario.hpp"
+#include "schema.generated.hpp"
 #include "statistics.hpp"
+#include "workloads/s5_replay.hpp"
+#include "world_hash.hpp"
 
 namespace enxame {
   namespace {
@@ -70,7 +75,7 @@ namespace enxame {
       }
     }
 
-    void writeJson(std::FILE* file, const LaunchOptions& options, const ScenarioInfo& info, RunLength run, const oly::app::Engine& engine, Measurements& measurements) {
+    void writeJson(std::FILE* file, const LaunchOptions& options, const ScenarioInfo& info, RunLength run, const oly::app::Engine& engine, Measurements& measurements, const std::string& measuresJson) {
       std::fprintf(file, "{\n  \"commit\": \"%s\", \"scenario\": \"%.*s\", \"size\": %u, \"seed\": %llu,\n", options.commit.c_str(), static_cast<int>(info.name.size()), info.name.data(), *options.size, static_cast<unsigned long long>(info.seed));
       std::fprintf(file, "  \"warmup\": %u, \"steps\": %u, \"stepsOverridden\": %s, \"timing\": %s,\n", run.warmup, run.steps, options.steps ? "true" : "false", options.timing ? "true" : "false");
       std::fprintf(file, "  \"step\": { \"p50\": %llu, \"p99\": %llu, \"max\": %llu },\n", static_cast<unsigned long long>(percentile(measurements.stepNanoseconds, 50.0)), static_cast<unsigned long long>(percentile(measurements.stepNanoseconds, 99.0)), static_cast<unsigned long long>(percentile(measurements.stepNanoseconds, 100.0)));
@@ -91,7 +96,29 @@ namespace enxame {
         std::fprintf(file, "%s\n    { \"phase\": \"%s\", \"median\": %llu }", slot == 0 ? "" : ",", phaseName(flushes[slot].phase), static_cast<unsigned long long>(medianOf(measurements.flushNanoseconds[slot])));
       }
 
-      std::fprintf(file, "%s],\n  \"measures\": {}\n}\n", flushes.empty() ? "" : "\n  ");
+      std::fprintf(file, "%s],\n  \"measures\": %s\n}\n", flushes.empty() ? "" : "\n  ", measuresJson.c_str());
+    }
+
+    template <class Tag>
+    size_t countOf(oly::ecs::World& world) {
+      size_t count = 0;
+
+      world.query<const Position>(oly::ecs::With<Tag>{}).each([&](const Position&) {
+        ++count;
+      });
+
+      return count;
+    }
+
+    std::string measuresOf(ScenarioId scenario, oly::ecs::World& world) {
+      if (scenario != ScenarioId::S5) {
+        return "{}";
+      }
+
+      char text[160];
+      std::snprintf(text, sizeof(text), "{ \"worldHash\": \"0x%016llx\", \"enemiesLeft\": %zu, \"turrets\": %zu }", static_cast<unsigned long long>(worldHash(world)), countOf<Enemy>(world), countOf<Turret>(world));
+
+      return text;
     }
   }
 
@@ -118,10 +145,24 @@ namespace enxame {
     Measurements measurements;
     engine.frame(0.0);
 
+    uint32_t nextClick = 0;
+
     for (uint32_t frame = 1; frame <= run.warmup + run.steps; ++frame) {
+      const bool clicking = *options.scenario == ScenarioId::S5 && nextClick < workloads::S5ClickCount && workloads::s5ClickAt(nextClick).step + 1 == frame;
+
+      if (clicking) {
+        const workloads::Click click = workloads::s5ClickAt(nextClick++);
+        engine.actions().pointerMove(click.screenX, click.screenY);
+        engine.actions().buttonDown(oly::input::MouseButton::Left);
+      }
+
       const auto start = std::chrono::steady_clock::now();
       engine.frame(static_cast<double>(frame) / 60.0);
       const uint64_t elapsed = nanosecondsSince(start);
+
+      if (clicking) {
+        engine.actions().buttonUp(oly::input::MouseButton::Left);
+      }
 
       if (frame > run.warmup) {
         measurements.stepNanoseconds.push_back(elapsed);
@@ -132,7 +173,7 @@ namespace enxame {
       }
     }
 
-    writeJson(file.get(), options, info, run, engine, measurements);
+    writeJson(file.get(), options, info, run, engine, measurements, measuresOf(*options.scenario, world));
     std::printf("wrote %s\n", options.out.c_str());
 
     return 0;

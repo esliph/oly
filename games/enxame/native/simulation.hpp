@@ -12,6 +12,10 @@
 #include "workload.hpp"
 
 namespace enxame {
+  // The logical size of the window: pointer positions and the camera centre are in these units.
+  inline constexpr int LogicalWidth = 640;
+  inline constexpr int LogicalHeight = 360;
+
   struct Camera {
     float x = 0.0f;
     float y = 0.0f;
@@ -27,9 +31,11 @@ namespace enxame {
     FlowField flowField;
     std::optional<SpatialHash> hash;
     HordeParameters horde{};
+    CombatParameters combat{};
     std::vector<oly::ecs::Entity> gatheredEntities;
     std::vector<float> gatheredXs;
     std::vector<float> gatheredYs;
+    std::vector<oly::ecs::Entity> hitEnemies; // cleared at the start of moveProjectiles
 
     explicit Simulation(uint64_t seed)
       : random(seed) {}

@@ -49,3 +49,8 @@ endfunction()
 
 enxame_check_run(S1 S1 on --headless --scenario S1 --size 1000 --steps 5 --commit test)
 enxame_check_run(S1_untimed S1 off --headless --scenario S1 --size 1000 --steps 5 --commit test --timing off)
+enxame_check_run(S5 S5 on --headless --scenario S5 --size 2000 --steps 5 --commit test)
+
+add_test(NAME enxame.replay_determinism
+  COMMAND ${CMAKE_COMMAND} "-DCOMMAND=$<TARGET_FILE:enxame>;--headless;--scenario;S5;--size;2000;--steps;2500;--commit;test"
+          -DOUT=${CMAKE_CURRENT_BINARY_DIR}/replay -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/replay_determinism.cmake)

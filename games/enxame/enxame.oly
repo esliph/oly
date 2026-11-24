@@ -1,4 +1,6 @@
 tag Enemy
+component Turret { reload: f32 }
+component Projectile { velocityX: f32, velocityY: f32, life: f32 }
 action pan: axis2d
 action zoomIn: button
 action zoomOut: button

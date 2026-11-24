@@ -10,3 +10,8 @@ void moveHorde(oly::app::SystemContext& context);
 // Window only: EnxameGame adds them, so no headless run has them.
 void moveCamera(oly::app::SystemContext& context);
 void drawWorld(oly::app::SystemContext& context);
+
+// Playable world and S5.
+void placeTurret(oly::app::SystemContext& context);
+void fireTurrets(oly::app::SystemContext& context);
+void moveProjectiles(oly::app::SystemContext& context);
