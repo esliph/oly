@@ -64,7 +64,7 @@ Outside a game, `oly doctor` checks the tools of both environments. Each line st
 
 ### `oly build`, `oly test` and `oly run`
 
-They build in `Debug`, so contract errors stop the game ([Errors](errors.md#at-run-time)). Put the options right after the command name.
+They build in `Debug`, so contract errors stop the game ([Errors](errors.md#at-run-time)), and run at most 6 compile jobs at a time. Put the options right after the command name.
 
 | Option | Meaning |
 |---|---|
