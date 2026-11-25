@@ -33,7 +33,7 @@ Measures of each scenario:
 - **S3**: 1002 transitions per step at p50 (max 1104); the `UpdateAfter` flush costs 135.8 µs at the median.
 - **S5**: the world hash is equal in every A run, in every B run and between A and B (`0x21c16d888746fd84`); 42 turrets, no enemy left.
 - **S6**: 5000 visited entities; `propagateTransforms` costs 22.2 ns per visited entity. The review measured 26–36 ns, but on children alone: context only.
-- **S8**: after the last wave (50), 257 archetypes, 589824 bytes of columns, 5685248 bytes resident.
+- **S8**: after the last wave (50), 257 archetypes, 589824 bytes of columns, 5654528 bytes resident (median).
 
 ## Noise
 

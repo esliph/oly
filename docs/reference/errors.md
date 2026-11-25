@@ -86,7 +86,7 @@ In debug builds, a contract violation stops on `OLY_ASSERT`. `oly build`, `oly t
 | `query type=<Type>: a tag cannot go in read or write; use with/without` | `World.query` | compile error `tag in Query<Ts...> is not allowed; ...` | `read: [Enemy]` with a tag | move it to `with` |
 | `write type=<Type>: type is not in the query's write (only in read or outside it)` | `Query` block | none | `block.write(T)` for a type in `read` | put the type in `write` |
 | `<operation> system=<name>: registration during frame` (`handler=<name>`, `hook=<name>`) | `Engine` | `addSystem: system "<name>" registered during frame` | `addSystem`, `on` or `onEnter` called from inside a system or handler | register everything at start-up |
-| `setTimingEnabled: called during frame` | `app` | none | the call ran inside a system, handler or hook | switch timing between frames |
+| `setTimingEnabled: called during frame` | `Engine` | none | the call ran inside a system, handler or hook | switch timing between frames |
 | `<operation> <subject>: the last frame was interrupted by an exception; call frame before registering` | `Engine` | none | a system threw; the engine has not recovered yet | call `frame` once, then register |
 | `frame: called from inside a system or handler (frame is not reentrant)` | `Engine` | none | `engine.frame` called from inside a system | never call `frame` from game code |
 | `frame: time=<now> is not a finite number` | `Engine` | none | `NaN` or `Infinity` passed to `frame` | pass a finite time |

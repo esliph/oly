@@ -126,6 +126,11 @@ run_task "$work/native-game" build --docker --release
 check "release: passes --release on, after --host" docker_line_has " build --host --release"
 
 : > "$DOCKER_LOG"
+run_task "$work/native-game" build --docker --platform windows --release
+check "windows release: runs in the windows image" docker_line_has " windows sh /oly-tools/spur"
+check "windows release: passes both on, after --host" docker_line_has " build --host --release --platform windows"
+
+: > "$DOCKER_LOG"
 run_task "$work/native-game" run --docker --release
 check "native run --release: exit 64" exit_is 64
 check "native run --release: names the release directory" stderr_has "run build/cmake-release-docker/games/native_game on the host"

@@ -71,7 +71,7 @@ They build in `Debug` unless `--release`, so contract errors stop the game ([Err
 | `--docker` | run the task in the Docker image of the pinned version: [`--docker`](#docker) |
 | `--host` | run the task with the tools of the host, even when `oly.env` says `OLY_RUNNER=docker` |
 | `--platform windows` | build the `.exe` of a desktop game with MinGW. On Linux this cross-compiles with `mingw-w64` and runs the Windows tools and tests under Wine; on Windows it is the normal build |
-| `--release` | build with `CMAKE_BUILD_TYPE=Release` in `build/cmake-release`, for measuring: `OLY_ASSERT` is off. Desktop games only |
+| `--release` | build with `CMAKE_BUILD_TYPE=Release` in `build/cmake-release[-windows][-docker]`, for measuring: `OLY_ASSERT` is off. Desktop games only |
 
 `--platform windows` is for desktop games only.
 

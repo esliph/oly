@@ -466,8 +466,8 @@ _dispatch_docker() {
   exec docker compose -f "$(_host_path "$_compose")" run --rm "$@"
 }
 
-# Every task that builds begins with it: _start "$@"; shift "$_consumed". Reads the leading --docker, --host and
-# --platform windows, sets _target and _consumed, and when the runner is docker re-runs the task in its container.
+# Every task that builds begins with it: _start "$@"; shift "$_consumed". Reads the leading --docker, --host, --release
+# and --platform windows, sets _target and _consumed, and when the runner is docker re-runs the task in its container.
 _start() {
   _runner=
   _consumed=0
