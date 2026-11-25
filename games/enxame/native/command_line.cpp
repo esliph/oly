@@ -83,6 +83,10 @@ namespace enxame {
         if (!options.steps) {
           return refuse("--steps needs a number");
         }
+
+        if (*options.steps == 0) {
+          return refuse("--steps must be at least 1");
+        }
       } else if (argument == "--timing" && hasValue) {
         const std::string_view value = arguments[++index];
 

@@ -305,6 +305,15 @@ namespace enxame {
     }
 
     writeJson(file.get(), options, info, run, engine, measurements, measuresOf(*options.scenario, world, engine, measurements));
+    const bool writeFailed = std::ferror(file.get()) != 0;
+    const bool closeFailed = std::fclose(file.release()) != 0;
+
+    if (writeFailed || closeFailed) {
+      std::fprintf(stderr, "enxame: cannot write %s\n", options.out.c_str());
+
+      return 1;
+    }
+
     std::printf("wrote %s\n", options.out.c_str());
 
     return 0;

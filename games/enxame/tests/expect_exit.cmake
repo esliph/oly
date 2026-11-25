@@ -1,4 +1,9 @@
 # Runs COMMAND (a ; list) and fails unless the exit code is EXIT_CODE and stderr contains TEXT.
+# With OUT set, it also fails if that file exists after the run.
+if(OUT)
+  file(REMOVE "${OUT}")
+endif()
+
 execute_process(
   COMMAND ${COMMAND}
   RESULT_VARIABLE exitCode
@@ -13,4 +18,8 @@ string(FIND "${errorText}" "${TEXT}" position)
 
 if(position EQUAL -1)
   message(FATAL_ERROR "stderr does not contain \"${TEXT}\"; stderr: ${errorText}")
+endif()
+
+if(OUT AND EXISTS "${OUT}")
+  message(FATAL_ERROR "${OUT} was written")
 endif()
