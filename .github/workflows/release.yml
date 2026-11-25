@@ -203,7 +203,7 @@ jobs:
             printf '%s %s\n' "$REGISTRY/oly-$image:$VERSION" "$(docker image inspect --format '{{.Id}}' "$REGISTRY/oly-$image:$VERSION")" >> build/publish/image-ids.txt
           done
 
-          docker save "$REGISTRY/oly-dev:$VERSION" "$REGISTRY/oly-wasm:$VERSION" "$REGISTRY/oly-windows:$VERSION" | gzip > build/publish/images.tar.gz
+          docker save "$REGISTRY/oly-dev:$VERSION" "$REGISTRY/oly-wasm:$VERSION" "$REGISTRY/oly-windows:$VERSION" | zstd -q -T0 -3 -o build/publish/images.tar.zst
       - uses: actions/upload-artifact@v4
         with:
           name: images
@@ -293,7 +293,7 @@ jobs:
           path: build/publish
       - name: Load the tested images and check they are the ones saved
         run: |
-          gunzip -c build/publish/images.tar.gz | docker load
+          zstd -q -dc build/publish/images.tar.zst | docker load
 
           while read -r name id; do
             loaded=$(docker image inspect --format '{{.Id}}' "$name")

@@ -90,6 +90,10 @@ _engine_source() {
   fi
 }
 
+# An unbounded -j is unbounded with Makefiles: a native game built with --docker peaked
+# at 151 runnable processes, the 12 cores and 4.1 GiB of Docker Desktop (measured 2026-11-25).
+_build_jobs=6
+
 # CMake's default generator on Windows is Visual Studio, which drives neither MinGW nor Emscripten.
 _generator_arguments() {
   if [ "$(_platform)" = windows-x64 ]; then
@@ -148,7 +152,7 @@ _build_native() {
   _source=$(_engine_source)
   _directory=$(_cmake_directory)
   cmake -S . -B "$_directory" $(_generator_arguments) $(_toolchain_arguments) -DCMAKE_BUILD_TYPE=$(_build_type) -DOLY_BUILD_NATIVE_HOST=ON "-DFETCHCONTENT_SOURCE_DIR_OLY=$_source"
-  cmake --build "$_directory" -j
+  cmake --build "$_directory" -j "$_build_jobs"
 }
 
 # local when OLY_ENGINE_DIR names a checkout, else pinned.
@@ -243,7 +247,7 @@ _build_schema_tool() {
   fi
 
   cmake -S "$(_host_path "$OLY_ENGINE_DIR")" -B "build/oly-schema$(_in_docker_suffix)" $(_generator_arguments) -DCMAKE_BUILD_TYPE=Release -DOLY_BUILD_TESTS=OFF -DOLY_WERROR=OFF
-  cmake --build "build/oly-schema$(_in_docker_suffix)" --target oly-schema -j
+  cmake --build "build/oly-schema$(_in_docker_suffix)" --target oly-schema -j "$_build_jobs"
 }
 
 _schema_tool_path() {
@@ -276,7 +280,7 @@ _build_web() {
     -DCMAKE_BUILD_TYPE=Debug "-DOLY_SCHEMA_TOOL=$_tool" "-DFETCHCONTENT_SOURCE_DIR_OLY=$_source"
   # The TS code imports the generated schema, so it exists before tsc.
   cmake --build "$_directory" --target oly_typescript_schemas
-  cmake --build "$_directory" -j
+  cmake --build "$_directory" -j "$_build_jobs"
   node_modules/.bin/tsc -b
 
   mkdir -p build/web
