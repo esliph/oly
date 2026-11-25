@@ -55,8 +55,8 @@ cleanup() {
     fi
   done
 
-  git worktree prune
   rm -rf "$work"
+  git worktree prune
 }
 
 trap cleanup EXIT INT TERM
