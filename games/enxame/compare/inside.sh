@@ -9,6 +9,7 @@
 set -eu
 
 repetitions="${ENXAME_REPETITIONS:-10}"
+warmUpFolder="${TMPDIR:-/tmp}"
 stepArguments=""
 
 if [ -n "${ENXAME_STEPS:-}" ]; then
@@ -41,6 +42,12 @@ run() {
   "$binary" --headless --scenario "$scenario" --size "$size" $stepArguments --commit "$commit" --out "$folder/$scenario-$size-$repetition.json" "$@" > /dev/null
 }
 
+# The first process of a session runs cold, and the repetitions alternate A then B, so it would always be A's. One
+# discarded pair absorbs that before the first repetition. The caller runs the pair; this removes its output.
+discardWarmUp() {
+  rm -f "$warmUpFolder/$1-$2-warmup.json"
+}
+
 summarize() {
   python3 -I /app/games/enxame/compare/summarize.py "$1" --a-label "$2" --b-label "$3"
 }
@@ -60,6 +67,9 @@ compare() {
   mkdir -p "$results/a" "$results/b"
 
   echo "$runs" | while read -r scenario size; do
+    run "$binaryA" "$commitA" "$scenario" "$size" warmup "$warmUpFolder"
+    run "$binaryB" "$commitB" "$scenario" "$size" warmup "$warmUpFolder"
+    discardWarmUp "$scenario" "$size"
     repetition=1
 
     while [ "$repetition" -le "$repetitions" ]; do
@@ -79,6 +89,9 @@ overhead() {
   build "$dir"
   binary="$(binaryOf "$dir")"
   mkdir -p "$results/a" "$results/b"
+  run "$binary" "$commit" S1 10000 warmup "$warmUpFolder" --timing off
+  run "$binary" "$commit" S1 10000 warmup "$warmUpFolder" --timing on
+  discardWarmUp S1 10000
   repetition=1
 
   while [ "$repetition" -le "$repetitions" ]; do
