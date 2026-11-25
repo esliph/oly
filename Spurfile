@@ -77,15 +77,11 @@ _in() {
     _rotate=$((_rotate - 1))
   done
 
-  # The compiler cache is on by default, with the values of ci.yml, in the images that carry ccache: the windows image
-  # does not, and a launcher it cannot run would break its build.
-  case $_image in
-    dev | wasm)
-      set -- -e CCACHE_DIR="${CCACHE_DIR:-/app/build/.ccache}" -e CCACHE_MAXSIZE="${CCACHE_MAXSIZE:-500M}" \
-        -e CMAKE_C_COMPILER_LAUNCHER="${CMAKE_C_COMPILER_LAUNCHER:-ccache}" \
-        -e CMAKE_CXX_COMPILER_LAUNCHER="${CMAKE_CXX_COMPILER_LAUNCHER:-ccache}" "$@"
-      ;;
-  esac
+  # The compiler cache is on by default, with the values of ci.yml. Every image installs ccache: one without it would
+  # break its build on a launcher it cannot run.
+  set -- -e CCACHE_DIR="${CCACHE_DIR:-/app/build/.ccache}" -e CCACHE_MAXSIZE="${CCACHE_MAXSIZE:-500M}" \
+    -e CMAKE_C_COMPILER_LAUNCHER="${CMAKE_C_COMPILER_LAUNCHER:-ccache}" \
+    -e CMAKE_CXX_COMPILER_LAUNCHER="${CMAKE_CXX_COMPILER_LAUNCHER:-ccache}" "$@"
 
   # Git Bash would rewrite arguments such as '^ecs\.' as Windows paths. A variable unset on the host stays unset in the
   # container: the ctest parallelism is on only where CI turns it on (ci.yml).
@@ -122,11 +118,43 @@ _staged_run() {
   OLY_RELEASE_URL=http://127.0.0.1:8766 OLY_ENGINE_SOURCE_DIR=$PWD sh tools/release/staged_consumer_test.sh "$1" "$2" "$PWD/build/staged/$2"
 }
 
+##@ Toolchain
+
 ## Build the images with the toolchain versions of toolchain.env; the arguments go to docker compose build.
 ##
 ##   ./spur images wasm
 images: ## build the images from toolchain.env (on the host)
   exec docker compose --env-file toolchain.env build "$@"
+
+## Run a command in the dev container, or a shell.
+##
+##   ./spur dev ./build/release/bench/ecs_bench_iterate
+##   ./spur dev ./spur -x test   # trace a task
+dev: ## command or shell in the dev container
+  _in dev -- "$@"
+
+  [ "$#" -gt 0 ] || set -- bash
+  exec "$@"
+
+## Run a command in the wasm container, or a shell.
+##
+##   ./spur wasm node --version
+wasm: ## command or shell in the wasm container
+  _in wasm -- "$@"
+
+  [ "$#" -gt 0 ] || set -- bash
+  exec "$@"
+
+## Run a command in the windows container (MinGW and Wine), or a shell.
+##
+##   ./spur windows wine --version
+windows: ## command or shell in the windows container
+  _in windows -- "$@"
+
+  [ "$#" -gt 0 ] || set -- bash
+  exec "$@"
+
+##@ Build and test
 
 configure: ## cmake --preset $PRESET (default debug-asan)
   preset=${PRESET:-debug-asan}
@@ -177,33 +205,7 @@ windows-test: ## the tests of a windows* preset, under Wine
 
   PRESET=$preset spur test "$@"
 
-## Run a command in the dev container, or a shell.
-##
-##   ./spur dev ./build/release/bench/ecs_bench_iterate
-##   ./spur dev ./spur -x test   # trace a task
-dev: ## command or shell in the dev container
-  _in dev -- "$@"
-
-  [ "$#" -gt 0 ] || set -- bash
-  exec "$@"
-
-## Run a command in the wasm container, or a shell.
-##
-##   ./spur wasm node --version
-wasm: ## command or shell in the wasm container
-  _in wasm -- "$@"
-
-  [ "$#" -gt 0 ] || set -- bash
-  exec "$@"
-
-## Run a command in the windows container (MinGW and Wine), or a shell.
-##
-##   ./spur windows wine --version
-windows: ## command or shell in the windows container
-  _in windows -- "$@"
-
-  [ "$#" -gt 0 ] || set -- bash
-  exec "$@"
+##@ Formatting
 
 ## Format with the dev image's clang-format, the one the CI checks against: the given files, or every tracked .cpp and
 ## .hpp file when there is none.
@@ -235,6 +237,8 @@ format-check: ## fail when the given files, or a tracked .cpp/.hpp, are not clan
   _list_tracked_sources "$list"
   xargs -0 clang-format --dry-run --Werror < "$list"
 
+##@ Web and TypeScript
+
 schema-tool: ## build oly-schema for the machine
   _in wasm -- "$@"
 
@@ -242,6 +246,40 @@ schema-tool: ## build oly-schema for the machine
   # build oly-schema with the tree.
   cmake --preset schema-tool
   cmake --build --preset schema-tool -j "$_build_jobs"
+
+ts: ## generate the schemas from a wasm-games* preset (default wasm-games) and build the TypeScript
+  preset=${PRESET:-wasm-games}
+  _require_games_preset "$preset"
+  _in wasm -- "$@"
+
+  spur schema-tool
+
+  # The TS code imports the generated schemas, so they exist before tsc. A game's comes from its CMake target, the only
+  # place that knows its plugins; a test-only schema is generated next to its .oly.
+  PRESET=$preset spur configure
+  cmake --build --preset "$preset" --target oly_typescript_schemas
+
+  for schema in engine/testing/fixture/schemas/*.oly; do
+    build/schema-tool/bin/oly-schema "$schema" --emit "ts=${schema%.oly}.generated.ts"
+  done
+
+  # npm is the one next to node: in the emsdk image it is not on the PATH.
+  npm="$(dirname "$(command -v node)")/npm"
+  [ -d node_modules ] || "$npm" ci --no-audit --no-fund
+  "$npm" run build
+
+## Build the TypeScript and run ctest on a wasm-games* preset (default wasm-games).
+##
+##   PRESET=wasm-games-release ./spur games-test -R '^ts\.'
+games-test: ## ts, then the tests of a wasm-games* preset
+  preset=${PRESET:-wasm-games}
+  _require_games_preset "$preset"
+  _in wasm -- "$@"
+
+  PRESET=$preset spur ts
+  PRESET=$preset spur test "$@"
+
+##@ Consumer tests
 
 ## Build cmake/tests/consumer, a project outside this tree that fetches the engine with FetchContent (here: this
 ## checkout), and run it. No argument: native, then web.
@@ -291,38 +329,6 @@ subproject-web: ## the web half of subproject-test
   grep -q -- '-sALLOW_MEMORY_GROWTH=1' "$directory/build.log" || _fail 1 "the web consumer links without -sALLOW_MEMORY_GROWTH=1"
 
   node --input-type=module -e 'const m = await import(process.argv[1]); await m.default(); console.log("consumer ok")' "file://$PWD/$directory/games/consumer.mjs"
-
-ts: ## generate the schemas from a wasm-games* preset (default wasm-games) and build the TypeScript
-  preset=${PRESET:-wasm-games}
-  _require_games_preset "$preset"
-  _in wasm -- "$@"
-
-  spur schema-tool
-
-  # The TS code imports the generated schemas, so they exist before tsc. A game's comes from its CMake target, the only
-  # place that knows its plugins; a test-only schema is generated next to its .oly.
-  PRESET=$preset spur configure
-  cmake --build --preset "$preset" --target oly_typescript_schemas
-
-  for schema in engine/testing/fixture/schemas/*.oly; do
-    build/schema-tool/bin/oly-schema "$schema" --emit "ts=${schema%.oly}.generated.ts"
-  done
-
-  # npm is the one next to node: in the emsdk image it is not on the PATH.
-  npm="$(dirname "$(command -v node)")/npm"
-  [ -d node_modules ] || "$npm" ci --no-audit --no-fund
-  "$npm" run build
-
-## Build the TypeScript and run ctest on a wasm-games* preset (default wasm-games).
-##
-##   PRESET=wasm-games-release ./spur games-test -R '^ts\.'
-games-test: ## ts, then the tests of a wasm-games* preset
-  preset=${PRESET:-wasm-games}
-  _require_games_preset "$preset"
-  _in wasm -- "$@"
-
-  PRESET=$preset spur ts
-  PRESET=$preset spur test "$@"
 
 ## Run the tests of the game tasks (tools/oly/), which need no engine build.
 ##
@@ -440,6 +446,8 @@ consumer-docker: ## the Docker half of consumer-test, on the host
 
   [ -d "$native/build/cmake" ] && [ -d "$native/build/cmake-docker" ] || _fail 1 "the host and Docker builds do not have their own directories"
   [ -f "$native/build/cmake-windows-docker/games/consumer_game.exe" ] || _fail 1 "the Windows build left no consumer_game.exe"
+
+##@ Release
 
 ## The shell tests of tools/release, which need no engine build.
 ##

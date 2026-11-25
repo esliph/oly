@@ -2,8 +2,9 @@ FROM debian:trixie-slim
 
 ARG MINGW_GCC_MINIMUM
 
+# ccache: as in the dev image.
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends cmake make git python3 ca-certificates \
+  && apt-get install -y --no-install-recommends cmake make git python3 ca-certificates ccache \
     g++-mingw-w64-x86-64-posix gcc-mingw-w64-x86-64-posix binutils-mingw-w64-x86-64 wine wine64 \
   && rm -rf /var/lib/apt/lists/*
 

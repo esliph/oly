@@ -123,6 +123,24 @@ The `wasm` image builds `oly-schema` with emsdk's Clang (`CC=clang`), because Ub
 
 With `--docker` the launcher's `Spurfile` runs again inside the container with `--host`, from `/oly-tools` (or `/oly` in local mode). Each runner has its own build directory (`build/cmake`, `build/cmake-docker`, with `-windows` for the cross-build), because one CMake cache cannot serve a container path and a host path.
 
+```mermaid
+flowchart TD
+  oly["./oly TASK, in the game folder"] --> tools["the oly-tools Spurfile:<br/>the pinned OLY_VERSION in OLY_HOME,<br/>or tools/oly of OLY_ENGINE_DIR in local mode"]
+  tools --> runner{"--docker, or<br/>OLY_RUNNER=docker?"}
+  runner -- no --> host["host tools,<br/>checked against toolchain.env"]
+  runner -- yes --> service{"service"}
+  service -- "web game" --> wasm["oly-wasm:OLY_VERSION"]
+  service -- "native game" --> dev["oly-dev:OLY_VERSION"]
+  service -- "native game, --platform windows" --> windows["oly-windows:OLY_VERSION"]
+  wasm & dev & windows --> inside["the same task with --host,<br/>game at /game, oly-tools at /oly-tools<br/>or the checkout at /oly"]
+  host --> hostBuild["build/cmake<br/>build/cmake-windows"]
+  inside --> dockerBuild["build/cmake-docker<br/>build/cmake-windows-docker"]
+  hostBuild & dockerBuild --> task{"task"}
+  task -- test --> ctest["ctest --test-dir"]
+  task -- "run, native" --> exe["games/GAME, or GAME.exe;<br/>on the host only: no window opens in the container"]
+  task -- "run, web" --> serve["esbuild serves build/web<br/>on 0.0.0.0:8000"]
+```
+
 ## Game builds are `Debug`
 
 `oly build`, `oly test` and `oly run` configure with `CMAKE_BUILD_TYPE=Debug`, so `OLY_ASSERT` stops a contract violation in a game. Debug stays the default. `--release` configures `Release` in its own directory (`build/cmake-release`), for measuring and not for shipping: shipping builds are phase 7 of the roadmap. The engine's release presets are for measuring, not for the game's everyday loop.
