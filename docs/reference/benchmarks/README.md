@@ -29,6 +29,7 @@ Folders: `ecs/` (ECS module), `bridge/` (WASM↔TS boundary), `wasm/` (variant l
 | `ecs/` and this page | ECS targets, `perf stat` of the fragmented iteration |
 | `bridge/` | boundary, loop and events |
 | `wasm/` | runs (`runs/`) and generated code (`codegen/`) of the native × WASM ladder |
+| `enxame/` | the phase 0 baseline, its noise and the timing overhead; see [`enxame/README.md`](enxame/README.md) |
 
 The ECS benchmarks live in `engine/runtime/ecs/bench/` (`ecs_bench_iterate`, `ecs_bench_transitions`, `ecs_bench_fragmented`, `ecs_bench_flush`). The boundary ones live in `engine/testing/bench/`. `tools/bench_ratio.py` computes the ratios. To run them and record a result, see [Run the benchmarks](../../how-to/contributor/run-benchmarks.md).
 

@@ -1,0 +1,1286 @@
+{
+  "scenario": "S2",
+  "size": 50000,
+  "a": {
+    "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+    "label": "A",
+    "runs": [
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 51167,
+          "p99": 116020,
+          "max": 266339
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "Update",
+            "ran": 600,
+            "median": 26610
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "Update",
+            "ran": 600,
+            "median": 501
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 23284
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "Update",
+            "median": 140
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "allocationsPerStep": {
+            "p50": 21,
+            "max": 38,
+            "total": 13127
+          }
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 51206,
+          "p99": 108254,
+          "max": 153750
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "Update",
+            "ran": 600,
+            "median": 26741
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "Update",
+            "ran": 600,
+            "median": 501
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 23264
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "Update",
+            "median": 131
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "allocationsPerStep": {
+            "p50": 21,
+            "max": 38,
+            "total": 13127
+          }
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 51157,
+          "p99": 108074,
+          "max": 144303
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "Update",
+            "ran": 600,
+            "median": 26600
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "Update",
+            "ran": 600,
+            "median": 501
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 23374
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "Update",
+            "median": 140
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "allocationsPerStep": {
+            "p50": 21,
+            "max": 38,
+            "total": 13127
+          }
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 51137,
+          "p99": 107203,
+          "max": 137139
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "Update",
+            "ran": 600,
+            "median": 26621
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "Update",
+            "ran": 600,
+            "median": 501
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 23073
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "Update",
+            "median": 150
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "allocationsPerStep": {
+            "p50": 21,
+            "max": 38,
+            "total": 13127
+          }
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 50746,
+          "p99": 106401,
+          "max": 142119
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "Update",
+            "ran": 600,
+            "median": 26350
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "Update",
+            "ran": 600,
+            "median": 491
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 23044
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "Update",
+            "median": 140
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "allocationsPerStep": {
+            "p50": 21,
+            "max": 38,
+            "total": 13127
+          }
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 50966,
+          "p99": 110599,
+          "max": 202122
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "Update",
+            "ran": 600,
+            "median": 26621
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "Update",
+            "ran": 600,
+            "median": 501
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 23143
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "Update",
+            "median": 160
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "allocationsPerStep": {
+            "p50": 21,
+            "max": 38,
+            "total": 13127
+          }
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 51357,
+          "p99": 115709,
+          "max": 152548
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "Update",
+            "ran": 600,
+            "median": 26810
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "Update",
+            "ran": 600,
+            "median": 501
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 23324
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "Update",
+            "median": 140
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "allocationsPerStep": {
+            "p50": 21,
+            "max": 38,
+            "total": 13127
+          }
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 51207,
+          "p99": 108405,
+          "max": 196070
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "Update",
+            "ran": 600,
+            "median": 26680
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "Update",
+            "ran": 600,
+            "median": 501
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 23354
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "Update",
+            "median": 131
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "allocationsPerStep": {
+            "p50": 21,
+            "max": 38,
+            "total": 13127
+          }
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 51427,
+          "p99": 119095,
+          "max": 155965
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "Update",
+            "ran": 600,
+            "median": 26850
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "Update",
+            "ran": 600,
+            "median": 501
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 23354
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "Update",
+            "median": 131
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "allocationsPerStep": {
+            "p50": 21,
+            "max": 38,
+            "total": 13127
+          }
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 51106,
+          "p99": 107543,
+          "max": 129124
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "Update",
+            "ran": 600,
+            "median": 26690
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "Update",
+            "ran": 600,
+            "median": 501
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 23204
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "Update",
+            "median": 140
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "allocationsPerStep": {
+            "p50": 21,
+            "max": 38,
+            "total": 13127
+          }
+        }
+      }
+    ],
+    "median": {
+      "p50": 51162.0,
+      "p99": 108329.5,
+      "max": 153149.0,
+      "systems": {
+        "moveBeltItems": 26650.5,
+        "runAssemblers": 501.0,
+        "propagateTransforms": 23274.0
+      },
+      "measures": {
+        "allocationsPerStep.p50": 21.0,
+        "allocationsPerStep.max": 38.0,
+        "allocationsPerStep.total": 13127.0
+      }
+    }
+  },
+  "b": {
+    "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+    "label": "B",
+    "runs": [
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 51628,
+          "p99": 113314,
+          "max": 162848
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "Update",
+            "ran": 600,
+            "median": 27031
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "Update",
+            "ran": 600,
+            "median": 501
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 23374
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "Update",
+            "median": 131
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "allocationsPerStep": {
+            "p50": 21,
+            "max": 38,
+            "total": 13127
+          }
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 50876,
+          "p99": 134634,
+          "max": 388023
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "Update",
+            "ran": 600,
+            "median": 26470
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "Update",
+            "ran": 600,
+            "median": 501
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 23203
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "Update",
+            "median": 130
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "allocationsPerStep": {
+            "p50": 21,
+            "max": 38,
+            "total": 13127
+          }
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 51437,
+          "p99": 114707,
+          "max": 159461
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "Update",
+            "ran": 600,
+            "median": 26861
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "Update",
+            "ran": 600,
+            "median": 501
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 23375
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "Update",
+            "median": 131
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "allocationsPerStep": {
+            "p50": 21,
+            "max": 38,
+            "total": 13127
+          }
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 51407,
+          "p99": 109146,
+          "max": 290600
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "Update",
+            "ran": 600,
+            "median": 26791
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "Update",
+            "ran": 600,
+            "median": 501
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 23414
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "Update",
+            "median": 141
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "allocationsPerStep": {
+            "p50": 21,
+            "max": 38,
+            "total": 13127
+          }
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 51287,
+          "p99": 108114,
+          "max": 122492
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "Update",
+            "ran": 600,
+            "median": 26780
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "Update",
+            "ran": 600,
+            "median": 501
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 23274
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "Update",
+            "median": 140
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "allocationsPerStep": {
+            "p50": 21,
+            "max": 38,
+            "total": 13127
+          }
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 51046,
+          "p99": 113154,
+          "max": 268026
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "Update",
+            "ran": 600,
+            "median": 26681
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "Update",
+            "ran": 600,
+            "median": 501
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 23154
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "Update",
+            "median": 130
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "allocationsPerStep": {
+            "p50": 21,
+            "max": 38,
+            "total": 13127
+          }
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 51267,
+          "p99": 115808,
+          "max": 171193
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "Update",
+            "ran": 600,
+            "median": 26750
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "Update",
+            "ran": 600,
+            "median": 501
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 23334
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "Update",
+            "median": 140
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "allocationsPerStep": {
+            "p50": 21,
+            "max": 38,
+            "total": 13127
+          }
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 51778,
+          "p99": 111220,
+          "max": 147769
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "Update",
+            "ran": 600,
+            "median": 26991
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "Update",
+            "ran": 600,
+            "median": 501
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 23524
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "Update",
+            "median": 151
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "allocationsPerStep": {
+            "p50": 21,
+            "max": 38,
+            "total": 13127
+          }
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 51447,
+          "p99": 112971,
+          "max": 268567
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "Update",
+            "ran": 600,
+            "median": 26961
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "Update",
+            "ran": 600,
+            "median": 501
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 23274
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "Update",
+            "median": 160
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "allocationsPerStep": {
+            "p50": 21,
+            "max": 38,
+            "total": 13127
+          }
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 51257,
+          "p99": 129545,
+          "max": 327077
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "Update",
+            "ran": 600,
+            "median": 26761
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "Update",
+            "ran": 600,
+            "median": 501
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 23264
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "Update",
+            "median": 140
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "allocationsPerStep": {
+            "p50": 21,
+            "max": 38,
+            "total": 13127
+          }
+        }
+      }
+    ],
+    "median": {
+      "p50": 51347.0,
+      "p99": 113234.0,
+      "max": 219609.5,
+      "systems": {
+        "moveBeltItems": 26785.5,
+        "runAssemblers": 501.0,
+        "propagateTransforms": 23304.0
+      },
+      "measures": {
+        "allocationsPerStep.p50": 21.0,
+        "allocationsPerStep.max": 38.0,
+        "allocationsPerStep.total": 13127.0
+      }
+    }
+  },
+  "ratio": {
+    "p50": 1.0036159649740042,
+    "p99": 1.045273909692189
+  },
+  "pairs": {
+    "p50": {
+      "values": [
+        1.0090097132917701,
+        0.993555442721556,
+        1.0054733467560646,
+        1.005279934294151,
+        1.0106609387932053,
+        1.0015696739002473,
+        0.9982475611893218,
+        1.0111508192239342,
+        1.000388900771968,
+        1.002954643290416
+      ],
+      "min": 0.993555442721556,
+      "max": 1.0111508192239342,
+      "iqr": 0.0074415276038057865
+    },
+    "p99": {
+      "values": [
+        0.976676435097397,
+        1.2436861455465849,
+        1.0613746136906195,
+        1.0181244927847168,
+        1.0160994727493162,
+        1.0231014746968778,
+        1.0008555946382736,
+        1.025967436926341,
+        0.9485788656114866,
+        1.2045879322689528
+      ],
+      "min": 0.9485788656114866,
+      "max": 1.2436861455465849,
+      "iqr": 0.04785625533351556
+    }
+  }
+}
