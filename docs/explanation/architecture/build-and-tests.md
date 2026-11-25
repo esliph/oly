@@ -2,6 +2,26 @@
 
 The tasks, services and presets are in [Commands](../../reference/contributor/commands.md). This page explains the organization.
 
+## The path of a task
+
+```mermaid
+flowchart TD
+  task["./spur TASK, from Git Bash on the host"] --> hostTask{"a host task?"}
+  hostTask -- "images, release, stage,<br/>consumer-docker, staged-docker" --> onHost["runs on the host:<br/>docker compose build, git, oly test --docker"]
+  hostTask -- "every other task" --> image{"the image of the task,<br/>or of PRESET"}
+  image -- "debug-asan, release, relwithdebinfo,<br/>native-games*, schema-tool-linux" --> dev["dev<br/>GCC"]
+  image -- "wasm*, native-clang*, schema-tool" --> wasm["wasm<br/>emsdk, Clang, node"]
+  image -- "windows*, schema-tool-windows" --> windows["windows<br/>MinGW, Wine"]
+  dev & wasm & windows --> compose["docker compose --env-file toolchain.env run --rm SERVICE<br/>ccache in build/.ccache"]
+  compose --> again["./spur TASK again, inside the container<br/>OLY_TOOLCHAIN names the image, so it does not re-dispatch"]
+  again --> cmake["cmake --preset PRESET<br/>build/PRESET/"]
+  cmake --> ctest["ctest: doctest suites, contract_death,<br/>ts.* in node, native_host; under Wine on windows*"]
+  cmake --> bench["build/PRESET/bench/*<br/>run with ./spur dev"]
+  cmake --> games["games/*.mjs, the test games<br/>run by ctest and the boundary benchmark"]
+```
+
+A task that needs another image calls `spur` again, and that call goes through the same dispatch: `ts` builds `schema-tool` first, and `subproject-test`, `consumer-test` and `staged-test` run one task per environment. Images and services: [Commands](../../reference/contributor/commands.md#services). CI runs `./spur format-check` and `./spur test` in the `dev` image and `./spur games-test` in the `wasm` image. The game side of the same path is in [Publishing](publishing.md#when-docker-is-used).
+
 ## Toolchain
 
 There is no C++ toolchain on the host. Everything runs in Docker Compose, in the services that [Commands](../../reference/contributor/commands.md#services) lists.
