@@ -68,15 +68,11 @@ _in() {
     _rotate=$((_rotate - 1))
   done
 
-  # The compiler cache is on by default, with the values of ci.yml, in the images that carry ccache: the windows image
-  # does not, and a launcher it cannot run would break its build.
-  case $_image in
-    dev | wasm)
-      set -- -e CCACHE_DIR="${CCACHE_DIR:-/app/build/.ccache}" -e CCACHE_MAXSIZE="${CCACHE_MAXSIZE:-500M}" \
-        -e CMAKE_C_COMPILER_LAUNCHER="${CMAKE_C_COMPILER_LAUNCHER:-ccache}" \
-        -e CMAKE_CXX_COMPILER_LAUNCHER="${CMAKE_CXX_COMPILER_LAUNCHER:-ccache}" "$@"
-      ;;
-  esac
+  # The compiler cache is on by default, with the values of ci.yml. Every image installs ccache: one without it would
+  # break its build on a launcher it cannot run.
+  set -- -e CCACHE_DIR="${CCACHE_DIR:-/app/build/.ccache}" -e CCACHE_MAXSIZE="${CCACHE_MAXSIZE:-500M}" \
+    -e CMAKE_C_COMPILER_LAUNCHER="${CMAKE_C_COMPILER_LAUNCHER:-ccache}" \
+    -e CMAKE_CXX_COMPILER_LAUNCHER="${CMAKE_CXX_COMPILER_LAUNCHER:-ccache}" "$@"
 
   # Git Bash would rewrite arguments such as '^ecs\.' as Windows paths. A variable unset on the host stays unset in the
   # container: the ctest parallelism is on only where CI turns it on (ci.yml).
