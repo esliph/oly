@@ -27,6 +27,7 @@
 #include "oly/ecs/observer.hpp"
 #include "oly/ecs/query.hpp"
 #include "oly/ecs/query_by_id.hpp"
+#include "oly/ecs/resource.hpp"
 
 namespace oly::ecs {
   namespace detail {
@@ -85,6 +86,7 @@ namespace oly::ecs {
     CommandBuffer deferred_; // what observers record into
     CommandBuffer applying_; // what applyDeferred is flushing, so observers of that flush record into deferred_
     std::vector<std::pair<Entity, ComponentId>> pendingOnAdd_; // a flush runs on add after its last transition (R-OB-7)
+    detail::ResourceStore resources_; // declared last: the resources are destroyed first, while the rest of the World is intact
 
    public:
     World();
@@ -146,6 +148,19 @@ namespace oly::ecs {
     // archetype contains T (R-IM-1). Removing Implied while T stays is a contract error (R-IM-4).
     template <class T, class Implied>
     void imply();
+
+    // One object per type, owned by the World, with an address that never changes until ~World, which destroys the
+    // resources in reverse insertion order. Inserting a type twice is a contract error (OLY_ASSERT). A resource is not
+    // a component: it has no archetype and no observer, and it is never in a query.
+    template <class T>
+    std::remove_cvref_t<T>& insertResource(T&& value);
+    template <class T>
+    T& resource(); // OLY_ASSERT when not inserted
+    template <class T>
+    T* tryResource() noexcept;
+    void* tryResourceById(ResourceId id) noexcept {
+      return resources_.find(id);
+    }
 
     // Cached by (Ts..., filters): same instance for the same combination, valid while the World exists.
     template <class... Ts, class... Filters>
@@ -248,6 +263,7 @@ namespace oly::ecs {
     bool checkEdges(std::string* why) const;
     bool checkObservedFlags(std::string* why) const;
     bool checkImplications(std::string* why) const;
+    bool checkResources(std::string* why) const;
   };
 
   template <class... Ts>
@@ -363,6 +379,32 @@ namespace oly::ecs {
     using U = std::remove_cvref_t<T>;
     static_assert(!std::is_empty_v<U>, "tryGet<Tag> is not allowed");
     return static_cast<U*>(tryGetById(entity, componentId<U>()));
+  }
+
+  template <class T>
+  std::remove_cvref_t<T>& World::insertResource(T&& value) {
+    using U = std::remove_cvref_t<T>;
+    const ResourceId id = resourceId<U>();
+    OLY_ASSERT(resources_.find(id) == nullptr, "insertResource type=%.*s already inserted", int(resourceName(id).size()), resourceName(id).data());
+
+    std::unique_ptr<U> owned(new U(std::forward<T>(value)));
+    resources_.adopt(id, owned.get(), [](void* object) noexcept { delete static_cast<U*>(object); });
+
+    return *owned.release();
+  }
+
+  template <class T>
+  T& World::resource() {
+    const ResourceId id = resourceId<T>();
+    void* object = resources_.find(id);
+    OLY_ASSERT(object != nullptr, "resource type=%.*s not inserted", int(resourceName(id).size()), resourceName(id).data());
+
+    return *static_cast<T*>(object);
+  }
+
+  template <class T>
+  T* World::tryResource() noexcept {
+    return static_cast<T*>(resources_.find(resourceId<T>()));
   }
 
   template <class... Ts, class... Filters>

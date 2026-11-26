@@ -70,6 +70,6 @@ Validity rules:
 
 ## Correctness
 
-- Invariants I-1 to I-13, the fuzz against a model and `LifeCounter` are in [Build, tests and tools](build-and-tests.md#tests).
+- Invariants I-1 to I-14, the fuzz against a model and `LifeCounter` are in [Build, tests and tools](build-and-tests.md#tests).
 - When changing structural logic, keep `checkInvariants` covering what changed, including the `QueryById` caches (which go into `checkQueries`).
 - Test-only hooks (`flushSequential`, `setGeneration`, `CommandBuffer::forEach`) live in `detail/test_access.hpp` (`WorldTestAccess`, `EntityStoreTestAccess`, `CommandBufferTestAccess`). The public classes have nothing "for testing".

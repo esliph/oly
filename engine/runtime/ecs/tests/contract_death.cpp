@@ -197,6 +197,21 @@ namespace {
     world.remove<Derived>(entity);
   }
 
+  struct Score {
+    int value;
+  };
+
+  void insertResourceTwice() {
+    oly::ecs::World world;
+    world.insertResource(Score{1});
+    world.insertResource(Score{2});
+  }
+
+  void resourceNotInserted() {
+    oly::ecs::World world;
+    world.resource<Score>();
+  }
+
   void singleEmpty() {
     oly::ecs::World world;
     world.query<A>().single();
@@ -249,6 +264,8 @@ int main(int argumentCount, char** arguments) {
     {"observe_by_id_unknown_component", observeByIdUnknownComponent, {"observeById", "unknown"}},
     {"imply_after_archetype", implyAfterArchetype, {"imply", "Mark"}},
     {"remove_implied_component", removeImpliedComponent, {"remove e=", "Derived", "implied by"}},
+    {"insert_resource_twice", insertResourceTwice, {"insertResource", "Score", "already inserted"}},
+    {"resource_not_inserted", resourceNotInserted, {"resource", "Score", "not inserted"}},
   };
 
   if (argumentCount != 2) {

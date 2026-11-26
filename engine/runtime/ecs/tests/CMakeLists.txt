@@ -12,6 +12,7 @@ oly_add_test(MODULE ecs NAME query_by_id SOURCES query_by_id.cpp support/alloc_c
 oly_add_test(MODULE ecs NAME surface SOURCES surface.cpp)
 oly_add_test(MODULE ecs NAME observers SOURCES observers.cpp)
 oly_add_test(MODULE ecs NAME implications SOURCES implications.cpp)
+oly_add_test(MODULE ecs NAME resources SOURCES resources.cpp)
 
 oly_add_contract_death(MODULE ecs SOURCE contract_death.cpp
   CASES add_during_each get_dead_entity flush_during_each command_after_destroy destroy_during_each_block
@@ -19,4 +20,5 @@ oly_add_contract_death(MODULE ecs SOURCE contract_death.cpp
         query_by_id_iteration_out_of_order add_during_query_by_id_iteration get_by_id_missing spawn_during_each
         single_empty single_many try_single_many structural_change_in_observer observe_during_each observe_in_observer
         remove_unknown_observer remove_observer_in_observer observe_by_id_in_observer observe_by_id_unknown_component
-        imply_after_archetype remove_implied_component)
+        imply_after_archetype remove_implied_component
+        insert_resource_twice resource_not_inserted)

@@ -695,7 +695,35 @@ namespace oly::ecs {
     }
 
     return checkArchetypes(why) && checkRecords(why) && checkFreeList(why) && checkComponentIndex(why) && checkQueries(why)
-      && checkEdges(why) && checkObservedFlags(why) && checkImplications(why);
+      && checkEdges(why) && checkObservedFlags(why) && checkImplications(why) && checkResources(why);
+  }
+
+  bool World::checkResources(std::string* why) const {
+    const auto& slots = resources_.slots();
+    const auto& order = resources_.insertionOrder();
+    size_t occupied = 0;
+
+    for (size_t id = 0; id < slots.size(); ++id) {
+      if (slots[id].object == nullptr) {
+        continue;
+      }
+
+      ++occupied;
+
+      if (slots[id].destroy == nullptr) {
+        return fail(why, "I-14", "resource rid=" + std::to_string(id) + " has no destroy function");
+      }
+
+      if (std::count(order.begin(), order.end(), static_cast<ResourceId>(id)) != 1) {
+        return fail(why, "I-14", "resource rid=" + std::to_string(id) + " is not in the insertion order exactly once");
+      }
+    }
+
+    if (order.size() != occupied) {
+      return fail(why, "I-14", "insertion order lists " + std::to_string(order.size()) + " resources, " + std::to_string(occupied) + " are inserted");
+    }
+
+    return true;
   }
 
   bool World::checkImplications(std::string* why) const {

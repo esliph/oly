@@ -456,6 +456,33 @@ world.imply<Position, WorldTransform>();
 
 The `essentials2d` and `essentials3d` plugins do this for you.
 
+## Resources
+
+A resource is one object per type owned by the `World`, for state that belongs to no entity. It is not a component: it has no archetype and no observer, and it is never in a query.
+
+### `World::insertResource`, `World::resource`, `World::tryResource`
+
+```cpp
+#include "oly/ecs/resource.hpp"
+
+template <class T>
+std::remove_cvref_t<T>& insertResource(T&& value);
+template <class T>
+T& resource();
+template <class T>
+T* tryResource() noexcept;
+void* tryResourceById(ResourceId id) noexcept;
+```
+
+`insertResource` moves or copies `value` into the `World` and returns it. The address never changes until the `World` is destroyed, which destroys the resources in reverse insertion order. Inserting a type twice stops with `OLY_ASSERT` (`insertResource type=<T> already inserted`). `resource` stops with `resource type=<T> not inserted` when the type is missing; `tryResource` returns `nullptr` instead. `tryResourceById` answers for an id that was never inserted, or is beyond the registry, with `nullptr`.
+
+`resourceId<T>()` is dense, assigned on the first call for each type, and ignores `const`, `volatile` and references. It depends on the order of those calls, so it is not for persisting. `resourceName(id)` is the type name and `registeredResourceCount()` the number of ids assigned.
+
+```cpp
+world.insertResource(Score{0});
+world.resource<Score>().value += 10;
+```
+
 ## Debugging the world
 
 How to use these calls in tests: [Debug the world](../../how-to/debug-the-world.md).
@@ -468,7 +495,7 @@ How to use these calls in tests: [Debug the world](../../how-to/debug-the-world.
 bool checkInvariants(const World& world, std::string* why = nullptr);
 ```
 
-Checks the structural invariants of the `World` (I-1 and I-3 to I-13) and returns `false` on the first one that fails. With `why`, it writes the invariant and the object to it, for example `I-3 e=4:1`.
+Checks the structural invariants of the `World` (I-1 and I-3 to I-14) and returns `false` on the first one that fails. With `why`, it writes the invariant and the object to it, for example `I-3 e=4:1`.
 
 ### `stats`
 
