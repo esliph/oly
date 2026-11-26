@@ -163,7 +163,7 @@ namespace enxame {
 
       for (size_t index = 0; index < waves.size(); ++index) {
         const WaveRecord& wave = waves[index];
-        char text[200];
+        char text[320];
         std::snprintf(text, sizeof(text), "%s\n    { \"wave\": %u, \"archetypes\": %u, \"liveEntities\": %u, \"columnBytes\": %llu, \"residentBytes\": ", index == 0 ? "" : ",", wave.wave, wave.archetypes, wave.liveEntities, static_cast<unsigned long long>(wave.columnBytes));
         json += text;
         json += wave.residentBytes < 0 ? "null" : std::to_string(wave.residentBytes);
@@ -174,10 +174,12 @@ namespace enxame {
     }
 
     std::string measuresOf(ScenarioId scenario, oly::ecs::World& world, const oly::app::Engine& engine, const Measurements& measurements) {
-      char text[200];
+      char hash[32];
+      std::snprintf(hash, sizeof(hash), "0x%016llx", static_cast<unsigned long long>(worldHash(world)));
+      char text[320];
 
       if (scenario == ScenarioId::S5) {
-        std::snprintf(text, sizeof(text), "{ \"worldHash\": \"0x%016llx\", \"enemiesLeft\": %zu, \"turrets\": %zu }", static_cast<unsigned long long>(worldHash(world)), countOf<Enemy>(world), countOf<Turret>(world));
+        std::snprintf(text, sizeof(text), "{ \"worldHash\": \"%s\", \"enemiesLeft\": %zu, \"turrets\": %zu }", hash, countOf<Enemy>(world), countOf<Turret>(world));
 
         return text;
       }
@@ -193,7 +195,7 @@ namespace enxame {
           }
         }
 
-        std::snprintf(text, sizeof(text), "{ \"transitionsPerStep\": { \"p50\": %llu, \"max\": %llu }, \"updateAfterFlushMedian\": %s }", static_cast<unsigned long long>(percentile(transitions, 50.0)), static_cast<unsigned long long>(percentile(transitions, 100.0)), flushMedian.c_str());
+        std::snprintf(text, sizeof(text), "{ \"worldHash\": \"%s\", \"transitionsPerStep\": { \"p50\": %llu, \"max\": %llu }, \"updateAfterFlushMedian\": %s }", hash, static_cast<unsigned long long>(percentile(transitions, 50.0)), static_cast<unsigned long long>(percentile(transitions, 100.0)), flushMedian.c_str());
 
         return text;
       }
@@ -216,13 +218,13 @@ namespace enxame {
           }
         }
 
-        std::snprintf(text, sizeof(text), "{ \"visitedEntities\": %zu, \"propagateTransformsNanosecondsPerEntity\": %s }", visited, perEntity.c_str());
+        std::snprintf(text, sizeof(text), "{ \"worldHash\": \"%s\", \"visitedEntities\": %zu, \"propagateTransformsNanosecondsPerEntity\": %s }", hash, visited, perEntity.c_str());
 
         return text;
       }
 
       if (scenario == ScenarioId::S8) {
-        return "{ \"waves\": " + wavesJson(measurements.waves) + " }";
+        return std::string("{ \"worldHash\": \"") + hash + "\", \"waves\": " + wavesJson(measurements.waves) + " }";
       }
 
       if (scenario == ScenarioId::S2) {
@@ -233,12 +235,12 @@ namespace enxame {
           total += allocated;
         }
 
-        std::snprintf(text, sizeof(text), "{ \"allocationsPerStep\": { \"p50\": %llu, \"max\": %llu, \"total\": %llu } }", static_cast<unsigned long long>(percentile(perStep, 50.0)), static_cast<unsigned long long>(percentile(perStep, 100.0)), static_cast<unsigned long long>(total));
+        std::snprintf(text, sizeof(text), "{ \"worldHash\": \"%s\", \"allocationsPerStep\": { \"p50\": %llu, \"max\": %llu, \"total\": %llu } }", hash, static_cast<unsigned long long>(percentile(perStep, 50.0)), static_cast<unsigned long long>(percentile(perStep, 100.0)), static_cast<unsigned long long>(total));
 
         return text;
       }
 
-      return "{}";
+      return "{ \"worldHash\": \"" + std::string(hash) + "\" }";
     }
   }
 

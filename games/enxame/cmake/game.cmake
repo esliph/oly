@@ -67,6 +67,20 @@ enxame_check_run(S3 S3 on --headless --scenario S3 --size 10000 --steps 5 --comm
 enxame_check_run(S6 S6 on --headless --scenario S6 --size 1000 --steps 5 --commit test)
 enxame_check_run(S8 S8 on --headless --scenario S8 --size 2000 --steps 120 --commit test)
 
+# enxame_check_hash(<scenario> <hash> <arguments...>)
+function(enxame_check_hash scenario hash)
+  set(out ${CMAKE_CURRENT_BINARY_DIR}/hash_${scenario}.json)
+  add_test(NAME enxame.hash.${scenario}
+    COMMAND ${CMAKE_COMMAND} "-DCOMMAND=$<TARGET_FILE:enxame>;${ARGN};--out;${out}" -DOUT=${out} -DSCENARIO=${scenario} -DHASH=${hash}
+            -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_hash.cmake)
+endfunction()
+
+enxame_check_hash(S1 0xa32813f53bc7a507 --headless --scenario S1 --size 1000 --steps 120 --commit test)
+enxame_check_hash(S2 0xf66e1e60dd9ed320 --headless --scenario S2 --size 50000 --steps 120 --commit test)
+enxame_check_hash(S3 0xfad7c3a7f5579772 --headless --scenario S3 --size 10000 --steps 120 --commit test)
+enxame_check_hash(S6 0x33f8f95eae13d5e5 --headless --scenario S6 --size 1000 --steps 120 --commit test)
+enxame_check_hash(S8 0xcbf29ce484222325 --headless --scenario S8 --size 2000 --steps 120 --commit test)
+
 add_test(NAME enxame.replay_determinism
   COMMAND ${CMAKE_COMMAND} "-DCOMMAND=$<TARGET_FILE:enxame>;--headless;--scenario;S5;--size;2000;--steps;2500;--commit;test"
-          -DOUT=${CMAKE_CURRENT_BINARY_DIR}/replay -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/replay_determinism.cmake)
+          -DOUT=${CMAKE_CURRENT_BINARY_DIR}/replay -DHASH=0x184baf3fb2cb3a5c -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/replay_determinism.cmake)

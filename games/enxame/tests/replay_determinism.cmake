@@ -1,5 +1,5 @@
 # Runs COMMAND (a ; list) twice with --out set to OUT_a.json and OUT_b.json, and fails unless both runs exit 0 and write
-# the same measures.worldHash.
+# the same measures.worldHash, and that hash is HASH.
 foreach(run a b)
   execute_process(
     COMMAND ${COMMAND} --out ${OUT}_${run}.json
@@ -17,4 +17,8 @@ endforeach()
 
 if(NOT hash_a STREQUAL hash_b)
   message(FATAL_ERROR "the world hash differs between two runs of the same input: ${hash_a} and ${hash_b}")
+endif()
+
+if(NOT hash_a STREQUAL HASH)
+  message(FATAL_ERROR "the world hash of the replay is ${hash_a}, expected ${HASH}")
 endif()
