@@ -141,6 +141,7 @@ compute `WorldTransform` after the game's movement systems. The `Engine` gets an
 Inside a band, the order stays the registration order. The band is fixed at registration. The exact API is left to the
 builder; it must not add a branch per system in `runPhase` beyond what the existing `whilePaused` and state checks cost
 (for example, two vectors per phase, or one vector kept sorted by band).
+*Superseded by phase 1: order bands are removed; a plugin declares a phase ([the phase 1 spec](2026-11-26-phase1-declared-access-design.md)).*
 
 ## 5. ECS lifecycle observers **[user decision: option A]**
 

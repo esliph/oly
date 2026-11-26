@@ -18,10 +18,11 @@ From then on the game uses the plugin through data: it adds the plugin's compone
 
 ## Run after the game's systems
 
-Plugins install before the game registers its systems, so a plugin system in the default band runs **before** the game's systems of the same phase. A plugin that must see the game's work of the step, such as positions after movement, registers in the `Last` band ([Order bands](engine-and-systems.md#order-bands)):
+The order of systems never depends on when a plugin installed ([Order by constraints](engine-and-systems.md#order-by-constraints)). A plugin that must see the game's work of the step, such as positions after movement, declares a phase after `Update` and registers its system there:
 
 ```cpp
-engine.addSystem(app::Phase::Update, "followTargets", followTargets, nullptr, app::OrderBand::Last);
+engine.addPhase<Follow>(app::FixedStep{}).after<app::Update>().before<app::UpdateAfter>();
+engine.addSystem<&followTargets>(Follow{}, "followTargets");
 ```
 
 ## In other clients

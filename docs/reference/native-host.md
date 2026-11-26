@@ -17,7 +17,7 @@ const oly::app::EngineConfig& engineConfig() const noexcept;
 virtual void onStart(oly::app::Engine& engine, Window& window) = 0;
 ```
 
-The class holds the window configuration, the engine configuration and the game's own state. A `Game` cannot be copied. `runGame` calls `onStart` once, on an `Engine` that `setUpGame` already set up and with the window open, before the first frame. Bind actions, spawn entities and add systems there. A system that needs the game keeps `this` in `userData`.
+The class holds the window configuration, the engine configuration and the game's own state. A `Game` cannot be copied. `runGame` calls `onStart` once, on an `Engine` that `setUpGame` already set up and with the window open, before the first frame. Bind actions, spawn entities and add systems there. A system that needs the game's state reads it as a resource (`Res<T>`), which `onStart` inserts with `engine.world().insertResource<T>()`.
 
 ```cpp
 class MyGame : public oly::native_host::Game {
@@ -25,7 +25,8 @@ class MyGame : public oly::native_host::Game {
   MyGame() : Game({"<game>", 640, 360}) {}
 
   void onStart(oly::app::Engine& engine, oly::native_host::Window& window) override {
-    engine.addSystem(oly::app::Phase::Render, "draw", draw, window.renderer());
+    engine.world().insertResource<Renderer>(window.renderer());
+    engine.addSystem<&draw>(oly::app::Render{}, "draw");
   }
 };
 ```
@@ -86,13 +87,14 @@ Opens a resizable window and an SDL renderer, and turns vsync on. The constructo
 
 ```cpp
 void onStart(oly::app::Engine& engine, oly::native_host::Window& window) override {
-  engine.addSystem(oly::app::Phase::Render, "draw", draw, window.renderer());
+  engine.world().insertResource<Renderer>(window.renderer());
+  engine.addSystem<&draw>(oly::app::Render{}, "draw");
 }
 ```
 
 A game that drives the loop itself builds the `Window` directly: `oly::native_host::Window window({"<game>", 640, 360});`.
 
-There is no draw hook. Draw in a `Render` system and reach the renderer through `userData`; include `<SDL3/SDL.h>` only in the file that draws. The host clears the renderer to black before each frame and presents it after the `Render` phase.
+There is no draw hook. Draw in a `Render` system and reach the renderer through a resource that holds it (`Renderer` above is the game's own struct around the `SDL_Renderer*`); include `<SDL3/SDL.h>` only in the file that draws. The host clears the renderer to black before each frame and presents it after the `Render` phase.
 
 ## The loop
 

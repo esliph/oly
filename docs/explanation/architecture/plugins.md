@@ -37,21 +37,20 @@ The rules of lifetime are in the [concept page](../concepts/plugins.md#lifetime-
 
 - `P` derives from `Plugin` and is default constructible (`static_assert`), so `installPlugin` can build it with no arguments.
 - `install` registers the plugin's systems, handlers, hooks and observers. A plugin installed earlier is reachable from `install` through `plugin<Q>()`, which is why the install order follows the dependencies.
-- **The `Engine` owns the plugin instances.** A plugin's state lives in its instance and reaches its systems through `userData`.
+- **The `Engine` owns the plugin instances.** A plugin's state lives in resources of the `World` (`insertResource`), which its systems declare as `Res<T>`; the instance holds nothing a system reads.
 - Each plugin type gets a dense per-process key (`pluginKey<P>()`), the same pattern as `eventKey<T>()`. The lookup walks the installed list; it is a cold path.
 - **Destructor contract.** Systems, handlers and hooks die with the `Engine`. Observers belong to the `World` ([ecs.md](ecs.md)), and the `World` outlives the `Engine` (`OlyEngine` and a native `main` declare it first). So a plugin's destructor removes the observers its `install` registered (`World::removeObserver`); otherwise the `World` would call into a destroyed plugin.
 
 No game code installs a plugin: the generated `setUpGame` does it, in dependency order ([The build](#the-build)).
 
-## Order bands
+## Phases and order
 
-Plugins install before the game registers its systems, so registration order alone would run every plugin system before the game's systems of the same phase. A plugin that must see the game's changes in the same phase asks for the `Last` band.
+Plugins install before the game registers its systems, so registration order cannot order them, and the order of two systems never depends on which plugin installed first. A plugin that must see the game's changes of `Update` declares a phase after it, instead of asking for a place at the end of `Update`.
 
-- `OrderBand::Default` and `OrderBand::Last` (`oly/app/phase.hpp`). The band is the last parameter of `addSystem` (default `Default`) and is fixed at registration.
-- Inside a phase, the `Default` band runs before the `Last` band; inside a band, systems run in registration order.
-- The phase applies its `CommandBuffer` once, after the `Last` band.
-- **Bands are storage, not a branch.** The `Engine` keeps one vector of systems per phase and band; `runPhase` walks the bands in order. There is no extra check per system.
-- The C API and the TS client register in `Default` only.
+- `addPhase<P>(FixedStep{})` declares a phase and `.after<Update>()` / `.before<UpdateAfter>()` place it; `phase<P>()` adds constraints to a phase another plugin declares, even before it declares it. The phase applies its `CommandBuffer` once, after its last system.
+- `essentials2d` and `essentials3d` declare `Propagation` (after `Update`, before `UpdateAfter`), and `physics2d` declares `Physics` (after `Update`, before `essentials2d::Propagation`).
+- Inside a phase, the order comes from `before` / `after` constraints and then from the system name. Two systems that touch one component or resource, one of them writing, and have no constraint between them are refused when registration closes.
+- The C API and the TS client order scripts with `olyEngineOrderSystems`; a script system is exclusive.
 
 Details of the loop: [app.md](app.md).
 

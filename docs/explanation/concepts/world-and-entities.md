@@ -38,23 +38,25 @@ A change is **direct** when it takes effect inside the call. It is **deferred** 
 |---|---|---|---|---|
 | `World` | direct | in the call | `false` | `OLY_ASSERT` |
 | `HandlerContext`, `TaskContext`, `StateContext` (they run outside any iteration) | direct | in the call | `false` | `OLY_ASSERT` |
-| `SystemContext` (a system may be iterating a query) | deferred to the phase's `CommandBuffer` | at the end of the phase | `true` until the end of the phase | ignored at the flush |
+| `Commands` in a system (a system may be iterating a query) | deferred to the phase's `CommandBuffer` | at the end of the phase | `true` until the end of the phase | ignored at the flush |
 | a `CommandBuffer` you own | deferred | at `world.flush(commandBuffer)` | `true` until the flush | ignored at the flush |
 | an observer, through `ObserverContext::commands()` | deferred to a `CommandBuffer` of the `World` | before the call that triggered the observer returns | `true` until then | ignored at the flush |
 
 The `World` and the direct contexts also stop on `OLY_ASSERT` when `destroy`, `add` or `remove` gets a dead entity, and on every direct structural change (`spawn`, `destroy`, `add`, `remove`) while a query iterates (`each`, `eachBlock`): the iteration would see moved rows. Inside a system, use the context: it is deferred, so it is safe in an iteration.
 
 ```cpp
-OLY_SYSTEM(removeDeadEnemies) {
-  context.query<const Health>(oly::ecs::With<Enemy>{}).each([&](oly::ecs::Entity entity, const Health& health) {
+void removeDeadEnemies(oly::app::Query<const Health, oly::ecs::With<Enemy>> enemies, oly::app::Commands commands) {
+  enemies.each([&](oly::ecs::Entity entity, const Health& health) {
     if (health.value <= 0) {
-      context.destroy(entity);
+      commands.destroy(entity);
     }
   });
 }
+
+OLY_SYSTEM(removeDeadEnemies);
 ```
 
-In this system `context.isAlive(entity)` is still `true` after `context.destroy(entity)`. The entity dies when the phase ends. More on phases: [Engine, loop and systems](engine-and-systems.md#structural-changes-in-systems).
+In this system `commands.isAlive(entity)` is still `true` after `commands.destroy(entity)`. The entity dies when the phase ends. More on phases: [Engine, loop and systems](engine-and-systems.md#structural-changes-in-systems).
 
 TypeScript: [Where the World comes from](../../reference/typescript/world-and-entities.md#where-the-world-comes-from) (the client refuses `spawn`, `destroy`, `add` and `remove` on `engine.world` during `frame`).
 

@@ -9,7 +9,7 @@
 
 namespace oly::native_host {
   // The game itself: its window, its engine configuration and its own state. runGame constructs it before the
-  // Engine and destroys it after, so systems may keep a pointer to it in userData.
+  // Engine and destroys it after, so a resource may keep a pointer to it.
   class Game {
    private:
     WindowConfig window_;

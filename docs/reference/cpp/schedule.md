@@ -2,7 +2,7 @@
 
 [Reference](../../README.md#reference) · Concept: [Schedule](../../explanation/concepts/schedule.md) · TypeScript: [Schedule in TypeScript](../typescript/schedule.md)
 
-Headers: `oly/app/scheduler.hpp` for `Scheduler`, `oly/app/task.hpp` for `TaskHandle`, `TaskFunction` and the payload limits, and `oly/app/task_context.hpp` for `TaskContext`. When tasks run and how pause and states affect them: the [concept page](../../explanation/concepts/schedule.md). The scheduler is `engine.schedule()` and `context.schedule()`.
+Headers: `oly/app/scheduler.hpp` for `Scheduler`, `oly/app/task.hpp` for `TaskHandle`, `TaskFunction` and the payload limits, and `oly/app/task_context.hpp` for `TaskContext`. When tasks run and how pause and states affect them: the [concept page](../../explanation/concepts/schedule.md). The scheduler is `engine.schedule()` and `context.schedule()`. A system appends tasks through the `Tasks` parameter (`after`, `every` and `schedule`, which declare nothing) and reaches `cancel`, `isPending` and `persist` through `Res<Scheduler>`.
 
 ## `after` and `every`
 
@@ -21,9 +21,11 @@ void spawnEnemy(oly::app::TaskContext& context) {
   context.spawn(Enemy{}, Position{0.0f, 0.0f});
 }
 
-OLY_SYSTEM(startRound) {
-  context.schedule().after(2.0, spawnEnemy);   // once, 2 seconds from now
+void startRound(oly::app::Tasks tasks) {
+  tasks.after(2.0, spawnEnemy);   // once, 2 seconds from now
 }
+
+OLY_SYSTEM(startRound);
 ```
 
 ### `Scheduler::every`
@@ -41,15 +43,17 @@ void spawnWave(oly::app::TaskContext& context) {
   // spawn several enemies
 }
 
-OLY_SYSTEM(startWaves) {
-  context.schedule().every(5.0, spawnWave);    // every 5 seconds; the first run is 5 seconds from now
+void startWaves(oly::app::Tasks tasks) {
+  tasks.every(5.0, spawnWave);    // every 5 seconds; the first run is 5 seconds from now
 }
+
+OLY_SYSTEM(startWaves);
 ```
 
 **Where you own the `Engine`** (native):
 
 ```cpp
-engine.addSystem(oly::app::Phase::Update, "startRound", startRound);
+engine.addSystem<&startRound>(oly::app::Update{}, "startRound");
 engine.schedule().after(2.0, spawnEnemy);
 ```
 
@@ -64,7 +68,7 @@ TaskHandle schedule(double delaySeconds, double intervalSeconds, TaskFunction fu
 The base of `after`, `every` and the C API. An `intervalSeconds` of `0` schedules an `after`; a positive one schedules an `every` whose first run is at `time() + delaySeconds`. The delay and the interval must be finite and not negative, and the function cannot be null: the call stops with `OLY_ASSERT` (`schedule: delay=<delay> negative or not finite`, `schedule: interval=<interval> negative or not finite` or `schedule: null function`). Use it when the delay of the first run differs from the interval, or when you build the `TaskPayload` yourself with `TaskPayload::of(value)`.
 
 ```cpp
-context.schedule().schedule(1.0, 5.0, spawnWave);   // the first run in 1 second, then every 5 seconds
+tasks.schedule(1.0, 5.0, spawnWave);   // the first run in 1 second, then every 5 seconds
 ```
 
 ## The task context
@@ -104,10 +108,10 @@ uint32_t pendingCount() const noexcept;
 `pendingCount()` is the number of tasks that may still run: every `every` that is not cancelled and every `after` that has not run. Use it in a test to check that a round left nothing behind.
 
 ```cpp
-oly::app::TaskHandle handle = context.schedule().every(1.0, tick);
+oly::app::TaskHandle handle = tasks.every(1.0, tick);
 
-context.schedule().isPending(handle);   // true while it may still run
-context.schedule().cancel(handle);      // true if it was pending; false if it already ended or was cancelled
+scheduler->isPending(handle);   // true while it may still run: scheduler is Res<Scheduler>
+scheduler->cancel(handle);      // true if it was pending; false if it already ended or was cancelled
 ```
 
 A task can cancel itself:
@@ -149,12 +153,14 @@ void endDash(oly::app::TaskContext& context) {
   }
 }
 
-OLY_SYSTEM(startDash) {
-  auto [player, dash] = context.query<Dash>(oly::ecs::With<Player>{}).single();
+void startDash(oly::app::Query<Dash, oly::ecs::With<Player>> players, oly::app::Tasks tasks) {
+  auto [player, dash] = players.single();
 
   dash.active = 1;
-  context.schedule().after(dash.duration, endDash, PlayerTarget{player});
+  tasks.after(dash.duration, endDash, PlayerTarget{player});
 }
+
+OLY_SYSTEM(startDash);
 ```
 
 If the task refers to an entity, check that it is still alive when the task runs, as `endDash` does.
@@ -162,7 +168,7 @@ If the task refers to an entity, check that it is still alive when the task runs
 **Where you own the `Engine`** (native):
 
 ```cpp
-engine.addSystem(oly::app::Phase::Update, "startDash", startDash);
+engine.addSystem<&startDash>(oly::app::Update{}, "startDash");
 ```
 
 **On the web**, the client uses a closure instead: [TypeScript](../typescript/schedule.md#captured-values-closures).

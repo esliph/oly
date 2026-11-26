@@ -31,8 +31,8 @@ The implication of `WorldTransform` by `Position` stays on the `World` when the 
 ## Parent and children
 
 ```cpp
-oly::ecs::Entity ship = context.spawn(Position{100.0f, 50.0f});
-oly::ecs::Entity turret = context.spawn(Position{10.0f, 0.0f}, Parent{ship});
+oly::ecs::Entity ship = engine.world().spawn(Position{100.0f, 50.0f});
+oly::ecs::Entity turret = engine.world().spawn(Position{10.0f, 0.0f}, Parent{ship});
 ```
 
 | You do | Result |

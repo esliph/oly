@@ -34,45 +34,34 @@ TypeScript: [The loop](../../reference/typescript/engine-and-systems.md#the-loop
 
 | Phase | Use it for |
 |---|---|
-| `Phase::UpdateBefore` | reading input, steering, decisions |
-| `Phase::Update` | movement, AI, shooting, most gameplay |
-| `Phase::UpdateAfter` | collision and physics, after everything moved |
-| `Phase::Render` | drawing; runs once per frame, not per step |
+| `UpdateBefore` | reading input, steering, decisions |
+| `Update` | movement, AI, shooting, most gameplay |
+| `UpdateAfter` | collision and physics, after everything moved |
+| `Render` | drawing; runs once per frame, not per step |
 
-Systems registered with `addSystem(Phase, name, function, userData, band)` run in **registration order** inside their phase. Systems registered with `addSystem<&function>(Phase, name)` run in the order their **constraints** give. Systems written in different languages mix freely in one phase.
+Systems in a phase run in the order their **constraints** give, and in name order where none applies. Systems written in different languages mix in one phase, and a script system is exclusive, so it is ordered against every other system of its phase.
 
 ### Order by constraints
 
 A phase is a group that ends with one flush of the deferred changes, and a schedule says when it runs: `FixedStep` in each step, `Frame` once per frame. A plugin declares its own phase (`addPhase<Physics>(FixedStep{}).after<Update>().before<UpdateAfter>()`), and the engine puts it between the two. Systems join a **set** (`inSet<Spatial>()`) and say what they run before or after: a set, a function (every registration of it) or one system by name.
 
-Registration closes at the first `frame`, and the engine builds the order then. The rule is: constraints first, then **name order**. The result never depends on registration order or on the order the plugins were installed, so adding a plugin does not move unrelated systems. A cycle, two phases with no order between them, and a system that needs a missing resource stop the first `frame` with every problem listed ([Errors](../../reference/errors.md#c)). The legacy `addSystem(Phase, ...)` stays until the new API replaces it: its systems keep their registration order, and a new-API system in the same phase conflicts with them until a constraint orders it.
+Registration closes at the first `frame`, and the engine builds the order then. The rule is: constraints first, then **name order**. The result never depends on registration order or on the order the plugins were installed, so adding a plugin does not move unrelated systems. A cycle, two phases with no order between them, and a system that needs a missing resource stop the first `frame` with every problem listed ([Errors](../../reference/errors.md#c)).
 
 Reference: [Phases, sets and constraints](../../reference/cpp/engine-and-systems.md#phases-sets-and-constraints).
 
-### Order bands
-
-A system can ask to run at the **end** of its phase, after every system of the default band, whatever the registration order.
-
-| Band | Runs |
-|---|---|
-| `OrderBand::Default` | first, in registration order (the default) |
-| `OrderBand::Last` | after the whole `Default` band of the phase, in registration order |
-
-The band is fixed at registration. The phase still applies its deferred changes once, after the `Last` band, so a `Last` system sees the direct writes of the `Default` band but not its spawns, adds or removes. `setWhilePaused` and `setSystemStates` work the same in both bands. Plugins use `Last` for work that must follow the game's systems; the clients register in `Default`. The call: [Engine::addSystem](../../reference/cpp/engine-and-systems.md#engineaddsystem).
-
 ## Structural changes in systems
 
-Inside a system, `spawn`, `destroy`, `add` and `remove` are **recorded** and applied at the **end of the phase**. This makes them safe inside `each` and `eachBlock`. The rule for every context: [Direct and deferred changes](world-and-entities.md#direct-and-deferred-changes).
+Inside a system, `Commands::spawn`, `destroy`, `add` and `remove` are **recorded** and applied at the **end of the phase**. This makes them safe inside `each` and `eachBlock`. The rule for every context: [Direct and deferred changes](world-and-entities.md#direct-and-deferred-changes).
 
 ```cpp
-OLY_SYSTEM(explodeDead) {
-  context.query<const Health, const Position>(oly::ecs::With<Enemy>{}).each([&](oly::ecs::Entity entity, const Health& health, const Position& position) {
+void explodeDead(oly::app::Query<const Health, const Position, oly::ecs::With<Enemy>> enemies, oly::app::Commands commands) {
+  enemies.each([&](oly::ecs::Entity entity, const Health& health, const Position& position) {
     if (health.value > 0) {
       return;
     }
 
-    context.destroy(entity);
-    context.spawn(Explosion{}, Position{position.x, position.y});
+    commands.destroy(entity);
+    commands.spawn(Explosion{}, Position{position.x, position.y});
   });
 }
 ```
@@ -81,7 +70,7 @@ What this means for the next systems:
 
 - A system later **in the same phase** still sees the destroyed enemy and does not see the explosion.
 - A system in the **next phase** sees the result.
-- `context.spawn` returns the new handle at once. You can `add` to it or store it in another component in the same step, but `isAlive` is `false` until the phase ends.
+- `commands.spawn` returns the new handle at once. You can `add` to it or store it in another component in the same step, but `isAlive` is `false` until the phase ends.
 
 Writing through a reference from `get` or a query is **not** structural: it changes the value immediately.
 
@@ -101,16 +90,16 @@ component PreviousPosition { x: f32, y: f32 }
 ```
 
 ```cpp
-OLY_SYSTEM(rememberPosition) {
-  context.query<const Position, PreviousPosition>().each([](const Position& position, PreviousPosition& previous) {
+void rememberPosition(oly::app::Query<const Position, PreviousPosition> bodies) {
+  bodies.each([](const Position& position, PreviousPosition& previous) {
     previous = PreviousPosition{position.x, position.y};
   });
 }
 
-OLY_SYSTEM(draw) {
-  const float alpha = context.interpolation();
+void draw(oly::app::Query<const Position, const PreviousPosition> bodies, const oly::app::StepInfo& step) {
+  const float alpha = step.interpolation;
 
-  context.query<const Position, const PreviousPosition>().each([alpha](const Position& position, const PreviousPosition& previous) {
+  bodies.each([alpha](const Position& position, const PreviousPosition& previous) {
     const float x = previous.x + (position.x - previous.x) * alpha;
     const float y = previous.y + (position.y - previous.y) * alpha;
     drawCircle(x, y, 8.0f);
@@ -118,7 +107,7 @@ OLY_SYSTEM(draw) {
 }
 ```
 
-Register `rememberPosition` as the first system of `UpdateBefore`, so it records where everything was before any system moves it, and `draw` in `Render`.
+Register `rememberPosition` in `UpdateBefore`, so it records where everything was before any `Update` system moves it, and `draw` in `Render`.
 
 TypeScript: [Time and interpolation](../../reference/typescript/engine-and-systems.md#time-and-interpolation).
 
@@ -136,20 +125,20 @@ The pause takes effect from the **next** step. While paused:
 A paused game still needs a way to resume. Register a system that runs only while paused:
 
 ```cpp
-OLY_SYSTEM(pauseOnPress) {
-  if (context.actions().button(actions::pause).pressed) {
-    context.pause();
+void pauseOnPress(oly::app::Res<const oly::input::ActionMap> actionMap, oly::app::Res<oly::app::PauseRequest> pauseRequest) {
+  if (actionMap->button(actions::pause).pressed) {
+    pauseRequest->pause();
   }
 }
 
-OLY_SYSTEM(resumeOnPress) {
-  if (context.actions().button(actions::pause).pressed) {
-    context.resume();
+void resumeOnPress(oly::app::Res<const oly::input::ActionMap> actionMap, oly::app::Res<oly::app::PauseRequest> pauseRequest) {
+  if (actionMap->button(actions::pause).pressed) {
+    pauseRequest->resume();
   }
 }
 ```
 
-A `whilePaused` system runs **only** while paused. That is why the two systems above never both fire on the same key press: register `resumeOnPress` with `setWhilePaused(id, true)` and leave `pauseOnPress` as it is. In Render, read `context.paused()` to draw a "Paused" overlay. The calls: [Pause](../../reference/cpp/engine-and-systems.md#pause).
+A `whilePaused` system runs **only** while paused. That is why the two systems above never both fire on the same key press: register `resumeOnPress` with `.whilePaused()` and leave `pauseOnPress` as it is. In Render, read `StepInfo::paused` to draw a "Paused" overlay. The calls: [Pause](../../reference/cpp/engine-and-systems.md#pause).
 
 TypeScript: [Pause](../../reference/typescript/engine-and-systems.md#pause).
 

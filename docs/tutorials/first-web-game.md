@@ -99,15 +99,18 @@ void movePlayer(oly::app::Query<Position, oly::ecs::With<Player>> players, oly::
 OLY_SYSTEM(movePlayer);
 ```
 
-`OLY_SYSTEM(movePlayer)` defines the system and registers it by name, so the TS side can add it. The query visits every entity that has `Position` and the tag `Player`. `native/systems.hpp` declares the function:
+`movePlayer` is a function whose parameters declare what it reads and writes, and `OLY_SYSTEM(movePlayer);` registers it by name, so the TS side can add it. The query visits every entity that has `Position` and the tag `Player`. `native/systems.hpp` declares the function:
 
 ```cpp
 #pragma once
 
-#include "oly/app/system.hpp"
+#include "oly/app/system_parameters.hpp"
+#include "oly/ecs/query.hpp"
+#include "oly/input/action_map.hpp"
+#include "schema.generated.hpp"
 
 // Registered by name through OLY_SYSTEM; declared here for a shell that adds it with Engine::addSystem.
-void movePlayer(oly::app::SystemContext& context);
+void movePlayer(oly::app::Query<Position, oly::ecs::With<Player>> players, oly::app::Res<const oly::input::ActionMap> actions, const oly::app::StepInfo& step);
 ```
 
 Change `PlayerSpeed` to `400.0f` and run `./oly run` again. You see the square cross the page twice as fast.

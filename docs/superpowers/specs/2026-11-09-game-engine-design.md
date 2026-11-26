@@ -246,6 +246,7 @@ And, per `requestAnimationFrame` frame: the `render` phase (only once, after the
 
 - There is no physics phase: the game's collision and physics register in `updateAfter`. **[design decision]**
 - Within a phase, the order is the registration order. **[design decision]** There is no dependency graph.
+  *Superseded by phase 1: the order is constraints, then name, and a system declares its access ([the phase 1 spec](2026-11-26-phase1-declared-access-design.md)).*
 - C++ and TS systems mix freely in the same phase, in registration order; the core walks the phase and calls
   each one (C++ directly, TS through the callback).
 - **Structural changes inside systems** (`spawn`, `destroy`, `add`, `remove`) are deferred through the ECS's

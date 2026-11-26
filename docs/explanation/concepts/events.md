@@ -77,7 +77,7 @@ TypeScript: [Restrict handlers to states](../../reference/typescript/events.md#r
 | several reactions to one fact, now | an event |
 | something to happen after N seconds | the [schedule](schedule.md) |
 | to keep data on an entity across steps | a component |
-| to mark entities for another system to process | a tag (`context.add(entity, Hit{})`), then a query `With<Hit>` |
+| to mark entities for another system to process | a tag (`commands.add(entity, Hit{})`), then a query `With<Hit>` |
 | to change screens | a [state](states.md) |
 
 ## API

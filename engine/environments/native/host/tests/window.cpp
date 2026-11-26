@@ -9,20 +9,26 @@
 #include <vector>
 
 #include "oly/app/engine.hpp"
+#include "oly/app/system_parameters.hpp"
 #include "oly/ecs/world.hpp"
+#include "oly/input/action_map.hpp"
 #include "oly/input/physical_button.hpp"
 #include "oly/native_host/run.hpp"
 
 using oly::app::Engine;
-using oly::app::Phase;
-using oly::app::SystemContext;
+using oly::app::Render;
+using oly::app::Update;
 using oly::native_host::run;
 using oly::native_host::RunOptions;
 using oly::native_host::Window;
 
 namespace {
-  void countCall(SystemContext& context) {
-    ++*static_cast<uint32_t*>(context.userData());
+  struct Draws {
+    uint32_t count = 0;
+  };
+
+  void countCall(oly::app::Res<Draws> draws) {
+    ++draws->count;
   }
 
   struct JumpProbe {
@@ -30,9 +36,8 @@ namespace {
     bool sawPressed = false;
   };
 
-  void recordJump(SystemContext& context) {
-    JumpProbe& probe = *static_cast<JumpProbe*>(context.userData());
-    probe.sawPressed = probe.sawPressed || context.actions().button(probe.jump).pressed;
+  void recordJump(oly::app::Res<JumpProbe> probe, oly::app::Res<const oly::input::ActionMap> actions) {
+    probe->sawPressed = probe->sawPressed || actions->button(probe->jump).pressed;
   }
 }
 
@@ -82,22 +87,22 @@ TEST_CASE("run drives frames and draws after each one") {
   oly::ecs::World world;
   Engine engine(world);
   Window window({"test", 320, 200});
-  uint32_t draws = 0;
-  engine.addSystem(Phase::Render, "draw", countCall, &draws);
+  Draws& draws = engine.world().insertResource(Draws{});
+  engine.addSystem<&countCall>(Render{}, "draw");
 
   int exitCode = run(engine, window, {.maxFrames = 11, .frameSeconds = 1.0 / 60});
 
   CHECK(exitCode == 0);
   CHECK(engine.time() == doctest::Approx(10.0 / 60));
-  CHECK(draws == 10);
+  CHECK(draws.count == 10);
 }
 
 TEST_CASE("a quit event ends run before the next frame") {
   oly::ecs::World world;
   Engine engine(world);
   Window window({"test", 320, 200});
-  uint32_t draws = 0;
-  engine.addSystem(Phase::Render, "draw", countCall, &draws);
+  Draws& draws = engine.world().insertResource(Draws{});
+  engine.addSystem<&countCall>(Render{}, "draw");
   SDL_Event quit{};
   quit.type = SDL_EVENT_QUIT;
   SDL_PushEvent(&quit);
@@ -105,16 +110,16 @@ TEST_CASE("a quit event ends run before the next frame") {
   int exitCode = run(engine, window, {.maxFrames = 5, .frameSeconds = 1.0 / 60});
 
   CHECK(exitCode == 0);
-  CHECK(draws == 0);
+  CHECK(draws.count == 0);
 }
 
 TEST_CASE("run forwards pending input before the frame") {
   oly::ecs::World world;
   Engine engine(world);
   Window window({"test", 320, 200});
-  JumpProbe probe{engine.actions().declareButton("jump")};
+  JumpProbe& probe = engine.world().insertResource(JumpProbe{engine.actions().declareButton("jump")});
   engine.actions().bind(probe.jump, oly::input::Key::W);
-  engine.addSystem(Phase::Update, "record", recordJump, &probe);
+  engine.addSystem<&recordJump>(Update{}, "record");
   SDL_Event press{};
   press.type = SDL_EVENT_KEY_DOWN;
   press.key.windowID = SDL_GetWindowID(window.window());

@@ -193,7 +193,7 @@ A name of a group that a reference page already documents is documented, not exc
 | C++ | The `core` module: `alignUp`, `alignedAllocate`, `alignedFree`, `AssertHandler`, `setAssertHandler`, `SmallMap`, `typeName<T>` |
 | C++ | Named registrations: `NamedHandler`, `findNamedHandler`, `NamedHandlerRegistration`, `NamedSystemRegistration`, `findNamedSystem`, `NamedStateHookRegistration`, `findNamedStateHook` |
 | C++ | Event identifiers: `EventKey`, `InvalidEventType`, `eventKey<T>`, `Engine::eventTypeOf`, `eventTypeCount`, `onById`, `emitById`, `context.emitById` |
-| C++ | Plugin and phase internals: `PluginKey`, `pluginKey<P>`, `PhaseCount`, `OrderBandCount`, `isGameplayPhase` |
+| C++ | Plugin, phase and schedule internals: `PluginKey`, `pluginKey<P>`, `scheduleKey<T>`, `systemFunctionKey<F>`, `detail::buildSchedule` |
 | C++ | Task internals: `PayloadKey`, `payloadKey<P>`, `NoPayloadKey`, `InvalidTaskSlot`, `TaskHandle.slot` and `.generation` |
 | C++ | The query `ById` variants: `queryById`; `QueryByIdSpec`, `BlockById`, `QueryIteration`, `QueryById` |
 | C++ | Query and type diagnostics: `Query::matchedCount`, `Query::writes`; `TypeInfo`, `typeInfo()`, `registeredTypeCount`; `signatureLookupCount`, `archetypeCount()` |
@@ -231,13 +231,13 @@ The docs do not reference any specific game. Games live in their own repositorie
 ## Examples
 
 - **C++ first in a concept page**, the client's language in a client page.
-- **The main example of a concept is the function body written against the context**, with `OLY_SYSTEM`, `OLY_HANDLER` and `OLY_STATE_HOOK`: it is valid in every environment. Under it, the registration is short and labelled:
+- **The main example of a concept is the function written against its parameters** (a system) or its context (a handler, a hook), followed by `OLY_SYSTEM(name);`, `OLY_HANDLER` or `OLY_STATE_HOOK`: it is valid in every environment. Under it, the registration is short and labelled:
 
   ````markdown
   **Where you own the `Engine`** (native):
 
   ```cpp
-  engine.addSystem(oly::app::Phase::Update, "integrate", integrate);
+  engine.addSystem<&integrate>(oly::app::Update{}, "integrate");
   ```
 
   **On the web**, the client registers it by name: [TypeScript](../../reference/typescript/engine-and-systems.md#anchor).

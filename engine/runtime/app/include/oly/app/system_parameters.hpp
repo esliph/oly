@@ -142,7 +142,7 @@ namespace oly::app {
     }
   };
 
-  // Structural changes deferred to the phase's flush. Entities born while a state is active are scoped, as SystemContext::spawn.
+  // Structural changes deferred to the phase's flush. Entities born while a state is active are scoped until they receive persist.
   class Commands {
    private:
     ecs::CommandBuffer* commands_;

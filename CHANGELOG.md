@@ -6,17 +6,25 @@ Each version of the engine has one section. While Oly is `0.x`, a minor version 
 
 ### Breaking
 
-None.
+- `SystemContext`, the `userData` of a system, `OrderBand`, the `Phase` enum and `addSystem(Phase, name, function, userData, band)` are removed. A system declares its access through its parameters and is registered with `addSystem<&f>(phase, name)`.
+- The order of systems of one phase is the constraints `before` / `after` and then the system name, never the registration order or the plugin install order. Two systems that conflict (one writes what the other touches) with no constraint between them stop the first `frame`.
+- Registration closes at the first `frame`: `addSystem`, `addPhase`, `set` and a constraint after it stop with `OLY_ASSERT`.
 
 ### Migration
 
 - `Engine::setTimingEnabled`, `systemTimings` and `flushTimings` record the time of each system and flush of the last step ([Time per system](docs/reference/cpp/engine-and-systems.md#time-per-system)). A game keeps working without them.
 - `World::insertResource`, `resource` and `tryResource` keep one object per type, owned by the `World` ([Resources](docs/reference/cpp/world-and-entities.md#resources)). A game keeps working without them.
-- A system function can declare what it reads and writes through its parameters (`Query`, `Lookup`, `Res`, `Commands`, `Events`, `Tasks`, `StepInfo`, `SystemInfo`, `ecs::World&`) ([System parameters](docs/reference/cpp/engine-and-systems.md#system-parameters)). A game keeps working without them.
-- Systems can be ordered by phases, sets and constraints: `addSystem<&f>(Update{}, "name")`, `addPhase<P>(FixedStep{})`, `set<S>()` ([Phases, sets and constraints](docs/reference/cpp/engine-and-systems.md#phases-sets-and-constraints)). The order is constraints first, then name; registration closes at the first `frame`, and `systemTimings` and `flushTimings` carry `PhaseId` and `phaseName`. A game keeps working without them: `addSystem(Phase, ...)` stays until a later phase removes it.
-- `essentials2d` and `essentials3d` propagate `WorldTransform` in their own `Propagation` phase, after `Update` and its flush, instead of the `Last` band of `Update` ([When `WorldTransform` is up to date](docs/explanation/concepts/transforms.md#when-worldtransform-is-up-to-date)). A game keeps working: an entity spawned in `Update` now has its `WorldTransform` in `UpdateAfter` of the same step.
 - `physics2d` is a new plugin that declares the `Physics` phase, after `Update` and before `essentials2d::Propagation` ([physics2d](docs/explanation/architecture/plugins.md#physics2d)). It has no system yet. A game keeps working without it.
-- `olyEngineOrderSystems(engine, first, second)` and `SystemRegistration.before` / `after` in TS order two systems ([C API](docs/reference/c-api.md#olyengineordersystems), [Registration options](docs/reference/typescript/engine-and-systems.md)). `OLY_SYSTEM(name);` now follows a system function written with parameters, and a native system from the C API carries its declared access; a script system is exclusive, so a script system and a native one in one phase need an order. A game keeps working without it only while its phases have no such pair.
+- `essentials2d` and `essentials3d` propagate `WorldTransform` in their own `Propagation` phase, after `Update` and its flush, instead of the `Last` band of `Update` ([When `WorldTransform` is up to date](docs/explanation/concepts/transforms.md#when-worldtransform-is-up-to-date)). An entity spawned in `Update` now has its `WorldTransform` in `UpdateAfter` of the same step.
+- `olyEngineOrderSystems(engine, first, second)` and `SystemRegistration.before` / `after` in TS order two systems ([C API](docs/reference/c-api.md#olyengineordersystems), [Registration options](docs/reference/typescript/engine-and-systems.md#register-systems)). A script system is exclusive: order it against every other system of its phase.
+- A game that registers systems moves to declared access, in this order ([System parameters](docs/reference/cpp/engine-and-systems.md#system-parameters), [Phases, sets and constraints](docs/reference/cpp/engine-and-systems.md#phases-sets-and-constraints)):
+  1. A system takes its parameters instead of a `SystemContext`: `Query<...>` for `context.query`, `Lookup<T>` for `get` / `tryGet` / `has`, `Commands` for `spawn` / `destroy` / `add` / `remove` / `persist` / `isAlive`, `Events<E>` for `emit`, `Tasks` for `schedule`, `const StepInfo&` for the time, the state and the pause, `Res<const input::ActionMap>` for `actions`, `Res<StateRequest>` for `requestState`, `Res<PauseRequest>` for `pause` and `resume`, `const SystemInfo&` for the id and the name. A system that changes structure directly takes `ecs::World&` and is exclusive.
+  2. State that a system read through `userData` becomes a resource: `world.insertResource<T>(...)` at start-up, `Res<T>` in the system. A plugin does the same in `install` instead of keeping the state in its instance.
+  3. `addSystem(Phase::X, "name", f, userData, band)` becomes `addSystem<&f>(X{}, "name")`, and `setWhilePaused` and `setSystemStates` become `.whilePaused()` and `.inStates({...})` on the result.
+  4. Where two systems of one phase touch one component or resource and one writes it, order them: `.before("name")`, `.after<&f>()`, or a `set<S>()`. Registration closes at the first `frame`, and an unordered conflict stops it with the systems listed. Without a constraint the order is by name, not by registration.
+  5. `OLY_SYSTEM(name) { ... }` becomes the function followed by `OLY_SYSTEM(name);`.
+  6. A plugin that used `OrderBand::Last` declares a phase with `addPhase<P>(FixedStep{}).after<Update>()` and registers its system there.
+  7. A native host game whose `Game` kept `this` in `userData` inserts that state as a resource in `onStart`.
 - `oly build`, `oly test` and `oly run` accept `--release`, a `Release` build in `build/cmake-release` for measuring ([The `oly` command](docs/reference/cli.md#oly-build-oly-test-and-oly-run)). A game keeps working without it.
 
 ## 0.2.0

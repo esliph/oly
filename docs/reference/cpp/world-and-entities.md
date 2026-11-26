@@ -2,7 +2,7 @@
 
 [Reference](../../README.md#reference) · Concept: [World and entities](../../explanation/concepts/world-and-entities.md) · TypeScript: [World and entities in TypeScript](../typescript/world-and-entities.md)
 
-Headers: `oly/ecs/world.hpp`, `oly/ecs/entity.hpp`, `oly/ecs/command_buffer.hpp`, `oly/ecs/observer.hpp`, `oly/ecs/diagnostics.hpp`, and `oly/app/context.hpp` and `oly/app/system.hpp` for the contexts. Which calls are direct and which are deferred: [Direct and deferred changes](../../explanation/concepts/world-and-entities.md#direct-and-deferred-changes).
+Headers: `oly/ecs/world.hpp`, `oly/ecs/entity.hpp`, `oly/ecs/command_buffer.hpp`, `oly/ecs/observer.hpp`, `oly/ecs/diagnostics.hpp`, `oly/app/context.hpp` for the contexts of handlers, tasks and hooks, and `oly/app/system_parameters.hpp` for the `Commands` of a system. Which calls are direct and which are deferred: [Direct and deferred changes](../../explanation/concepts/world-and-entities.md#direct-and-deferred-changes).
 
 ## Where the World comes from
 
@@ -83,7 +83,7 @@ ecs::Entity spawn(Ts&&... components);
 
 The `spawn` of `HandlerContext`, `TaskContext` and `StateContext`. It calls `World::spawn`; with an active state the entity is born scoped (it disappears on a state change) until it receives `persist`.
 
-### `SystemContext::spawn`
+### `Commands::spawn`
 
 ```cpp
 ecs::Entity spawn();
@@ -94,11 +94,13 @@ ecs::Entity spawn(Ts&&... components);
 Records the `spawn` and one `add` per component in the phase's `CommandBuffer`. The handle is valid at once; the entity is alive when the phase ends. With an active state the entity is born scoped until it receives `persist`.
 
 ```cpp
-OLY_SYSTEM(spawnWave) {
-  oly::ecs::Entity rock = context.spawn(Position{});
-  oly::ecs::Entity marker = context.spawn();
-  oly::ecs::Entity enemy = context.spawn(Enemy{}, Position{100.0f, 50.0f}, Health{3});
+void spawnWave(oly::app::Commands commands) {
+  oly::ecs::Entity rock = commands.spawn(Position{});
+  oly::ecs::Entity marker = commands.spawn();
+  oly::ecs::Entity enemy = commands.spawn(Enemy{}, Position{100.0f, 50.0f}, Health{3});
 }
+
+OLY_SYSTEM(spawnWave);
 ```
 
 ### `CommandBuffer::spawn`
@@ -123,10 +125,12 @@ T& EngineContext::get(ecs::Entity entity);
 Returns a reference to the stored component. Write through it. It is a contract violation if the entity is dead or lacks `T`: `OLY_ASSERT` with the message `get e=<index>:<generation> type=<T>`. `T` cannot be a tag. The reference is invalid after any structural change ([What stays valid](../../explanation/concepts/world-and-entities.md#what-stays-valid)).
 
 ```cpp
-OLY_SYSTEM(hurtPlayer) {
-  auto [player, health] = context.query<Health>(oly::ecs::With<Player>{}).single();
+void hurtPlayer(oly::app::Query<Health, oly::ecs::With<Player>> players) {
+  auto [player, health] = players.single();
   health.value -= 1;
 }
+
+OLY_SYSTEM(hurtPlayer);
 ```
 
 ### `tryGet`
@@ -141,7 +145,7 @@ T* EngineContext::tryGet(ecs::Entity entity) noexcept;
 Returns a pointer, or `nullptr` if the entity is dead or lacks `T`. `T` cannot be a tag.
 
 ```cpp
-if (Shield* shield = context.tryGet<Shield>(player)) {
+if (Shield* shield = shields.tryGet(player)) {   // shields: Lookup<Shield>; context.tryGet<Shield> in a handler
   shield->charge = 0.0f;
 }
 ```
@@ -198,7 +202,7 @@ void remove(ecs::Entity entity);
 
 Direct, like the `World` calls they forward to.
 
-### `SystemContext::add`, `SystemContext::remove`
+### `Commands::add`, `Commands::remove`
 
 ```cpp
 template <class T>
@@ -210,14 +214,16 @@ void remove(ecs::Entity entity);
 Deferred to the end of the phase.
 
 ```cpp
-OLY_SYSTEM(freezeEnemy) {
-  oly::ecs::Entity enemy = std::get<0>(context.query<const Health>(oly::ecs::With<Enemy>{}).single());
+void freezeEnemy(oly::app::Query<const Health, oly::ecs::With<Enemy>> enemies, oly::app::Commands commands) {
+  oly::ecs::Entity enemy = std::get<0>(enemies.single());
 
-  context.add(enemy, Frozen{});
-  context.add(enemy, Slow{0.5f});
-  context.add(enemy, Slow{0.25f});
-  context.remove<Frozen>(enemy);
+  commands.add(enemy, Frozen{});
+  commands.add(enemy, Slow{0.5f});
+  commands.add(enemy, Slow{0.25f});
+  commands.remove<Frozen>(enemy);
 }
+
+OLY_SYSTEM(freezeEnemy);
 ```
 
 `Slow{0.25f}` replaces the value of the previous `Slow`, because the entity already has it.
@@ -229,7 +235,7 @@ void World::addById(Entity entity, ComponentId componentId, void* value);
 void World::removeById(Entity entity, ComponentId componentId);
 ```
 
-The same operations by `ComponentId`. `addById` moves from `value` (the caller still owns the moved-from object) and ignores it for a tag. `DirectContext`, `SystemContext` and `CommandBuffer` have the same two methods.
+The same operations by `ComponentId`. `addById` moves from `value` (the caller still owns the moved-from object) and ignores it for a tag. `DirectContext`, `Commands` and `CommandBuffer` have the same two methods.
 
 ## Destroy and check
 
@@ -239,10 +245,10 @@ The same operations by `ComponentId`. `addById` moves from `value` (the caller s
 void destroy(Entity entity);
 ```
 
-Destroys the entity. Stops with `OLY_ASSERT` (`destroy e=<index>:<generation> during iteration=<n>`) if the entity is dead or a query iterates. `DirectContext::destroy` forwards to it; `SystemContext::destroy` defers it to the end of the phase, and `CommandBuffer::destroy` to the flush.
+Destroys the entity. Stops with `OLY_ASSERT` (`destroy e=<index>:<generation> during iteration=<n>`) if the entity is dead or a query iterates. `DirectContext::destroy` forwards to it; `Commands::destroy` defers it to the end of the phase, and `CommandBuffer::destroy` to the flush.
 
 ```cpp
-context.destroy(enemy);
+commands.destroy(enemy);   // commands: Commands in a system; context.destroy in a handler
 ```
 
 ### `World::isAlive`
@@ -250,9 +256,10 @@ context.destroy(enemy);
 ```cpp
 bool isAlive(Entity entity) const noexcept;
 bool EngineContext::isAlive(ecs::Entity entity) const noexcept;
+bool Commands::isAlive(ecs::Entity entity) const noexcept;
 ```
 
-`true` while the entity is alive. A handle from an entity that died is `false`, even if its index was reused. After `destroy` in a `SystemContext` the answer stays `true` until the end of the phase.
+`true` while the entity is alive. A handle from an entity that died is `false`, even if its index was reused. After `destroy` through `Commands` the answer stays `true` until the end of the phase.
 
 ### `World::isIterating`
 
@@ -283,13 +290,15 @@ component Follower { leader: entity, distance: f32 }
 ```
 
 ```cpp
-OLY_SYSTEM(followLeader) {
-  context.query<const Follower>().each([&](oly::ecs::Entity entity, const Follower& follower) {
-    if (!context.isAlive(follower.leader)) {
-      context.destroy(entity);
+void followLeader(oly::app::Query<const Follower> followers, oly::app::Commands commands) {
+  followers.each([&](oly::ecs::Entity entity, const Follower& follower) {
+    if (!commands.isAlive(follower.leader)) {
+      commands.destroy(entity);
     }
   });
 }
+
+OLY_SYSTEM(followLeader);
 ```
 
 ### `NullEntity`

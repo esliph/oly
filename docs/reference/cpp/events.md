@@ -2,7 +2,7 @@
 
 [Reference](../../README.md#reference) · Concept: [Events](../../explanation/concepts/events.md) · TypeScript: [Events in TypeScript](../typescript/events.md)
 
-Headers: `oly/app/event.hpp`, `oly/app/handler.hpp`, `oly/app/engine.hpp` and `oly/app/context.hpp`. When events are dispatched, in what order and what rounds are: the [concept page](../../explanation/concepts/events.md).
+Headers: `oly/app/event.hpp`, `oly/app/handler.hpp`, `oly/app/engine.hpp`, `oly/app/context.hpp` and `oly/app/system_parameters.hpp`. When events are dispatched, in what order and what rounds are: the [concept page](../../explanation/concepts/events.md).
 
 ## Declare, emit, handle
 
@@ -17,23 +17,27 @@ EventTypeId declareEvent(std::string_view name = oly::core::typeName<T>());
 
 Declares the event type `T` and returns its `EventTypeId`. The declaration order is the dispatch order of the types. `setUpGame` declares the events of the schema, so a game does not call it. Declaring during `frame` stops with `OLY_ASSERT` (`declareEvent: event "<name>" declared during frame`), and so does declaring the same type twice (`declareEvent: event "<name>" already declared`).
 
-### `context.emit`
+### `Events::emit` and `context.emit`
 
 ```cpp
 template <class T>
-void emit(const T& event);
+void Events<T>::emit(const T& event);   // a system parameter
+template <class T>
+void context.emit(const T& event);      // a handler, task or hook
 ```
 
-Emits `event` from a system, handler, task or hook. It is dispatched in the rounds of the current step, as the [dispatch table](../../explanation/concepts/events.md#when-events-are-dispatched) says. An event type that is not declared stops with `OLY_ASSERT` (`emit: event "<T>" not declared`). From the code that owns the `Engine`: [Engine::emit](engine-and-systems.md#engineemit).
+Emits `event` from a system (the `Events<T>` parameter, which declares nothing), handler, task or hook. It is dispatched in the rounds of the current step, as the [dispatch table](../../explanation/concepts/events.md#when-events-are-dispatched) says. An event type that is not declared stops with `OLY_ASSERT` (`emit: event "<T>" not declared`). From the code that owns the `Engine`: [Engine::emit](engine-and-systems.md#engineemit).
 
 ```cpp
-OLY_SYSTEM(killDead) {
-  context.query<const Health, const Position>(oly::ecs::With<Enemy>{}).each([&](oly::ecs::Entity entity, const Health& health, const Position& position) {
+void killDead(oly::app::Query<const Health, const Position, oly::ecs::With<Enemy>> enemies, oly::app::Events<EnemyDied> enemyDied) {
+  enemies.each([&](oly::ecs::Entity entity, const Health& health, const Position& position) {
     if (health.value <= 0) {
-      context.emit(EnemyDied{entity, position.x, position.y});
+      enemyDied.emit(EnemyDied{entity, position.x, position.y});
     }
   });
 }
+
+OLY_SYSTEM(killDead);
 ```
 
 ### `OLY_HANDLER`
@@ -63,7 +67,7 @@ Registers `function` as a handler of the event type `T` and returns its `Handler
 **Where you own the `Engine`** (native):
 
 ```cpp
-engine.addSystem(oly::app::Phase::Update, "killDead", killDead);
+engine.addSystem<&killDead>(oly::app::Update{}, "killDead");
 engine.on<EnemyDied>("countKill", [](oly::app::HandlerContext& context) { countKill(context, context.events<EnemyDied>()); });
 ```
 

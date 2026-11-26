@@ -103,15 +103,18 @@ namespace oly::capi {
       OLY_ASSERT(actions.kind(action) == expected, "%s: action=%u (%.*s) has a kind other than the expected one (%u)", operation, action, static_cast<int>(actions.name(action).size()), actions.name(action).data(), static_cast<unsigned>(expected));
     }
 
-    oly::app::ScheduleKey builtInPhase(uint32_t phase, [[maybe_unused]] const char* operation) {
-      OLY_ASSERT(phase < oly::app::PhaseCount, "%s: phase=%u out of range (0..%u)", operation, phase, oly::app::PhaseCount - 1);
+    // The phase numbers of the C API: the four built-in phases, in the order of olyEngineAddNativeSystem.
+    constexpr uint32_t BuiltInPhaseCount = 4;
 
-      switch (static_cast<oly::app::Phase>(phase)) {
-        case oly::app::Phase::UpdateBefore:
+    oly::app::ScheduleKey builtInPhase(uint32_t phase, [[maybe_unused]] const char* operation) {
+      OLY_ASSERT(phase < BuiltInPhaseCount, "%s: phase=%u out of range (0..%u)", operation, phase, BuiltInPhaseCount - 1);
+
+      switch (phase) {
+        case 0:
           return oly::app::scheduleKey<oly::app::UpdateBefore>();
-        case oly::app::Phase::Update:
+        case 1:
           return oly::app::scheduleKey<oly::app::Update>();
-        case oly::app::Phase::UpdateAfter:
+        case 2:
           return oly::app::scheduleKey<oly::app::UpdateAfter>();
         default:
           return oly::app::scheduleKey<oly::app::Render>();

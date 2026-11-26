@@ -8,7 +8,7 @@ namespace oly::app {
   using PluginKey = uint32_t;
 
   // A unit of engine functionality that installs itself into an Engine: install registers its systems, handlers,
-  // hooks and observers, and keeps its own state, which reaches its systems through userData. The Engine owns the
+  // hooks and observers, and keeps its state as World resources, which reach its systems as parameters. The Engine owns the
   // instance and destroys it in reverse install order, after discarding the pending tasks, so a task's discard may still
   // reach the plugin through its payload. Systems, handlers and hooks die with the Engine, but observers
   // belong to the World, which outlives the Engine: the destructor removes the observers install registered

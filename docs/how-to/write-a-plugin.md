@@ -53,55 +53,51 @@ The class derives from `oly::app::Plugin`, has a default constructor and impleme
 #include "oly/app/plugin.hpp"
 
 namespace oly::lifetime {
-  class Plugin : public app::Plugin {
-   private:
-    uint32_t expiredCount_ = 0;
+  struct ExpiredCount {
+    uint32_t value = 0;
+  };
 
+  class Plugin : public app::Plugin {
    public:
     void install(app::Engine& engine) override;
-
-    uint32_t expiredCount() const noexcept {
-      return expiredCount_;
-    }
   };
 }
 ```
 
-`install` registers the plugin's systems, handlers, hooks and observers. The plugin's state lives in the instance and reaches its systems through `userData`:
+`install` registers the plugin's systems, handlers, hooks and observers. The plugin's state is a resource in the `World`, and a system declares it as a parameter ([Resources](../reference/cpp/world-and-entities.md#resources)):
 
 ```cpp
 #include "oly/lifetime/plugin.hpp"
 
 #include "oly/app/engine.hpp"
-#include "oly/app/system.hpp"
+#include "oly/app/system_descriptor.hpp"
+#include "oly/app/system_parameters.hpp"
 #include "oly/lifetime/schema.generated.hpp"
 
 namespace oly::lifetime {
   namespace {
-    void expire(app::SystemContext& context) {
-      uint32_t& expiredCount = *static_cast<uint32_t*>(context.userData());
-      const float step = context.fixedDeltaTime();
-
-      context.query<Lifetime>().each([&](ecs::Entity entity, Lifetime& lifetime) {
-        lifetime.seconds -= step;
+    void expire(app::Query<Lifetime> lifetimes, app::Res<ExpiredCount> expiredCount, app::Commands commands, const app::StepInfo& step) {
+      lifetimes.each([&](ecs::Entity entity, Lifetime& lifetime) {
+        lifetime.seconds -= step.fixedDeltaTime;
 
         if (lifetime.seconds <= 0) {
-          context.destroy(entity);
-          ++expiredCount;
+          commands.destroy(entity);
+          ++expiredCount->value;
         }
       });
     }
   }
 
   void Plugin::install(app::Engine& engine) {
-    engine.addSystem(app::Phase::UpdateAfter, "expire", expire, &expiredCount_);
+    engine.world().insertResource<ExpiredCount>();
+    engine.addSystem<&expire>(app::UpdateAfter{}, "expire");
   }
 }
 ```
 
 Inside `install`, `engine.plugin<Q>()` reaches a plugin that installed earlier, for example one listed in `PLUGINS` ([Plugins in C++](../reference/cpp/plugins.md#engineplugin)).
 
-A plugin that registers observers removes them in its destructor, and a plugin system that must see the game's work of the step registers in the `Last` band. Both rules are in [Plugins](../explanation/concepts/plugins.md).
+A plugin that registers observers removes them in its destructor, and a plugin system that must see the game's work of the step declares its own phase with `addPhase`, ordered after `Update`, instead of asking for a place at the end of one. Both rules are in [Plugins](../explanation/concepts/plugins.md).
 
 ## 5. Follow the rules for plugin code
 

@@ -4,7 +4,7 @@
 
 The scheduler runs code **later** or **repeatedly**, on the **game clock**. Game time stops when the game pauses, so timers stop too. You never need to count frames or read the wall clock.
 
-The same scheduler is `engine.schedule()` and `context.schedule()` in every system, handler, task and hook.
+The same scheduler is `engine.schedule()`, `context.schedule()` in a handler, task or hook, and the `Tasks` parameter in a system.
 
 ## `after` and `every`
 

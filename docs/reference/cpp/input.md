@@ -128,9 +128,9 @@ struct PointerState { float x; float y; bool valid; };
 ```
 
 ```cpp
-OLY_SYSTEM(readInput) {
-  const oly::input::ButtonState jumpButton = context.actions().button(actions::jump);
-  const oly::input::PointerState pointer = context.actions().pointer(actions::aim);
+void readInput(oly::app::Res<const oly::input::ActionMap> actionMap) {
+  const oly::input::ButtonState jumpButton = actionMap->button(actions::jump);
+  const oly::input::PointerState pointer = actionMap->pointer(actions::aim);
 
   if (jumpButton.pressed) {
     // first step of the press
@@ -148,12 +148,14 @@ OLY_SYSTEM(readInput) {
     // a pointer position has arrived at least once
   }
 }
+
+OLY_SYSTEM(readInput);
 ```
 
 **Where you own the `Engine`** (native):
 
 ```cpp
-engine.addSystem(oly::app::Phase::UpdateBefore, "readInput", readInput);
+engine.addSystem<&readInput>(oly::app::UpdateBefore{}, "readInput");
 ```
 
 **On the web**, the client registers it by name: [TypeScript](../typescript/input.md#read-actions-in-systems).
@@ -161,10 +163,12 @@ engine.addSystem(oly::app::Phase::UpdateBefore, "readInput", readInput);
 ### The 2D axis
 
 ```cpp
-OLY_SYSTEM(steerPlayer) {
-  auto [player, velocity] = context.query<Velocity>(oly::ecs::With<Player>{}).single();
-  const oly::input::Vector2 direction = context.actions().axis2d(actions::move);
+void steerPlayer(oly::app::Query<Velocity, oly::ecs::With<Player>> players, oly::app::Res<const oly::input::ActionMap> actionMap) {
+  auto [player, velocity] = players.single();
+  const oly::input::Vector2 direction = actionMap->axis2d(actions::move);
 
   velocity = Velocity{direction.x * 220.0f, direction.y * 220.0f};
 }
+
+OLY_SYSTEM(steerPlayer);
 ```

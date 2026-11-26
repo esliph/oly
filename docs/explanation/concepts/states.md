@@ -46,14 +46,14 @@ TypeScript: [Run only in some states](../../reference/typescript/states.md#run-o
 
 While a state is active, **everything created through a context is scoped to that state**:
 
-- entities created with `context.spawn` (in systems, handlers, tasks and hooks);
+- entities created with `Commands::spawn` in a system or `context.spawn` in a handler, task or hook;
 - tasks created with `schedule().after` and `schedule().every` ([Schedule](schedule.md#pause-states-and-recovery)).
 
 When the state changes, the engine destroys the scoped entities and cancels the scoped tasks. So "play again" needs **no reset code**: leaving `playing` removes the player, the enemies, the bullets and the wave timer.
 
 | Created by | Scoped? |
 |---|---|
-| `context.spawn(...)` with an active state | yes |
+| `commands.spawn(...)` or `context.spawn(...)` with an active state | yes |
 | `schedule().after/every` with an active state | yes |
 | `world.spawn(...)` (direct on the world) | **never** |
 | anything with no active state | no |

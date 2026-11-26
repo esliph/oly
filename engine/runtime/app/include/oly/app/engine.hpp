@@ -57,13 +57,10 @@ namespace oly::app {
     };
 
     struct SystemEntry {
-      SystemFunction function; // the legacy bridge only
-      void* userData; // the legacy bridge only
       std::string name;
       SystemId id;
       ScheduleKey phaseKey;
-      OrderBand band; // the legacy bridge only
-      const SystemDescriptor* descriptor; // nullptr for the legacy bridge
+      const SystemDescriptor* descriptor;
       detail::SystemSlots slots;
       SystemInfo info; // filled when registration closes, once the names stop moving
       std::vector<ScheduleKey> sets;
@@ -180,10 +177,6 @@ namespace oly::app {
       return static_cast<P&>(*found);
     }
 
-    // Cannot be called during frame (OLY_ASSERT). Within a phase, the Default band runs before the Last band, and
-    // within a band systems run in registration order. The phase applies its commands once, after the Last band.
-    // The legacy form: registers an exclusive system in a built-in phase.
-    SystemId addSystem(Phase phase, std::string_view name, SystemFunction function, void* userData = nullptr, OrderBand band = OrderBand::Default);
     // In the fixed-step phases, a whilePaused system runs only in paused steps and the others only in unpaused ones.
     // A frame system does not accept whilePaused (OLY_ASSERT).
     void setWhilePaused(SystemId system, bool whilePaused);
@@ -383,7 +376,6 @@ namespace oly::app {
     PhaseId declaredPhaseId(ScheduleKey key) const;
     SystemId addSystemEntry(ScheduleKey phaseKey, std::string_view name, SystemEntry entry);
     void closeRegistration();
-    void chainLegacySystems(std::vector<detail::OrderConstraint>& constraints) const;
     void dispatchEvents();
     void runDueSchedule();
 

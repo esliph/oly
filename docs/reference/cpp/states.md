@@ -46,20 +46,22 @@ StateId state() const noexcept;
 
 `requestState` asks for a change. The change happens at step 5 of the fixed step, paused or not, and the last request before step 5 wins. It is valid inside and outside `frame`. A state that is not declared stops with `OLY_ASSERT` (`requestState: state=<id> out of range (<n> states)`). `state()` is `NoState` until the first change, and it changes only at step 5.
 
-`context.requestState(state)` and `context.state()` do the same in every context: a system, handler, task or hook. A request made in a hook takes effect in the next step.
+`context.requestState(state)` and `context.state()` do the same in a handler, task or hook. A system requests with `Res<StateRequest>` (`request(state)`) and reads `StepInfo::state`. A request made in a hook takes effect in the next step.
 
 ```cpp
-OLY_SYSTEM(startOnConfirm) {
-  if (context.actions().button(actions::confirm).pressed) {
-    context.requestState(states::playing);
+void startOnConfirm(oly::app::Res<const oly::input::ActionMap> actionMap, oly::app::Res<oly::app::StateRequest> stateRequest) {
+  if (actionMap->button(actions::confirm).pressed) {
+    stateRequest->request(states::playing);
   }
 }
+
+OLY_SYSTEM(startOnConfirm);
 ```
 
 From outside the loop, call `engine.requestState(states::gameOver)`. Read the current state and compare it with the generated id:
 
 ```cpp
-if (context.state() == states::playing) {
+if (step.state == states::playing) {   // step: const StepInfo&
   // ...
 }
 ```
@@ -83,8 +85,8 @@ const oly::app::StateMask menuOrGameOver = (oly::app::StateMask{1} << states::me
 **Where you own the `Engine`** (native):
 
 ```cpp
-engine.setSystemStates(engine.addSystem(oly::app::Phase::UpdateBefore, "startOnConfirm", startOnConfirm), {states::menu, states::gameOver});
-engine.setSystemStates(engine.addSystem(oly::app::Phase::Update, "chasePlayer", chasePlayer), {states::playing});
+engine.addSystem<&startOnConfirm>(oly::app::UpdateBefore{}, "startOnConfirm").inStates({states::menu, states::gameOver});
+engine.addSystem<&chasePlayer>(oly::app::Update{}, "chasePlayer").inStates({states::playing});
 engine.setHandlerStates(engine.on<PlayerDied>("endRound", [](oly::app::HandlerContext& context) { endRound(context, context.events<PlayerDied>()); }), {states::playing});
 ```
 
@@ -163,7 +165,7 @@ void persist(ecs::Entity entity);
 bool Scheduler::persist(TaskHandle task);
 ```
 
-`context.persist(entity)` removes the scope of an entity, and `context.schedule().persist(handle)` removes the scope of a pending task ([`Scheduler::cancel`](schedule.md#schedulercancel)). The entity must be alive: otherwise the call stops with `OLY_ASSERT`. An entity that is not scoped is left as it is. In a system `persist` is deferred to the end of the phase, like `remove`. In hooks, handlers and tasks it is direct.
+`context.persist(entity)` removes the scope of an entity, and `context.schedule().persist(handle)` removes the scope of a pending task ([`Scheduler::cancel`](schedule.md#schedulercancel)). The entity must be alive: otherwise the call stops with `OLY_ASSERT`. An entity that is not scoped is left as it is. In a system (`Commands::persist`) it is deferred to the end of the phase, like `remove`. In hooks, handlers and tasks it is direct.
 
 ```cpp
 OLY_STATE_HOOK(startRound) {

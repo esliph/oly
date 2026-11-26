@@ -15,21 +15,6 @@ namespace oly::app {
       return static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - start).count());
     }
 
-    ScheduleKey builtInKey(Phase phase) {
-      switch (phase) {
-        case Phase::UpdateBefore:
-          return scheduleKey<UpdateBefore>();
-        case Phase::Update:
-          return scheduleKey<Update>();
-        case Phase::UpdateAfter:
-          return scheduleKey<UpdateAfter>();
-        case Phase::Render:
-          break;
-      }
-
-      return scheduleKey<Render>();
-    }
-
     constexpr uint32_t MissingIndex = 0xFFFFFFFFu;
   }
 
@@ -172,15 +157,6 @@ namespace oly::app {
     return systems_.back().id;
   }
 
-  SystemId Engine::addSystem(Phase phase, std::string_view name, SystemFunction function, void* userData, OrderBand band) {
-    SystemEntry entry{};
-    entry.function = function;
-    entry.userData = userData;
-    entry.band = band;
-
-    return addSystemEntry(builtInKey(phase), name, std::move(entry));
-  }
-
   SystemBuilder Engine::addSystem(ScheduleKey phase, std::string_view name, const SystemDescriptor& descriptor) {
     SystemEntry entry{};
     entry.descriptor = &descriptor;
@@ -261,27 +237,6 @@ namespace oly::app {
     return *this;
   }
 
-  // Constraints that keep the order of the legacy bridge: the Default band in registration order, then the Last band.
-  void Engine::chainLegacySystems(std::vector<detail::OrderConstraint>& constraints) const {
-    for (const PhaseEntry& phase : phases_) {
-      std::vector<const SystemEntry*> chain;
-
-      for (const OrderBand band : {OrderBand::Default, OrderBand::Last}) {
-        for (const SystemEntry& entry : systems_) {
-          if (entry.descriptor == nullptr && entry.phaseKey == phase.key && entry.band == band) {
-            chain.push_back(&entry);
-          }
-        }
-      }
-
-      for (size_t position = 1; position < chain.size(); ++position) {
-        const SystemEntry& previous = *chain[position - 1];
-        const SystemEntry& next = *chain[position];
-        constraints.push_back(detail::OrderConstraint{detail::OrderTarget{detail::TargetKind::System, previous.id, previous.name}, detail::OrderTarget{detail::TargetKind::System, next.id, next.name}});
-      }
-    }
-  }
-
   void Engine::closeRegistration() {
     detail::ScheduleInput input;
 
@@ -291,19 +246,14 @@ namespace oly::app {
 
     input.phaseConstraints = phaseConstraints_;
     input.constraints = constraints_;
-    chainLegacySystems(input.constraints);
 
     for (SystemEntry& entry : systems_) {
       const uint32_t phaseIndex = ensurePhaseEntry("frame", entry.phaseKey);
       entry.info = SystemInfo{entry.id, entry.name, phaseIndex, phases_[phaseIndex].schedule};
 
-      detail::GraphSystem system{entry.name, entry.phaseKey, entry.descriptor != nullptr ? entry.descriptor->key : MissingIndex, entry.sets, {}};
+      detail::GraphSystem system{entry.name, entry.phaseKey, entry.descriptor->key, entry.sets, {}};
 
-      if (entry.descriptor != nullptr) {
-        entry.descriptor->declare(system.access);
-      } else {
-        system.access.exclusive = true;
-      }
+      entry.descriptor->declare(system.access);
 
       input.systems.push_back(std::move(system));
     }
@@ -312,10 +262,8 @@ namespace oly::app {
     std::vector<std::string> errors = plan.errors;
 
     for (SystemEntry& entry : systems_) {
-      if (entry.descriptor != nullptr) {
-        detail::ResolveContext context{world_, controls_, queues_, scheduler_, entry.name, errors};
-        entry.descriptor->resolve(context, entry.slots);
-      }
+      detail::ResolveContext context{world_, controls_, queues_, scheduler_, entry.name, errors};
+      entry.descriptor->resolve(context, entry.slots);
     }
 
     registrationClosed_ = true;
@@ -526,15 +474,8 @@ namespace oly::app {
   }
 
   void Engine::runSystem(SystemEntry& entry, const StepInfo& step) {
-    if (entry.descriptor != nullptr) {
-      detail::RunContext context{world_, commands_, queues_, step, entry.info, state_ != NoState};
-      entry.descriptor->run(entry.slots, context);
-
-      return;
-    }
-
-    SystemContext context(*this, world_, commands_, static_cast<Phase>(entry.info.phase), entry.id, entry.name, entry.userData);
-    entry.function(context);
+    detail::RunContext context{world_, commands_, queues_, step, entry.info, state_ != NoState};
+    entry.descriptor->run(entry.slots, context);
   }
 
   template <bool Timed>

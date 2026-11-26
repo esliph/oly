@@ -10,18 +10,20 @@ A system that reads `Position` loads only the `Position` column into the cache. 
 
 ## 2. Reuse queries
 
-`context.query<...>()` is cached by its shape. Calling it inside a system every step is a map lookup, not a new query. In a very hot system you can take the reference once (`auto& enemies = context.query<...>()`) and use it in a nested loop.
+A `Query` parameter of a system is resolved **once**, when registration closes: each step does no lookup at all. A handler or task that calls `context.query<...>()` pays a map lookup, because the query is cached by its shape; take the reference once (`auto& enemies = context.query<...>()`) and use it in a nested loop.
 
 Iterate with `each` or `eachBlock`, and use `get` for **one** entity: the player, the boss, the camera. A `get` per entity in a loop repeats a lookup that the iteration already did.
 
 ```cpp
-OLY_SYSTEM(drift) {
-  context.query<Position, const Velocity>(oly::ecs::With<Enemy>{}).eachBlock([](std::span<Position> positions, std::span<const Velocity> velocities) {
+void drift(oly::app::Query<Position, const Velocity, oly::ecs::With<Enemy>> bodies) {
+  bodies.eachBlock([](std::span<Position> positions, std::span<const Velocity> velocities) {
     for (size_t row = 0; row < positions.size(); ++row) {
       positions[row].x += velocities[row].x;
     }
   });
 }
+
+OLY_SYSTEM(drift);
 ```
 
 `eachBlock` gives the compiler whole columns, which it can vectorize. Register the system as shown in [Engine, loop and systems](../reference/cpp/engine-and-systems.md#register-systems).

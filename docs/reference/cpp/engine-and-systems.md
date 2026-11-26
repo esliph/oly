@@ -2,7 +2,7 @@
 
 [Reference](../../README.md#reference) · Concept: [Engine, loop and systems](../../explanation/concepts/engine-and-systems.md) · TypeScript: [Engine, loop and systems in TypeScript](../typescript/engine-and-systems.md)
 
-Headers: `oly/app/engine.hpp`, `oly/app/system.hpp`, `oly/app/context.hpp`, `oly/app/phase.hpp`, `oly/app/handler.hpp`, `oly/app/state_context.hpp`, `oly/app/task_context.hpp` and `oly/app/game.hpp`. Which phase runs when, and what an order band means: [Phases](../../explanation/concepts/engine-and-systems.md#phases).
+Headers: `oly/app/engine.hpp`, `oly/app/system.hpp`, `oly/app/phase.hpp`, `oly/app/system_parameters.hpp`, `oly/app/handler.hpp`, `oly/app/state_context.hpp`, `oly/app/task_context.hpp` and `oly/app/game.hpp`. Which phase runs when, and how systems are ordered: [Phases](../../explanation/concepts/engine-and-systems.md#phases).
 
 ## Create the engine
 
@@ -65,14 +65,14 @@ bool inFrame() const noexcept;
 
 ## Register systems
 
-A system is a function of the context. Write it with `OLY_SYSTEM`:
+A system is a function whose parameters declare what it reads and writes ([System parameters](#system-parameters)):
 
 ```cpp
-OLY_SYSTEM(spin) {
-  const float step = 3.14159f * context.fixedDeltaTime();
+void spin(oly::app::Query<Rotation> rotations, const oly::app::StepInfo& step) {
+  const float angle = 3.14159f * step.fixedDeltaTime;
 
-  context.query<Rotation>().each([step](Rotation& rotation) {
-    rotation.angle += step;
+  rotations.each([angle](Rotation& rotation) {
+    rotation.angle += angle;
   });
 }
 ```
@@ -80,62 +80,38 @@ OLY_SYSTEM(spin) {
 **Where you own the `Engine`** (native):
 
 ```cpp
-oly::app::SystemId spinId = engine.addSystem(oly::app::Phase::Update, "spin", spin);
+oly::app::SystemId spinId = engine.addSystem<&spin>(oly::app::Update{}, "spin").id();
 
 engine.setSystemStates(spinId, {states::playing});
-engine.setWhilePaused(engine.addSystem(oly::app::Phase::UpdateBefore, "resumeOnPress", resumeOnPress), true);
+engine.addSystem<&resumeOnPress>(oly::app::UpdateBefore{}, "resumeOnPress").whilePaused();
 ```
 
-**On the web**, the client registers it by name: [TypeScript](../typescript/engine-and-systems.md#register-systems).
-
-### `Phase` and `OrderBand`
-
-```cpp
-enum class Phase : uint8_t { UpdateBefore, Update, UpdateAfter, Render };
-enum class OrderBand : uint8_t { Default, Last };
-```
-
-`addSystem` takes the `Phase` and, last, the `OrderBand`. The first three phases run in each fixed step, in this order, and `Render` runs once per frame. Inside a phase, the `Default` band runs before the `Last` band, and inside a band the systems run in registration order ([Phases](../../explanation/concepts/engine-and-systems.md#phases)).
+**On the web**, the client registers it by name: [TypeScript](../typescript/engine-and-systems.md#register-systems). Which phase runs when, and how systems are ordered: [Phases](../../explanation/concepts/engine-and-systems.md#phases).
 
 ### Data for a system or a handler
 
-A system is a function pointer with an optional `userData` pointer, and `addSystem` returns an id you can restrict to states. A handler takes a `userData` pointer too, and reads the batch with `context.events<T>()`:
+A system keeps its state in a resource, and takes it as `Res<T>` ([System parameters](#system-parameters)). A handler or a state hook takes a `userData` pointer and reads the batch with `context.events<T>()`:
 
 ```cpp
 struct Game {
   uint32_t hits = 0;
 };
 
-void steer(oly::app::SystemContext& context) {
-  Game& game = *static_cast<Game*>(context.userData());
-  // read context.actions(), use game
+void steer(oly::app::Res<Game> game, oly::app::Res<const oly::input::ActionMap> actionMap) {
+  // read actionMap->button(actions::shoot), use game->hits
 }
 
 void countHits(oly::app::HandlerContext& context) {
   static_cast<Game*>(context.userData())->hits += context.eventCount();
 }
 
-Game game;
-oly::app::SystemId steerId = engine.addSystem(oly::app::Phase::UpdateBefore, "steer", steer, &game);
-
-engine.setSystemStates(steerId, {states::playing});
-engine.on<Hit>("countHits", countHits, &game);
+world.insertResource<Game>();
+engine.addSystem<&steer>(oly::app::UpdateBefore{}, "steer").inStates({states::playing});
+engine.on<Hit>("countHits", countHits, &world.resource<Game>());
 engine.requestState(states::playing);
 ```
 
-The macros (`OLY_SYSTEM`, `OLY_HANDLER`, `OLY_STATE_HOOK`) are only needed when a client registers by name ([C++ systems, handlers and hooks](#c-systems-handlers-and-hooks)). A desktop game with no client can use plain functions, as above, or the macros so that the same code also runs on the web.
-
-### `Engine::addSystem`
-
-```cpp
-SystemId addSystem(Phase phase, std::string_view name, SystemFunction function, void* userData = nullptr, OrderBand band = OrderBand::Default);
-```
-
-Registers `function` in `phase` and returns its `SystemId`. `name` appears in the error messages. The system reads `userData` with `context.userData()`. Within a phase, the `Default` band runs before the `Last` band, and within a band systems run in registration order. The phase applies its commands once, after the `Last` band. Register everything at start-up: a call during `frame` stops with `OLY_ASSERT` (`addSystem: system "<name>" registered during frame`).
-
-```cpp
-engine.addSystem(oly::app::Phase::Update, "followTargets", followTargets, nullptr, oly::app::OrderBand::Last);
-```
+`OLY_SYSTEM`, `OLY_HANDLER` and `OLY_STATE_HOOK` are only needed when a client registers by name ([C++ systems, handlers and hooks](#c-systems-handlers-and-hooks)). A desktop game with no client can use plain functions, as above.
 
 ### `Engine::setWhilePaused`
 
@@ -207,7 +183,7 @@ template <class S> SetBuilder set();
 
 A **system set** is a tag `S` that groups systems. `set<S>().before<Q>()` and `after<Q>()` order every member of `S`; the target is a set, a function (`before<&f>()`, every registration of `f`) or a system name (`before("name")`). A set orders its members in each phase they are in.
 
-### `Engine::addSystem` (declared access)
+### `Engine::addSystem`
 
 ```cpp
 template <auto Function, class P> SystemBuilder addSystem(P phase, std::string_view name);
@@ -251,7 +227,7 @@ Three macros define the functions a game registers. Each one registers its funct
 
 | Macro | Defines | Native registration |
 |---|---|---|
-| `OLY_SYSTEM(name)` | `void name(oly::app::SystemContext& context)` | `engine.addSystem(phase, "name", name)` |
+| `OLY_SYSTEM(name);` | after the definition of the function `name` | `engine.addSystem<&name>(phase, "name")` |
 | `OLY_HANDLER(name, Event)` | `void name(HandlerContext& context, std::span<const Event> events)` | `engine.on<Event>("name", lambda)` ([Events](events.md#engineon)) |
 | `OLY_STATE_HOOK(name)` | `void name(oly::app::StateContext& context)` | `engine.onEnter(state, "name", name)` / `onExit` |
 
@@ -262,7 +238,7 @@ Include the engine headers you use and the generated schema:
 ```cpp
 #include "oly/app/handler.hpp"        // OLY_HANDLER
 #include "oly/app/state_context.hpp"  // OLY_STATE_HOOK (StateContext)
-#include "oly/app/system.hpp"         // OLY_SYSTEM
+#include "oly/app/system.hpp"         // OLY_SYSTEM, after system_descriptor.hpp
 #include "oly/app/task_context.hpp"   // TaskContext, payloads
 #include "oly/ecs/query.hpp"          // With, Without
 #include "schema.generated.hpp"       // your components, events, actions:: and states::
@@ -270,7 +246,7 @@ Include the engine headers you use and the generated schema:
 
 ## System parameters
 
-A system function can declare what it needs as parameters, instead of reading it from a `SystemContext`. The engine builds the declared access from the parameter types, which is what later lets it order systems and refuse conflicts.
+A system function declares what it needs as parameters. The engine builds the declared access from the parameter types, which is what lets it order systems and refuse conflicts. A system is a function pointer with no `void*`: its state is a resource.
 
 ```cpp
 #include "oly/app/system_descriptor.hpp"
@@ -299,43 +275,46 @@ An exclusive system takes `ecs::World&` and may change structure directly; no ot
 
 A `Res<T>` whose resource is not inserted, and an `Events<E>` whose event is not declared, are reported with the system's name when registration closes.
 
-## The system context
-
-A system receives a `SystemContext`. It is valid only during that call.
-
-| Need | Call |
-|---|---|
-| query | `context.query<Position, const Velocity>(oly::ecs::With<Enemy>{})` |
-| read / write one component | `context.get<Health>(entity)` (reference), `context.tryGet<Health>(entity)` (pointer or `nullptr`) |
-| check | `context.has<Frozen>(entity)`, `context.isAlive(entity)` |
-| create | `context.spawn(Bullet{}, Position{x, y}, Velocity{vx, vy})` |
-| change structure | `context.add(entity, Frozen{})`, `context.remove<Frozen>(entity)`, `context.destroy(entity)`, `context.persist(entity)` |
-| events | `context.emit(EnemyDied{entity, x, y})` ([Events](events.md#contextemit)) |
-| input | `context.actions().button(actions::shoot).held` ([Input](input.md)) |
-| time | `context.fixedDeltaTime()`, `context.time()`, `context.interpolation()` |
-| schedule | `context.schedule().after(seconds, function, payload)` ([Schedule](schedule.md)) |
-| state | `context.state() == states::playing`, `context.requestState(states::gameOver)` ([States](states.md)) |
-| pause | `context.pause()`, `context.resume()`, `context.paused()` |
-| where it runs | `context.phase()`, `context.systemId()`, `context.name()`, `context.userData()` |
-
-### `SystemContext::systemId`
+### `SystemInfo`
 
 ```cpp
-SystemId systemId() const noexcept;
+struct SystemInfo {
+  SystemId id;
+  std::string_view name;
+  PhaseId phase;
+  ScheduleKind schedule;
+};
 ```
 
-Returns the `SystemId` that `addSystem` returned for the running system. Use it with a system that serves several registrations, to know which one is running.
+`const SystemInfo&` gives the `SystemId` that `addSystem` returned for the running system, its name and its phase. Use it with a function that serves several registrations, to know which one is running. It is valid only during the call.
+
+### Engine state as resources
+
+State that a system keeps goes in a resource, read as `Res<T>` ([Resources](world-and-entities.md#resources)). A system does not take a `void*`.
+
+| Need | Parameter |
+|---|---|
+| query | `oly::app::Query<Position, const Velocity, oly::ecs::With<Enemy>>` |
+| read / write one component | `Lookup<Health>`: `get(entity)` (reference), `tryGet(entity)` (pointer or `nullptr`), `has(entity)` |
+| create, change structure | `Commands`: `spawn`, `add`, `remove<T>`, `destroy`, `persist`, `isAlive` |
+| events | `Events<EnemyDied>`: `emit(EnemyDied{entity, x, y})` ([Events](events.md#eventsemit-and-contextemit)) |
+| input | `Res<const input::ActionMap>`: `button(actions::shoot).held` ([Input](input.md)) |
+| time, state, pause | `const StepInfo&`: `fixedDeltaTime`, `time`, `interpolation`, `state`, `paused` |
+| schedule | `Tasks`: `after(seconds, function, payload)` ([Schedule](schedule.md)) |
+| request a state | `Res<StateRequest>`: `request(states::gameOver)` ([States](states.md)) |
+| pause, resume | `Res<PauseRequest>`: `pause()`, `resume()`, `requested()` |
+| where it runs | `const SystemInfo&` |
 
 ## The contexts
 
-Four contexts reach a game's code. All of them derive from the same base, so they share the calls in the first row. The three direct contexts change the world at once. `SystemContext` defers the changes to the end of the phase.
+Three contexts reach a game's code besides the system parameters. All of them derive from the same base, so they share the calls in the first row. They change the world at once.
 
-| | `SystemContext` | `HandlerContext` | `TaskContext` | `StateContext` |
-|---|---|---|---|---|
-| structural changes | deferred to the end of the phase | direct | direct | direct |
-| members only this context has | `phase()`, `systemId()`, `name()`, `userData()`, `interpolation()` | `eventType()`, `handlerId()`, `name()`, `userData()`, `events<T>()`, `eventCount()`, `eventData()` | `handle()`, `lastRun()`, `payload<P>()` | `hookId()`, `name()`, `userData()`, `fromState()`, `toState()`, `entering()` |
+| | `HandlerContext` | `TaskContext` | `StateContext` |
+|---|---|---|---|
+| structural changes | direct | direct | direct |
+| members only this context has | `eventType()`, `handlerId()`, `name()`, `userData()`, `events<T>()`, `eventCount()`, `eventData()` | `handle()`, `lastRun()`, `payload<P>()` | `hookId()`, `name()`, `userData()`, `fromState()`, `toState()`, `entering()` |
 
-Every context has `time()`, `fixedDeltaTime()`, `paused()`, `pause()`, `resume()`, `state()`, `requestState()`, `actions()`, `schedule()`, `query`, `get`, `tryGet`, `has`, `isAlive` and `emit`. The ones that change the world also have `spawn`, `destroy`, `add`, `remove` and `persist`. Each context is valid only during the call it was passed to. The members of the others: [`HandlerContext`](events.md#handlercontextevents), [`TaskContext`](schedule.md#the-task-context) and [`StateContext`](states.md#statecontexthookid).
+Every context has `time()`, `fixedDeltaTime()`, `paused()`, `pause()`, `resume()`, `state()`, `requestState()`, `actions()`, `schedule()`, `query`, `get`, `tryGet`, `has`, `isAlive`, `emit`, `spawn`, `destroy`, `add`, `remove` and `persist`. Each context is valid only during the call it was passed to. The members of each: [`HandlerContext`](events.md#handlercontextevents), [`TaskContext`](schedule.md#the-task-context) and [`StateContext`](states.md#statecontexthookid). A system does not receive a context: it declares [parameters](#system-parameters).
 
 ## Emit from the host
 
@@ -362,7 +341,7 @@ double fixedDeltaTime() const noexcept;
 double interpolation() const noexcept;
 ```
 
-`time()` is `steps × fixedDeltaTime()`. Inside a system it is the start of the current step, and it does not advance in paused steps. `interpolation()` is how far the real time is between the last step and the next; read it in Render. Every context has `fixedDeltaTime()` (a `float`) and `time()`; `SystemContext` also has `interpolation()` (a `float`). What they mean: [Time and interpolation](../../explanation/concepts/engine-and-systems.md#time-and-interpolation).
+`time()` is `steps × fixedDeltaTime()`. Inside a system it is the start of the current step, and it does not advance in paused steps. `interpolation()` is how far the real time is between the last step and the next; read it in Render. Every context has `fixedDeltaTime()` (a `float`) and `time()`; a system reads `interpolation` from `StepInfo`. What they mean: [Time and interpolation](../../explanation/concepts/engine-and-systems.md#time-and-interpolation).
 
 ## Pause
 
@@ -385,8 +364,8 @@ engine.paused();
 Register a system that resumes the game with `setWhilePaused`: [Engine::setWhilePaused](#enginesetwhilepaused). Which parts keep running: [Pause](../../explanation/concepts/engine-and-systems.md#pause).
 
 ```cpp
-engine.addSystem(oly::app::Phase::UpdateBefore, "pauseOnPress", pauseOnPress);
-engine.setWhilePaused(engine.addSystem(oly::app::Phase::UpdateBefore, "resumeOnPress", resumeOnPress), true);
+engine.addSystem<&pauseOnPress>(oly::app::UpdateBefore{}, "pauseOnPress");
+engine.addSystem<&resumeOnPress>(oly::app::UpdateBefore{}, "resumeOnPress").whilePaused();
 ```
 
 ## Time per system

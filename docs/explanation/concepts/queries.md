@@ -7,16 +7,18 @@ A query visits every entity that has a given set of components. It is the main w
 ## Rules while iterating
 
 - References and spans are valid **only inside the callback**. Do not keep them for later.
-- A direct structural change on the `World` (`spawn`, `destroy`, `add`, `remove`) while a query iterates is a contract violation (`OLY_ASSERT`). The iteration would see moved rows. Inside a system, use `context.spawn/destroy/add/remove`: they are deferred to the end of the phase and safe ([Direct and deferred changes](world-and-entities.md#direct-and-deferred-changes)). Outside the loop, collect the entities first and change them after the iteration, or use a `CommandBuffer` ([World and entities](../../reference/cpp/world-and-entities.md#commandbuffer)).
+- A direct structural change on the `World` (`spawn`, `destroy`, `add`, `remove`) while a query iterates is a contract violation (`OLY_ASSERT`). The iteration would see moved rows. Inside a system, use `Commands`' `spawn/destroy/add/remove`: they are deferred to the end of the phase and safe ([Direct and deferred changes](world-and-entities.md#direct-and-deferred-changes)). Outside the loop, collect the entities first and change them after the iteration, or use a `CommandBuffer` ([World and entities](../../reference/cpp/world-and-entities.md#commandbuffer)).
 
 ```cpp
-OLY_SYSTEM(removeDead) {
-  context.query<const Health>().each([&](oly::ecs::Entity entity, const Health& health) {
+void removeDead(oly::app::Query<const Health> healths, oly::app::Commands commands) {
+  healths.each([&](oly::ecs::Entity entity, const Health& health) {
     if (health.value <= 0) {
-      context.destroy(entity);
+      commands.destroy(entity);
     }
   });
 }
+
+OLY_SYSTEM(removeDead);
 ```
 
 - The row of `single` and `trySingle` is a tuple of references. It stays valid until the next structural change, not only inside a callback, because no user code runs between the call and your use of it.

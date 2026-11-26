@@ -13,8 +13,7 @@
 #include "oly/app/plugin.hpp"
 
 using oly::app::Engine;
-using oly::app::Phase;
-using oly::app::SystemContext;
+using oly::app::Update;
 using oly::native_host::Game;
 using oly::native_host::runGame;
 using oly::native_host::Window;
@@ -54,7 +53,7 @@ namespace {
     void install(Engine&) override {}
   };
 
-  void countStep(SystemContext&) {
+  void countStep() {
     ++Probe::updateSteps;
   }
 
@@ -75,7 +74,7 @@ namespace {
       Probe::setUpCallsAtStart = Probe::setUpCalls;
       Probe::titleAtStart = SDL_GetWindowTitle(window.window());
       engine.installPlugin<ProbePlugin>();
-      engine.addSystem(Phase::Update, "countStep", countStep);
+      engine.addSystem<&countStep>(Update{}, "countStep");
     }
   };
 

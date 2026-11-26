@@ -7,6 +7,9 @@
 - **Windows is checked under Wine and by hand only.** The whole test suite runs under Wine (`./spur windows-test`), but no real Windows machine runs it, and the `.exe` is opened by hand only.
 - **The Linux window is checked by hand only.** The tests use SDL's dummy video driver; the X11 and Wayland backends are checked to be compiled in, not to open a window.
 - **A phase a plugin declares is not reachable from the C API or TS.** They register in the four built-in phases by number.
+- **Event handlers, state hooks, scheduled tasks and observers keep registration order.** Only systems are ordered by constraints and names; the others run in the order they were registered, and a plugin's install order moves them.
+- **A query filter never makes two accesses disjoint.** `With` and `Without` do not separate two systems: systems that write one component in one phase are ordered, even when their filters select different entities. Phase 3 relies on the declared access alone, so a disjointness proof from filters is not available to it ([the spec](../superpowers/specs/2026-11-26-phase1-declared-access-design.md)).
+- **A resource that holds a pointer to the `World` or the `Engine` bypasses the declared access.** A system that reaches the world through such a pointer does what its parameters did not declare, and the engine cannot see it.
 - **Time per system is C++ only.** The C API and the TypeScript client do not expose it.
 - **`--release` builds desktop games only.** `oly build --release` on a web game exits 64.
 - **ECS v1**: no fixed-size chunks, no change detection, no enableable components, no sparse storage. `ComponentId` is only valid inside the process.

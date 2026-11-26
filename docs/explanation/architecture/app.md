@@ -24,43 +24,43 @@ frame(now):
 fixed step:
   1. action capture                          (paused or not)
   2. due scheduled tasks                     (only when not paused)
-  3. updateBefore → update → updateAfter     (CommandBuffer applied at the end of each phase)
+  3. the FixedStep phases, in constraint order (updateBefore → update → physics → propagation → updateAfter; CommandBuffer applied at the end of each phase)
   4. event dispatch, in rounds
   5. pending state change                    (paused or not)
   clock advances (only when not paused)
 ```
 
 - `time()` = completed unpaused steps × `fixedDeltaTime`. Inside a step, it is the start of the step; outside `frame` and in the `render` phase, it is the start of the next step. There is no accumulated `double` sum.
-- There is no physics phase. The game's collision and physics go in `updateAfter`.
-- Inside a phase, the `Default` band runs before the `Last` band, and inside a band the order is the registration order ([Order bands](#order-bands)). There is no dependency graph between systems.
+- The phases are types a plugin adds with `addPhase<P>(FixedStep{})` or `Frame{}`; `physics2d` declares `Physics` and `essentials2d` and `essentials3d` declare `Propagation`. The order of phases and of the systems inside a phase comes from constraints and names ([Phases, sets and order](#phases-sets-and-order)).
 
 ## Systems and contexts
 
-A system is a function pointer plus `userData`. That way `app` does not know about TS: `capi` registers a TS system as an ordinary C++ function ([capi.md](capi.md)).
+A system is a function whose parameters declare what it reads and writes. A compile-time adapter (`oly/app/detail/system_adapter.hpp`) turns the function pointer into a `SystemDescriptor`: the declared access, the resolution of each parameter once, and one trampoline of a fixed signature. That way `app` does not know about TS: `capi` registers a TS system through a descriptor of its own ([capi.md](capi.md)).
 
-Registration: `addSystem(phase, name, function, userData, band)` (`userData` and `band` optional) or, by name, the `OLY_SYSTEM(name)` macro, which TS adds with `addNativeSystem`. C++ and TS systems mix in the same phase, in registration order.
+Registration: `addSystem<&f>(phase, name)` or, by name, the `OLY_SYSTEM(name);` macro after the function, which TS adds with `addNativeSystem`. C++ and TS systems mix in the same phase, and a TS system is an exclusive system.
 
-### Order bands
+### Phases, sets and order
 
-Plugins install before the game registers its systems, so registration order alone would run a plugin's systems before the game's. A system that must see the other systems' changes of its phase asks for the `Last` band.
+Plugins install before the game registers its systems, so registration order cannot be what orders them. The order comes from constraints and names only.
 
-- `OrderBand::Default` (the default) and `OrderBand::Last` (`oly/app/phase.hpp`). The band is fixed at registration.
-- The `Default` band runs first, then the `Last` band; inside a band, registration order. The phase applies its `CommandBuffer` once, after the `Last` band: a `Last` system sees the field writes of the `Default` band, but not yet its deferred structural changes.
-- Bands are storage, not a branch: one vector of systems per phase and band, and `runPhase` walks the bands in order. `setWhilePaused` and `setSystemStates` apply to a `Last` system like any other.
-- The C API and the TS client register in `Default` only.
+- A phase is a type (`oly/app/phase.hpp`) with a schedule, `FixedStep` or `Frame`. Phases and sets share one key space, `scheduleKey<T>()`. `before<Q>()` and `after<Q>()` on a phase, a set, a function or a system name add constraints.
+- Registration closes on the first `frame` call. `detail::buildSchedule` (`oly/app/detail/schedule_graph.hpp`) is a pure pass over the registered phases, sets and systems: it orders the phases, orders each phase topologically with ties broken by name, and collects the errors (a cycle, two systems that conflict with no order between them) as strings. The `Engine` raises them with one `OLY_ASSERT`, then resolves every parameter once.
+- The phase applies its `CommandBuffer` once, after its last system. `setWhilePaused` and `inStates` apply to a system like any other.
+- A script system takes `ecs::World&`: it is exclusive, and runs alone.
 
-Context hierarchy:
+Contexts and parameters:
 
 ```
 EngineContext      time, pause, query/get/has/isAlive, emit, actions, schedule, state, requestState
-├── SystemContext  deferred changes (CommandBuffer), interpolation, deferred persist
 └── DirectContext  direct changes to the World, direct persist
     ├── HandlerContext  + event batch
     ├── TaskContext     + handle, lastRun, payload<P>()
     └── StateContext    + fromState, toState
 ```
 
-Systems do not make direct structural changes, because they may be inside an iteration. Handlers, tasks and hooks run outside iteration, so they change the `World` directly.
+A system receives no context: it declares `Query`, `Lookup`, `Res`, `Commands`, `Events`, `Tasks`, `StepInfo` and `SystemInfo`. The engine controls it needs are resources the `Engine` owns: `StateRequest`, `PauseRequest`, `input::ActionMap` and `Scheduler`. A resource id resolves against those first, then against the `World`.
+
+Systems do not make direct structural changes, because they may be inside an iteration: they record them through `Commands`. Handlers, tasks and hooks run outside iteration, so they change the `World` directly.
 
 ## Pause and hidden tab
 
