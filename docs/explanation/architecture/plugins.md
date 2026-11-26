@@ -113,6 +113,10 @@ Measured with `essentials2d_bench_propagation` (release, Docker, 8 CPUs at 3.1 G
 
 There is no target. What the perf review found and left as is: each child pays six component lookups by entity and a `sincosf` of its parent's angle (2D); the three root queries are looked up each step; any `Parent` change rebuilds the whole child order the next step.
 
+## physics2d
+
+`plugins/physics2d/` has only C++ and no schema. Its `Plugin` declares the `Physics` phase in the fixed step, after `Update` and before `essentials2d::Propagation`, and has no system in phase 1: the order is the same whichever plugin installs first. Taking over the game's integration and separation needs a velocity column, which is new work that the roadmap's rule 7 re-measures first.
+
 ## Test plugins
 
 Two test plugins in `engine/testing/fixture/plugins/` prove the mechanism on `native` and `web`:

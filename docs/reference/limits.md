@@ -1,6 +1,6 @@
 # Known limitations, not yet and out of scope
 
-- **Not yet**, with the phase of the [roadmap](../superpowers/specs/2026-11-24-aaa-roadmap-design.md): physics (`physics2d`, phase 1), save and load with stable ids and the in-game inspector (phase 2), camera (`camera2d`, phase 2), threads (phase 3), assets (phase 5), render (`render2d`, phase 6). Render and collision belong to the game until their phase.
+- **Not yet**, with the phase of the [roadmap](../superpowers/specs/2026-11-24-aaa-roadmap-design.md): physics (phase 1: `physics2d` declares the `Physics` phase; taking over the game's integration and separation is not done yet, because it needs a velocity column, new work the roadmap's rule 7 re-measures first), save and load with stable ids and the in-game inspector (phase 2), camera (`camera2d`, phase 2), threads (phase 3), assets (phase 5), render (`render2d`, phase 6). Render and collision belong to the game until their phase.
 - **Not planned yet**: audio, UI and gamepad. No phase of the roadmap plans them.
 - **Out of scope**: networking, a 3D render and an editor beyond the in-game inspector.
 - **No shared library for foreign clients yet.** The C API headers are valid C and a C test drives an engine through them (`capi.foreign_client`), but nothing builds a `.so` or `.dll` that another language could load.
