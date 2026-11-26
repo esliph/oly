@@ -4,7 +4,10 @@
 #include "oly/app/system.hpp"
 
 namespace oly::counting {
-  // Test plugin: a Default-band Update system adds 1 to every Counter.
+  // The set of the systems that change Counter, so a system of another plugin orders itself against all of them.
+  struct Counting {};
+
+  // Test plugin: an Update system in the Counting set adds 1 to every Counter.
   class Plugin : public app::Plugin {
    private:
     app::SystemId system_ = 0;

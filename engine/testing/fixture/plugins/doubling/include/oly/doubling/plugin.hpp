@@ -4,7 +4,7 @@
 #include "oly/app/system.hpp"
 
 namespace oly::doubling {
-  // Test plugin that needs counting: a Last-band Update system writes Doubled.value = 2 * Counter.value.
+  // Test plugin that needs counting: an Update system ordered after counting::Counting writes Doubled.value = 2 * Counter.value.
   class Plugin : public app::Plugin {
    private:
     app::SystemId system_ = 0;
