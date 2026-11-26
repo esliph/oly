@@ -3,6 +3,7 @@
 #include <array>
 #include <cstdio>
 #include <string>
+#include <utility>
 
 #include "oly/core/assert.hpp"
 #include "oly/input/physical_button.hpp"
@@ -43,134 +44,123 @@ namespace enxame {
       return text;
     }
 
-    void spawnHorde(Simulation& simulation, oly::app::Engine& engine, uint32_t size) {
-      const TileMap& map = *simulation.map;
+    void spawnHorde(oly::ecs::World& world, uint32_t size) {
+      const TileMap& map = world.resource<TileMap>();
+      Random& random = world.resource<Random>();
 
       for (uint32_t index = 0; index < size; ++index) {
         TilePosition tile{0, 0};
 
         do {
-          tile = {static_cast<int32_t>(simulation.random.nextBelow(map.width())), static_cast<int32_t>(simulation.random.nextBelow(map.height()))};
+          tile = {static_cast<int32_t>(random.nextBelow(map.width())), static_cast<int32_t>(random.nextBelow(map.height()))};
         } while (map.blocked(tile) || (tile.x == map.base().x && tile.y == map.base().y));
 
-        const float jitterX = (simulation.random.nextFloat() - 0.5f) * map.tileSize();
-        const float jitterY = (simulation.random.nextFloat() - 0.5f) * map.tileSize();
-        engine.world().spawn(Enemy{}, Position{map.centerX(tile) + jitterX, map.centerY(tile) + jitterY});
+        const float jitterX = (random.nextFloat() - 0.5f) * map.tileSize();
+        const float jitterY = (random.nextFloat() - 0.5f) * map.tileSize();
+        world.spawn(Enemy{}, Position{map.centerX(tile) + jitterX, map.centerY(tile) + jitterY});
       }
     }
 
-    std::unique_ptr<Simulation> makeHordeSimulation(const ScenarioInfo& info, const HordeParameters& horde) {
-      std::unique_ptr<Simulation> simulation = std::make_unique<Simulation>(info.seed);
-      simulation->horde = horde;
-      simulation->map = TileMap::generate(horde.mapWidth, horde.mapHeight, horde.tileSize, horde.obstacleRate, simulation->random);
-      simulation->flowField.build(*simulation->map);
-      simulation->camera = {simulation->map->centerX(simulation->map->base()), simulation->map->centerY(simulation->map->base()), 1.0f};
-      simulation->hash.emplace(0.0f, 0.0f, static_cast<float>(horde.mapWidth) * horde.tileSize, static_cast<float>(horde.mapHeight) * horde.tileSize, horde.tileSize);
+    void insertHordeResources(oly::ecs::World& world, const ScenarioInfo& info, const HordeParameters& horde) {
+      Random& random = world.insertResource(Random(info.seed));
+      const TileMap& map = world.insertResource(TileMap::generate(horde.mapWidth, horde.mapHeight, horde.tileSize, horde.obstacleRate, random));
 
-      return simulation;
+      world.insertResource(FlowField()).build(map);
+      world.insertResource(Camera{map.centerX(map.base()), map.centerY(map.base()), 1.0f});
+      world.insertResource(SpatialHash(0.0f, 0.0f, static_cast<float>(horde.mapWidth) * horde.tileSize, static_cast<float>(horde.mapHeight) * horde.tileSize, horde.tileSize));
+      world.insertResource(HordeParameters(horde));
+      world.insertResource(GatheredEnemies());
     }
 
-    void addHordeSystems(Simulation& simulation, oly::app::Engine& engine) {
-      engine.addSystem(oly::app::Phase::UpdateBefore, "updateFlowField", updateFlowField, &simulation);
-      engine.addSystem(oly::app::Phase::Update, "rebuildSpatialHash", rebuildSpatialHash, &simulation);
-      engine.addSystem(oly::app::Phase::Update, "moveHorde", moveHorde, &simulation);
+    void addHordeSystems(oly::app::Engine& engine) {
+      engine.addSystem<&updateFlowField>(oly::app::UpdateBefore{}, "updateFlowField");
+      engine.addSystem<&rebuildSpatialHash>(oly::app::Update{}, "rebuildSpatialHash");
+      engine.addSystem<&moveHorde>(oly::app::Update{}, "moveHorde").after<&rebuildSpatialHash>();
     }
 
-    std::unique_ptr<Simulation> setUpHorde(const ScenarioInfo& info, const HordeParameters& horde, uint32_t size, oly::app::Engine& engine) {
-      std::unique_ptr<Simulation> simulation = makeHordeSimulation(info, horde);
-
-      addHordeSystems(*simulation, engine);
-      spawnHorde(*simulation, engine, size);
-
-      return simulation;
+    void setUpHorde(const ScenarioInfo& info, const HordeParameters& horde, uint32_t size, oly::app::Engine& engine) {
+      insertHordeResources(engine.world(), info, horde);
+      addHordeSystems(engine);
+      spawnHorde(engine.world(), size);
     }
 
     // S3 is S1's horde plus the status toggles of toggleStatus.
-    std::unique_ptr<Simulation> setUpStatusHorde(uint32_t size, oly::app::Engine& engine) {
-      const ScenarioInfo& info = scenarioInfo(ScenarioId::S3);
-      std::unique_ptr<Simulation> simulation = makeHordeSimulation(info, workloads::S3Horde);
-      simulation->toggleProbability = workloads::S3ToggleProbability;
-
-      addHordeSystems(*simulation, engine);
-      engine.addSystem(oly::app::Phase::UpdateAfter, "toggleStatus", toggleStatus, simulation.get());
-      spawnHorde(*simulation, engine, size);
-
-      return simulation;
+    void setUpStatusHorde(uint32_t size, oly::app::Engine& engine) {
+      insertHordeResources(engine.world(), scenarioInfo(ScenarioId::S3), workloads::S3Horde);
+      engine.world().insertResource(StatusToggles{workloads::S3ToggleProbability, 0});
+      addHordeSystems(engine);
+      engine.addSystem<&toggleStatus>(oly::app::UpdateAfter{}, "toggleStatus");
+      spawnHorde(engine.world(), size);
     }
 
     // Vehicle i drives a circle around the i-th point of a grid; its four turrets are children at local (+-offset, +-offset).
-    std::unique_ptr<Simulation> setUpHierarchy(uint32_t size, oly::app::Engine& engine) {
-      std::unique_ptr<Simulation> simulation = std::make_unique<Simulation>(scenarioInfo(ScenarioId::S6).seed);
-      simulation->vehicles = workloads::S6Vehicles;
-      const VehicleParameters& vehicles = simulation->vehicles;
+    void setUpHierarchy(uint32_t size, oly::app::Engine& engine) {
+      oly::ecs::World& world = engine.world();
+      const VehicleParameters& vehicles = workloads::S6Vehicles;
 
       for (uint32_t index = 0; index < size; ++index) {
         const float centerX = static_cast<float>(index % vehicles.columns) * vehicles.spacing;
         const float centerY = static_cast<float>(index / vehicles.columns) * vehicles.spacing;
-        const oly::ecs::Entity vehicle = engine.world().spawn(Vehicle{}, Position{centerX + vehicles.radius, centerY}, Rotation{0.0f}, VehicleMotion{centerX, centerY, vehicles.radius, 0.0f, vehicles.angularSpeed});
+        const oly::ecs::Entity vehicle = world.spawn(Vehicle{}, Position{centerX + vehicles.radius, centerY}, Rotation{0.0f}, VehicleMotion{centerX, centerY, vehicles.radius, 0.0f, vehicles.angularSpeed});
 
         for (const float signX : {-1.0f, 1.0f}) {
           for (const float signY : {-1.0f, 1.0f}) {
-            engine.world().spawn(VehicleTurret{}, Position{signX * vehicles.turretOffset, signY * vehicles.turretOffset}, Parent{vehicle});
+            world.spawn(VehicleTurret{}, Position{signX * vehicles.turretOffset, signY * vehicles.turretOffset}, Parent{vehicle});
           }
         }
       }
 
       const uint32_t rows = (size + vehicles.columns - 1) / vehicles.columns;
-      simulation->camera = {static_cast<float>(vehicles.columns - 1) * vehicles.spacing / 2.0f, static_cast<float>(rows - 1) * vehicles.spacing / 2.0f, 0.2f};
-      engine.addSystem(oly::app::Phase::Update, "moveVehicles", moveVehicles, simulation.get());
-
-      return simulation;
+      world.insertResource(Camera{static_cast<float>(vehicles.columns - 1) * vehicles.spacing / 2.0f, static_cast<float>(rows - 1) * vehicles.spacing / 2.0f, 0.2f});
+      engine.addSystem<&moveVehicles>(oly::app::Update{}, "moveVehicles");
     }
 
-    std::unique_ptr<Simulation> setUpWaves(uint32_t size, oly::app::Engine& engine) {
-      std::unique_ptr<Simulation> simulation = std::make_unique<Simulation>(scenarioInfo(ScenarioId::S8).seed);
-      simulation->waves = workloads::S8Waves;
-      simulation->waveSize = size;
-      simulation->camera = {0.0f, 0.0f, 0.3f};
-      engine.addSystem(oly::app::Phase::UpdateBefore, "runWaves", runWaves, simulation.get());
+    void setUpWaves(uint32_t size, oly::app::Engine& engine) {
+      oly::ecs::World& world = engine.world();
 
-      return simulation;
+      world.insertResource(Random(scenarioInfo(ScenarioId::S8).seed));
+      world.insertResource(Camera{0.0f, 0.0f, 0.3f});
+      world.insertResource(WaveParameters(workloads::S8Waves));
+      world.insertResource(WaveClock{size, 0, 0});
+      engine.addSystem<&runWaves>(oly::app::UpdateBefore{}, "runWaves");
     }
 
     // Belt b runs along y = beltSpacing * b from x = 0; its assembler sits one tile after the belt's end.
-    std::unique_ptr<Simulation> setUpFactory(uint32_t size, oly::app::Engine& engine) {
-      const ScenarioInfo& info = scenarioInfo(ScenarioId::S2);
-      std::unique_ptr<Simulation> simulation = std::make_unique<Simulation>(info.seed);
-      simulation->factory = workloads::S2Factory;
-      const FactoryParameters& factory = simulation->factory;
+    void setUpFactory(uint32_t size, oly::app::Engine& engine) {
+      oly::ecs::World& world = engine.world();
+      const FactoryParameters& factory = workloads::S2Factory;
       const float beltLength = static_cast<float>(factory.beltTiles) * factory.tileSize;
       const uint32_t itemsPerBelt = size / factory.assemblers;
+      Belts belts;
 
       for (uint32_t belt = 0; belt < factory.assemblers; ++belt) {
         const float y = static_cast<float>(belt) * factory.beltSpacing;
-        simulation->assemblerOfBelt.push_back(engine.world().spawn(Assembler{belt, 0, 0.0f}, Position{beltLength + factory.tileSize, y}));
+        belts.assemblerOfBelt.push_back(world.spawn(Assembler{belt, 0, 0.0f}, Position{beltLength + factory.tileSize, y}));
 
         for (uint32_t item = 0; item < itemsPerBelt; ++item) {
           const float offset = beltLength / static_cast<float>(itemsPerBelt) * static_cast<float>(item);
-          engine.world().spawn(BeltItem{belt, offset}, Position{offset, y});
+          world.spawn(BeltItem{belt, offset}, Position{offset, y});
         }
       }
 
-      simulation->camera = {(beltLength + factory.tileSize) / 2.0f, static_cast<float>(factory.assemblers - 1) * factory.beltSpacing / 2.0f, 1.0f};
-      engine.addSystem(oly::app::Phase::Update, "moveBeltItems", moveBeltItems, simulation.get());
-      engine.addSystem(oly::app::Phase::Update, "runAssemblers", runAssemblers, simulation.get());
-
-      return simulation;
+      world.insertResource(std::move(belts));
+      world.insertResource(FactoryParameters(factory));
+      world.insertResource(Camera{(beltLength + factory.tileSize) / 2.0f, static_cast<float>(factory.assemblers - 1) * factory.beltSpacing / 2.0f, 1.0f});
+      engine.addSystem<&moveBeltItems>(oly::app::Update{}, "moveBeltItems");
+      engine.addSystem<&runAssemblers>(oly::app::Update{}, "runAssemblers").after<&moveBeltItems>();
     }
 
-    // placeTurret goes before updateFlowField, so the field sees the new tile in the same step.
-    std::unique_ptr<Simulation> setUpPlayableWorld(uint32_t size, oly::app::Engine& engine) {
-      std::unique_ptr<Simulation> simulation = makeHordeSimulation(scenarioInfo(ScenarioId::S5), workloads::S5Horde);
-      simulation->combat = workloads::S5Combat;
+    void setUpPlayableWorld(uint32_t size, oly::app::Engine& engine) {
+      insertHordeResources(engine.world(), scenarioInfo(ScenarioId::S5), workloads::S5Horde);
+      engine.world().insertResource(CombatParameters(workloads::S5Combat));
+      engine.world().insertResource(HitEnemies());
 
-      engine.addSystem(oly::app::Phase::UpdateBefore, "placeTurret", placeTurret, simulation.get());
-      addHordeSystems(*simulation, engine);
-      engine.addSystem(oly::app::Phase::UpdateAfter, "fireTurrets", fireTurrets, simulation.get());
-      engine.addSystem(oly::app::Phase::UpdateAfter, "moveProjectiles", moveProjectiles, simulation.get());
-      spawnHorde(*simulation, engine, size);
-
-      return simulation;
+      // placeTurret goes before updateFlowField, so the field sees the new tile in the same step.
+      engine.addSystem<&placeTurret>(oly::app::UpdateBefore{}, "placeTurret").before<&updateFlowField>();
+      addHordeSystems(engine);
+      engine.addSystem<&fireTurrets>(oly::app::UpdateAfter{}, "fireTurrets");
+      engine.addSystem<&moveProjectiles>(oly::app::UpdateAfter{}, "moveProjectiles").after<&fireTurrets>();
+      spawnHorde(engine.world(), size);
     }
   }
 
@@ -218,24 +208,30 @@ namespace enxame {
     return true;
   }
 
-  std::unique_ptr<Simulation> setUpScenario(ScenarioId scenario, uint32_t size, oly::app::Engine& engine) {
+  void setUpScenario(ScenarioId scenario, uint32_t size, oly::app::Engine& engine) {
     OLY_ASSERT(scenarioInfo(scenario).blockedReason.empty(), "setUpScenario: scenario %u is blocked", static_cast<unsigned>(scenario));
 
     engine.actions().bind(actions::place, oly::input::MouseButton::Left);
 
     switch (scenario) {
       case ScenarioId::S1:
-        return setUpHorde(scenarioInfo(scenario), workloads::S1Horde, size, engine);
+        setUpHorde(scenarioInfo(scenario), workloads::S1Horde, size, engine);
+        break;
       case ScenarioId::S2:
-        return setUpFactory(size, engine);
+        setUpFactory(size, engine);
+        break;
       case ScenarioId::S3:
-        return setUpStatusHorde(size, engine);
+        setUpStatusHorde(size, engine);
+        break;
       case ScenarioId::S6:
-        return setUpHierarchy(size, engine);
+        setUpHierarchy(size, engine);
+        break;
       case ScenarioId::S8:
-        return setUpWaves(size, engine);
+        setUpWaves(size, engine);
+        break;
       default:
-        return setUpPlayableWorld(size, engine);
+        setUpPlayableWorld(size, engine);
+        break;
     }
   }
 }

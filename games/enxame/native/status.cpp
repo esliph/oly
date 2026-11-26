@@ -1,42 +1,39 @@
-#include "oly/app/system.hpp"
-#include "oly/ecs/query.hpp"
-#include "schema.generated.hpp"
-#include "simulation.hpp"
 #include "systems.hpp"
 
-namespace {
-  template <class Status>
-  void toggle(oly::app::SystemContext& context, oly::ecs::Entity entity) {
-    if (context.has<Status>(entity)) {
-      context.remove<Status>(entity);
-    } else {
-      context.add(entity, Status{});
+namespace enxame {
+  namespace {
+    template <class Status>
+    void toggle(oly::app::Lookup<const Status> statuses, oly::app::Commands& commands, oly::ecs::Entity entity) {
+      if (statuses.has(entity)) {
+        commands.remove<Status>(entity);
+      } else {
+        commands.add(entity, Status{});
+      }
     }
   }
-}
 
-// An entity toggles at most once per step, so the toggles of a step equal its archetype moves.
-OLY_SYSTEM(toggleStatus) {
-  enxame::Simulation& simulation = *static_cast<enxame::Simulation*>(context.userData());
-  simulation.statusTogglesLastStep = 0;
+  // An entity toggles at most once per step, so the toggles of a step equal its archetype moves.
+  void toggleStatus(oly::app::Query<const Position, oly::ecs::With<Enemy>> enemies, oly::app::Lookup<const Burning> burning, oly::app::Lookup<const Slowed> slowed, oly::app::Lookup<const Stunned> stunned, oly::app::Res<Random> random, oly::app::Res<StatusToggles> toggles, oly::app::Commands commands) {
+    toggles->lastStep = 0;
 
-  context.query<const Position>(oly::ecs::With<Enemy>{}).each([&](oly::ecs::Entity entity, const Position&) {
-    if (!simulation.random.chance(simulation.toggleProbability)) {
-      return;
-    }
+    enemies.each([&](oly::ecs::Entity entity, const Position&) {
+      if (!random->chance(toggles->probability)) {
+        return;
+      }
 
-    switch (simulation.random.nextBelow(3)) {
-      case 0:
-        toggle<Burning>(context, entity);
-        break;
-      case 1:
-        toggle<Slowed>(context, entity);
-        break;
-      default:
-        toggle<Stunned>(context, entity);
-        break;
-    }
+      switch (random->nextBelow(3)) {
+        case 0:
+          toggle(burning, commands, entity);
+          break;
+        case 1:
+          toggle(slowed, commands, entity);
+          break;
+        default:
+          toggle(stunned, commands, entity);
+          break;
+      }
 
-    simulation.statusTogglesLastStep += 1;
-  });
+      toggles->lastStep += 1;
+    });
+  }
 }

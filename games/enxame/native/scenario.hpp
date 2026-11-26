@@ -1,13 +1,12 @@
 #pragma once
 
 #include <cstdint>
-#include <memory>
 #include <optional>
 #include <span>
 #include <string_view>
 
 #include "oly/app/engine.hpp"
-#include "simulation.hpp"
+#include "resources.hpp"
 #include "workload.hpp"
 
 namespace enxame {
@@ -37,7 +36,7 @@ namespace enxame {
   // sizes (checked in that order). A missing size is valid: the caller picks the first one.
   bool checkScenario(ScenarioId scenario, std::optional<uint32_t> size);
 
-  // Binds actions::place to the left mouse button, registers the scenario's systems and spawns its world. The Engine
-  // already ran setUpGame. The returned Simulation is the userData of every system: keep it alive as long as the Engine.
-  std::unique_ptr<Simulation> setUpScenario(ScenarioId scenario, uint32_t size, oly::app::Engine& engine);
+  // Binds actions::place to the left mouse button, inserts the scenario's resources, registers its systems and spawns its world. The Engine
+  // already ran setUpGame.
+  void setUpScenario(ScenarioId scenario, uint32_t size, oly::app::Engine& engine);
 }

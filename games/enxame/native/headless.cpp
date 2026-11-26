@@ -247,7 +247,7 @@ namespace enxame {
     oly::ecs::World world;
     oly::app::Engine engine(world);
     oly::app::setUpGame(engine);
-    const std::unique_ptr<Simulation> simulation = setUpScenario(*options.scenario, *options.size, engine);
+    setUpScenario(*options.scenario, *options.size, engine);
     engine.setTimingEnabled(options.timing);
     Measurements measurements;
     engine.frame(0.0);
@@ -278,7 +278,7 @@ namespace enxame {
         measurements.allocationsPerStep.push_back(allocated);
 
         if (*options.scenario == ScenarioId::S3) {
-          measurements.transitionsPerStep.push_back(simulation->statusTogglesLastStep);
+          measurements.transitionsPerStep.push_back(world.resource<StatusToggles>().lastStep);
         }
 
         if (options.timing) {
@@ -286,8 +286,8 @@ namespace enxame {
         }
       }
 
-      if (*options.scenario == ScenarioId::S8 && simulation->wavesCompleted > measurements.waves.size()) {
-        measurements.waves.push_back(waveRecordOf(world, simulation->wavesCompleted));
+      if (*options.scenario == ScenarioId::S8 && world.resource<WaveClock>().wavesCompleted > measurements.waves.size()) {
+        measurements.waves.push_back(waveRecordOf(world, world.resource<WaveClock>().wavesCompleted));
       }
     }
 

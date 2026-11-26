@@ -5,9 +5,11 @@
 #include <algorithm>
 #include <cmath>
 
+#include "oly/app/system_parameters.hpp"
+#include "oly/ecs/query.hpp"
+#include "oly/input/action_map.hpp"
 #include "oly/input/physical_button.hpp"
 #include "schema.generated.hpp"
-#include "systems.hpp"
 
 namespace enxame {
   namespace {
@@ -50,46 +52,67 @@ namespace enxame {
 
     // Every entity with Tag, from its WorldTransform (it already holds the parent chain), at least one pixel wide.
     template <class Tag>
-    void drawEntities(oly::app::SystemContext& context, const WorldView& view, Color color, float size) {
-      const Camera& camera = view.simulation->camera;
+    void drawTagged(oly::app::Query<const WorldTransform, oly::ecs::With<Tag>> entities, const View& view, const Camera& camera, Color color, float size) {
       const float side = std::max(1.0f, size * camera.zoom);
 
       SDL_SetRenderDrawColor(view.renderer, color.red, color.green, color.blue, 255);
 
-      context.query<const WorldTransform>(oly::ecs::With<Tag>{}).each([&](const WorldTransform& transform) {
+      entities.each([&](const WorldTransform& transform) {
         fillSquare(view.renderer, screenX(camera, transform.x), screenY(camera, transform.y), side);
       });
     }
 
-    void drawMap(const WorldView& view) {
-      if (!view.simulation->map) {
-        return;
+    void moveCamera(oly::app::Res<Camera> camera, oly::app::Res<const oly::input::ActionMap> actionMap, const oly::app::StepInfo& step) {
+      const float deltaTime = step.fixedDeltaTime;
+      const oly::input::Vector2 pan = actionMap->axis2d(actions::pan);
+
+      camera->x += pan.x * PanSpeed / camera->zoom * deltaTime;
+      camera->y += pan.y * PanSpeed / camera->zoom * deltaTime;
+
+      if (actionMap->button(actions::zoomIn).held) {
+        camera->zoom *= 1.0f + ZoomRate * deltaTime;
       }
 
-      const Camera& camera = view.simulation->camera;
-      const TileMap& map = *view.simulation->map;
-      const float halfWidth = LogicalWidth / 2.0f / camera.zoom;
-      const float halfHeight = LogicalHeight / 2.0f / camera.zoom;
-      const TilePosition first = map.tileAt(camera.x - halfWidth, camera.y - halfHeight);
-      const TilePosition last = map.tileAt(camera.x + halfWidth, camera.y + halfHeight);
+      if (actionMap->button(actions::zoomOut).held) {
+        camera->zoom /= 1.0f + ZoomRate * deltaTime;
+      }
+
+      camera->zoom = std::clamp(camera->zoom, MinimumZoom, MaximumZoom);
+    }
+
+    void drawMap(oly::app::Res<View> view, oly::app::Res<const Camera> camera, oly::app::Res<const TileMap> map) {
+      const float halfWidth = LogicalWidth / 2.0f / camera->zoom;
+      const float halfHeight = LogicalHeight / 2.0f / camera->zoom;
+      const TilePosition first = map->tileAt(camera->x - halfWidth, camera->y - halfHeight);
+      const TilePosition last = map->tileAt(camera->x + halfWidth, camera->y + halfHeight);
       const int32_t firstX = std::max(first.x, 0);
       const int32_t firstY = std::max(first.y, 0);
-      const int32_t lastX = std::min(last.x, static_cast<int32_t>(map.width()) - 1);
-      const int32_t lastY = std::min(last.y, static_cast<int32_t>(map.height()) - 1);
-      const float side = map.tileSize() * camera.zoom;
+      const int32_t lastX = std::min(last.x, static_cast<int32_t>(map->width()) - 1);
+      const int32_t lastY = std::min(last.y, static_cast<int32_t>(map->height()) - 1);
+      const float side = map->tileSize() * camera->zoom;
 
-      SDL_SetRenderDrawColor(view.renderer, 60, 60, 70, 255);
+      SDL_SetRenderDrawColor(view->renderer, 60, 60, 70, 255);
 
       for (int32_t y = firstY; y <= lastY; ++y) {
         for (int32_t x = firstX; x <= lastX; ++x) {
-          if (map.blocked({x, y})) {
-            fillSquare(view.renderer, screenX(camera, map.centerX({x, y})), screenY(camera, map.centerY({x, y})), side);
+          if (map->blocked({x, y})) {
+            fillSquare(view->renderer, screenX(*camera, map->centerX({x, y})), screenY(*camera, map->centerY({x, y})), side);
           }
         }
       }
 
-      SDL_SetRenderDrawColor(view.renderer, 255, 255, 255, 255);
-      fillSquare(view.renderer, screenX(camera, map.centerX(map.base())), screenY(camera, map.centerY(map.base())), side);
+      SDL_SetRenderDrawColor(view->renderer, 255, 255, 255, 255);
+      fillSquare(view->renderer, screenX(*camera, map->centerX(map->base())), screenY(*camera, map->centerY(map->base())), side);
+    }
+
+    void drawEntities(oly::app::Query<const WorldTransform, oly::ecs::With<Enemy>> enemies, oly::app::Query<const WorldTransform, oly::ecs::With<Turret>> turrets, oly::app::Query<const WorldTransform, oly::ecs::With<Projectile>> projectiles, oly::app::Query<const WorldTransform, oly::ecs::With<BeltItem>> beltItems, oly::app::Query<const WorldTransform, oly::ecs::With<Assembler>> assemblers, oly::app::Query<const WorldTransform, oly::ecs::With<Vehicle>> vehicles, oly::app::Query<const WorldTransform, oly::ecs::With<VehicleTurret>> vehicleTurrets, oly::app::Res<View> view, oly::app::Res<const Camera> camera) {
+      drawTagged(enemies, *view, *camera, {220, 60, 60}, EnemySize);
+      drawTagged(turrets, *view, *camera, {80, 140, 255}, TurretSize);
+      drawTagged(projectiles, *view, *camera, {255, 220, 80}, ProjectileSize);
+      drawTagged(beltItems, *view, *camera, {170, 170, 170}, BeltItemSize);
+      drawTagged(assemblers, *view, *camera, {230, 140, 40}, AssemblerSize);
+      drawTagged(vehicles, *view, *camera, {80, 200, 120}, VehicleSize);
+      drawTagged(vehicleTurrets, *view, *camera, {160, 240, 170}, VehicleTurretSize);
     }
   }
 
@@ -110,42 +133,16 @@ namespace enxame {
     actionMap.bind(actions::zoomOut, Key::Q);
 
     SDL_SetRenderLogicalPresentation(window.renderer(), LogicalWidth, LogicalHeight, SDL_LOGICAL_PRESENTATION_LETTERBOX);
-    simulation_ = setUpScenario(windowScenario, windowSize, engine);
-    view_ = {window.renderer(), simulation_.get()};
+    setUpScenario(windowScenario, windowSize, engine);
+    engine.world().insertResource(View{window.renderer()});
 
-    engine.addSystem(oly::app::Phase::Update, "moveCamera", moveCamera, simulation_.get());
-    engine.addSystem(oly::app::Phase::Render, "drawWorld", drawWorld, &view_);
+    engine.addSystem<&moveCamera>(oly::app::Update{}, "moveCamera");
+
+    if (engine.world().tryResource<TileMap>() != nullptr) {
+      engine.addSystem<&drawMap>(oly::app::Render{}, "drawMap");
+      engine.addSystem<&drawEntities>(oly::app::Render{}, "drawEntities").after<&drawMap>();
+    } else {
+      engine.addSystem<&drawEntities>(oly::app::Render{}, "drawEntities");
+    }
   }
-}
-
-OLY_SYSTEM(moveCamera) {
-  enxame::Camera& camera = static_cast<enxame::Simulation*>(context.userData())->camera;
-  const float deltaTime = context.fixedDeltaTime();
-  const oly::input::Vector2 pan = context.actions().axis2d(actions::pan);
-
-  camera.x += pan.x * enxame::PanSpeed / camera.zoom * deltaTime;
-  camera.y += pan.y * enxame::PanSpeed / camera.zoom * deltaTime;
-
-  if (context.actions().button(actions::zoomIn).held) {
-    camera.zoom *= 1.0f + enxame::ZoomRate * deltaTime;
-  }
-
-  if (context.actions().button(actions::zoomOut).held) {
-    camera.zoom /= 1.0f + enxame::ZoomRate * deltaTime;
-  }
-
-  camera.zoom = std::clamp(camera.zoom, enxame::MinimumZoom, enxame::MaximumZoom);
-}
-
-OLY_SYSTEM(drawWorld) {
-  const enxame::WorldView& view = *static_cast<enxame::WorldView*>(context.userData());
-
-  enxame::drawMap(view);
-  enxame::drawEntities<Enemy>(context, view, {220, 60, 60}, enxame::EnemySize);
-  enxame::drawEntities<Turret>(context, view, {80, 140, 255}, enxame::TurretSize);
-  enxame::drawEntities<Projectile>(context, view, {255, 220, 80}, enxame::ProjectileSize);
-  enxame::drawEntities<BeltItem>(context, view, {170, 170, 170}, enxame::BeltItemSize);
-  enxame::drawEntities<Assembler>(context, view, {230, 140, 40}, enxame::AssemblerSize);
-  enxame::drawEntities<Vehicle>(context, view, {80, 200, 120}, enxame::VehicleSize);
-  enxame::drawEntities<VehicleTurret>(context, view, {160, 240, 170}, enxame::VehicleTurretSize);
 }

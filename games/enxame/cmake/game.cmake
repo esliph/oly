@@ -11,7 +11,8 @@ oly_add_game(enxame
   DIMENSION 2d
   SCHEMA ${CMAKE_CURRENT_SOURCE_DIR}/enxame.oly
   SOURCES ${gameSources}
-  DEPENDS ecs app input native_host)
+  DEPENDS ecs app input native_host
+  PLUGINS physics2d)
 target_include_directories(enxame PRIVATE native native/workloads desktop)
 target_link_libraries(enxame PRIVATE enxame_core)
 
@@ -80,6 +81,10 @@ enxame_check_hash(S2 0xf66e1e60dd9ed320 --headless --scenario S2 --size 50000 --
 enxame_check_hash(S3 0xfad7c3a7f5579772 --headless --scenario S3 --size 10000 --steps 120 --commit test)
 enxame_check_hash(S6 0x33f8f95eae13d5e5 --headless --scenario S6 --size 1000 --steps 120 --commit test)
 enxame_check_hash(S8 0xcbf29ce484222325 --headless --scenario S8 --size 2000 --steps 120 --commit test)
+
+add_test(NAME enxame.phase_order
+  COMMAND ${CMAKE_COMMAND} "-DCOMMAND=$<TARGET_FILE:enxame>;--headless;--scenario;S5;--size;2000;--steps;3;--commit;test;--out;${CMAKE_CURRENT_BINARY_DIR}/phase_order.json"
+          -DOUT=${CMAKE_CURRENT_BINARY_DIR}/phase_order.json -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_phase_order.cmake)
 
 add_test(NAME enxame.replay_determinism
   COMMAND ${CMAKE_COMMAND} "-DCOMMAND=$<TARGET_FILE:enxame>;--headless;--scenario;S5;--size;2000;--steps;2500;--commit;test"
