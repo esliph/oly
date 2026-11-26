@@ -83,7 +83,7 @@ Ratios are B over A. Step times are the median over repetitions.
 | S8 | 2000 | 2.45 | 2.50 | 1.019 | 0.668 to 1.411 | 1.017 | inside |
 
 - **S5 world hash**: equal on both sides (`0x21c16d888746fd84`). S5 is the only scenario whose phase 0 run wrote a hash, so the summary marks the others `DIFFERENT`: the A side has none. Their phase 0 values are recorded as the `enxame.hash.*` tests of `games/enxame/tests`, which pass at `ca934ce`.
-- Six of the eight p50 ratios are inside the A/A spread of phase 0 (0.985 to 1.019 for the ones outside it or at its edge). S6 leaves it, by 3.6 points (`propagateTransforms` runs in its own phase now, with its own flush); S2 and S3 leave it by 1 point or less. The p99 ratios are inside the wide p99 spread of every scenario.
+- Five of the eight p50 ratios are inside the A/A spread of phase 0. S6 leaves it, by 3.6 points (`propagateTransforms` runs in its own phase now, with its own flush); S2 and S3 leave it by 1 point or less. The p99 ratios are inside the wide p99 spread of every scenario.
 
 ## Blocked scenarios
 
