@@ -7,17 +7,20 @@
 #include "components.hpp"
 #include "log.hpp"
 #include "oly/app/engine.hpp"
+#include "oly/app/system_parameters.hpp"
 #include "oly/app/task_context.hpp"
 
 using doctest::Approx;
 using oly::app::Engine;
 using oly::app::EngineConfig;
 using oly::app::HandlerContext;
-using oly::app::Phase;
+using oly::app::Render;
+using oly::app::Res;
 using oly::app::Scheduler;
-using oly::app::SystemContext;
 using oly::app::TaskContext;
 using oly::app::TaskHandle;
+using oly::app::Tasks;
+using oly::app::Update;
 
 namespace {
   struct Mark {
@@ -128,19 +131,21 @@ namespace {
     static_cast<Log*>(context.userData())->times.push_back(context.time());
   }
 
-  void scheduleOnceFromSystem(SystemContext& context) {
-    SchedulingSystem& system = *static_cast<SchedulingSystem*>(context.userData());
-
-    if (system.done) {
+  void scheduleOnceFromSystem(Res<SchedulingSystem> system, Tasks tasks) {
+    if (system->done) {
       return;
     }
 
-    system.done = true;
-    context.schedule().after(0.0, markTask, Mark{system.log, 'x'});
+    system->done = true;
+    tasks.after(0.0, markTask, Mark{system->log, 'x'});
   }
 
-  void captureScheduler(SystemContext& context) {
-    *static_cast<Scheduler**>(context.userData()) = &context.schedule();
+  struct CapturedScheduler {
+    Scheduler* scheduler = nullptr;
+  };
+
+  void captureScheduler(Res<Scheduler> scheduler, Res<CapturedScheduler> captured) {
+    captured->scheduler = &*scheduler;
   }
 
   struct Fixture {
@@ -176,7 +181,7 @@ TEST_CASE("after scheduled outside frame fires in the step whose start reaches t
 
 TEST_CASE("after(0) outside frame runs in stage 2 of the next step") {
   Fixture fixture;
-  fixture.engine.addSystem<&recordName>(oly::app::Update{}, "s");
+  fixture.engine.addSystem<&recordName>(Update{}, "s");
   fixture.engine.frame(0.0);
   fixture.engine.schedule().after(0.0, markTask, Mark{&fixture.log, 't'});
 
@@ -205,8 +210,8 @@ TEST_CASE("after(0) inside a task only runs in the next step") {
 
 TEST_CASE("after(0) scheduled by a system runs in the step after its own") {
   Fixture fixture;
-  SchedulingSystem system{&fixture.log};
-  fixture.engine.addSystem(Phase::Update, "scheduler", scheduleOnceFromSystem, &system);
+  fixture.world.insertResource(SchedulingSystem{&fixture.log});
+  fixture.engine.addSystem<&scheduleOnceFromSystem>(Update{}, "scheduler");
   fixture.engine.frame(0.0);
 
   fixture.step();
@@ -222,8 +227,8 @@ TEST_CASE("after(0) scheduled by a system runs in the step after its own") {
 
 TEST_CASE("after(0) scheduled in the render phase runs in the next step") {
   Fixture fixture;
-  SchedulingSystem system{&fixture.log};
-  fixture.engine.addSystem(Phase::Render, "scheduler", scheduleOnceFromSystem, &system);
+  fixture.world.insertResource(SchedulingSystem{&fixture.log});
+  fixture.engine.addSystem<&scheduleOnceFromSystem>(Render{}, "scheduler");
   fixture.engine.frame(0.0);
 
   fixture.step();
@@ -453,15 +458,15 @@ TEST_CASE("event emitted in a task is dispatched in the same step") {
   CHECK_INVARIANTS(fixture.world);
 }
 
-TEST_CASE("context.schedule() is the same Scheduler as the Engine's") {
+TEST_CASE("the Scheduler resource is the same Scheduler as the Engine's") {
   Fixture fixture;
-  Scheduler* captured = nullptr;
-  fixture.engine.addSystem(Phase::Update, "capture", captureScheduler, &captured);
+  CapturedScheduler& captured = fixture.world.insertResource(CapturedScheduler());
+  fixture.engine.addSystem<&captureScheduler>(Update{}, "capture");
   fixture.engine.frame(0.0);
 
   fixture.step();
 
-  CHECK(captured == &fixture.engine.schedule());
+  CHECK(captured.scheduler == &fixture.engine.schedule());
   CHECK_INVARIANTS(fixture.world);
 }
 

@@ -10,9 +10,14 @@
 #include "oly/app/handler.hpp"
 
 using oly::app::Engine;
+using oly::app::Events;
 using oly::app::HandlerContext;
-using oly::app::Phase;
-using oly::app::SystemContext;
+using oly::app::Query;
+using oly::app::Render;
+using oly::app::Res;
+using oly::app::StepInfo;
+using oly::app::Update;
+using oly::app::UpdateAfter;
 
 struct Health {
   float value;
@@ -46,8 +51,8 @@ namespace {
   struct Fixture {
     oly::ecs::World world;
     Engine engine{world};
-    Recorder recorder;
-    Log log;
+    Recorder& recorder = world.insertResource(Recorder());
+    Log& log = world.insertResource(Log());
     double now = 0.0;
 
     Fixture() {
@@ -66,15 +71,15 @@ namespace {
     }
   };
 
-  void damage(SystemContext& context) {
-    const int deaths = static_cast<Recorder*>(context.userData())->deathsEmittedPerStep;
+  void damage(Query<Health, const Position, oly::ecs::With<Enemy>> enemies, Events<EnemyDied> deaths, Res<Recorder> recorder) {
+    const int deathsPerEnemy = recorder->deathsEmittedPerStep;
 
-    context.query<Health, const Position>(oly::ecs::With<Enemy>{}).each([&](oly::ecs::Entity entity, Health& health, const Position& position) {
+    enemies.each([&](oly::ecs::Entity entity, Health& health, const Position& position) {
       health.value -= 10;
 
       if (health.value <= 0) {
-        for (int index = 0; index < deaths; ++index) {
-          context.emit(EnemyDied{entity, position.x, position.y});
+        for (int index = 0; index < deathsPerEnemy; ++index) {
+          deaths.emit(EnemyDied{entity, position.x, position.y});
         }
       }
     });
@@ -130,8 +135,8 @@ namespace {
     }
   }
 
-  void emitPingWhilePaused(SystemContext& context) {
-    context.emit(Ping{1});
+  void emitPingWhilePaused(Events<Ping> pings) {
+    pings.emit(Ping{1});
   }
 
   void recordPingValues(HandlerContext& context) {
@@ -146,19 +151,17 @@ namespace {
     static_cast<Log*>(context.userData())->calls.push_back("ping");
   }
 
-  void renderEmitsOnce(SystemContext& context) {
-    Log& log = *static_cast<Log*>(context.userData());
-
-    if (log.calls.empty()) {
-      context.emit(Ping{1});
+  void renderEmitsOnce(Res<Log> log, Events<Ping> pings) {
+    if (log->calls.empty()) {
+      pings.emit(Ping{1});
     }
 
-    log.calls.push_back("render");
+    log->calls.push_back("render");
   }
 
-  void emitPingEveryStep(SystemContext& context) {
-    static_cast<Recorder*>(context.userData())->systemTimes.push_back(context.time());
-    context.emit(Ping{1});
+  void emitPingEveryStep(Res<Recorder> recorder, Events<Ping> pings, const StepInfo& step) {
+    recorder->systemTimes.push_back(step.time);
+    pings.emit(Ping{1});
   }
 
   void recordHandlerTime(HandlerContext& context) {
@@ -170,7 +173,7 @@ namespace {
   }
 
   void registerReferenceFlow(Fixture& fixture) {
-    fixture.engine.addSystem(Phase::UpdateAfter, "damage", damage, &fixture.recorder);
+    fixture.engine.addSystem<&damage>(UpdateAfter{}, "damage");
     fixture.engine.on<EnemyDied>("dropCoin", dropCoin, &fixture.recorder);
     fixture.engine.on<EnemyDied>("addScore", addScore, &fixture.recorder);
     fixture.engine.on<EnemyDied>("destroyDead", destroyDead, &fixture.recorder);
@@ -236,8 +239,7 @@ TEST_CASE("entity destroyed in an earlier round arrives dead in the next round")
 
 TEST_CASE("handlers run in a paused step") {
   Fixture fixture;
-  const auto system = fixture.engine.addSystem(Phase::Update, "emit", emitPingWhilePaused);
-  fixture.engine.setWhilePaused(system, true);
+  fixture.engine.addSystem<&emitPingWhilePaused>(Update{}, "emit").whilePaused();
   fixture.engine.on<Ping>("pings", recordPingValues, &fixture.recorder);
   fixture.start();
   fixture.engine.pause();
@@ -251,7 +253,7 @@ TEST_CASE("handlers run in a paused step") {
 
 TEST_CASE("event emitted in Render is dispatched in the next step") {
   Fixture fixture;
-  fixture.engine.addSystem(Phase::Render, "render", renderEmitsOnce, &fixture.log);
+  fixture.engine.addSystem<&renderEmitsOnce>(Render{}, "render");
   fixture.engine.on<Ping>("ping", recordPingInLog, &fixture.log);
   fixture.start();
 
@@ -281,7 +283,7 @@ TEST_CASE("event emitted outside frame goes to the next step") {
 
 TEST_CASE("handler sees the time() of the step start, same as the systems") {
   Fixture fixture;
-  fixture.engine.addSystem(Phase::Update, "emit", emitPingEveryStep, &fixture.recorder);
+  fixture.engine.addSystem<&emitPingEveryStep>(Update{}, "emit");
   fixture.engine.on<Ping>("time", recordHandlerTime, &fixture.recorder);
   fixture.start();
 

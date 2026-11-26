@@ -3,13 +3,17 @@
 #include <vector>
 
 #include "components.hpp"
+#include "oly/app/controls.hpp"
 #include "oly/app/engine.hpp"
 #include "oly/input/action_map.hpp"
 
 using oly::app::Engine;
+using oly::app::Events;
 using oly::app::HandlerContext;
-using oly::app::Phase;
-using oly::app::SystemContext;
+using oly::app::PauseRequest;
+using oly::app::Res;
+using oly::app::Update;
+using oly::input::ActionMap;
 using oly::input::ButtonAction;
 using oly::input::ButtonState;
 using oly::input::Key;
@@ -26,9 +30,8 @@ namespace {
     bool rebound = false;
   };
 
-  void record(SystemContext& context) {
-    auto& recorder = *static_cast<Recorder*>(context.userData());
-    recorder.states.push_back(context.actions().button(recorder.action));
+  void record(Res<Recorder> recorder, Res<const ActionMap> actionMap) {
+    recorder->states.push_back(actionMap->button(recorder->action));
   }
 
   void recordInHandler(HandlerContext& context) {
@@ -36,36 +39,33 @@ namespace {
     recorder.states.push_back(context.actions().button(recorder.action));
   }
 
-  void emitPing(SystemContext& context) {
-    context.emit(Ping{1});
+  void emitPing(Events<Ping> pings) {
+    pings.emit(Ping{1});
   }
 
-  void resumeOnToggle(SystemContext& context) {
-    auto& recorder = *static_cast<Recorder*>(context.userData());
-
-    if (context.actions().button(recorder.action).pressed) {
-      context.resume();
+  void resumeOnToggle(Res<Recorder> recorder, Res<const ActionMap> actionMap, Res<PauseRequest> pauseRequest) {
+    if (actionMap->button(recorder->action).pressed) {
+      pauseRequest->resume();
     }
   }
 
-  void countNormal(SystemContext& context) {
-    ++static_cast<Recorder*>(context.userData())->normalRuns;
+  void countNormal(Res<Recorder> recorder) {
+    ++recorder->normalRuns;
   }
 
-  void rebindOnce(SystemContext& context) {
-    auto& recorder = *static_cast<Recorder*>(context.userData());
-    recorder.states.push_back(context.actions().button(recorder.action));
+  void rebindOnce(Res<Recorder> recorder, Res<ActionMap> actionMap) {
+    recorder->states.push_back(actionMap->button(recorder->action));
 
-    if (!recorder.rebound) {
-      recorder.rebound = true;
-      context.actions().bind(recorder.action, Key::Q);
+    if (!recorder->rebound) {
+      recorder->rebound = true;
+      actionMap->bind(recorder->action, Key::Q);
     }
   }
 
   struct Fixture {
     oly::ecs::World world;
     Engine engine{world};
-    Recorder recorder;
+    Recorder& recorder = world.insertResource(Recorder());
     double now = 0.0;
     bool started = false;
 
@@ -97,8 +97,7 @@ namespace {
 
 TEST_CASE("one capture per step, also when paused") {
   Fixture fixture;
-  const auto system = fixture.engine.addSystem(Phase::Update, "whilePaused", record, &fixture.recorder);
-  fixture.engine.setWhilePaused(system, true);
+  fixture.engine.addSystem<&record>(Update{}, "whilePaused").whilePaused();
   fixture.engine.pause();
 
   fixture.engine.actions().buttonDown(Key::Space);
@@ -113,7 +112,7 @@ TEST_CASE("one capture per step, also when paused") {
 
 TEST_CASE("edges only in the first step of the frame") {
   Fixture fixture;
-  fixture.engine.addSystem(Phase::Update, "u", record, &fixture.recorder);
+  fixture.engine.addSystem<&record>(Update{}, "u");
 
   fixture.engine.actions().buttonDown(Key::Space);
   fixture.engine.actions().buttonUp(Key::Space);
@@ -128,7 +127,7 @@ TEST_CASE("edges only in the first step of the frame") {
 
 TEST_CASE("frame without a step keeps the edge for the next step") {
   Fixture fixture;
-  fixture.engine.addSystem(Phase::Update, "u", record, &fixture.recorder);
+  fixture.engine.addSystem<&record>(Update{}, "u");
 
   fixture.engine.actions().buttonDown(Key::Space);
   fixture.engine.actions().buttonUp(Key::Space);
@@ -144,9 +143,8 @@ TEST_CASE("frame without a step keeps the edge for the next step") {
 
 TEST_CASE("leaving the pause through an action in a whilePaused system") {
   Fixture fixture;
-  const auto toggle = fixture.engine.addSystem(Phase::Update, "toggle", resumeOnToggle, &fixture.recorder);
-  fixture.engine.setWhilePaused(toggle, true);
-  fixture.engine.addSystem(Phase::Update, "normal", countNormal, &fixture.recorder);
+  fixture.engine.addSystem<&resumeOnToggle>(Update{}, "toggle").whilePaused();
+  fixture.engine.addSystem<&countNormal>(Update{}, "normal").after("toggle");
   fixture.engine.pause();
 
   fixture.engine.actions().buttonDown(Key::Space);
@@ -162,7 +160,7 @@ TEST_CASE("leaving the pause through an action in a whilePaused system") {
 
 TEST_CASE("setHidden(true) releases the buttons") {
   Fixture fixture;
-  fixture.engine.addSystem(Phase::Update, "u", record, &fixture.recorder);
+  fixture.engine.addSystem<&record>(Update{}, "u");
 
   fixture.engine.actions().buttonDown(Key::Space);
   fixture.step();
@@ -179,7 +177,7 @@ TEST_CASE("setHidden(true) releases the buttons") {
 
 TEST_CASE("system rebinds and the change takes effect on the next capture") {
   Fixture fixture;
-  fixture.engine.addSystem(Phase::Update, "rebind", rebindOnce, &fixture.recorder);
+  fixture.engine.addSystem<&rebindOnce>(Update{}, "rebind");
   fixture.engine.actions().clearBindings(fixture.recorder.action.id);
 
   fixture.engine.actions().buttonDown(Key::Q);
@@ -195,7 +193,7 @@ TEST_CASE("system rebinds and the change takes effect on the next capture") {
 TEST_CASE("handler reads the actions through the same context") {
   Fixture fixture;
   fixture.engine.declareEvent<Ping>("Ping");
-  fixture.engine.addSystem(Phase::Update, "emit", emitPing);
+  fixture.engine.addSystem<&emitPing>(Update{}, "emit");
   fixture.engine.on<Ping>("handler", recordInHandler, &fixture.recorder);
 
   fixture.engine.actions().buttonDown(Key::Space);

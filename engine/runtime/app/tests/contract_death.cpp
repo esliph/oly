@@ -15,14 +15,23 @@
 #include "oly/app/system_parameters.hpp"
 #include "oly/app/task_context.hpp"
 #include "oly/core/assert.hpp"
+#include "oly/input/action_map.hpp"
 
 namespace {
   using oly::app::Engine;
   using oly::app::HandlerContext;
-  using oly::app::Phase;
-  using oly::app::SystemContext;
+  using oly::app::Res;
+  using oly::app::SystemInfo;
   using oly::app::TaskContext;
   using oly::app::TaskHandle;
+  using oly::app::Update;
+
+  // A system reaches the Engine only through this non-owning handle: the cases below call the Engine during a frame.
+  struct EngineHandle {
+    Engine* engine;
+  };
+
+  void idle() {}
 
   struct Needed {};
 
@@ -53,35 +62,33 @@ namespace {
     std::_Exit(0);
   }
 
-  void addSystemFromSystem(SystemContext& context) {
-    Engine& engine = *static_cast<Engine*>(context.userData());
-    engine.addSystem(Phase::Update, "other", [](SystemContext&) {});
+  void addSystemFromSystem(Res<EngineHandle> handle) {
+    handle->engine->addSystem<&idle>(Update{}, "other");
   }
 
   void addSystemDuringFrame() {
     oly::ecs::World world;
     Engine engine(world);
-    engine.addSystem(Phase::Update, "adder", addSystemFromSystem, &engine);
+    world.insertResource(EngineHandle{&engine});
+    engine.addSystem<&addSystemFromSystem>(Update{}, "adder");
 
     engine.frame(0.0);
     engine.frame(1.0 / 60);
   }
 
-  void enableTimingFromSystem(SystemContext& context) {
-    Engine& engine = *static_cast<Engine*>(context.userData());
-    engine.setTimingEnabled(true);
+  void enableTimingFromSystem(Res<EngineHandle> handle) {
+    handle->engine->setTimingEnabled(true);
   }
 
   void setTimingEnabledDuringFrame() {
     oly::ecs::World world;
     Engine engine(world);
-    engine.addSystem(Phase::Update, "enabler", enableTimingFromSystem, &engine);
+    world.insertResource(EngineHandle{&engine});
+    engine.addSystem<&enableTimingFromSystem>(Update{}, "enabler");
 
     engine.frame(0.0);
     engine.frame(1.0 / 60);
   }
-
-  void idle() {}
 
   void idleWithResource(oly::app::Res<Needed>) {}
 
@@ -260,43 +267,43 @@ namespace {
     engine.declareEvent<Ping>();
   }
 
-  void onFromSystem(SystemContext& context) {
-    Engine& engine = *static_cast<Engine*>(context.userData());
-    engine.on<Ping>("late", nothing);
+  void onFromSystem(Res<EngineHandle> handle) {
+    handle->engine->on<Ping>("late", nothing);
   }
 
   void onDuringFrame() {
     oly::ecs::World world;
     Engine engine(world);
+    world.insertResource(EngineHandle{&engine});
     engine.declareEvent<Ping>();
-    engine.addSystem(Phase::Update, "registrar", onFromSystem, &engine);
+    engine.addSystem<&onFromSystem>(Update{}, "registrar");
 
     engine.frame(0.0);
     engine.frame(1.0 / 60);
   }
 
-  void declareEventFromSystem(SystemContext& context) {
-    Engine& engine = *static_cast<Engine*>(context.userData());
-    engine.declareEvent<Echo>();
+  void declareEventFromSystem(Res<EngineHandle> handle) {
+    handle->engine->declareEvent<Echo>();
   }
 
   void declareEventDuringFrame() {
     oly::ecs::World world;
     Engine engine(world);
-    engine.addSystem(Phase::Update, "declarer", declareEventFromSystem, &engine);
+    world.insertResource(EngineHandle{&engine});
+    engine.addSystem<&declareEventFromSystem>(Update{}, "declarer");
 
     engine.frame(0.0);
     engine.frame(1.0 / 60);
   }
 
-  void declareActionFromSystem(SystemContext& context) {
-    context.actions().declareButton("late");
+  void declareActionFromSystem(Res<oly::input::ActionMap> actionMap) {
+    actionMap->declareButton("late");
   }
 
   void declareActionDuringFrame() {
     oly::ecs::World world;
     Engine engine(world);
-    engine.addSystem(Phase::Update, "declarer", declareActionFromSystem);
+    engine.addSystem<&declareActionFromSystem>(Update{}, "declarer");
 
     engine.frame(0.0);
     engine.frame(1.0 / 60);
@@ -391,14 +398,15 @@ namespace {
     engine.schedule().cancel(TaskHandle{7, 0});
   }
 
-  void declareStateFromSystem(SystemContext& context) {
-    static_cast<Engine*>(context.userData())->declareState("late");
+  void declareStateFromSystem(Res<EngineHandle> handle) {
+    handle->engine->declareState("late");
   }
 
   void declareStateDuringFrame() {
     oly::ecs::World world;
     Engine engine(world);
-    engine.addSystem(Phase::Update, "declarer", declareStateFromSystem, &engine);
+    world.insertResource(EngineHandle{&engine});
+    engine.addSystem<&declareStateFromSystem>(Update{}, "declarer");
 
     engine.frame(0.0);
     engine.frame(1.0 / 60);
@@ -430,31 +438,31 @@ namespace {
     engine.requestState(5);
   }
 
-  void onEnterFromSystem(SystemContext& context) {
-    Engine& engine = *static_cast<Engine*>(context.userData());
-    engine.onEnter(0, "late", [](oly::app::StateContext&) {});
+  void onEnterFromSystem(Res<EngineHandle> handle) {
+    handle->engine->onEnter(0, "late", [](oly::app::StateContext&) {});
   }
 
   void onEnterDuringFrame() {
     oly::ecs::World world;
     Engine engine(world);
+    world.insertResource(EngineHandle{&engine});
     engine.declareState("a");
-    engine.addSystem(Phase::Update, "registrar", onEnterFromSystem, &engine);
+    engine.addSystem<&onEnterFromSystem>(Update{}, "registrar");
 
     engine.frame(0.0);
     engine.frame(1.0 / 60);
   }
 
-  void setSystemStatesFromSystem(SystemContext& context) {
-    Engine& engine = *static_cast<Engine*>(context.userData());
-    engine.setSystemStates(context.systemId(), {0});
+  void setSystemStatesFromSystem(Res<EngineHandle> handle, const SystemInfo& self) {
+    handle->engine->setSystemStates(self.id, {0});
   }
 
   void systemStatesDuringFrame() {
     oly::ecs::World world;
     Engine engine(world);
+    world.insertResource(EngineHandle{&engine});
     engine.declareState("a");
-    engine.addSystem(Phase::Update, "restrictor", setSystemStatesFromSystem, &engine);
+    engine.addSystem<&setSystemStatesFromSystem>(Update{}, "restrictor");
 
     engine.frame(0.0);
     engine.frame(1.0 / 60);
@@ -480,7 +488,7 @@ namespace {
     Engine engine(world);
     engine.declareState("a");
     engine.declareState("b");
-    const auto system = engine.addSystem(Phase::Update, "s", [](SystemContext&) {});
+    const auto system = engine.addSystem<&idle>(Update{}, "s").id();
 
     engine.setSystemStateMask(system, 0b100);
   }

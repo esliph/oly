@@ -12,9 +12,9 @@
 
 using oly::app::Engine;
 using oly::app::EngineConfig;
+using oly::app::Events;
 using oly::app::HandlerContext;
-using oly::app::Phase;
-using oly::app::SystemContext;
+using oly::app::Update;
 
 struct Ping {
   uint32_t value;
@@ -67,18 +67,23 @@ namespace {
     }
   };
 
-  void emitOneTwoThree(SystemContext& context) {
-    context.emit(Ping{1});
-    context.emit(Ping{2});
-    context.emit(Ping{3});
+  void emitOneTwoThree(Events<Ping> pings) {
+    pings.emit(Ping{1});
+    pings.emit(Ping{2});
+    pings.emit(Ping{3});
   }
 
-  void emitEchoZero(SystemContext& context) {
-    context.emit(Echo{0});
+  void emitEchoZero(Events<Echo> echoes) {
+    echoes.emit(Echo{0});
   }
 
-  void emitPingZero(SystemContext& context) {
-    context.emit(Ping{0});
+  void emitPingZero(Events<Ping> pings) {
+    pings.emit(Ping{0});
+  }
+
+  void emitEchoThenPing(Events<Echo> echoes, Events<Ping> pings) {
+    echoes.emit(Echo{0});
+    pings.emit(Ping{0});
   }
 
   void recordPingValues(HandlerContext& context) {
@@ -159,7 +164,7 @@ namespace {
 
 TEST_CASE("handler receives the whole batch, in emission order") {
   Fixture fixture;
-  fixture.engine.addSystem(Phase::Update, "emit", emitOneTwoThree);
+  fixture.engine.addSystem<&emitOneTwoThree>(Update{}, "emit");
   fixture.engine.on<Ping>("pings", recordPingValues, &fixture.recorder);
 
   fixture.step();
@@ -171,7 +176,7 @@ TEST_CASE("handler receives the whole batch, in emission order") {
 
 TEST_CASE("handlers of the same type in registration order") {
   Fixture fixture;
-  fixture.engine.addSystem(Phase::Update, "emit", emitOneTwoThree);
+  fixture.engine.addSystem<&emitOneTwoThree>(Update{}, "emit");
   fixture.engine.on<Ping>("h1", recordHandlerName, &fixture.log);
   fixture.engine.on<Ping>("h2", recordHandlerName, &fixture.log);
   fixture.engine.on<Ping>("h3", recordHandlerName, &fixture.log);
@@ -184,10 +189,7 @@ TEST_CASE("handlers of the same type in registration order") {
 
 TEST_CASE("types dispatched in declaration order, not in emission order") {
   Fixture fixture;
-  fixture.engine.addSystem(Phase::Update, "emit", [](SystemContext& context) {
-    context.emit(Echo{0});
-    context.emit(Ping{0});
-  });
+  fixture.engine.addSystem<&emitEchoThenPing>(Update{}, "emit");
   fixture.engine.on<Echo>("echo", recordHandlerName, &fixture.log);
   fixture.engine.on<Ping>("ping", recordHandlerName, &fixture.log);
 
@@ -199,7 +201,7 @@ TEST_CASE("types dispatched in declaration order, not in emission order") {
 
 TEST_CASE("event emitted during the round goes to the next round") {
   Fixture fixture;
-  fixture.engine.addSystem(Phase::Update, "emit", emitPingZero);
+  fixture.engine.addSystem<&emitPingZero>(Update{}, "emit");
   fixture.engine.on<Ping>("ping", traceRoundsAndCascade, &fixture.recorder);
   fixture.engine.on<Echo>("echo", traceEcho, &fixture.recorder);
 
@@ -211,7 +213,7 @@ TEST_CASE("event emitted during the round goes to the next round") {
 
 TEST_CASE("batch does not change when the handler emits many of its own type") {
   Fixture fixture;
-  fixture.engine.addSystem(Phase::Update, "emit", emitPingZero);
+  fixture.engine.addSystem<&emitPingZero>(Update{}, "emit");
   fixture.engine.on<Ping>("flood", flood, &fixture.recorder);
 
   fixture.step();
@@ -223,7 +225,7 @@ TEST_CASE("batch does not change when the handler emits many of its own type") {
 
 TEST_CASE("cascade ends in the same step when the queues empty") {
   Fixture fixture;
-  fixture.engine.addSystem(Phase::Update, "emit", emitEchoZero);
+  fixture.engine.addSystem<&emitEchoZero>(Update{}, "emit");
   fixture.engine.on<Echo>("cascade", cascadeEcho, &fixture.recorder);
 
   fixture.step();
@@ -234,7 +236,7 @@ TEST_CASE("cascade ends in the same step when the queues empty") {
 
 TEST_CASE("handler makes a direct structural change") {
   Fixture fixture;
-  fixture.engine.addSystem(Phase::Update, "emit", emitPingZero);
+  fixture.engine.addSystem<&emitPingZero>(Update{}, "emit");
   fixture.engine.on<Ping>("spawn", spawnFromHandler, &fixture.recorder);
 
   fixture.step();
@@ -267,7 +269,7 @@ TEST_CASE("configurable round limit: exactly maxEventRounds rounds is allowed") 
   EngineConfig config;
   config.maxEventRounds = 3;
   Fixture fixture(config);
-  fixture.engine.addSystem(Phase::Update, "emit", emitEchoZero);
+  fixture.engine.addSystem<&emitEchoZero>(Update{}, "emit");
   fixture.engine.on<Echo>("cascade", cascadeEchoUntilTwo, &fixture.recorder);
 
   fixture.step();
