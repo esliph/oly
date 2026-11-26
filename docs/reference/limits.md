@@ -10,6 +10,7 @@
 - **Event handlers, state hooks, scheduled tasks and observers keep registration order.** Only systems are ordered by constraints and names; the others run in the order they were registered, and a plugin's install order moves them.
 - **A query filter never makes two accesses disjoint.** `With` and `Without` do not separate two systems: systems that write one component in one phase are ordered, even when their filters select different entities. Phase 3 relies on the declared access alone, so a disjointness proof from filters is not available to it ([the spec](../superpowers/specs/2026-11-26-phase1-declared-access-design.md)).
 - **A resource that holds a pointer to the `World` or the `Engine` bypasses the declared access.** A system that reaches the world through such a pointer does what its parameters did not declare, and the engine cannot see it.
+- **A plugin system in a built-in phase cannot be ordered from a TS game.** A script system is exclusive, so it conflicts with every other system of its phase, and TS can only order it against the registrations it holds. A web game with a script system in a phase where a plugin also has a system stops at the first `frame`. A plugin gives its systems a phase of its own.
 - **Time per system is C++ only.** The C API and the TypeScript client do not expose it.
 - **`--release` builds desktop games only.** `oly build --release` on a web game exits 64.
 - **ECS v1**: no fixed-size chunks, no change detection, no enableable components, no sparse storage. `ComponentId` is only valid inside the process.

@@ -23,13 +23,13 @@ namespace oly::core {
 
   namespace detail {
     void assertFail(const char* expression, const char* file, int line, const char* format, ...) noexcept {
-      char message[256];
+      char message[4096];
       va_list arguments;
       va_start(arguments, format);
       std::vsnprintf(message, sizeof message, format, arguments);
       va_end(arguments);
 
-      char fullMessage[512];
+      char fullMessage[4352];
       std::snprintf(fullMessage, sizeof fullMessage, "OLY_ASSERT failed: %s | %s (%s:%d)", expression, message, file, line);
 
       g_handler(fullMessage);

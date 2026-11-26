@@ -176,6 +176,17 @@ namespace {
     engine.frame(0.0);
   }
 
+  void manyConflicts() {
+    oly::ecs::World world;
+    Engine engine(world);
+
+    for (int index = 0; index < 8; ++index) {
+      engine.addSystem<&writeHealth>(oly::app::Update{}, "healSystemWithALongName" + std::to_string(index));
+    }
+
+    engine.frame(0.0);
+  }
+
   void readWriteConflict() {
     oly::ecs::World world;
     Engine engine(world);
@@ -559,6 +570,7 @@ int main(int argumentCount, char** arguments) {
     {"duplicate_system_name", duplicateSystemName, {"already registered", "twice"}},
     {"add_system_after_first_frame", addSystemAfterFirstFrame, {"addSystem", "registered after the first frame"}},
     {"write_write_conflict", writeWriteConflict, {"frame: systems", "have no order", "component", "writes"}},
+    {"every_conflict_is_listed", manyConflicts, {"frame: systems", "healSystemWithALongName6", "healSystemWithALongName7"}},
     {"read_write_conflict", readWriteConflict, {"frame: systems", "have no order", "component", "reads"}},
     {"resource_conflict", resourceConflict, {"frame: systems", "have no order", "resource"}},
     {"missing_constraint_target", missingConstraintTarget, {"which is not registered"}},

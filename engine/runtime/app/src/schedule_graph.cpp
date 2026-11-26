@@ -91,7 +91,9 @@ namespace oly::app::detail {
       return sorted;
     }
 
-    // From the first node that `before` ranks, follows the first successor still on a cycle until a node repeats; the repeat closes the loop.
+    // `cyclic` also holds the nodes behind a cycle, and such a node may have no successor left. Every node that was never placed has a
+    // predecessor that was never placed either (its indegree did not reach zero), so the walk goes backwards from the first node that
+    // `before` ranks, following the first such predecessor until a node repeats; the repeat closes the loop, which is then reversed.
     template <class Before>
     std::vector<uint32_t> findCycle(const Successors& successors, const std::vector<uint32_t>& cyclic, Before before) {
       const std::set<uint32_t> remaining(cyclic.begin(), cyclic.end());
@@ -100,23 +102,24 @@ namespace oly::app::detail {
       while (true) {
         std::vector<uint32_t> candidates;
 
-        for (const uint32_t target : successors[path.back()]) {
-          if (remaining.contains(target)) {
-            candidates.push_back(target);
+        for (const uint32_t node : cyclic) {
+          if (successors[node].contains(path.back())) {
+            candidates.push_back(node);
           }
         }
 
-        const uint32_t next = *std::min_element(candidates.begin(), candidates.end(), before);
-        const auto repeated = std::find(path.begin(), path.end(), next);
+        const uint32_t previous = *std::min_element(candidates.begin(), candidates.end(), before);
+        const auto repeated = std::find(path.begin(), path.end(), previous);
 
         if (repeated != path.end()) {
           std::vector<uint32_t> cycle(repeated, path.end());
-          cycle.push_back(next);
+          cycle.push_back(previous);
+          std::reverse(cycle.begin(), cycle.end());
 
           return cycle;
         }
 
-        path.push_back(next);
+        path.push_back(previous);
       }
     }
 

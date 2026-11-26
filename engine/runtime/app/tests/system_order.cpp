@@ -308,6 +308,28 @@ TEST_CASE("a cycle of systems is an error naming the cycle") {
   CHECK(plan.errors == std::vector<std::string>{"cycle of system constraints in phase \"" + phaseName + "\": a -> b -> a"});
 }
 
+TEST_CASE("a cycle is reported when a system behind it sorts first") {
+  ScheduleInput input = builtInPhases();
+  input.systems = {systemIn<Update>("a"), systemIn<Update>("x"), systemIn<Update>("y")};
+  input.constraints = {before(nameTarget("x"), nameTarget("y")), before(nameTarget("y"), nameTarget("x")), before(nameTarget("x"), nameTarget("a"))};
+
+  const SchedulePlan plan = buildSchedule(input);
+
+  const std::string phaseName(oly::core::typeName<Update>());
+  CHECK(plan.errors == std::vector<std::string>{"cycle of system constraints in phase \"" + phaseName + "\": x -> y -> x"});
+}
+
+TEST_CASE("a phase cycle is reported when a phase behind it is declared first") {
+  ScheduleInput input;
+  input.phases = {pluginPhase<UpdateAfter>(ScheduleKind::FixedStep), pluginPhase<UpdateBefore>(ScheduleKind::FixedStep), pluginPhase<Update>(ScheduleKind::FixedStep)};
+  input.phaseConstraints = {{oly::app::scheduleKey<UpdateBefore>(), oly::app::scheduleKey<Update>()}, {oly::app::scheduleKey<Update>(), oly::app::scheduleKey<UpdateBefore>()}, {oly::app::scheduleKey<Update>(), oly::app::scheduleKey<UpdateAfter>()}};
+
+  const SchedulePlan plan = buildSchedule(input);
+
+  REQUIRE(!plan.errors.empty());
+  CHECK(plan.errors[0].find("cycle of phase constraints") != std::string::npos);
+}
+
 TEST_CASE("phases follow their constraints") {
   ScheduleInput input = builtInPhases();
   input.phases.push_back(pluginPhase<Physics>(ScheduleKind::FixedStep));

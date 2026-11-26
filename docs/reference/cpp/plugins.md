@@ -17,7 +17,7 @@ class Plugin {
 };
 ```
 
-The base class of every plugin. `install` registers the plugin's systems, handlers, hooks and observers, and the plugin keeps its own state in the instance, which reaches its systems through `userData`. A plugin class needs a default constructor. The destructor removes the observers that `install` registered with `World::removeObserver`: observers belong to the `World`, which outlives the `Engine`.
+The base class of every plugin. `install` registers the plugin's systems, handlers, hooks and observers, and the plugin keeps its state in resources of the `World`, which its systems declare as `Res<T>`. A plugin class needs a default constructor. The destructor removes the observers that `install` registered with `World::removeObserver`: observers belong to the `World`, which outlives the `Engine`.
 
 A plugin is a class named `Plugin` in the namespace `oly::<plugin>`, and it declares `install` in its public section:
 

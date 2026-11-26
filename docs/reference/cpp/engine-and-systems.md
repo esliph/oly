@@ -105,7 +105,7 @@ void countHits(oly::app::HandlerContext& context) {
   static_cast<Game*>(context.userData())->hits += context.eventCount();
 }
 
-world.insertResource<Game>();
+world.insertResource(Game{});
 engine.addSystem<&steer>(oly::app::UpdateBefore{}, "steer").inStates({states::playing});
 engine.on<Hit>("countHits", countHits, &world.resource<Game>());
 engine.requestState(states::playing);

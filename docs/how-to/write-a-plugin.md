@@ -57,6 +57,8 @@ namespace oly::lifetime {
     uint32_t value = 0;
   };
 
+  struct Expiry {};
+
   class Plugin : public app::Plugin {
    public:
     void install(app::Engine& engine) override;
@@ -89,11 +91,14 @@ namespace oly::lifetime {
   }
 
   void Plugin::install(app::Engine& engine) {
-    engine.world().insertResource<ExpiredCount>();
-    engine.addSystem<&expire>(app::UpdateAfter{}, "expire");
+    engine.world().insertResource(ExpiredCount{});
+    engine.addPhase<Expiry>(app::FixedStep{}).after<app::Update>().before<app::UpdateAfter>();
+    engine.addSystem<&expire>(Expiry{}, "expire");
   }
 }
 ```
+
+The system runs in a phase of its own. A script system of a web game is exclusive and TS cannot order it against a system it did not register, so a plugin system placed in `Update` or `UpdateAfter` would conflict with every script system of that phase ([Known limitations](../reference/limits.md)).
 
 Inside `install`, `engine.plugin<Q>()` reaches a plugin that installed earlier, for example one listed in `PLUGINS` ([Plugins in C++](../reference/cpp/plugins.md#engineplugin)).
 

@@ -17,7 +17,7 @@ const oly::app::EngineConfig& engineConfig() const noexcept;
 virtual void onStart(oly::app::Engine& engine, Window& window) = 0;
 ```
 
-The class holds the window configuration, the engine configuration and the game's own state. A `Game` cannot be copied. `runGame` calls `onStart` once, on an `Engine` that `setUpGame` already set up and with the window open, before the first frame. Bind actions, spawn entities and add systems there. A system that needs the game's state reads it as a resource (`Res<T>`), which `onStart` inserts with `engine.world().insertResource<T>()`.
+The class holds the window configuration, the engine configuration and the game's own state. A `Game` cannot be copied. `runGame` calls `onStart` once, on an `Engine` that `setUpGame` already set up and with the window open, before the first frame. Bind actions, spawn entities and add systems there. A system that needs the game's state reads it as a resource (`Res<T>`), which `onStart` inserts with `engine.world().insertResource(T{...})`.
 
 ```cpp
 class MyGame : public oly::native_host::Game {
@@ -25,7 +25,7 @@ class MyGame : public oly::native_host::Game {
   MyGame() : Game({"<game>", 640, 360}) {}
 
   void onStart(oly::app::Engine& engine, oly::native_host::Window& window) override {
-    engine.world().insertResource<Renderer>(window.renderer());
+    engine.world().insertResource(Renderer{window.renderer()});
     engine.addSystem<&draw>(oly::app::Render{}, "draw");
   }
 };
@@ -87,7 +87,7 @@ Opens a resizable window and an SDL renderer, and turns vsync on. The constructo
 
 ```cpp
 void onStart(oly::app::Engine& engine, oly::native_host::Window& window) override {
-  engine.world().insertResource<Renderer>(window.renderer());
+  engine.world().insertResource(Renderer{window.renderer()});
   engine.addSystem<&draw>(oly::app::Render{}, "draw");
 }
 ```
