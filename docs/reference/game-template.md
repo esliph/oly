@@ -30,8 +30,8 @@ Both environments get these files.
 | `common/gitignore` | `.gitignore` | ignores `build/`, `node_modules/`, `web/dist/`, `web/schema.generated.ts` and `*.tsbuildinfo` |
 | `common/gitattributes` | `.gitattributes` | pins `oly` to LF line endings, so a checkout on Windows does not break the script |
 | not in `common/` | `oly` | the launcher of the engine version, copied from the version's `oly-tools` (from `tools/oly/oly` in local mode), mode 755; `oly upgrade` replaces it |
-| `common/native/movement.cpp` | `native/movement.cpp` | the C++ system `movePlayer`: moves every `Player` by the `move` action |
-| `common/native/systems.hpp` | `native/systems.hpp` | declares `movePlayer` for a shell that adds it with `Engine::addSystem` |
+| `common/native/movement.cpp` | `native/movement.cpp` | the C++ system `movePlayer(Query<Position, With<Player>>, Res<const ActionMap>, const StepInfo&)`: moves every `Player` by the `move` action, followed by `OLY_SYSTEM(movePlayer);` |
+| `common/native/systems.hpp` | `native/systems.hpp` | declares `movePlayer` for a shell that adds it with `addSystem<&movePlayer>` |
 | `common/.github/workflows/ci.yml` | `.github/workflows/ci.yml` | runs `sh ./oly test --docker` on every push and pull request, and installs nothing |
 
 `Position` is not in `<game>.oly`: `DIMENSION 2d` in `cmake/game.cmake` turns the `essentials2d` plugin on, which brings it ([Transforms](../explanation/concepts/transforms.md)).

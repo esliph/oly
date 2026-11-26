@@ -7,6 +7,8 @@
 #include "oly/app/handler.hpp"
 #include "oly/app/state_context.hpp"
 #include "oly/app/system.hpp"
+#include "oly/app/system_descriptor.hpp"
+#include "oly/app/system_parameters.hpp"
 #include "oly/app/task_context.hpp"
 #include "oly/capi/engine.hpp"
 #include "oly/capi/schema_registry.hpp"
@@ -25,12 +27,13 @@ namespace oly::capi {
       engine->scriptInvoker(engine->scriptUserData, engine, kind, id, events, eventCount);
     }
 
-    void runScriptSystem(oly::app::SystemContext& context) {
-      OlyEngine* engine = static_cast<OlyEngine*>(context.userData());
+    // Exclusive (it takes the World), so the engine runs it alone and every system of its phase must be ordered against it.
+    void runScriptSystem(oly::ecs::World&, oly::app::Commands commands, oly::app::Res<ScriptHost> host, const oly::app::SystemInfo& self) {
+      OlyEngine* engine = host->engine;
 
-      engine->currentContext = &context;
-      invokeScript(engine, OLY_SCRIPT_SYSTEM, context.systemId(), nullptr, 0);
-      engine->currentContext = nullptr;
+      engine->currentCommands = &commands;
+      invokeScript(engine, OLY_SCRIPT_SYSTEM, self.id, nullptr, 0);
+      engine->currentCommands = nullptr;
     }
 
     // Holds the current direct context for olyDirectSpawn and olyContextPersist and restores the previous one on exit.
@@ -90,9 +93,9 @@ namespace oly::capi {
       return eventType;
     }
 
-    oly::app::SystemContext& currentContext(OlyEngine* engine, [[maybe_unused]] const char* operation) {
-      OLY_ASSERT(engine->currentContext != nullptr, "%s: called outside a system", operation);
-      return *engine->currentContext;
+    oly::app::Commands& currentCommands(OlyEngine* engine, [[maybe_unused]] const char* operation) {
+      OLY_ASSERT(engine->currentCommands != nullptr, "%s: called outside a system", operation);
+      return *engine->currentCommands;
     }
 
     void checkedAction([[maybe_unused]] const oly::input::ActionMap& actions, [[maybe_unused]] uint32_t action, [[maybe_unused]] oly::input::ActionKind expected, [[maybe_unused]] const char* operation) {
@@ -100,9 +103,19 @@ namespace oly::capi {
       OLY_ASSERT(actions.kind(action) == expected, "%s: action=%u (%.*s) has a kind other than the expected one (%u)", operation, action, static_cast<int>(actions.name(action).size()), actions.name(action).data(), static_cast<unsigned>(expected));
     }
 
-    oly::app::Phase phaseOf(uint32_t phase, [[maybe_unused]] const char* operation) {
+    oly::app::ScheduleKey builtInPhase(uint32_t phase, [[maybe_unused]] const char* operation) {
       OLY_ASSERT(phase < oly::app::PhaseCount, "%s: phase=%u out of range (0..%u)", operation, phase, oly::app::PhaseCount - 1);
-      return static_cast<oly::app::Phase>(phase);
+
+      switch (static_cast<oly::app::Phase>(phase)) {
+        case oly::app::Phase::UpdateBefore:
+          return oly::app::scheduleKey<oly::app::UpdateBefore>();
+        case oly::app::Phase::Update:
+          return oly::app::scheduleKey<oly::app::Update>();
+        case oly::app::Phase::UpdateAfter:
+          return oly::app::scheduleKey<oly::app::UpdateAfter>();
+        default:
+          return oly::app::scheduleKey<oly::app::Render>();
+      }
     }
 
     uint32_t checkedWhen([[maybe_unused]] uint32_t when, [[maybe_unused]] const char* operation) {
@@ -123,6 +136,7 @@ namespace oly::capi {
 extern "C" {
 OlyEngine* olyEngineCreate(double fixedHz, uint32_t maxStepsPerFrame, uint32_t maxEventRounds) {
   OlyEngine* engine = new OlyEngine(oly::app::EngineConfig{fixedHz, maxStepsPerFrame, maxEventRounds});
+  engine->world.world.insertResource(oly::capi::ScriptHost{engine});
 
   oly::app::setUpGame(engine->engine);
 
@@ -146,7 +160,7 @@ void olyEngineSetScriptInvoker(OlyEngine* engine, OlyScriptInvoker invoker, void
 
 void olyEngineFrame(OlyEngine* engine, double nowSeconds) {
   // After an exception from script code the pointer was left pointing to a stack that no longer exists.
-  engine->currentContext = nullptr;
+  engine->currentCommands = nullptr;
   engine->directContext = nullptr;
   engine->engine.frame(nowSeconds);
 }
@@ -180,19 +194,24 @@ double olyEngineInterpolation(OlyEngine* engine) {
 }
 
 uint32_t olyEngineAddNativeSystem(OlyEngine* engine, uint32_t phase, const char* name) {
-  const oly::app::Phase checkedPhase = oly::capi::phaseOf(phase, "olyEngineAddNativeSystem");
-  const oly::app::SystemFunction function = oly::app::findNamedSystem(name);
+  const oly::app::ScheduleKey phaseKey = oly::capi::builtInPhase(phase, "olyEngineAddNativeSystem");
+  const oly::app::SystemDescriptor* descriptor = oly::app::findNamedSystem(name);
 
-  if (function == nullptr) {
+  if (descriptor == nullptr) {
     return OLY_INVALID_SYSTEM;
   }
 
-  return engine->engine.addSystem(checkedPhase, name, function);
+  return engine->engine.addSystem(phaseKey, name, *descriptor).id();
 }
 
 uint32_t olyEngineAddScriptSystem(OlyEngine* engine, uint32_t phase, const char* name) {
-  const oly::app::Phase checkedPhase = oly::capi::phaseOf(phase, "olyEngineAddScriptSystem");
-  return engine->engine.addSystem(checkedPhase, name, &oly::capi::runScriptSystem, engine);
+  const oly::app::ScheduleKey phaseKey = oly::capi::builtInPhase(phase, "olyEngineAddScriptSystem");
+
+  return engine->engine.addSystem(phaseKey, name, oly::app::systemDescriptor<&oly::capi::runScriptSystem>()).id();
+}
+
+void olyEngineOrderSystems(OlyEngine* engine, uint32_t firstSystemId, uint32_t secondSystemId) {
+  engine->engine.orderSystems(firstSystemId, secondSystemId);
 }
 
 void olyEngineSetWhilePaused(OlyEngine* engine, uint32_t systemId, int32_t whilePaused) {
@@ -321,21 +340,21 @@ const OlyActionState* olyEngineActionSnapshot(OlyEngine* engine) {
 }
 
 void olySystemSpawn(OlyEngine* engine, OlyEntity* out) {
-  const oly::ecs::Entity entity = oly::capi::currentContext(engine, "olySystemSpawn").spawn();
+  const oly::ecs::Entity entity = oly::capi::currentCommands(engine, "olySystemSpawn").spawn();
   out->index = entity.index;
   out->generation = entity.generation;
 }
 
 void olySystemDestroy(OlyEngine* engine, uint32_t index, uint32_t generation) {
-  oly::capi::currentContext(engine, "olySystemDestroy").destroy(oly::capi::entityOf(index, generation));
+  oly::capi::currentCommands(engine, "olySystemDestroy").destroy(oly::capi::entityOf(index, generation));
 }
 
 void olySystemAdd(OlyEngine* engine, uint32_t index, uint32_t generation, uint32_t componentId, void* value) {
-  oly::capi::currentContext(engine, "olySystemAdd").addById(oly::capi::entityOf(index, generation), componentId, value);
+  oly::capi::currentCommands(engine, "olySystemAdd").addById(oly::capi::entityOf(index, generation), componentId, value);
 }
 
 void olySystemRemove(OlyEngine* engine, uint32_t index, uint32_t generation, uint32_t componentId) {
-  oly::capi::currentContext(engine, "olySystemRemove").removeById(oly::capi::entityOf(index, generation), componentId);
+  oly::capi::currentCommands(engine, "olySystemRemove").removeById(oly::capi::entityOf(index, generation), componentId);
 }
 
 void olyDirectSpawn(OlyEngine* engine, OlyEntity* out) {
@@ -347,14 +366,14 @@ void olyDirectSpawn(OlyEngine* engine, OlyEntity* out) {
 }
 
 void olyContextPersist(OlyEngine* engine, uint32_t index, uint32_t generation) {
-  OLY_ASSERT(engine->directContext != nullptr || engine->currentContext != nullptr, "olyContextPersist: called outside a system, handler, task or hook");
+  OLY_ASSERT(engine->directContext != nullptr || engine->currentCommands != nullptr, "olyContextPersist: called outside a system, handler, task or hook");
 
   const oly::ecs::Entity entity = oly::capi::entityOf(index, generation);
 
   if (engine->directContext != nullptr) {
     engine->directContext->persist(entity);
   } else {
-    engine->currentContext->persist(entity);
+    engine->currentCommands->persist(entity);
   }
 }
 }

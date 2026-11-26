@@ -3,11 +3,14 @@
 #include "oly/app/handler.hpp"
 #include "oly/app/state_context.hpp"
 #include "oly/app/system.hpp"
+#include "oly/app/system_descriptor.hpp"
+#include "oly/app/system_parameters.hpp"
 #include "oly/app/task_context.hpp"
 #include "oly/capi/c_api.h"
 #include "oly/capi/engine.hpp"
 #include "oly/capi/world.hpp"
 #include "oly/ecs/entity.hpp"
+#include "oly/input/action_map.hpp"
 #include "schema.generated.hpp"
 
 namespace {
@@ -71,32 +74,42 @@ OLY_API double fixtureMixedChecksum(OlyWorld* world, uint32_t index, uint32_t ge
 }
 }
 
-OLY_SYSTEM(noop) {}
+void noop() {}
 
-OLY_SYSTEM(move) {
-  const float deltaTime = context.fixedDeltaTime();
-  context.query<Position, const Velocity>().each([deltaTime](Position& position, const Velocity& velocity) {
+OLY_SYSTEM(noop);
+
+void move(oly::app::Query<Position, const Velocity> bodies, const oly::app::StepInfo& step) {
+  const float deltaTime = step.fixedDeltaTime;
+  bodies.each([deltaTime](Position& position, const Velocity& velocity) {
     position.x += velocity.x * deltaTime;
     position.y += velocity.y * deltaTime;
   });
 }
 
-OLY_SYSTEM(countFirePresses) {
-  if (context.actions().button(actions::fire).pressed) {
+OLY_SYSTEM(move);
+
+void countFirePresses(oly::app::Res<const oly::input::ActionMap> actionMap) {
+  if (actionMap->button(actions::fire).pressed) {
     ++fixtureFirePressCount;
   }
 }
 
-OLY_SYSTEM(appendNine) {
-  context.query<Trace>().each([](Trace& trace) { trace.value = trace.value * 10 + 9; });
+OLY_SYSTEM(countFirePresses);
+
+void appendNine(oly::app::Query<Trace> traces) {
+  traces.each([](Trace& trace) { trace.value = trace.value * 10 + 9; });
 }
 
+OLY_SYSTEM(appendNine);
+
 // Large enough for the WASM heap to grow before the next TS system.
-OLY_SYSTEM(spawnBatch) {
+void spawnBatch(oly::app::Commands commands) {
   for (uint32_t count = 0; count < 400000; ++count) {
-    context.spawn(Position{1, 0});
+    commands.spawn(Position{1, 0});
   }
 }
+
+OLY_SYSTEM(spawnBatch);
 
 OLY_HANDLER(appendNineOnPing, Ping) {
   for (const Ping& ping : events) {
@@ -111,11 +124,13 @@ OLY_HANDLER(sumPing, Ping) {
   }
 }
 
-OLY_SYSTEM(emitPings) {
+void emitPings(oly::app::Events<Ping> pings) {
   for (uint32_t count = 0; count < fixturePingCount; ++count) {
-    context.emit(Ping{oly::ecs::NullEntity, 1});
+    pings.emit(Ping{oly::ecs::NullEntity, 1});
   }
 }
+
+OLY_SYSTEM(emitPings);
 
 OLY_STATE_HOOK(appendEight) {
   context.query<Trace>().each([](Trace& trace) { trace.value = trace.value * 10 + 8; });

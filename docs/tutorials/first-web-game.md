@@ -78,8 +78,7 @@ C++ is the right place for code that touches every entity each step. This is `na
 
 ```cpp
 #include "oly/app/system.hpp"
-#include "oly/ecs/query.hpp"
-#include "schema.generated.hpp"
+#include "oly/app/system_descriptor.hpp"
 #include "systems.hpp"
 
 namespace {
@@ -87,15 +86,17 @@ namespace {
   constexpr float PlayerSpeed = 200.0f;
 }
 
-OLY_SYSTEM(movePlayer) {
-  const oly::input::Vector2 axis = context.actions().axis2d(actions::move);
-  const float step = PlayerSpeed * context.fixedDeltaTime();
+void movePlayer(oly::app::Query<Position, oly::ecs::With<Player>> players, oly::app::Res<const oly::input::ActionMap> actions, const oly::app::StepInfo& step) {
+  const oly::input::Vector2 axis = actions->axis2d(actions::move);
+  const float distance = PlayerSpeed * step.fixedDeltaTime;
 
-  context.query<Position>(oly::ecs::With<Player>{}).each([&](Position& position) {
-    position.x += axis.x * step;
-    position.y += axis.y * step;
+  players.each([&](Position& position) {
+    position.x += axis.x * distance;
+    position.y += axis.y * distance;
   });
 }
+
+OLY_SYSTEM(movePlayer);
 ```
 
 `OLY_SYSTEM(movePlayer)` defines the system and registers it by name, so the TS side can add it. The query visits every entity that has `Position` and the tag `Player`. `native/systems.hpp` declares the function:

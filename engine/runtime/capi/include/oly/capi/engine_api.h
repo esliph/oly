@@ -74,10 +74,15 @@ OLY_API double olyEngineFixedDeltaTime(OlyEngine* engine);
 OLY_API double olyEngineInterpolation(OlyEngine* engine);
 
 // `phase` is an oly::app::Phase (out of range, OLY_ASSERT). Registering during olyEngineFrame is a contract violation.
-// OLY_INVALID_SYSTEM if there is no native system with that name (registered by OLY_SYSTEM).
+// OLY_INVALID_SYSTEM if there is no native system with that name (registered by OLY_SYSTEM). The system carries the access its
+// parameters declare, so it must be ordered against the systems of its phase that conflict with it.
 OLY_API uint32_t olyEngineAddNativeSystem(OlyEngine* engine, uint32_t phase, const char* name);
-// The system is called by the engine's script invoker with the id returned here.
+// The system is called by the engine's script invoker with the id returned here. A script system is exclusive: it
+// conflicts with every other system of its phase, so it must be ordered against each of them.
 OLY_API uint32_t olyEngineAddScriptSystem(OlyEngine* engine, uint32_t phase, const char* name);
+// `first` runs before `second`: in the same phase, or in phases in that order. Checked when registration closes, at the first
+// olyEngineFrame (a cycle or an unordered conflict is an OLY_ASSERT).
+OLY_API void olyEngineOrderSystems(OlyEngine* engine, uint32_t firstSystemId, uint32_t secondSystemId);
 OLY_API void olyEngineSetWhilePaused(OlyEngine* engine, uint32_t systemId, int32_t whilePaused);
 
 // eventType < olySchemaEventCount() (OLY_ASSERT). Copies the event (the type's size) into the queue; valid inside and outside

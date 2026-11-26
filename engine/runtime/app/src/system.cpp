@@ -10,24 +10,24 @@ namespace oly::app {
   namespace {
     // Local static, not global: OLY_SYSTEM registers during the static initialization of other files, whose
     // order relative to this one is undefined.
-    std::vector<std::pair<std::string, SystemFunction>>& namedSystems() {
-      static std::vector<std::pair<std::string, SystemFunction>> systems;
+    std::vector<std::pair<std::string, const SystemDescriptor*>>& namedSystems() {
+      static std::vector<std::pair<std::string, const SystemDescriptor*>> systems;
       return systems;
     }
   }
 
-  SystemFunction findNamedSystem(std::string_view name) noexcept {
-    for (const auto& [registeredName, function] : namedSystems()) {
+  const SystemDescriptor* findNamedSystem(std::string_view name) noexcept {
+    for (const auto& [registeredName, descriptor] : namedSystems()) {
       if (registeredName == name) {
-        return function;
+        return descriptor;
       }
     }
 
     return nullptr;
   }
 
-  NamedSystemRegistration::NamedSystemRegistration(std::string_view name, SystemFunction function) {
-    namedSystems().emplace_back(std::string(name), function);
+  NamedSystemRegistration::NamedSystemRegistration(std::string_view name, const SystemDescriptor& descriptor) {
+    namedSystems().emplace_back(std::string(name), &descriptor);
   }
 
   ecs::Entity SystemContext::spawn() {

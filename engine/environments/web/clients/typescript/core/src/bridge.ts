@@ -302,6 +302,12 @@ export class Bridge {
     return id;
   }
 
+  // The first system runs before the second; checked when registration closes, at the first frame.
+  orderSystems(engine: number, firstSystemId: number, secondSystemId: number): void {
+    this.module._olyEngineOrderSystems(engine, firstSystemId, secondSystemId);
+    this.sync();
+  }
+
   // 0xFFFFFFFF (OLY_INVALID_HANDLER) if the native name does not exist; 0xFFFFFFFE (OLY_HANDLER_TYPE_MISMATCH) if it is of another type.
   addNativeHandler(engine: number, eventType: number, name: string): number {
     const id = this.module._olyEngineAddNativeHandler(engine, eventType, this.writeString(name)) >>> 0;

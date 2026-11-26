@@ -55,8 +55,7 @@ action move: axis2d
 <!-- template: templates/game/common/native/movement.cpp -->
 ```cpp
 #include "oly/app/system.hpp"
-#include "oly/ecs/query.hpp"
-#include "schema.generated.hpp"
+#include "oly/app/system_descriptor.hpp"
 #include "systems.hpp"
 
 namespace {
@@ -64,15 +63,17 @@ namespace {
   constexpr float PlayerSpeed = 200.0f;
 }
 
-OLY_SYSTEM(movePlayer) {
-  const oly::input::Vector2 axis = context.actions().axis2d(actions::move);
-  const float step = PlayerSpeed * context.fixedDeltaTime();
+void movePlayer(oly::app::Query<Position, oly::ecs::With<Player>> players, oly::app::Res<const oly::input::ActionMap> actions, const oly::app::StepInfo& step) {
+  const oly::input::Vector2 axis = actions->axis2d(actions::move);
+  const float distance = PlayerSpeed * step.fixedDeltaTime;
 
-  context.query<Position>(oly::ecs::With<Player>{}).each([&](Position& position) {
-    position.x += axis.x * step;
-    position.y += axis.y * step;
+  players.each([&](Position& position) {
+    position.x += axis.x * distance;
+    position.y += axis.y * distance;
   });
 }
+
+OLY_SYSTEM(movePlayer);
 ```
 
 `oly new` writes these files at `<game>/<game>.oly` and `<game>/native/movement.cpp`. The TypeScript system of a web game is in [Read the TypeScript system](docs/tutorials/first-web-game.md#7-read-the-typescript-system).

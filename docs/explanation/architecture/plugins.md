@@ -123,8 +123,8 @@ Two test plugins in `engine/testing/fixture/plugins/` prove the mechanism on `na
 
 | Plugin | `.oly` | Install |
 |---|---|---|
-| `counting` | `component Counter { value: u32 }`, `event Counted { value: u32 }` | a `Default`-band `Update` system that adds 1 to every `Counter` |
-| `doubling` (`PLUGINS counting`) | `component Doubled { value: u32 }` | an `Update` system ordered after the `counting::Counting` set that writes `Doubled.value = 2 * Counter.value` |
+| `counting` | `component Counter { value: u32 }`, `event Counted { value: u32 }` | a system in its own `CountingPhase` (fixed step, after `Update`) that adds 1 to every `Counter` |
+| `doubling` (`PLUGINS counting`) | `component Doubled { value: u32 }` | a `CountingPhase` system ordered after the `counting::Counting` set that writes `Doubled.value = 2 * Counter.value` |
 
 - `native/`: `plugin_fixture_game`, an engine test game with `PLUGINS doubling`, runs the doctest suite `fixture.plugins` (install order, plugin events declared first, the dispatch order independent of the install order, the doubling system seeing the step's counts).
 - `web`: the `fixture_game` WASM module turns on `PLUGINS doubling` and writes `fixture.generated.ts`; `ts.testing.wasm` checks that the plugins' components come first and that their systems run.

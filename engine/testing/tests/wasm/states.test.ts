@@ -14,16 +14,18 @@ const { runtime } = await loadFixture();
 const StepSeconds = 1 / 60;
 
 function createEngine(): Engine {
-  const engine = runtime.createEngine({ fixedHz: 60 });
-  engine.frame(0);
-
-  return engine;
+  return runtime.createEngine({ fixedHz: 60 });
 }
 
+// The first frame closes the registration of systems, so it comes after the test registers them.
 function stepper(engine: Engine): () => void {
   let step = 0;
 
   return () => {
+    if (step === 0) {
+      engine.frame(0);
+    }
+
     ++step;
     engine.frame(step * StepSeconds);
   };
@@ -114,10 +116,10 @@ test("inState from TS on a native system, a TS system and a handler", () => {
   withEngine((engine) => {
     const entity = engine.world.spawn([Trace], { Trace: { value: 0 } });
     let handlerEvents = 0;
-    engine.addNativeSystem(Phase.Update, "appendNine").inState(menu);
+    const appendNine = engine.addNativeSystem(Phase.Update, "appendNine").inState(menu);
     engine.addSystem(Phase.Update, "appendSeven", (context) => {
       context.set(entity, Trace, { value: context.get(entity, Trace).value * 10 + 7 });
-    }).inState(playing);
+    }).inState(playing).after(appendNine);
     engine.addSystem(Phase.UpdateBefore, "pinger", (context) => context.emit(Ping, { value: 1 }));
     engine.on(Ping, "counter", (_context, batch) => {
       handlerEvents += batch.count;

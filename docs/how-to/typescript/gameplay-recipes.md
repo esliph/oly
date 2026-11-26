@@ -538,6 +538,7 @@ Notice:
 
 - No code destroys the enemies or cancels the wave timer: the scope does it ([Scope: automatic clean-up](../../explanation/concepts/states.md#scope-automatic-clean-up)).
 - The pause belongs to the whole engine, and only `resumeOnPress`, limited to `playing`, lifts it. Leaving `playing` while paused would freeze the next state, so `resumeOnExit` resumes on the way out.
+- A TS system conflicts with every other system of its phase, so a C++ system and a TS system in one phase need an order: `engine.addSystem(Phase.UpdateAfter, "score", fn).after(collide)`, where `collide` is the registration `addNativeSystem` returned. TS systems of one phase run in declaration order without it ([Registration options](../../reference/typescript/engine-and-systems.md)).
 
 ## High score saved in the browser
 

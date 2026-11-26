@@ -9,6 +9,8 @@
 #include "components.hpp"
 #include "oly/app/handler.hpp"
 #include "oly/app/system.hpp"
+#include "oly/app/system_descriptor.hpp"
+#include "oly/app/system_parameters.hpp"
 #include "oly/app/task_context.hpp"
 #include "oly/capi/c_api.h"
 #include "oly/capi/engine.hpp"
@@ -146,9 +148,23 @@ namespace {
   }
 }
 
-OLY_SYSTEM(capiTestNative) {
+void capiTestNative() {
   g_order.push_back("n");
 }
+
+OLY_SYSTEM(capiTestNative);
+
+void capiTestAlpha() {
+  g_order.push_back("a");
+}
+
+OLY_SYSTEM(capiTestAlpha);
+
+void capiTestBeta() {
+  g_order.push_back("b");
+}
+
+OLY_SYSTEM(capiTestBeta);
 
 OLY_HANDLER(capiTestNativeHandler, CapiTestEvent) {
   g_order.push_back("n");
@@ -165,6 +181,8 @@ TEST_CASE("script system is called by the invoker, in order with the native ones
   const uint32_t first = olyEngineAddScriptSystem(fixture.engine, 1, "s1");
   const uint32_t native = olyEngineAddNativeSystem(fixture.engine, 1, "capiTestNative");
   const uint32_t second = olyEngineAddScriptSystem(fixture.engine, 1, "s2");
+  olyEngineOrderSystems(fixture.engine, first, native);
+  olyEngineOrderSystems(fixture.engine, native, second);
 
   fixture.step();
 
@@ -174,6 +192,30 @@ TEST_CASE("script system is called by the invoker, in order with the native ones
   CHECK(g_invocations[0].first == fixture.engine);
   CHECK(g_invocations[0].second == first);
   CHECK(g_invocations[1].second == second);
+  CHECK(fixture.invariantsHold());
+}
+
+TEST_CASE("olyEngineOrderSystems orders two native systems of one phase") {
+  EngineFixture fixture;
+  const uint32_t alpha = olyEngineAddNativeSystem(fixture.engine, 1, "capiTestAlpha");
+  const uint32_t beta = olyEngineAddNativeSystem(fixture.engine, 1, "capiTestBeta");
+
+  olyEngineOrderSystems(fixture.engine, beta, alpha);
+  fixture.step();
+
+  CHECK(g_order == std::vector<std::string>{"b", "a"});
+  CHECK(fixture.invariantsHold());
+}
+
+TEST_CASE("a script system is ordered against a native one") {
+  EngineFixture fixture;
+  const uint32_t native = olyEngineAddNativeSystem(fixture.engine, 1, "capiTestNative");
+  const uint32_t script = olyEngineAddScriptSystem(fixture.engine, 1, "s");
+
+  olyEngineOrderSystems(fixture.engine, script, native);
+  fixture.step();
+
+  CHECK(g_order == std::vector<std::string>{"s", "n"});
   CHECK(fixture.invariantsHold());
 }
 
@@ -385,9 +427,11 @@ namespace {
   }
 }
 
-OLY_SYSTEM(capiTestReadJump) {
-  g_sawJumpPressed = context.actions().button(oly::input::ButtonAction{0}).pressed;
+void capiTestReadJump(oly::app::Res<const oly::input::ActionMap> actionMap) {
+  g_sawJumpPressed = actionMap->button(oly::input::ButtonAction{0}).pressed;
 }
+
+OLY_SYSTEM(capiTestReadJump);
 
 TEST_CASE("schema actions are declared at creation, in order") {
   EngineFixture fixture;

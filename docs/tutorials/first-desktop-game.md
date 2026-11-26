@@ -72,8 +72,7 @@ The gameplay lives in `native/` and does not include SDL, so it stays the same i
 
 ```cpp
 #include "oly/app/system.hpp"
-#include "oly/ecs/query.hpp"
-#include "schema.generated.hpp"
+#include "oly/app/system_descriptor.hpp"
 #include "systems.hpp"
 
 namespace {
@@ -81,26 +80,31 @@ namespace {
   constexpr float PlayerSpeed = 200.0f;
 }
 
-OLY_SYSTEM(movePlayer) {
-  const oly::input::Vector2 axis = context.actions().axis2d(actions::move);
-  const float step = PlayerSpeed * context.fixedDeltaTime();
+void movePlayer(oly::app::Query<Position, oly::ecs::With<Player>> players, oly::app::Res<const oly::input::ActionMap> actions, const oly::app::StepInfo& step) {
+  const oly::input::Vector2 axis = actions->axis2d(actions::move);
+  const float distance = PlayerSpeed * step.fixedDeltaTime;
 
-  context.query<Position>(oly::ecs::With<Player>{}).each([&](Position& position) {
-    position.x += axis.x * step;
-    position.y += axis.y * step;
+  players.each([&](Position& position) {
+    position.x += axis.x * distance;
+    position.y += axis.y * distance;
   });
 }
+
+OLY_SYSTEM(movePlayer);
 ```
 
-`OLY_SYSTEM(movePlayer)` defines a function the engine can run every step. The query visits every entity that has `Position` and the tag `Player`. `native/systems.hpp` declares the function, so the shell can add it:
+`movePlayer` is a function the engine can run every step; its parameters declare what it reads and writes, and `OLY_SYSTEM(movePlayer);` registers it by name. The query visits every entity that has `Position` and the tag `Player`. `native/systems.hpp` declares the function, so the shell can add it:
 
 ```cpp
 #pragma once
 
-#include "oly/app/system.hpp"
+#include "oly/app/system_parameters.hpp"
+#include "oly/ecs/query.hpp"
+#include "oly/input/action_map.hpp"
+#include "schema.generated.hpp"
 
 // Registered by name through OLY_SYSTEM; declared here for a shell that adds it with Engine::addSystem.
-void movePlayer(oly::app::SystemContext& context);
+void movePlayer(oly::app::Query<Position, oly::ecs::With<Player>> players, oly::app::Res<const oly::input::ActionMap> actions, const oly::app::StepInfo& step);
 ```
 
 Change `PlayerSpeed` to `400.0f` and run `./oly run` again. You see the square cross the window twice as fast.
@@ -113,6 +117,7 @@ The shell is `desktop/main.cpp`. It holds the game as a class, `MyGame`, and sta
 #include <SDL3/SDL.h>
 
 #include "oly/app/engine.hpp"
+#include "oly/app/system_descriptor.hpp"
 #include "oly/ecs/query.hpp"
 #include "oly/ecs/world.hpp"
 #include "oly/native_host/game.hpp"
@@ -124,11 +129,15 @@ namespace {
   constexpr int LogicalHeight = 360;
   constexpr float PlayerSize = 16.0f;
 
-  void draw(oly::app::SystemContext& context) {
-    SDL_Renderer* renderer = static_cast<SDL_Renderer*>(context.userData());
+  struct Renderer {
+    SDL_Renderer* renderer;
+  };
+
+  void draw(oly::app::Query<const Position, oly::ecs::With<Player>> players, oly::app::Res<const Renderer> target) {
+    SDL_Renderer* renderer = target->renderer;
 
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    context.query<const Position>(oly::ecs::With<Player>{}).each([renderer](const Position& position) {
+    players.each([renderer](const Position& position) {
       const SDL_FRect box{position.x - PlayerSize / 2, position.y - PlayerSize / 2, PlayerSize, PlayerSize};
       SDL_RenderFillRect(renderer, &box);
     });
@@ -142,8 +151,9 @@ namespace {
     void onStart(oly::app::Engine& engine, oly::native_host::Window& window) override {
       engine.actions().bind(actions::move, {oly::input::Key::W, oly::input::Key::S, oly::input::Key::A, oly::input::Key::D});
       engine.world().spawn(Player{}, Position{LogicalWidth / 2.0f, LogicalHeight / 2.0f});
-      engine.addSystem(oly::app::Phase::Update, "movePlayer", movePlayer);
-      engine.addSystem(oly::app::Phase::Render, "draw", draw, window.renderer());
+      engine.world().insertResource(Renderer{window.renderer()});
+      engine.addSystem<&movePlayer>(oly::app::Update{}, "movePlayer");
+      engine.addSystem<&draw>(oly::app::Render{}, "draw");
     }
   };
 }
@@ -155,9 +165,9 @@ int main(int argumentCount, char** arguments) {
 
 In the file, in order:
 
-- `draw` is a `Render` system. It gets the SDL renderer through `userData`.
+- `Renderer` is a resource the shell inserts in `onStart`; `draw` is a `Render` system that reads it through `Res<const Renderer>`.
 - `MyGame` derives `oly::native_host::Game`. Its constructor gives the window configuration. The size, `640` by `360`, is the logical size the game draws in: the host scales it to the window and adds bars when the shape differs ([Native host](../reference/native-host.md)).
-- `onStart` is the content of the game. `runGame` calls it once, on an `Engine` that it already set up with `setUpGame`, with the window open. `engine.actions().bind` ties the keys `W`, `S`, `A` and `D` to the two axes of `move`. `engine.world().spawn` creates the player in the middle of the logical area. `engine.addSystem` adds `movePlayer` to the `Update` phase and `draw` to the `Render` phase.
+- `onStart` is the content of the game. `runGame` calls it once, on an `Engine` that it already set up with `setUpGame`, with the window open. `engine.actions().bind` ties the keys `W`, `S`, `A` and `D` to the two axes of `move`. `engine.world().spawn` creates the player in the middle of the logical area. `engine.world().insertResource` stores the renderer, and `addSystem<&movePlayer>` and `addSystem<&draw>` add the two systems to the `Update` and `Render` phases.
 - `runGame<MyGame>` reads `--frames <n>`, constructs the game, opens the window and runs the loop. It returns the exit code: `0` when the window closes, `64` for a wrong command line and `1` when an exception escapes, after it prints `<title>: <message>`.
 
 Rename `MyGame` to fit your game. Change `PlayerSize` to `32.0f` and run `./oly run` again. You see a square twice as wide.

@@ -12,16 +12,18 @@ const { runtime, fixture } = await loadFixture();
 const StepSeconds = 1 / 60;
 
 function createEngine(): Engine {
-  const engine = runtime.createEngine({ fixedHz: 60 });
-  engine.frame(0);
-
-  return engine;
+  return runtime.createEngine({ fixedHz: 60 });
 }
 
+// The first frame closes the registration of systems, so it comes after the test registers them.
 function stepper(engine: Engine): () => void {
   let step = 0;
 
   return () => {
+    if (step === 0) {
+      engine.frame(0);
+    }
+
     ++step;
     engine.frame(step * StepSeconds);
   };
@@ -45,17 +47,58 @@ function appendDigit(entity: number, digit: number): (context: SystemContext) =>
   };
 }
 
-test("TS and C++ systems in phase and registration order", () => {
+test("script systems of a phase run in declaration order", () => {
   withEngine((engine) => {
     const entity = engine.world.spawn([Trace], { Trace: { value: 0 } });
-    engine.addSystem(Phase.Update, "u2", appendDigit(entity, 2));
+    engine.addSystem(Phase.Update, "z", appendDigit(entity, 1));
+    engine.addSystem(Phase.Update, "a", appendDigit(entity, 2));
+    engine.addSystem(Phase.UpdateBefore, "b", appendDigit(entity, 3));
+
+    stepper(engine)();
+
+    assert.equal(engine.world.get(entity, Trace).value, 312);
+  });
+});
+
+test("registration.after orders a script system after a native one", () => {
+  withEngine((engine) => {
+    const entity = engine.world.spawn([Trace], { Trace: { value: 0 } });
+    const u2 = engine.addSystem(Phase.Update, "u2", appendDigit(entity, 2));
     engine.addSystem(Phase.UpdateBefore, "b1", appendDigit(entity, 1));
-    engine.addNativeSystem(Phase.Update, "appendNine");
-    engine.addSystem(Phase.Update, "u3", appendDigit(entity, 3));
+    const nine = engine.addNativeSystem(Phase.Update, "appendNine").after(u2);
+    engine.addSystem(Phase.Update, "u3", appendDigit(entity, 3)).after(nine);
 
     stepper(engine)();
 
     assert.equal(engine.world.get(entity, Trace).value, 1293);
+  });
+});
+
+test("before with a registration of another engine is ContractError", () => {
+  const first = createEngine();
+  const second = createEngine();
+
+  try {
+    const own = first.addSystem(Phase.Update, "own", () => {});
+    const foreign = second.addSystem(Phase.Update, "foreign", () => {});
+
+    assert.throws(() => own.before(foreign), ContractError);
+    assert.throws(() => own.after(foreign), ContractError);
+  } finally {
+    first.dispose();
+    second.dispose();
+  }
+});
+
+test("registering or ordering a system after the first frame is ContractError", () => {
+  withEngine((engine) => {
+    const early = engine.addSystem(Phase.Update, "early", () => {});
+    const other = engine.addSystem(Phase.Update, "other", () => {});
+    stepper(engine)();
+
+    assert.throws(() => engine.addSystem(Phase.Update, "late", () => {}), ContractError);
+    assert.throws(() => engine.addNativeSystem(Phase.Update, "noop"), ContractError);
+    assert.throws(() => early.before(other), ContractError);
   });
 });
 
@@ -64,7 +107,7 @@ test("frame(k/60) for k = 0..60 runs 60 steps", () => {
 
   try {
     let steps = 0;
-    engine.addSystem(Phase.Update, "count", () => {
+    engine.addSystem(Phase.Update, "countSteps", () => {
       ++steps;
     });
 

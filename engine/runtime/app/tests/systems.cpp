@@ -6,6 +6,7 @@
 #include "components.hpp"
 #include "log.hpp"
 #include "oly/app/engine.hpp"
+#include "oly/app/system_descriptor.hpp"
 
 using oly::app::Commands;
 using oly::app::Engine;
@@ -16,7 +17,9 @@ using oly::app::Update;
 using oly::app::UpdateAfter;
 using oly::app::UpdateBefore;
 
-OLY_SYSTEM(appTestNamed) {}
+void appTestNamed() {}
+
+OLY_SYSTEM(appTestNamed);
 
 namespace {
   struct Shared {

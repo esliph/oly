@@ -23,6 +23,11 @@ struct OlyWorld {
 };
 
 namespace oly::capi {
+  // The World resource through which a script system reaches its OlyEngine.
+  struct ScriptHost {
+    OlyEngine* engine;
+  };
+
   // Every OlyEngine starts with it: a script call before olyEngineSetScriptInvoker is a contract violation.
   void missingScriptInvoker(void* userData, OlyEngine* engine, uint32_t kind, uint32_t id, const void* events, uint32_t eventCount);
 }
@@ -33,7 +38,7 @@ struct OlyEngine {
   OlyScriptInvoker scriptInvoker = &oly::capi::missingScriptInvoker;
   void* scriptUserData = nullptr;
   oly::app::Engine engine;
-  oly::app::SystemContext* currentContext = nullptr;
+  oly::app::Commands* currentCommands = nullptr;
   oly::app::DirectContext* directContext = nullptr;
 
   explicit OlyEngine(oly::app::EngineConfig config)

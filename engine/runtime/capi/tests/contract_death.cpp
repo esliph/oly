@@ -159,6 +159,16 @@ namespace {
     olyEngineFrame(engine, 1.0 / 60);
   }
 
+  void orderSystemsCycle() {
+    OlyEngine* engine = olyEngineCreate(60.0, 5, 16);
+    const uint32_t first = olyEngineAddScriptSystem(engine, 1, "first");
+    const uint32_t second = olyEngineAddScriptSystem(engine, 1, "second");
+
+    olyEngineOrderSystems(engine, first, second);
+    olyEngineOrderSystems(engine, second, first);
+    olyEngineFrame(engine, 0.0);
+  }
+
   struct Case {
     const char* name;
     void (*run)();
@@ -181,6 +191,7 @@ int main(int argumentCount, char** arguments) {
     {"schedule_script_task_negative_interval", scheduleScriptTaskNegativeInterval, {"schedule", "interval"}},
     {"set_script_invoker_null", setScriptInvokerNull, {"olyEngineSetScriptInvoker", "null"}},
     {"script_without_invoker", scriptWithoutInvoker, {"no invoker", "kind=0"}},
+    {"order_systems_cycle", orderSystemsCycle, {"frame: cycle of system constraints"}},
   };
 
   if (argumentCount != 2) {

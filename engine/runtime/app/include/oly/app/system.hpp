@@ -79,15 +79,14 @@ namespace oly::app {
     }
   };
 
+  struct SystemDescriptor;
+
   // nullptr if the name does not exist.
-  SystemFunction findNamedSystem(std::string_view name) noexcept;
+  const SystemDescriptor* findNamedSystem(std::string_view name) noexcept;
 
   struct NamedSystemRegistration {
-    NamedSystemRegistration(std::string_view name, SystemFunction function);
+    NamedSystemRegistration(std::string_view name, const SystemDescriptor& descriptor);
   };
 }
 
-#define OLY_SYSTEM(name)                                                           \
-  void name(oly::app::SystemContext& context);                                     \
-  static const oly::app::NamedSystemRegistration name##Registration(#name, &name); \
-  void name([[maybe_unused]] oly::app::SystemContext& context)
+#define OLY_SYSTEM(name) static const oly::app::NamedSystemRegistration name##Registration(#name, oly::app::systemDescriptor<&name>())

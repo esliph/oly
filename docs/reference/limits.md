@@ -6,6 +6,7 @@
 - **No shared library for foreign clients yet.** The C API headers are valid C and a C test drives an engine through them (`capi.foreign_client`), but nothing builds a `.so` or `.dll` that another language could load.
 - **Windows is checked under Wine and by hand only.** The whole test suite runs under Wine (`./spur windows-test`), but no real Windows machine runs it, and the `.exe` is opened by hand only.
 - **The Linux window is checked by hand only.** The tests use SDL's dummy video driver; the X11 and Wayland backends are checked to be compiled in, not to open a window.
+- **A phase a plugin declares is not reachable from the C API or TS.** They register in the four built-in phases by number.
 - **Time per system is C++ only.** The C API and the TypeScript client do not expose it.
 - **`--release` builds desktop games only.** `oly build --release` on a web game exits 64.
 - **ECS v1**: no fixed-size chunks, no change detection, no enableable components, no sparse storage. `ComponentId` is only valid inside the process.

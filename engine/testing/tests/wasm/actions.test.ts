@@ -15,10 +15,15 @@ const StepSeconds = 1 / 60;
 
 const idle: ButtonState = { pressed: false, held: false, released: false };
 
+// The first frame closes the registration of systems, so it comes after the test registers them.
 function stepper(engine: Engine): () => void {
   let step = 0;
 
   return () => {
+    if (step === 0) {
+      engine.frame(0);
+    }
+
     ++step;
     engine.frame(step * StepSeconds);
   };
@@ -26,7 +31,6 @@ function stepper(engine: Engine): () => void {
 
 function withEngine(body: (engine: Engine) => void): void {
   const engine = runtime.createEngine({ fixedHz: 60 });
-  engine.frame(0);
 
   try {
     body(engine);
@@ -88,10 +92,10 @@ test("a tap shorter than a step shows up in a single step", () => {
 test("C++ and TS systems see the same snapshot in the same step", () => {
   withEngine((engine) => {
     let tsSawPressed = false;
-    engine.addNativeSystem(Phase.Update, "countFirePresses");
+    const countFirePresses = engine.addNativeSystem(Phase.Update, "countFirePresses");
     engine.addSystem(Phase.Update, "reader", (context) => {
       tsSawPressed = context.actions.button(fire).pressed;
-    });
+    }).after(countFirePresses);
     engine.actions.bind(fire, "Space");
     fixture.fixtureTakeFirePressCount();
 

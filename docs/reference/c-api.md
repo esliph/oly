@@ -326,7 +326,7 @@ Returns how far, from 0 to 1, the real time is between the last fixed step and t
 uint32_t olyEngineAddNativeSystem(OlyEngine* engine, uint32_t phase, const char* name);
 ```
 
-Registers the C++ system that `OLY_SYSTEM` defined under `name`, in `phase`, and returns its system id. Returns `OLY_INVALID_SYSTEM` if no native system has that name. `phase` is an `oly::app::Phase`; a value out of range is a contract violation. Registering during `olyEngineFrame` is a contract violation.
+Registers the C++ system that `OLY_SYSTEM` defined under `name`, in `phase`, and returns its system id. Returns `OLY_INVALID_SYSTEM` if no native system has that name. `phase` is an `oly::app::Phase`; a value out of range is a contract violation. Registering during `olyEngineFrame` is a contract violation. The system carries the access its parameters declare, so it must be ordered, with `olyEngineOrderSystems`, against every system of its phase that conflicts with it.
 
 ### `olyEngineAddScriptSystem`
 
@@ -334,7 +334,15 @@ Registers the C++ system that `OLY_SYSTEM` defined under `name`, in `phase`, and
 uint32_t olyEngineAddScriptSystem(OlyEngine* engine, uint32_t phase, const char* name);
 ```
 
-Registers a script system and returns its system id. The invoker receives that id with `OLY_SCRIPT_SYSTEM` once per system per step. The same rules about `phase` and about registering during `olyEngineFrame` apply.
+Registers a script system and returns its system id. The invoker receives that id with `OLY_SCRIPT_SYSTEM` once per system per step. The same rules about `phase` and about registering during `olyEngineFrame` apply. A script system is exclusive: it conflicts with every other system of its phase, so it must be ordered against each of them.
+
+### `olyEngineOrderSystems`
+
+```c
+void olyEngineOrderSystems(OlyEngine* engine, uint32_t firstSystemId, uint32_t secondSystemId);
+```
+
+Makes `firstSystemId` run before `secondSystemId`: in the same phase, or in phases in that order. The constraint is checked when registration closes, at the first `olyEngineFrame`: a cycle of constraints, or two conflicting systems with no order between them, is a contract violation. Calling it after the first `olyEngineFrame` is a contract violation. A phase a plugin declares is not reachable from the C API: the four built-in phases are.
 
 ### `olyEngineSetWhilePaused`
 

@@ -12,6 +12,7 @@ namespace oly::counting {
   }
 
   void Plugin::install(app::Engine& engine) {
-    system_ = engine.addSystem<&count>(app::Update{}, "count").inSet<Counting>().id();
+    engine.addPhase<CountingPhase>(app::FixedStep{}).after<app::Update>().before<app::UpdateAfter>();
+    system_ = engine.addSystem<&count>(CountingPhase{}, "count").inSet<Counting>().id();
   }
 }

@@ -14,6 +14,6 @@ namespace oly::doubling {
   }
 
   void Plugin::install(app::Engine& engine) {
-    system_ = engine.addSystem<&writeDoubles>(app::Update{}, "writeDoubles").after<counting::Counting>().id();
+    system_ = engine.addSystem<&writeDoubles>(counting::CountingPhase{}, "writeDoubles").after<counting::Counting>().id();
   }
 }

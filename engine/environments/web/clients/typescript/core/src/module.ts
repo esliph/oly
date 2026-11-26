@@ -56,6 +56,7 @@ export interface OlyModule {
   _olyEngineInterpolation(engine: number): number;
   _olyEngineAddNativeSystem(engine: number, phase: number, name: number): number;
   _olyEngineAddScriptSystem(engine: number, phase: number, name: number): number;
+  _olyEngineOrderSystems(engine: number, firstSystemId: number, secondSystemId: number): void;
   _olyEngineSetWhilePaused(engine: number, systemId: number, whilePaused: number): void;
   _olyEngineRequestState(engine: number, state: number): void;
   _olyEngineState(engine: number): number;

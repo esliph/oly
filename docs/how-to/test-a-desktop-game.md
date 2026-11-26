@@ -35,7 +35,7 @@ int main() {
   oly::app::setUpGame(engine);
 
   engine.actions().bind(actions::move, {oly::input::Key::W, oly::input::Key::S, oly::input::Key::A, oly::input::Key::D});
-  engine.addSystem(oly::app::Phase::Update, "movePlayer", movePlayer);
+  engine.addSystem<&movePlayer>(oly::app::Update{}, "movePlayer");
   oly::ecs::Entity player = world.spawn(Player{}, Position{0.0f, 0.0f});
 
   engine.actions().buttonDown(oly::input::Key::D);

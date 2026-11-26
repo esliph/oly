@@ -39,6 +39,14 @@ export interface SystemRegistration {
   whilePaused(): SystemRegistration;
   /** Like `HandlerRegistration.inState`, for the system; applies in every phase, including render. */
   inState(...states: State[]): SystemRegistration;
+  /**
+   * Makes this system run before `other`: in the same phase, or in phases in that order. Throws ContractError for a
+   * registration of another Engine and after the first `frame` call. A cycle or an unordered conflict is raised by the
+   * first `frame`.
+   */
+  before(other: SystemRegistration): SystemRegistration;
+  /** Makes this system run after `other`; see `before`. */
+  after(other: SystemRegistration): SystemRegistration;
 }
 
 const InvalidSystem = 0xffffffff;
@@ -69,6 +77,9 @@ interface ScriptStateHookEntry {
   readonly entering: boolean;
 }
 
+// The Engine each registration came from, so `before` and `after` refuse the registration of another Engine.
+const registrationOwners = new WeakMap<SystemRegistration, Engine>();
+
 let engineHandleOfInternal!: (engine: Engine) => number;
 let invokeScriptInternal!: (engine: Engine, kind: number, id: number, events: number, eventCount: number) => void;
 
@@ -85,6 +96,9 @@ export class Engine {
   readonly #scriptSystems = new Map<number, ScriptSystem>();
   readonly #scriptHandlers = new Map<number, ScriptHandlerEntry>();
   readonly #scriptStateHooks = new Map<number, ScriptStateHookEntry>();
+  // The last script system of each phase: the next one of the phase is ordered after it, so they run in declaration order.
+  readonly #lastScriptSystem = new Map<Phase, number>();
+  #started = false;
   #inFrame = false;
   // An exception unwinds the WASM without destructors: the C++ core stays "in frame" until the next frame recovers.
   #interrupted = false;
@@ -158,6 +172,7 @@ export class Engine {
     }
 
     this.#lastFrameTime = nowSeconds;
+    this.#started = true;
     this.#inFrame = true;
     setStructureLocked(this.world, true);
 
@@ -252,6 +267,14 @@ export class Engine {
     const context = new SystemContext(phase, name, this.#runtime, this.#bridge, this.#handle, this.world, this.#actions, this.#scheduler);
     this.#scriptSystems.set(id, { function: system, context });
 
+    const previous = this.#lastScriptSystem.get(phase);
+
+    if (previous !== undefined) {
+      this.#bridge.orderSystems(this.#handle, previous, id);
+    }
+
+    this.#lastScriptSystem.set(phase, id);
+
     return this.#registration(id, phase, name);
   }
 
@@ -331,9 +354,37 @@ export class Engine {
 
         return registration;
       },
+      before: (other) => {
+        this.#orderSystems("before", name, registration, other, registration, other);
+
+        return registration;
+      },
+      after: (other) => {
+        this.#orderSystems("after", name, registration, other, other, registration);
+
+        return registration;
+      },
     };
 
+    registrationOwners.set(registration, this);
+
     return registration;
+  }
+
+  #orderSystems(operation: string, name: string, self: SystemRegistration, other: SystemRegistration, first: SystemRegistration, second: SystemRegistration): void {
+    this.#assertUsable(operation);
+
+    if (registrationOwners.get(other) !== this) {
+      throw new ContractError(`${operation} system=${name}: the other registration belongs to another Engine`);
+    }
+    if (self === other) {
+      throw new ContractError(`${operation} system=${name}: a system cannot be ordered against itself`);
+    }
+    if (this.#started || this.#inFrame) {
+      throw new ContractError(`${operation} system=${name}: registration after the first frame`);
+    }
+
+    this.#bridge.orderSystems(this.#handle, first.id, second.id);
   }
 
   #handlerRegistration(id: number, name: string): HandlerRegistration {
@@ -488,6 +539,10 @@ export class Engine {
     }
 
     this.#assertNotInterrupted(operation, `system=${name}`);
+
+    if (this.#started) {
+      throw new ContractError(`${operation} system=${name}: registration after the first frame`);
+    }
 
     if (!Object.values(Phase).includes(phase)) {
       throw new ContractError(`${operation} system=${name}: invalid phase=${String(phase)}`);

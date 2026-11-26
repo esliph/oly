@@ -17,7 +17,7 @@ A TS system costs at least one crossing per call and runs in the JS engine. A C+
 | rules that change often: score, waves | TypeScript | they are not per entity, and a TS change needs no C++ build |
 | bindings and state hooks that talk to the page | TypeScript | they need the browser |
 
-Both kinds of system can live in the same phase, in the order you register them. The template uses both: the C++ system `movePlayer` and the TS system `draw` ([Your first web game](../../tutorials/first-web-game.md#7-read-the-typescript-system)).
+Both kinds of system can live in the same phase once each pair that conflicts is ordered: a C++ system declares the access of its parameters, and a TS system conflicts with every other system of its phase ([Registration options](../../reference/typescript/engine-and-systems.md)). The template uses both: the C++ system `movePlayer` and the TS system `draw` ([Your first web game](../../tutorials/first-web-game.md#7-read-the-typescript-system)).
 
 A game can run only TS systems (a prototype or few entities: the `native/` folder can be empty), or only C++ with no client at all: that is a [desktop game](../../tutorials/first-desktop-game.md) or a tool, with an `oly::app::Engine` over an `oly::ecs::World`.
 

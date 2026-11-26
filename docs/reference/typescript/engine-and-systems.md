@@ -60,7 +60,7 @@ engine.addNativeSystem(Phase.Update, "integrate");   // a C++ OLY_SYSTEM(integra
 
 The name appears in error messages; use a clear one. The system has the type `SystemFunction`, `(context: SystemContext) => void`.
 
-Registration returns a `SystemRegistration`: its `id` is the system id, and it has two options. Both can be chained:
+Registration returns a `SystemRegistration`: its `id` is the system id, and it has four options. They can be chained:
 
 ```ts
 engine.addSystem(Phase.UpdateBefore, "resumeOnPress", resumeOnPress).whilePaused().inState(playing);
@@ -70,6 +70,10 @@ engine.addSystem(Phase.UpdateBefore, "resumeOnPress", resumeOnPress).whilePaused
 |---|---|
 | `.whilePaused()` | the system runs **only** while the game is paused (not in Render) |
 | `.inState(...states)` | the system runs only in those states ([States](states.md)) |
+| `.before(other)` | the system runs before `other`, a registration of the same `Engine`; same phase, or phases in that order |
+| `.after(other)` | the system runs after `other`, with the same rules |
+
+`before` and `after` throw `ContractError` for a registration of another `Engine` and after the first frame. A TS system is exclusive: it conflicts with every other system of its phase. The script systems of one phase run in declaration order, because `addSystem` orders each one after the previous script system of its phase. A C++ system from `addNativeSystem` declares the access of its parameters, so it needs `before` or `after` against each script system of its phase.
 
 ## C++ systems, handlers and hooks
 
@@ -95,7 +99,7 @@ const Phase = { UpdateBefore: 0, Update: 1, UpdateAfter: 2, Render: 3 } as const
 
 `addSystem` takes one of `Phase.UpdateBefore`, `Phase.Update`, `Phase.UpdateAfter` and `Phase.Render`. The first three run in each fixed step, in this order, and `Render` runs once per frame ([Phases](../../explanation/concepts/engine-and-systems.md#phases)). A TS system always runs in the `Default` band.
 
-C++ and TS systems mix freely in one phase, in registration order.
+C++ and TS systems mix in one phase once each pair that conflicts is ordered with `before` or `after`; a phase a plugin declares is not reachable from TS.
 
 ## The system context
 

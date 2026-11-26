@@ -12,16 +12,18 @@ const { runtime, fixture } = await loadFixture();
 const StepSeconds = 1 / 60;
 
 function createEngine(): Engine {
-  const engine = runtime.createEngine({ fixedHz: 60 });
-  engine.frame(0);
-
-  return engine;
+  return runtime.createEngine({ fixedHz: 60 });
 }
 
+// The first frame closes the registration of systems, so it comes after the test registers them.
 function stepper(engine: Engine): () => void {
   let step = 0;
 
   return () => {
+    if (step === 0) {
+      engine.frame(0);
+    }
+
     ++step;
     engine.frame(step * StepSeconds);
   };
