@@ -5,20 +5,22 @@
 
 #include "components.hpp"
 #include "fixture.hpp"
-#include "oly/app/context.hpp"
-#include "oly/app/system.hpp"
+#include "oly/app/system_parameters.hpp"
 #include "oly/ecs/diagnostics.hpp"
 
-using oly::app::OrderBand;
-using oly::app::Phase;
-using oly::app::SystemContext;
+using oly::app::Commands;
+using oly::app::Lookup;
+using oly::app::Query;
+using oly::app::Res;
+using oly::app::Update;
+using oly::app::UpdateAfter;
 using oly::ecs::Entity;
 
 namespace {
   constexpr float HalfTurn = std::numbers::pi_v<float> / 2;
 
-  void moveRightByOne(SystemContext& context) {
-    context.query<Position>().each([](Position& position) { position.x += 1; });
+  void moveRightByOne(Query<Position> positions) {
+    positions.each([](Position& position) { position.x += 1; });
   }
 
   struct Probe {
@@ -27,13 +29,12 @@ namespace {
     bool moved = false;
   };
 
-  void readWorldThenMove(SystemContext& context) {
-    Probe& probe = *static_cast<Probe*>(context.userData());
-    probe.worldXSeen = context.get<WorldTransform>(probe.entity).x;
+  void readWorldThenMove(Res<Probe> probe, Lookup<const WorldTransform> worlds, Lookup<Position> positions) {
+    probe->worldXSeen = worlds.get(probe->entity).x;
 
-    if (!probe.moved) {
-      context.get<Position>(probe.entity).x = 7;
-      probe.moved = true;
+    if (!probe->moved) {
+      positions.get(probe->entity).x = 7;
+      probe->moved = true;
     }
   }
 
@@ -43,13 +44,17 @@ namespace {
     bool spawned = false;
   };
 
-  void spawnChildOfParent(SystemContext& context) {
-    Spawner& spawner = *static_cast<Spawner*>(context.userData());
-
-    if (!spawner.spawned) {
-      spawner.child = context.spawn(Position{1, 0}, Parent{spawner.parent});
-      spawner.spawned = true;
+  void spawnChildOfParent(Res<Spawner> spawner, Commands commands) {
+    if (!spawner->spawned) {
+      spawner->child = commands.spawn(Position{1, 0}, Parent{spawner->parent});
+      spawner->spawned = true;
     }
+  }
+
+  void readSpawnedChild(Res<const Spawner> spawner, Lookup<const WorldTransform> worlds) {
+    const WorldTransform& world = worlds.get(spawner->child);
+    CHECK(world.x == doctest::Approx(11));
+    CHECK(world.y == doctest::Approx(5));
   }
 }
 
@@ -103,24 +108,35 @@ TEST_CASE("a child's WorldTransform composes translate-rotate-scale") {
   CHECK_INVARIANTS(fixture.world);
 }
 
-TEST_CASE("propagation runs after the Default systems of update, so updateAfter reads the new world values") {
+TEST_CASE("a system of Update and a reader of UpdateAfter see the propagated WorldTransform in the same step") {
   Fixture fixture;
-  fixture.engine.addSystem(Phase::Update, "moveRight", moveRightByOne, nullptr, OrderBand::Default);
-  Probe probe;
+  fixture.engine.addSystem<&moveRightByOne>(Update{}, "moveRight");
+  Probe& probe = fixture.world.insertResource(Probe{});
   probe.entity = fixture.world.spawn(Position{0, 0});
   probe.moved = true;
-  fixture.engine.addSystem(Phase::UpdateAfter, "read", readWorldThenMove, &probe);
+  fixture.engine.addSystem<&readWorldThenMove>(UpdateAfter{}, "read");
 
   fixture.step();
 
   CHECK(probe.worldXSeen == doctest::Approx(1));
+  CHECK_INVARIANTS(fixture.world);
+}
+
+TEST_CASE("the propagation phase runs after Update and before UpdateAfter") {
+  Fixture fixture;
+  fixture.engine.setTimingEnabled(true);
+
+  fixture.start();
+
+  CHECK(phaseNames(fixture.engine.flushTimings()) == std::vector<std::string>{"oly::app::UpdateBefore", "oly::app::Update", "oly::essentials2d::Propagation", "oly::app::UpdateAfter", "oly::app::Render"});
+  CHECK_INVARIANTS(fixture.world);
 }
 
 TEST_CASE("a Position change in updateAfter reaches WorldTransform in the next step") {
   Fixture fixture;
-  Probe probe;
+  Probe& probe = fixture.world.insertResource(Probe{});
   probe.entity = fixture.world.spawn(Position{1, 0});
-  fixture.engine.addSystem(Phase::UpdateAfter, "readAndMove", readWorldThenMove, &probe);
+  fixture.engine.addSystem<&readWorldThenMove>(UpdateAfter{}, "readAndMove");
 
   fixture.step();
   CHECK(probe.worldXSeen == doctest::Approx(1));
@@ -133,14 +149,10 @@ TEST_CASE("a Position change in updateAfter reaches WorldTransform in the next s
 
 TEST_CASE("a child spawned by a CommandBuffer during update has its WorldTransform in updateAfter") {
   Fixture fixture;
-  Spawner spawner;
+  Spawner& spawner = fixture.world.insertResource(Spawner{});
   spawner.parent = fixture.world.spawn(Position{10, 5});
-  fixture.engine.addSystem(Phase::Update, "spawnChild", spawnChildOfParent, &spawner);
-  fixture.engine.addSystem(Phase::UpdateAfter, "read", [](SystemContext& context) {
-    Spawner& spawned = *static_cast<Spawner*>(context.userData());
-    const WorldTransform& world = context.get<WorldTransform>(spawned.child);
-    CHECK(world.x == doctest::Approx(11));
-    CHECK(world.y == doctest::Approx(5)); }, &spawner);
+  fixture.engine.addSystem<&spawnChildOfParent>(Update{}, "spawnChild");
+  fixture.engine.addSystem<&readSpawnedChild>(UpdateAfter{}, "read");
 
   fixture.step();
 

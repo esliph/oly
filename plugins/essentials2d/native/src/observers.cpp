@@ -46,7 +46,7 @@ namespace oly::essentials2d {
   }
 
   void Plugin::onParentAdded(ecs::ObserverContext& context) {
-    Plugin& plugin = *static_cast<Plugin*>(context.userData());
+    detail::Hierarchy& hierarchy = *static_cast<detail::Hierarchy*>(context.userData());
     ecs::World& world = context.world();
     const ecs::Entity entity = context.entity();
     const ecs::Entity parent = world.get<Parent>(entity).entity;
@@ -59,33 +59,33 @@ namespace oly::essentials2d {
     OLY_ASSERT(!isSelfOrAncestor(world, entity, parent), "add e=%u:%u type=%.*s: parent e=%u:%u is a descendant of the entity", entity.index,
                entity.generation, static_cast<int>(typeName.size()), typeName.data(), parent.index, parent.generation);
 
-    std::vector<ecs::Entity>& siblings = plugin.children_[keyOf(parent)];
+    std::vector<ecs::Entity>& siblings = hierarchy.children[detail::Hierarchy::keyOf(parent)];
     const bool firstChild = siblings.empty();
-    plugin.slots_[keyOf(entity)] = static_cast<uint32_t>(siblings.size());
+    hierarchy.slots[detail::Hierarchy::keyOf(entity)] = static_cast<uint32_t>(siblings.size());
     siblings.push_back(entity);
 
     if (firstChild) {
       context.commands().add(parent, detail::HasChildren{});
     }
 
-    plugin.orderDirty_ = true;
+    hierarchy.orderDirty = true;
     computeWorldTransform(world, entity);
   }
 
   void Plugin::onParentRemoved(ecs::ObserverContext& context) {
-    Plugin& plugin = *static_cast<Plugin*>(context.userData());
+    detail::Hierarchy& hierarchy = *static_cast<detail::Hierarchy*>(context.userData());
     ecs::World& world = context.world();
     const ecs::Entity entity = context.entity();
     const ecs::Entity parent = world.get<Parent>(entity).entity;
-    plugin.orderDirty_ = true;
+    hierarchy.orderDirty = true;
 
-    const auto slot = plugin.slots_.find(keyOf(entity));
-    const auto found = plugin.children_.find(keyOf(parent));
+    const auto slot = hierarchy.slots.find(detail::Hierarchy::keyOf(entity));
+    const auto found = hierarchy.children.find(detail::Hierarchy::keyOf(parent));
 
     // A parent already erased by the cascade, or a Parent written through get (a contract violation), leaves nothing to fix.
-    if (found == plugin.children_.end() || slot == plugin.slots_.end() || slot->second >= found->second.size() || found->second[slot->second] != entity) {
-      if (slot != plugin.slots_.end() && found == plugin.children_.end()) {
-        plugin.slots_.erase(slot);
+    if (found == hierarchy.children.end() || slot == hierarchy.slots.end() || slot->second >= found->second.size() || found->second[slot->second] != entity) {
+      if (slot != hierarchy.slots.end() && found == hierarchy.children.end()) {
+        hierarchy.slots.erase(slot);
       }
 
       return;
@@ -95,12 +95,12 @@ namespace oly::essentials2d {
     const uint32_t index = slot->second;
     const ecs::Entity moved = siblings.back();
     siblings[index] = moved;
-    plugin.slots_[keyOf(moved)] = index;
+    hierarchy.slots[detail::Hierarchy::keyOf(moved)] = index;
     siblings.pop_back();
-    plugin.slots_.erase(keyOf(entity));
+    hierarchy.slots.erase(detail::Hierarchy::keyOf(entity));
 
     if (siblings.empty()) {
-      plugin.children_.erase(found);
+      hierarchy.children.erase(found);
 
       if (world.isAlive(parent)) {
         context.commands().remove<detail::HasChildren>(parent);
@@ -115,10 +115,10 @@ namespace oly::essentials2d {
   // The marker leaves either because the last child left (the entry is already gone) or because the parent is being
   // destroyed (children still listed).
   void Plugin::onHasChildrenRemoved(ecs::ObserverContext& context) {
-    Plugin& plugin = *static_cast<Plugin*>(context.userData());
-    const auto found = plugin.children_.find(keyOf(context.entity()));
+    detail::Hierarchy& hierarchy = *static_cast<detail::Hierarchy*>(context.userData());
+    const auto found = hierarchy.children.find(detail::Hierarchy::keyOf(context.entity()));
 
-    if (found == plugin.children_.end()) {
+    if (found == hierarchy.children.end()) {
       return;
     }
 
@@ -126,7 +126,7 @@ namespace oly::essentials2d {
       context.commands().destroy(child);
     }
 
-    plugin.children_.erase(found);
-    plugin.orderDirty_ = true;
+    hierarchy.children.erase(found);
+    hierarchy.orderDirty = true;
   }
 }

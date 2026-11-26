@@ -85,11 +85,12 @@ At install the plugin:
 
 - registers `imply<Position, WorldTransform>()` on the `World`; the implication cannot be undone, so it outlives the plugin's destructor;
 - registers four observers (`onAdd<Parent>`, `onRemove<Parent>`, `onAdd<WorldTransform>`, `onRemove<detail::HasChildren>`), which its destructor removes;
-- adds the system `propagateTransforms` to `Update`, in the `Last` band.
+- inserts the `detail::Hierarchy` resource (the children index, the slots and the propagation order), which the observers receive as `userData`;
+- declares the `Propagation` phase in the fixed step, after `Update` and before `UpdateAfter`, and registers `propagateTransforms` in it.
 
 | Part | What it does |
 |---|---|
-| children index | `unordered_map` keyed by `(index << 32) \| generation` of the parent, with the list of its children, plus a slot per child so it leaves in O(1); they change only in observers |
+| `detail::Hierarchy` children index | `unordered_map` keyed by `(index << 32) \| generation` of the parent, with the list of its children, plus a slot per child so it leaves in O(1); they change only in observers |
 | `detail::HasChildren` | a tag, C++ only, recorded on a parent with its first child and removed with its last; parents and non-parents live in different archetypes |
 | `onAdd<Parent>` | asserts the parent is alive, not the entity and not a descendant; adds the child to the index; records the tag on the parent; recomputes the child's `WorldTransform` |
 | `onRemove<Parent>` | removes the child from the index in O(1), through the slot it keeps for each child; skips a child the index does not list (a `Parent` written through `get`); removes the tag from a parent left with no children |
@@ -97,7 +98,7 @@ At install the plugin:
 | `onAdd<WorldTransform>` | computes the value at once from the locals and the parent's `WorldTransform`, so a child spawned by a command buffer is right in `UpdateAfter` |
 | `propagateTransforms` | roots: three block passes over entities without `Parent` (`Position`, then `Rotation`, then `Scale`, each writing its part of `WorldTransform`); children: a cached vector in parent-before-child order, rebuilt by a breadth-first walk of the index when a `Parent` was added or removed |
 
-A parent without `WorldTransform` counts as the identity: a child's chain stops at it. A child without `Position` has no `WorldTransform` and propagation skips it.
+A parent without `WorldTransform` counts as the identity: a child's chain stops at it. A child without `Position` has no `WorldTransform` and propagation skips it. The propagation runs after the flush of `Update`, so an entity spawned in `Update` already has its `WorldTransform` in `UpdateAfter` of the same step.
 
 `checkHierarchy(world, &why)` on the plugin compares the index and the tags with the `Parent` components of the world; the tests call it after each operation. Writing `Parent::entity` through `get` is not observed and `checkHierarchy` reports it.
 

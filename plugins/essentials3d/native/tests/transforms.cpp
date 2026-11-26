@@ -117,3 +117,13 @@ TEST_CASE("a child with WorldTransform and no Position is skipped by propagation
   CHECK(fixture.world.isAlive(child));
   CHECK_INVARIANTS(fixture.world);
 }
+
+TEST_CASE("the propagation phase runs after Update and before UpdateAfter") {
+  Fixture fixture;
+  fixture.engine.setTimingEnabled(true);
+
+  fixture.start();
+
+  CHECK(phaseNames(fixture.engine.flushTimings()) == std::vector<std::string>{"oly::app::UpdateBefore", "oly::app::Update", "oly::essentials3d::Propagation", "oly::app::UpdateAfter", "oly::app::Render"});
+  CHECK_INVARIANTS(fixture.world);
+}

@@ -15,7 +15,7 @@ Every game names its dimension in CMake, and the engine gives it the components 
 | Moment | Value |
 |---|---|
 | right after you add `Position` or `Parent` | computed at once from the locals |
-| after the `Default` systems of `Update` | recomputed once per fixed step, in the `Last` band |
+| after the systems of `Update` and their flush | recomputed once per fixed step, in the `Propagation` phase |
 | in `UpdateAfter` and `Render` | reflects the movement of this step |
 
 A change you make to a local component in `UpdateAfter` reaches `WorldTransform` in the next step. An entity spawned by a system during `Update` already has the right `WorldTransform` in `UpdateAfter`.

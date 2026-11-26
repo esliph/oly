@@ -34,18 +34,21 @@ namespace oly::essentials3d {
 
   void Plugin::install(app::Engine& engine) {
     world_ = &engine.world();
+    detail::Hierarchy& hierarchy = world_->insertResource(detail::Hierarchy{});
     world_->imply<Position, WorldTransform>();
-    observers_[0] = world_->onAdd<Parent>(onParentAdded, this);
-    observers_[1] = world_->onRemove<Parent>(onParentRemoved, this);
-    observers_[2] = world_->onAdd<WorldTransform>(onWorldTransformAdded, this);
-    observers_[3] = world_->onRemove<detail::HasChildren>(onHasChildrenRemoved, this);
-    engine.addSystem(app::Phase::Update, "propagateTransforms", propagateTransforms, this, app::OrderBand::Last);
+    observers_[0] = world_->onAdd<Parent>(onParentAdded, &hierarchy);
+    observers_[1] = world_->onRemove<Parent>(onParentRemoved, &hierarchy);
+    observers_[2] = world_->onAdd<WorldTransform>(onWorldTransformAdded, &hierarchy);
+    observers_[3] = world_->onRemove<detail::HasChildren>(onHasChildrenRemoved, &hierarchy);
+    engine.addPhase<Propagation>(app::FixedStep{}).after<app::Update>().before<app::UpdateAfter>();
+    detail::addPropagation(engine);
   }
 
   bool Plugin::checkHierarchy(ecs::World& world, std::string* why) const {
+    const detail::Hierarchy& hierarchy = world.resource<detail::Hierarchy>();
     size_t indexed = 0;
 
-    for (const auto& [key, children] : children_) {
+    for (const auto& [key, children] : hierarchy.children) {
       const ecs::Entity parent = entityOfKey(key);
 
       if (!world.isAlive(parent)) {
@@ -61,12 +64,12 @@ namespace oly::essentials3d {
       for (uint32_t slot = 0; slot < children.size(); ++slot) {
         const ecs::Entity child = children[slot];
         const Parent* link = world.tryGet<Parent>(child);
-        const auto recorded = slots_.find(keyOf(child));
+        const auto recorded = hierarchy.slots.find(detail::Hierarchy::keyOf(child));
 
         if (link == nullptr || link->entity != parent) {
           return fail(why, "indexed child with another Parent", child);
         }
-        if (recorded == slots_.end() || recorded->second != slot) {
+        if (recorded == hierarchy.slots.end() || recorded->second != slot) {
           return fail(why, "child with a wrong slot", child);
         }
       }
@@ -79,13 +82,13 @@ namespace oly::essentials3d {
     ecs::Entity markedEntity = ecs::NullEntity;
     world.query<Parent>().each([&](Parent&) { ++linked; });
     world.query<>(ecs::With<detail::HasChildren>{}).each([&](ecs::Entity entity) {
-      if (children_.find(keyOf(entity)) == children_.end()) {
+      if (hierarchy.children.find(detail::Hierarchy::keyOf(entity)) == hierarchy.children.end()) {
         markedWithoutChildren = true;
         markedEntity = entity;
       }
     });
 
-    if (linked != indexed || slots_.size() != indexed) {
+    if (linked != indexed || hierarchy.slots.size() != indexed) {
       return fail(why, "Parent components and the index differ in size", ecs::NullEntity);
     }
     if (markedWithoutChildren) {
