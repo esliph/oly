@@ -5,27 +5,33 @@
 
 #include "components.hpp"
 #include "log.hpp"
+#include "oly/app/controls.hpp"
 #include "oly/app/engine.hpp"
 
 using oly::app::Engine;
-using oly::app::Phase;
-using oly::app::SystemContext;
+using oly::app::PauseRequest;
+using oly::app::Render;
+using oly::app::Res;
+using oly::app::StepInfo;
+using oly::app::SystemInfo;
+using oly::app::Update;
+using oly::app::UpdateAfter;
 
 namespace {
-  void pauseSelf(SystemContext& context) {
-    recordName(context);
-    context.pause();
+  void pauseSelf(Res<Log> log, const SystemInfo& self, const StepInfo& step, Res<PauseRequest> pauseRequest) {
+    recordName(log, self, step);
+    pauseRequest->pause();
   }
 
-  void resumeSelf(SystemContext& context) {
-    recordName(context);
-    context.resume();
+  void resumeSelf(Res<Log> log, const SystemInfo& self, const StepInfo& step, Res<PauseRequest> pauseRequest) {
+    recordName(log, self, step);
+    pauseRequest->resume();
   }
 
   struct Fixture {
     oly::ecs::World world;
     Engine engine{world};
-    Log log;
+    Log& log = world.insertResource(Log());
     double now = 0.0;
 
     void step() {
@@ -37,10 +43,9 @@ namespace {
 
 TEST_CASE("paused: only whilePaused runs, the clock freezes, render continues") {
   Fixture fixture;
-  fixture.engine.addSystem(Phase::Update, "u", recordName, &fixture.log);
-  const auto pausedSystem = fixture.engine.addSystem(Phase::Update, "p", recordName, &fixture.log);
-  fixture.engine.setWhilePaused(pausedSystem, true);
-  fixture.engine.addSystem(Phase::Render, "r", recordName, &fixture.log);
+  fixture.engine.addSystem<&recordName>(Update{}, "u");
+  fixture.engine.addSystem<&recordName>(Update{}, "p").after("u").whilePaused();
+  fixture.engine.addSystem<&recordName>(Render{}, "r");
   fixture.engine.frame(0.0);
   fixture.engine.pause();
 
@@ -54,10 +59,9 @@ TEST_CASE("paused: only whilePaused runs, the clock freezes, render continues") 
 
 TEST_CASE("resume runs the gameplay systems again instead of the whilePaused ones") {
   Fixture fixture;
-  fixture.engine.addSystem(Phase::Update, "u", recordName, &fixture.log);
-  const auto pausedSystem = fixture.engine.addSystem(Phase::Update, "p", recordName, &fixture.log);
-  fixture.engine.setWhilePaused(pausedSystem, true);
-  fixture.engine.addSystem(Phase::Render, "r", recordName, &fixture.log);
+  fixture.engine.addSystem<&recordName>(Update{}, "u");
+  fixture.engine.addSystem<&recordName>(Update{}, "p").after("u").whilePaused();
+  fixture.engine.addSystem<&recordName>(Render{}, "r");
   fixture.engine.frame(0.0);
   fixture.engine.pause();
   fixture.step();
@@ -72,8 +76,8 @@ TEST_CASE("resume runs the gameplay systems again instead of the whilePaused one
 
 TEST_CASE("pause requested by a system does not interrupt the current step") {
   Fixture fixture;
-  fixture.engine.addSystem(Phase::Update, "pauser", pauseSelf, &fixture.log);
-  fixture.engine.addSystem(Phase::UpdateAfter, "a", recordName, &fixture.log);
+  fixture.engine.addSystem<&pauseSelf>(Update{}, "pauser");
+  fixture.engine.addSystem<&recordName>(UpdateAfter{}, "a");
   fixture.engine.frame(0.0);
 
   fixture.step();
@@ -85,8 +89,8 @@ TEST_CASE("pause requested by a system does not interrupt the current step") {
 
 TEST_CASE("pause requested by a system takes effect in the next step") {
   Fixture fixture;
-  fixture.engine.addSystem(Phase::Update, "pauser", pauseSelf, &fixture.log);
-  fixture.engine.addSystem(Phase::UpdateAfter, "a", recordName, &fixture.log);
+  fixture.engine.addSystem<&pauseSelf>(Update{}, "pauser");
+  fixture.engine.addSystem<&recordName>(UpdateAfter{}, "a");
   fixture.engine.frame(0.0);
   fixture.step();
   fixture.log.calls.clear();
@@ -97,11 +101,10 @@ TEST_CASE("pause requested by a system takes effect in the next step") {
   CHECK_INVARIANTS(fixture.world);
 }
 
-TEST_CASE("whilePaused system resumes through the context") {
+TEST_CASE("whilePaused system resumes through the PauseRequest") {
   Fixture fixture;
-  const auto pausedSystem = fixture.engine.addSystem(Phase::Update, "p", resumeSelf, &fixture.log);
-  fixture.engine.setWhilePaused(pausedSystem, true);
-  fixture.engine.addSystem(Phase::Update, "u", recordName, &fixture.log);
+  fixture.engine.addSystem<&resumeSelf>(Update{}, "p").whilePaused();
+  fixture.engine.addSystem<&recordName>(Update{}, "u").after("p");
   fixture.engine.frame(0.0);
   fixture.engine.pause();
 
@@ -114,8 +117,8 @@ TEST_CASE("whilePaused system resumes through the context") {
 
 TEST_CASE("hidden tab ignores frames") {
   Fixture fixture;
-  fixture.engine.addSystem(Phase::Update, "u", recordName, &fixture.log);
-  fixture.engine.addSystem(Phase::Render, "r", recordName, &fixture.log);
+  fixture.engine.addSystem<&recordName>(Update{}, "u");
+  fixture.engine.addSystem<&recordName>(Render{}, "r");
   fixture.engine.frame(0.0);
   fixture.engine.setHidden(true);
 
@@ -127,8 +130,8 @@ TEST_CASE("hidden tab ignores frames") {
 
 TEST_CASE("first frame after the hidden tab only records the time") {
   Fixture fixture;
-  fixture.engine.addSystem(Phase::Update, "u", recordName, &fixture.log);
-  fixture.engine.addSystem(Phase::Render, "r", recordName, &fixture.log);
+  fixture.engine.addSystem<&recordName>(Update{}, "u");
+  fixture.engine.addSystem<&recordName>(Render{}, "r");
   fixture.engine.frame(0.0);
   fixture.engine.setHidden(true);
   fixture.engine.frame(1.0);

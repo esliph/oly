@@ -4,21 +4,24 @@
 
 #include "components.hpp"
 #include "log.hpp"
+#include "oly/app/controls.hpp"
 #include "oly/app/detail/state_scoped.hpp"
 #include "oly/app/engine.hpp"
 #include "oly/app/state_context.hpp"
 #include "oly/app/task_context.hpp"
 #include "oly/ecs/diagnostics.hpp"
 
+using oly::app::Commands;
 using oly::app::Engine;
 using oly::app::HandlerContext;
-using oly::app::Phase;
+using oly::app::Res;
 using oly::app::Scheduler;
 using oly::app::StateContext;
 using oly::app::StateId;
-using oly::app::SystemContext;
+using oly::app::StateRequest;
 using oly::app::TaskContext;
 using oly::app::TaskHandle;
+using oly::app::Update;
 using oly::app::detail::StateScoped;
 using oly::ecs::Entity;
 
@@ -86,12 +89,10 @@ namespace {
     discarding.engine->schedule().after(10.0, noopTask, Counter{discarding.count}, countDiscard);
   }
 
-  void spawnFromSystem(SystemContext& context) {
-    Created& created = *static_cast<Created*>(context.userData());
-
-    if (created.armed) {
-      created.armed = false;
-      created.fromSystem = context.spawn();
+  void spawnFromSystem(Res<Created> created, Commands commands) {
+    if (created->armed) {
+      created->armed = false;
+      created->fromSystem = commands.spawn();
     }
   }
 
@@ -124,17 +125,15 @@ namespace {
     bool armed = false;
   };
 
-  void spawnPersistAndRequestFromSystem(SystemContext& context) {
-    SpawnAndPersist& state = *static_cast<SpawnAndPersist*>(context.userData());
-
-    if (!state.armed) {
+  void spawnPersistAndRequestFromSystem(Res<SpawnAndPersist> state, Commands commands, Res<StateRequest> stateRequest) {
+    if (!state->armed) {
       return;
     }
 
-    state.armed = false;
-    state.entity = context.spawn();
-    context.persist(state.entity);
-    context.requestState(state.target);
+    state->armed = false;
+    state->entity = commands.spawn();
+    commands.persist(state->entity);
+    stateRequest->request(state->target);
   }
 
   struct Link {
@@ -208,10 +207,10 @@ namespace {
 
 TEST_CASE("entities created by a system, handler, task and hook with an active state are destroyed on the change") {
   Fixture fixture;
-  Created created;
+  Created& created = fixture.world.insertResource(Created());
   Entity fromTask{};
   fixture.engine.declareEvent<Ping>("Ping");
-  fixture.engine.addSystem(Phase::Update, "spawner", spawnFromSystem, &created);
+  fixture.engine.addSystem<&spawnFromSystem>(Update{}, "spawner");
   fixture.engine.on<Ping>("spawner", spawnFromHandler, &created);
   fixture.engine.onEnter(fixture.menu, "spawner", spawnFromHook, &created);
   fixture.switchTo(fixture.menu);
@@ -295,9 +294,9 @@ TEST_CASE("what onExit creates is cleared on the same change; what onEnter creat
 
 TEST_CASE("persist in a system in the step of the change: the tag's add and remove cancel out and the entity survives") {
   Fixture fixture;
-  SpawnAndPersist state;
+  SpawnAndPersist& state = fixture.world.insertResource(SpawnAndPersist());
   state.target = fixture.playing;
-  fixture.engine.addSystem(Phase::Update, "spawner", spawnPersistAndRequestFromSystem, &state);
+  fixture.engine.addSystem<&spawnPersistAndRequestFromSystem>(Update{}, "spawner");
   fixture.switchTo(fixture.menu);
   state.armed = true;
 

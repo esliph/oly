@@ -5,19 +5,25 @@
 
 #include "components.hpp"
 #include "log.hpp"
+#include "oly/app/controls.hpp"
 #include "oly/app/engine.hpp"
 #include "oly/app/state_context.hpp"
 #include "oly/app/task_context.hpp"
 
 using oly::app::Engine;
 using oly::app::EngineConfig;
+using oly::app::Events;
 using oly::app::HandlerContext;
 using oly::app::NoState;
-using oly::app::Phase;
+using oly::app::Render;
+using oly::app::Res;
 using oly::app::StateContext;
 using oly::app::StateId;
-using oly::app::SystemContext;
+using oly::app::StateRequest;
+using oly::app::StepInfo;
+using oly::app::SystemInfo;
 using oly::app::TaskContext;
+using oly::app::Update;
 
 namespace {
   struct Ping {
@@ -48,8 +54,12 @@ namespace {
     context.emit(Ping{1});
   }
 
-  void emitPingSystem(SystemContext& context) {
-    context.emit(Ping{1});
+  void emitPingSystem(Events<Ping> pings) {
+    pings.emit(Ping{1});
+  }
+
+  void recordProbeName(Res<Probe> probe, const SystemInfo& self, const StepInfo& step) {
+    recordName(Res<Log>(&probe->log), self, step);
   }
 
   void recordHandlerTime(HandlerContext& context) {
@@ -60,13 +70,17 @@ namespace {
     static_cast<Log*>(context.userData())->calls.push_back("handler");
   }
 
-  void requestWhenSeen(SystemContext& context) {
-    Probe& probe = *static_cast<Probe*>(context.userData());
-    probe.seen.push_back(context.state());
+  void requestWhenSeen(Res<Probe> probe, const StepInfo& step, Res<StateRequest> stateRequest) {
+    probe->seen.push_back(step.state);
 
-    if (context.state() == probe.requestWhen) {
-      context.requestState(probe.next);
+    if (step.state == probe->requestWhen) {
+      stateRequest->request(probe->next);
     }
+  }
+
+  void seeAndRequestSystem(Res<Probe> probe, const StepInfo& step, Res<StateRequest> stateRequest) {
+    probe->seen.push_back(step.state);
+    stateRequest->request(probe->next);
   }
 
   template <class Context>
@@ -85,7 +99,7 @@ namespace {
   struct Fixture {
     oly::ecs::World world;
     Engine engine;
-    Probe probe;
+    Probe& probe = world.insertResource(Probe());
     StateId menu;
     StateId playing;
     StateId gameOver;
@@ -119,8 +133,7 @@ OLY_STATE_HOOK(namedEnter) {}
 TEST_CASE("initial state enters in stage 5 of the first step; inState systems only run from the next one") {
   Fixture fixture;
   fixture.engine.onEnter(fixture.menu, "menu", recordHook, &fixture.probe);
-  const auto system = fixture.engine.addSystem(Phase::Update, "menuSystem", recordName, &fixture.probe.log);
-  fixture.engine.setSystemStates(system, {fixture.menu});
+  fixture.engine.addSystem<&recordProbeName>(Update{}, "menuSystem").inStates({fixture.menu});
   fixture.engine.requestState(fixture.menu);
   fixture.start();
 
@@ -138,7 +151,7 @@ TEST_CASE("initial state enters in stage 5 of the first step; inState systems on
 
 TEST_CASE("state() only changes in stage 5") {
   Fixture fixture;
-  fixture.engine.addSystem(Phase::Update, "requester", requestWhenSeen, &fixture.probe);
+  fixture.engine.addSystem<&requestWhenSeen>(Update{}, "requester");
   fixture.probe.requestWhen = fixture.playing;
   fixture.probe.next = fixture.gameOver;
   fixture.start();
@@ -231,9 +244,7 @@ TEST_CASE("change in a paused step happens and does not touch the pause") {
 
 TEST_CASE("inState combines with whilePaused") {
   Fixture fixture;
-  const auto system = fixture.engine.addSystem(Phase::Update, "pausedMenu", recordName, &fixture.probe.log);
-  fixture.engine.setWhilePaused(system, true);
-  fixture.engine.setSystemStates(system, {fixture.menu});
+  fixture.engine.addSystem<&recordProbeName>(Update{}, "pausedMenu").whilePaused().inStates({fixture.menu});
   fixture.start();
   fixture.enter(fixture.menu);
 
@@ -259,10 +270,8 @@ TEST_CASE("inState combines with whilePaused") {
 
 TEST_CASE("inState applies in the render phase") {
   Fixture fixture;
-  const auto inMenu = fixture.engine.addSystem(Phase::Render, "menuRender", recordName, &fixture.probe.log);
-  const auto inPlaying = fixture.engine.addSystem(Phase::Render, "playingRender", recordName, &fixture.probe.log);
-  fixture.engine.setSystemStates(inMenu, {fixture.menu});
-  fixture.engine.setSystemStates(inPlaying, {fixture.playing});
+  fixture.engine.addSystem<&recordProbeName>(Render{}, "menuRender").inStates({fixture.menu});
+  fixture.engine.addSystem<&recordProbeName>(Render{}, "playingRender").after("menuRender").inStates({fixture.playing});
   fixture.engine.requestState(fixture.menu);
   fixture.start();
 
@@ -275,9 +284,9 @@ TEST_CASE("inState applies in the render phase") {
 
 TEST_CASE("empty list removes the restriction") {
   Fixture fixture;
-  const auto system = fixture.engine.addSystem(Phase::Update, "free", recordName, &fixture.probe.log);
-  fixture.engine.setSystemStates(system, {fixture.menu});
-  fixture.engine.setSystemStates(system, {});
+  auto registration = fixture.engine.addSystem<&recordProbeName>(Update{}, "free");
+  registration.inStates({fixture.menu});
+  registration.inStates({});
   fixture.start();
 
   fixture.step();
@@ -310,7 +319,7 @@ TEST_CASE("event emitted in a hook is dispatched in the same step and counts tow
   Fixture fixture(EngineConfig{.maxEventRounds = 2});
   fixture.engine.declareEvent<Ping>("Ping");
   fixture.engine.on<Ping>("counter", countPings, &fixture.probe.log);
-  fixture.engine.addSystem(Phase::Update, "emitter", emitPingSystem);
+  fixture.engine.addSystem<&emitPingSystem>(Update{}, "emitter");
   fixture.engine.onEnter(fixture.playing, "emit", emitPingHook);
   fixture.engine.requestState(fixture.playing);
   fixture.start();
@@ -340,10 +349,10 @@ TEST_CASE("request with the hidden tab waits for the first step after returning"
   CHECK_INVARIANTS(fixture.world);
 }
 
-TEST_CASE("requestState and state through the system context") {
+TEST_CASE("requestState and state through StateRequest and StepInfo") {
   Fixture fixture;
   fixture.probe.next = fixture.playing;
-  fixture.engine.addSystem(Phase::Update, "requester", seeAndRequest<SystemContext>, &fixture.probe);
+  fixture.engine.addSystem<&seeAndRequestSystem>(Update{}, "requester");
   fixture.start();
 
   fixture.step();
@@ -407,28 +416,27 @@ TEST_CASE("OLY_STATE_HOOK registers by name") {
 TEST_CASE("inState with the state at index 31 uses the highest bit of the mask") {
   oly::ecs::World world;
   Engine engine(world);
-  Probe probe;
+  Log& log = world.insertResource(Log());
   StateId last = NoState;
 
   for (uint32_t index = 0; index < oly::app::MaxStates; ++index) {
     last = engine.declareState("state" + std::to_string(index));
   }
 
-  const auto system = engine.addSystem(Phase::Update, "lastOnly", recordName, &probe.log);
-  engine.setSystemStates(system, {last});
+  engine.addSystem<&recordName>(Update{}, "lastOnly").inStates({last});
   engine.frame(0.0);
 
   engine.requestState(0);
   engine.frame(1.0 / 60);
   engine.frame(2.0 / 60);
 
-  CHECK(probe.log.count("lastOnly") == 0);
+  CHECK(log.count("lastOnly") == 0);
 
   engine.requestState(last);
   engine.frame(3.0 / 60);
   engine.frame(4.0 / 60);
 
   CHECK(last == 31);
-  CHECK(probe.log.count("lastOnly") == 1);
+  CHECK(log.count("lastOnly") == 1);
   CHECK_INVARIANTS(world);
 }

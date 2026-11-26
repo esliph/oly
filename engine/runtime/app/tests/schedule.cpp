@@ -146,7 +146,7 @@ namespace {
   struct Fixture {
     oly::ecs::World world;
     Engine engine{world};
-    Log log;
+    Log& log = world.insertResource(Log());
     double now = 0.0;
 
     void step() {
@@ -176,7 +176,7 @@ TEST_CASE("after scheduled outside frame fires in the step whose start reaches t
 
 TEST_CASE("after(0) outside frame runs in stage 2 of the next step") {
   Fixture fixture;
-  fixture.engine.addSystem(Phase::Update, "s", recordName, &fixture.log);
+  fixture.engine.addSystem<&recordName>(oly::app::Update{}, "s");
   fixture.engine.frame(0.0);
   fixture.engine.schedule().after(0.0, markTask, Mark{&fixture.log, 't'});
 

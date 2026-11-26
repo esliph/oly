@@ -9,9 +9,9 @@
 #include "oly/app/plugin.hpp"
 
 using oly::app::Engine;
-using oly::app::Phase;
 using oly::app::Plugin;
-using oly::app::SystemContext;
+using oly::app::Res;
+using oly::app::Update;
 
 namespace {
   std::vector<std::string> g_events;
@@ -40,15 +40,18 @@ namespace {
     void install(Engine&) override {}
   };
 
-  struct TickingPlugin : Plugin {
-    int ticks = 0;
+  struct Ticks {
+    int count = 0;
+  };
 
+  struct TickingPlugin : Plugin {
     void install(Engine& engine) override {
-      engine.addSystem(Phase::Update, "tick", tick, this);
+      engine.world().insertResource(Ticks());
+      engine.addSystem<&tick>(Update{}, "tick");
     }
 
-    static void tick(SystemContext& context) {
-      ++static_cast<TickingPlugin*>(context.userData())->ticks;
+    static void tick(Res<Ticks> ticks) {
+      ++ticks->count;
     }
   };
 
@@ -115,15 +118,15 @@ TEST_CASE("plugins are destroyed in reverse install order") {
   CHECK(g_events == std::vector<std::string>{"second", "first"});
 }
 
-TEST_CASE("a plugin keeps state reachable from its systems through userData") {
+TEST_CASE("a plugin keeps state reachable from its systems through a resource") {
   oly::ecs::World world;
   Engine engine(world);
-  TickingPlugin& plugin = engine.installPlugin<TickingPlugin>();
+  engine.installPlugin<TickingPlugin>();
   engine.frame(0.0);
 
   engine.frame(1.0 / 60);
 
-  CHECK(plugin.ticks == 1);
+  CHECK(world.resource<Ticks>().count == 1);
   CHECK_INVARIANTS(world);
 }
 

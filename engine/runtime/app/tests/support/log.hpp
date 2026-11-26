@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "oly/app/engine.hpp"
+#include "oly/app/system_parameters.hpp"
 
 struct Position {
   float x = 0, y = 0;
@@ -23,13 +23,12 @@ struct Log {
   }
 };
 
-inline void recordName(oly::app::SystemContext& context) {
-  Log& log = *static_cast<Log*>(context.userData());
-  log.calls.push_back(std::string(context.name()));
+inline void recordName(oly::app::Res<Log> log, const oly::app::SystemInfo& self, const oly::app::StepInfo& step) {
+  log->calls.push_back(std::string(self.name));
 
-  if (context.phase() == oly::app::Phase::Render) {
-    log.interpolations.push_back(context.interpolation());
+  if (self.schedule == oly::app::ScheduleKind::Frame) {
+    log->interpolations.push_back(step.interpolation);
   } else {
-    log.times.push_back(context.time());
+    log->times.push_back(step.time);
   }
 }

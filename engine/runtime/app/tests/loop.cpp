@@ -9,14 +9,18 @@
 
 using oly::app::Engine;
 using oly::app::EngineConfig;
-using oly::app::Phase;
+using oly::app::Render;
+using oly::app::Res;
+using oly::app::StepInfo;
+using oly::app::Update;
+using oly::app::UpdateAfter;
 
 TEST_CASE("first frame only records the time") {
   oly::ecs::World world;
   Engine engine(world);
-  Log log;
-  engine.addSystem(Phase::Update, "u", recordName, &log);
-  engine.addSystem(Phase::Render, "r", recordName, &log);
+  Log& log = world.insertResource(Log());
+  engine.addSystem<&recordName>(Update{}, "u");
+  engine.addSystem<&recordName>(Render{}, "r");
 
   engine.frame(10.0);
   engine.frame(10.0 + 1.0 / 60);
@@ -28,9 +32,9 @@ TEST_CASE("first frame only records the time") {
 TEST_CASE("frame at exact multiples of 1/60 runs one step per frame") {
   oly::ecs::World world;
   Engine engine(world);
-  Log log;
-  engine.addSystem(Phase::Update, "u", recordName, &log);
-  engine.addSystem(Phase::Render, "r", recordName, &log);
+  Log& log = world.insertResource(Log());
+  engine.addSystem<&recordName>(Update{}, "u");
+  engine.addSystem<&recordName>(Render{}, "r");
 
   for (int frameIndex = 0; frameIndex <= 120; ++frameIndex) {
     engine.frame(frameIndex / 60.0);
@@ -44,9 +48,9 @@ TEST_CASE("frame at exact multiples of 1/60 runs one step per frame") {
 TEST_CASE("fractions accumulate across frames") {
   oly::ecs::World world;
   Engine engine(world);
-  Log log;
-  engine.addSystem(Phase::Update, "u", recordName, &log);
-  engine.addSystem(Phase::Render, "r", recordName, &log);
+  Log& log = world.insertResource(Log());
+  engine.addSystem<&recordName>(Update{}, "u");
+  engine.addSystem<&recordName>(Render{}, "r");
   engine.frame(0.0);
 
   engine.frame(0.5 / 60);
@@ -59,8 +63,8 @@ TEST_CASE("fractions accumulate across frames") {
 TEST_CASE("frame with a large jump runs at most maxStepsPerFrame steps") {
   oly::ecs::World world;
   Engine engine(world, EngineConfig{.fixedHz = 60.0, .maxStepsPerFrame = 5});
-  Log log;
-  engine.addSystem(Phase::Update, "u", recordName, &log);
+  Log& log = world.insertResource(Log());
+  engine.addSystem<&recordName>(Update{}, "u");
   engine.frame(0.0);
 
   engine.frame(10.0);
@@ -72,8 +76,8 @@ TEST_CASE("frame with a large jump runs at most maxStepsPerFrame steps") {
 TEST_CASE("steps beyond maxStepsPerFrame are discarded") {
   oly::ecs::World world;
   Engine engine(world, EngineConfig{.fixedHz = 60.0, .maxStepsPerFrame = 5});
-  Log log;
-  engine.addSystem(Phase::Update, "u", recordName, &log);
+  Log& log = world.insertResource(Log());
+  engine.addSystem<&recordName>(Update{}, "u");
   engine.frame(0.0);
   engine.frame(10.0);
 
@@ -86,8 +90,8 @@ TEST_CASE("steps beyond maxStepsPerFrame are discarded") {
 TEST_CASE("render receives the interpolation") {
   oly::ecs::World world;
   Engine engine(world);
-  Log log;
-  engine.addSystem(Phase::Render, "r", recordName, &log);
+  Log& log = world.insertResource(Log());
+  engine.addSystem<&recordName>(Render{}, "r");
   engine.frame(0.0);
 
   engine.frame(1.5 / 60);
@@ -98,18 +102,22 @@ TEST_CASE("render receives the interpolation") {
 }
 
 namespace {
-  void checkFixedDelta(oly::app::SystemContext& context) {
-    *static_cast<float*>(context.userData()) = context.fixedDeltaTime();
+  struct FixedDelta {
+    float value = 0;
+  };
+
+  void checkFixedDelta(Res<FixedDelta> fixedDelta, const StepInfo& step) {
+    fixedDelta->value = step.fixedDeltaTime;
   }
 }
 
 TEST_CASE("time is the start of the step and fixedDeltaTime comes from fixedHz") {
   oly::ecs::World world;
   Engine engine(world, EngineConfig{.fixedHz = 50.0});
-  Log log;
-  float fixedDeltaTime = 0;
-  engine.addSystem(Phase::Update, "u", recordName, &log);
-  engine.addSystem(Phase::UpdateAfter, "d", checkFixedDelta, &fixedDeltaTime);
+  Log& log = world.insertResource(Log());
+  FixedDelta& fixedDelta = world.insertResource(FixedDelta());
+  engine.addSystem<&recordName>(Update{}, "u");
+  engine.addSystem<&checkFixedDelta>(UpdateAfter{}, "d");
   engine.frame(0.0);
 
   engine.frame(0.06);
@@ -118,7 +126,7 @@ TEST_CASE("time is the start of the step and fixedDeltaTime comes from fixedHz")
   CHECK(log.times[0] == doctest::Approx(0.0));
   CHECK(log.times[1] == doctest::Approx(0.02));
   CHECK(log.times[2] == doctest::Approx(0.04));
-  CHECK(fixedDeltaTime == 0.02f);
+  CHECK(fixedDelta.value == 0.02f);
   CHECK(engine.time() == doctest::Approx(0.06));
   CHECK_INVARIANTS(world);
 }

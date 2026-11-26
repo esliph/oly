@@ -7,16 +7,19 @@
 
 #include "components.hpp"
 #include "log.hpp"
+#include "oly/app/controls.hpp"
 #include "oly/app/engine.hpp"
 #include "oly/app/handler.hpp"
 #include "oly/app/state_context.hpp"
 #include "oly/app/task_context.hpp"
 
+using oly::app::Commands;
 using oly::app::Engine;
 using oly::app::HandlerContext;
-using oly::app::Phase;
-using oly::app::SystemContext;
+using oly::app::Res;
+using oly::app::StateRequest;
 using oly::app::TaskContext;
+using oly::app::Update;
 
 namespace {
   struct Shared {
@@ -25,16 +28,15 @@ namespace {
     int stepsAfterFailure = 0;
   };
 
-  void spawnThenThrowOnce(SystemContext& context) {
-    Shared& shared = *static_cast<Shared*>(context.userData());
-    ++shared.calls;
+  void spawnThenThrowOnce(Res<Shared> shared, Commands commands) {
+    ++shared->calls;
 
-    if (shared.calls == 1) {
-      shared.entity = context.spawn();
+    if (shared->calls == 1) {
+      shared->entity = commands.spawn();
       throw std::runtime_error("boom");
     }
 
-    ++shared.stepsAfterFailure;
+    ++shared->stepsAfterFailure;
   }
 
   struct TaskCounts {
@@ -88,12 +90,11 @@ namespace {
     int calls = 0;
   };
 
-  void requestThenThrowOnSecondCall(SystemContext& context) {
-    StateShared& shared = *static_cast<StateShared*>(context.userData());
-    ++shared.calls;
+  void requestThenThrowOnSecondCall(Res<StateShared> shared, Res<StateRequest> stateRequest) {
+    ++shared->calls;
 
-    if (shared.calls == 2) {
-      context.requestState(shared.target);
+    if (shared->calls == 2) {
+      stateRequest->request(shared->target);
       throw std::runtime_error("boom");
     }
   }
@@ -114,8 +115,8 @@ namespace {
 TEST_CASE("exception in a system leaves the deferred spawn unapplied") {
   oly::ecs::World world;
   Engine engine(world);
-  Shared shared;
-  engine.addSystem(Phase::Update, "thrower", spawnThenThrowOnce, &shared);
+  Shared& shared = world.insertResource(Shared());
+  engine.addSystem<&spawnThenThrowOnce>(Update{}, "thrower");
   engine.frame(0.0);
 
   CHECK_THROWS(engine.frame(1.0 / 60));
@@ -127,8 +128,8 @@ TEST_CASE("exception in a system leaves the deferred spawn unapplied") {
 TEST_CASE("frame after the exception only records the time and the next one runs again") {
   oly::ecs::World world;
   Engine engine(world);
-  Shared shared;
-  engine.addSystem(Phase::Update, "thrower", spawnThenThrowOnce, &shared);
+  Shared& shared = world.insertResource(Shared());
+  engine.addSystem<&spawnThenThrowOnce>(Update{}, "thrower");
   engine.frame(0.0);
   CHECK_THROWS(engine.frame(1.0 / 60));
 
@@ -191,10 +192,10 @@ TEST_CASE("exception in a handler discards the pending events in the next frame"
 TEST_CASE("recovery discards the pending request") {
   oly::ecs::World world;
   Engine engine(world);
-  StateShared shared;
+  StateShared& shared = world.insertResource(StateShared());
   const auto first = engine.declareState("a");
   shared.target = engine.declareState("b");
-  engine.addSystem(Phase::Update, "requester", requestThenThrowOnSecondCall, &shared);
+  engine.addSystem<&requestThenThrowOnSecondCall>(Update{}, "requester");
   engine.requestState(first);
   engine.frame(0.0);
   engine.frame(1.0 / 60);

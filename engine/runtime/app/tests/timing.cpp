@@ -10,15 +10,16 @@
 
 using oly::app::Engine;
 using oly::app::FlushTiming;
-using oly::app::OrderBand;
-using oly::app::Phase;
+using oly::app::Render;
 using oly::app::SystemTiming;
+using oly::app::Update;
+using oly::app::UpdateBefore;
 
 namespace {
   struct Fixture {
     oly::ecs::World world;
     Engine engine{world};
-    Log log;
+    Log& log = world.insertResource(Log());
     double now = 0.0;
 
     void step() {
@@ -37,13 +38,18 @@ namespace {
     return names;
   }
 
-  // Short names fit in std::string's inline buffer, so they move with the entries when the system vectors grow.
+  // Short names fit in std::string's inline buffer, so they move with the entries when the system vectors grow. Each
+  // system runs after the previous one: they all write the Log, and the numbers do not sort as names.
   std::vector<std::string> addNumberedSystems(Fixture& fixture, int count) {
     std::vector<std::string> names;
 
     for (int index = 0; index < count; ++index) {
       names.push_back("s" + std::to_string(index));
-      fixture.engine.addSystem(Phase::Update, names.back(), recordName, &fixture.log);
+      auto registration = fixture.engine.addSystem<&recordName>(Update{}, names.back());
+
+      if (index > 0) {
+        registration.after(names[index - 1]);
+      }
     }
 
     return names;
@@ -52,7 +58,7 @@ namespace {
 
 TEST_CASE("timing off: a frame records no system and no flush") {
   Fixture fixture;
-  fixture.engine.addSystem(Phase::Update, "update", recordName, &fixture.log);
+  fixture.engine.addSystem<&recordName>(Update{}, "update");
   fixture.engine.frame(0.0);
 
   fixture.step();
@@ -64,10 +70,10 @@ TEST_CASE("timing off: a frame records no system and no flush") {
 
 TEST_CASE("timing on: one entry per system, in dispatch order, with its id and phase") {
   Fixture fixture;
-  const auto last = fixture.engine.addSystem(Phase::Update, "last", recordName, &fixture.log, OrderBand::Last);
-  const auto update = fixture.engine.addSystem(Phase::Update, "update", recordName, &fixture.log);
-  const auto before = fixture.engine.addSystem(Phase::UpdateBefore, "before", recordName, &fixture.log);
-  const auto render = fixture.engine.addSystem(Phase::Render, "render", recordName, &fixture.log);
+  const auto last = fixture.engine.addSystem<&recordName>(Update{}, "last").after("update").id();
+  const auto update = fixture.engine.addSystem<&recordName>(Update{}, "update").id();
+  const auto before = fixture.engine.addSystem<&recordName>(UpdateBefore{}, "before").id();
+  const auto render = fixture.engine.addSystem<&recordName>(Render{}, "render").id();
   fixture.engine.setTimingEnabled(true);
   fixture.engine.frame(0.0);
 
@@ -93,12 +99,9 @@ TEST_CASE("timing on: one entry per system, in dispatch order, with its id and p
 TEST_CASE("a system skipped by the pause or by its states has ran false and 0 ns") {
   Fixture fixture;
   const auto playing = fixture.engine.declareState("playing");
-  fixture.engine.addSystem(Phase::Update, "gameplay", recordName, &fixture.log);
-  const auto paused = fixture.engine.addSystem(Phase::Update, "paused", recordName, &fixture.log);
-  fixture.engine.setWhilePaused(paused, true);
-  const auto restricted = fixture.engine.addSystem(Phase::Update, "restricted", recordName, &fixture.log);
-  fixture.engine.setWhilePaused(restricted, true);
-  fixture.engine.setSystemStates(restricted, {playing});
+  fixture.engine.addSystem<&recordName>(Update{}, "gameplay");
+  fixture.engine.addSystem<&recordName>(Update{}, "paused").after("gameplay").whilePaused();
+  fixture.engine.addSystem<&recordName>(Update{}, "restricted").after("paused").whilePaused().inStates({playing});
   fixture.engine.setTimingEnabled(true);
   fixture.engine.frame(0.0);
   fixture.engine.pause();
@@ -133,7 +136,7 @@ TEST_CASE("each gameplay phase and Render has its flush entry, in phase order") 
 
 TEST_CASE("a frame with no fixed step keeps the record of the last step") {
   Fixture fixture;
-  fixture.engine.addSystem(Phase::Update, "update", recordName, &fixture.log);
+  fixture.engine.addSystem<&recordName>(Update{}, "update");
   fixture.engine.setTimingEnabled(true);
   fixture.engine.frame(0.0);
   fixture.step();
@@ -159,7 +162,7 @@ TEST_CASE("systems added while timing is on are recorded with their names") {
 
 TEST_CASE("turning timing off empties the record") {
   Fixture fixture;
-  fixture.engine.addSystem(Phase::Update, "update", recordName, &fixture.log);
+  fixture.engine.addSystem<&recordName>(Update{}, "update");
   fixture.engine.setTimingEnabled(true);
   fixture.engine.frame(0.0);
   fixture.step();

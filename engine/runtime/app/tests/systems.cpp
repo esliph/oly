@@ -7,14 +7,16 @@
 #include "log.hpp"
 #include "oly/app/engine.hpp"
 
+using oly::app::Commands;
 using oly::app::Engine;
-using oly::app::OrderBand;
-using oly::app::Phase;
-using oly::app::SystemContext;
+using oly::app::Lookup;
+using oly::app::Render;
+using oly::app::Res;
+using oly::app::Update;
+using oly::app::UpdateAfter;
+using oly::app::UpdateBefore;
 
-OLY_SYSTEM(appTestNamed) {
-  recordName(context);
-}
+OLY_SYSTEM(appTestNamed) {}
 
 namespace {
   struct Shared {
@@ -24,52 +26,47 @@ namespace {
     float x = 0;
   };
 
-  void spawnInUpdate(SystemContext& context) {
-    Shared& shared = *static_cast<Shared*>(context.userData());
-    shared.entity = context.spawn(Position{1, 2});
-    shared.aliveInSameSystem = context.isAlive(shared.entity);
+  void spawnInUpdate(Res<Shared> shared, Commands commands) {
+    shared->entity = commands.spawn(Position{1, 2});
+    shared->aliveInSameSystem = commands.isAlive(shared->entity);
   }
 
-  void observeInUpdateAfter(SystemContext& context) {
-    Shared& shared = *static_cast<Shared*>(context.userData());
-    shared.aliveInNextPhase = context.isAlive(shared.entity);
-    shared.x = context.get<Position>(shared.entity).x;
+  void observeInUpdateAfter(Res<Shared> shared, Lookup<const Position> positions, Commands commands) {
+    shared->aliveInNextPhase = commands.isAlive(shared->entity);
+    shared->x = positions.get(shared->entity).x;
   }
 
-  void spawnInRender(SystemContext& context) {
-    static_cast<Shared*>(context.userData())->entity = context.spawn();
+  void spawnInRender(Res<Shared> shared, Commands commands) {
+    shared->entity = commands.spawn();
   }
 
-  void addAndDestroy(SystemContext& context) {
-    Shared& shared = *static_cast<Shared*>(context.userData());
-    context.add(shared.entity, Velocity{});
-    context.destroy(shared.entity);
+  void addAndDestroy(Res<Shared> shared, Commands commands) {
+    commands.add(shared->entity, Velocity{});
+    commands.destroy(shared->entity);
   }
 
-  struct BandProbe {
+  struct FlushProbe {
     oly::ecs::Entity entity;
-    bool aliveInLastBand = true;
+    bool aliveInSamePhase = true;
     bool aliveInNextPhase = false;
   };
 
-  void spawnInDefaultBand(SystemContext& context) {
-    static_cast<BandProbe*>(context.userData())->entity = context.spawn(Position{1, 2});
+  void spawnInPhase(Res<FlushProbe> probe, Commands commands) {
+    probe->entity = commands.spawn(Position{1, 2});
   }
 
-  void observeInLastBand(SystemContext& context) {
-    BandProbe& probe = *static_cast<BandProbe*>(context.userData());
-    probe.aliveInLastBand = context.isAlive(probe.entity);
+  void observeInSamePhase(Res<FlushProbe> probe, Commands commands) {
+    probe->aliveInSamePhase = commands.isAlive(probe->entity);
   }
 
-  void observeAfterLastBand(SystemContext& context) {
-    BandProbe& probe = *static_cast<BandProbe*>(context.userData());
-    probe.aliveInNextPhase = context.isAlive(probe.entity);
+  void observeInNextPhase(Res<FlushProbe> probe, Commands commands) {
+    probe->aliveInNextPhase = commands.isAlive(probe->entity);
   }
 
   struct Clock {
     oly::ecs::World world;
     Engine engine{world};
-    Log log;
+    Log& log = world.insertResource(Log());
     double now = 0.0;
 
     void step() {
@@ -79,15 +76,15 @@ namespace {
   };
 }
 
-TEST_CASE("phases in order and, within a phase, registration order") {
+TEST_CASE("phases in order and, within a phase, constraint order") {
   oly::ecs::World world;
   Engine engine(world);
-  Log log;
-  engine.addSystem(Phase::Render, "r", recordName, &log);
-  engine.addSystem(Phase::Update, "u1", recordName, &log);
-  engine.addSystem(Phase::UpdateBefore, "b", recordName, &log);
-  engine.addSystem(Phase::UpdateAfter, "a", recordName, &log);
-  engine.addSystem(Phase::Update, "u2", recordName, &log);
+  Log& log = world.insertResource(Log());
+  engine.addSystem<&recordName>(Render{}, "r");
+  engine.addSystem<&recordName>(Update{}, "u1");
+  engine.addSystem<&recordName>(UpdateBefore{}, "b");
+  engine.addSystem<&recordName>(UpdateAfter{}, "a");
+  engine.addSystem<&recordName>(Update{}, "u2").after("u1");
   engine.frame(0.0);
 
   engine.frame(1.0 / 60);
@@ -104,9 +101,9 @@ TEST_CASE("OLY_SYSTEM registers by name") {
 TEST_CASE("deferred spawn: alive only in the next phase") {
   oly::ecs::World world;
   Engine engine(world);
-  Shared shared;
-  engine.addSystem(Phase::Update, "spawn", spawnInUpdate, &shared);
-  engine.addSystem(Phase::UpdateAfter, "observe", observeInUpdateAfter, &shared);
+  Shared& shared = world.insertResource(Shared());
+  engine.addSystem<&spawnInUpdate>(Update{}, "spawn");
+  engine.addSystem<&observeInUpdateAfter>(UpdateAfter{}, "observe");
   engine.frame(0.0);
 
   engine.frame(1.0 / 60);
@@ -120,8 +117,8 @@ TEST_CASE("deferred spawn: alive only in the next phase") {
 TEST_CASE("render commands applied at the end of the frame") {
   oly::ecs::World world;
   Engine engine(world);
-  Shared shared;
-  engine.addSystem(Phase::Render, "spawn", spawnInRender, &shared);
+  Shared& shared = world.insertResource(Shared());
+  engine.addSystem<&spawnInRender>(Render{}, "spawn");
   engine.frame(0.0);
 
   engine.frame(1.0 / 60);
@@ -133,9 +130,9 @@ TEST_CASE("render commands applied at the end of the frame") {
 TEST_CASE("destroy and add deferred in the same phase resolve like the CommandBuffer") {
   oly::ecs::World world;
   Engine engine(world);
-  Shared shared;
+  Shared& shared = world.insertResource(Shared());
   shared.entity = world.spawn(Position{});
-  engine.addSystem(Phase::Update, "addAndDestroy", addAndDestroy, &shared);
+  engine.addSystem<&addAndDestroy>(Update{}, "addAndDestroy");
   engine.frame(0.0);
 
   engine.frame(1.0 / 60);
@@ -144,61 +141,59 @@ TEST_CASE("destroy and add deferred in the same phase resolve like the CommandBu
   CHECK_INVARIANTS(world);
 }
 
-TEST_CASE("a Last system runs after every Default system of its phase, whatever the registration order") {
+TEST_CASE("a constrained system runs after the systems it names, whatever the registration order") {
   oly::ecs::World world;
   Engine engine(world);
-  Log log;
-  engine.addSystem(Phase::Update, "last1", recordName, &log, OrderBand::Last);
-  engine.addSystem(Phase::Update, "a", recordName, &log);
-  engine.addSystem(Phase::Update, "b", recordName, &log);
+  Log& log = world.insertResource(Log());
+  engine.addSystem<&recordName>(Update{}, "last").after("a").after("b");
+  engine.addSystem<&recordName>(Update{}, "a");
+  engine.addSystem<&recordName>(Update{}, "b").after("a");
   engine.frame(0.0);
 
   engine.frame(1.0 / 60);
 
-  CHECK(log.calls == std::vector<std::string>{"a", "b", "last1"});
+  CHECK(log.calls == std::vector<std::string>{"a", "b", "last"});
   CHECK_INVARIANTS(world);
 }
 
-TEST_CASE("Last systems keep their registration order") {
+TEST_CASE("a constraint overrides the name order of its phase") {
   oly::ecs::World world;
   Engine engine(world);
-  Log log;
-  engine.addSystem(Phase::Update, "last2", recordName, &log, OrderBand::Last);
-  engine.addSystem(Phase::Update, "a", recordName, &log);
-  engine.addSystem(Phase::Update, "last1", recordName, &log, OrderBand::Last);
-  engine.addSystem(Phase::UpdateAfter, "after", recordName, &log);
+  Log& log = world.insertResource(Log());
+  engine.addSystem<&recordName>(Update{}, "a").after("c");
+  engine.addSystem<&recordName>(Update{}, "b").after("a");
+  engine.addSystem<&recordName>(Update{}, "c");
+  engine.addSystem<&recordName>(UpdateAfter{}, "after");
   engine.frame(0.0);
 
   engine.frame(1.0 / 60);
 
-  CHECK(log.calls == std::vector<std::string>{"a", "last2", "last1", "after"});
+  CHECK(log.calls == std::vector<std::string>{"c", "a", "b", "after"});
   CHECK_INVARIANTS(world);
 }
 
-TEST_CASE("a phase with Last systems flushes once, after the Last band") {
+TEST_CASE("a phase flushes once, after every system of the phase") {
   oly::ecs::World world;
   Engine engine(world);
-  BandProbe probe;
-  engine.addSystem(Phase::Update, "observeLast", observeInLastBand, &probe, OrderBand::Last);
-  engine.addSystem(Phase::Update, "spawn", spawnInDefaultBand, &probe);
-  engine.addSystem(Phase::UpdateAfter, "observeAfter", observeAfterLastBand, &probe);
+  FlushProbe& probe = world.insertResource(FlushProbe());
+  engine.addSystem<&spawnInPhase>(Update{}, "spawn");
+  engine.addSystem<&observeInSamePhase>(Update{}, "observeSame").after("spawn");
+  engine.addSystem<&observeInNextPhase>(UpdateAfter{}, "observeNext");
   engine.frame(0.0);
 
   engine.frame(1.0 / 60);
 
-  CHECK(!probe.aliveInLastBand);
+  CHECK(!probe.aliveInSamePhase);
   CHECK(probe.aliveInNextPhase);
   CHECK_INVARIANTS(world);
 }
 
-TEST_CASE("setWhilePaused and setSystemStates apply to a Last system") {
+TEST_CASE("whilePaused and inStates apply to systems ordered by constraints") {
   Clock clock;
   const auto menu = clock.engine.declareState("menu");
-  clock.engine.addSystem(Phase::Update, "plain", recordName, &clock.log, OrderBand::Last);
-  const auto whilePaused = clock.engine.addSystem(Phase::Update, "whilePaused", recordName, &clock.log, OrderBand::Last);
-  clock.engine.setWhilePaused(whilePaused, true);
-  const auto inMenu = clock.engine.addSystem(Phase::Update, "inMenu", recordName, &clock.log, OrderBand::Last);
-  clock.engine.setSystemStates(inMenu, {menu});
+  clock.engine.addSystem<&recordName>(Update{}, "plain");
+  clock.engine.addSystem<&recordName>(Update{}, "whilePaused").after("plain").whilePaused();
+  clock.engine.addSystem<&recordName>(Update{}, "inMenu").after("whilePaused").inStates({menu});
   clock.engine.frame(0.0);
   clock.engine.requestState(menu);
 
