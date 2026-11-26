@@ -192,6 +192,37 @@ Include the engine headers you use and the generated schema:
 #include "schema.generated.hpp"       // your components, events, actions:: and states::
 ```
 
+## System parameters
+
+A system function can declare what it needs as parameters, instead of reading it from a `SystemContext`. The engine builds the declared access from the parameter types, which is what later lets it order systems and refuse conflicts.
+
+```cpp
+#include "oly/app/system_descriptor.hpp"
+#include "oly/app/system_parameters.hpp"
+
+void move(oly::app::Query<Position, const Velocity> bodies, oly::app::Res<const Clock> clock) {
+  bodies.each([&](Position& position, const Velocity& velocity) { position.x += velocity.x * clock->delta; });
+}
+```
+
+| Parameter | Declares | Gives |
+|---|---|---|
+| `Query<Ts...>` | a read of each `const T`, a write of each `T`; `ecs::With<...>` and `ecs::Without<...>` declare nothing | `each`, `eachBlock`, `single`, `trySingle`, `matchedCount`, as `ecs::Query` |
+| `Lookup<const T>`, `Lookup<T>` | a read, a write of component `T` | `get(Entity)`, `tryGet(Entity)`, `has(Entity)`; for a tag only `Lookup<const Tag>`, with `has` alone |
+| `Res<const T>`, `Res<T>` | a read, a write of resource `T` | `get()`, `operator*`, `operator->` |
+| `Commands` | nothing | `spawn`, `destroy`, `add`, `remove<T>`, `addById`, `removeById`, `persist`, `isAlive`; deferred to the phase's flush |
+| `Events<E>` | nothing | `emit(const E&)` |
+| `Tasks` | nothing | `schedule`, `after`, `every`; no `cancel` |
+| `const StepInfo&` | nothing | `time`, `fixedDeltaTime`, `interpolation`, `state`, `paused` |
+| `const SystemInfo&` | nothing | `id`, `name`, `phase`, `schedule` |
+| `ecs::World&` | the system is exclusive | direct access to the world |
+
+A write of a type replaces its read in the declared access. `StepInfo` is the same for every system of one phase run: `paused` is the pause request read when the phase starts. A parameter of any other type does not compile (`addSystem: this parameter type is not a system parameter`), and neither does a write through a `const` parameter. A system takes at most 16 parameters.
+
+An exclusive system takes `ecs::World&` and may change structure directly; no other system runs beside it.
+
+A `Res<T>` whose resource is not inserted, and an `Events<E>` whose event is not declared, are reported with the system's name when registration closes.
+
 ## The system context
 
 A system receives a `SystemContext`. It is valid only during that call.

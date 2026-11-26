@@ -12,6 +12,7 @@ None.
 
 - `Engine::setTimingEnabled`, `systemTimings` and `flushTimings` record the time of each system and flush of the last step ([Time per system](docs/reference/cpp/engine-and-systems.md#time-per-system)). A game keeps working without them.
 - `World::insertResource`, `resource` and `tryResource` keep one object per type, owned by the `World` ([Resources](docs/reference/cpp/world-and-entities.md#resources)). A game keeps working without them.
+- A system function can declare what it reads and writes through its parameters (`Query`, `Lookup`, `Res`, `Commands`, `Events`, `Tasks`, `StepInfo`, `SystemInfo`, `ecs::World&`) ([System parameters](docs/reference/cpp/engine-and-systems.md#system-parameters)). A game keeps working without them.
 - `oly build`, `oly test` and `oly run` accept `--release`, a `Release` build in `build/cmake-release` for measuring ([The `oly` command](docs/reference/cli.md#oly-build-oly-test-and-oly-run)). A game keeps working without it.
 
 ## 0.2.0

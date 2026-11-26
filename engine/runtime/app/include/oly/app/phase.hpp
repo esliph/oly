@@ -10,6 +10,11 @@ namespace oly::app {
 
   inline constexpr uint32_t PhaseCount = static_cast<uint32_t>(Phase::Render) + 1;
 
+  using PhaseId = uint32_t;
+
+  enum class ScheduleKind : uint8_t { FixedStep,
+                                      Frame };
+
   // Inside a phase, the Default band runs before the Last band; inside a band, registration order.
   enum class OrderBand : uint8_t { Default,
                                    Last };
