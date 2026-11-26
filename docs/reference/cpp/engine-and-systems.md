@@ -169,6 +169,76 @@ The same restriction, with the states as a `StateMask`: bit `n` is the state wit
 engine.setSystemStateMask(spinId, (oly::app::StateMask{1} << states::menu) | (oly::app::StateMask{1} << states::playing));
 ```
 
+## Phases, sets and constraints
+
+A **phase** is a group of systems that runs together and ends with one flush of the deferred changes. A **schedule** says when a phase runs: `FixedStep` phases run in each fixed step, `Frame` phases run once per frame, after the steps. The built-in phases are tags in `oly/app/phase.hpp`:
+
+```cpp
+struct FixedStep {};
+struct Frame {};
+struct UpdateBefore {};  // FixedStep, id 0
+struct Update {};        // FixedStep, id 1
+struct UpdateAfter {};   // FixedStep, id 2
+struct Render {};        // Frame, id 3
+```
+
+`UpdateBefore` runs before `Update`, and `Update` before `UpdateAfter`. A phase id is its declaration order, built-ins first.
+
+```cpp
+engine.addPhase<Physics>(oly::app::FixedStep{}).after<oly::app::Update>().before<oly::app::UpdateAfter>();
+engine.set<Spatial>().before<&collide>();
+engine.addSystem<&collide>(oly::app::UpdateAfter{}, "collide").inSet<Spatial>().after("moveAll");
+```
+
+### `Engine::addPhase` and `Engine::phase`
+
+```cpp
+template <class P, class Schedule> PhaseBuilder addPhase(Schedule schedule);  // FixedStep{} or Frame{}
+template <class P> PhaseBuilder phase();
+```
+
+`addPhase` declares the phase `P`; declaring it twice stops with `OLY_ASSERT` (`addPhase: phase "<name>" already declared`). `phase<P>()` adds constraints to a phase declared now or later. `PhaseBuilder::before<Q>()` and `after<Q>()` each add one constraint between two phases. Two phases of one schedule need a path of constraints between them, and a constraint cannot join a `FixedStep` phase to a `Frame` phase.
+
+### `Engine::set`
+
+```cpp
+template <class S> SetBuilder set();
+```
+
+A **system set** is a tag `S` that groups systems. `set<S>().before<Q>()` and `after<Q>()` order every member of `S`; the target is a set, a function (`before<&f>()`, every registration of `f`) or a system name (`before("name")`). A set orders its members in each phase they are in.
+
+### `Engine::addSystem` (declared access)
+
+```cpp
+template <auto Function, class P> SystemBuilder addSystem(P phase, std::string_view name);
+SystemBuilder addSystem(ScheduleKey phase, std::string_view name, const SystemDescriptor& descriptor);
+```
+
+Registers `Function` in the phase `P` with the access its parameters declare ([System parameters](#system-parameters)). Names are unique in one `Engine`: a repeat stops with `OLY_ASSERT` (`addSystem: system "<name>" already registered`). The `SystemBuilder` returned adds, each call one constraint or setting:
+
+- `inSet<S>()`: the system joins the set `S`.
+- `before` / `after`, each as `<S>()` (a set), `<&f>()` (every registration of `f`) or `("name")` (one system).
+- `whilePaused(bool = true)`: as [`setWhilePaused`](#enginesetwhilepaused). A system of a `Frame` phase cannot be `whilePaused` (`setWhilePaused: frame system "<name>" cannot be whilePaused`).
+- `inStates({...})`: as [`setSystemStates`](#enginesetsystemstates).
+- `id()`: the `SystemId`.
+
+`Engine::orderSystems(first, second)` adds one constraint between two `SystemId`s.
+
+### The order rule
+
+Registration closes at the top of the first `frame`. Then the engine builds the order of each schedule:
+
+1. Phases follow their constraints.
+2. Inside a phase, systems follow their constraints, and a system with no constraint between two others runs in **name order**.
+
+The order depends on names and constraints only, never on registration order or plugin install order. A constraint that makes a cycle, two phases with no order between them, and a system that needs a missing resource stop the first `frame` with one `OLY_ASSERT` that lists every problem, one per line, each starting with `frame: ` ([Errors](../errors.md#c)). After the first `frame`, `addSystem`, `addPhase`, `set`, `phase` and `orderSystems` stop with `OLY_ASSERT` (`<operation>: "<name>" registered after the first frame`).
+
+`Engine::phaseId<P>()` returns the `PhaseId` of `P` (`OLY_ASSERT` when not declared) and `Engine::phaseName(PhaseId)` its name.
+
+### Engine controls as parameters
+
+`Res<StateRequest>` requests a state (`request(StateId)`, as `Engine::requestState`); `Res<PauseRequest>` pauses and resumes (`pause()`, `resume()`, `requested()`); `Res<const ActionMap>` reads the actions of the step. They resolve to the `Engine` that runs the system, so two `Engine`s on one `World` do not share them. `StepInfo` holds the clock, the state and the pause as they were at the start of the phase; `SystemInfo` holds the system's name and id.
+
 ## C++ systems, handlers and hooks
 
 Three macros define the functions a game registers. Each one registers its function **by name** when the module loads, so an environment can find it from a string. That is what the C API's `olyEngineAddNative*` functions use, for every client.
@@ -345,9 +415,9 @@ std::span<const FlushTiming> flushTimings() const noexcept;
 ```
 
 - Timing off: both spans are empty.
-- Timing on: `systemTimings()` has one entry per registered system, in dispatch order (phase, then band, then registration), each with `ran = false` and 0 ns until its phase runs. `flushTimings()` has four entries, in `Phase` order.
+- Timing on: both spans are empty until registration closes at the first `frame`. After it, `systemTimings()` has one entry per system in dispatch order (fixed-step phases, then frame phases) and `flushTimings()` one entry per phase in the same order, each with `ran = false` and 0 ns until its phase runs.
 - Each phase overwrites the entries of its phase. After a frame, the gameplay entries hold the last fixed step and the `Render` entries the last `Render`. A frame with no fixed step keeps the last step's entries.
-- The spans, and the names in them, stay valid until the next `addSystem` or `setTimingEnabled` call. Adding a system while timing is on resets every entry to `ran = false` and 0 ns.
+- The spans, and the names in them, stay valid until the next `setTimingEnabled` call. Calling `setTimingEnabled` resets every entry to `ran = false` and 0 ns.
 
 ### `SystemTiming` and `FlushTiming`
 
@@ -355,13 +425,15 @@ std::span<const FlushTiming> flushTimings() const noexcept;
 struct SystemTiming {
   SystemId system;
   std::string_view name;
-  Phase phase;
+  PhaseId phase;
+  std::string_view phaseName;
   bool ran;
   uint64_t nanoseconds;
 };
 
 struct FlushTiming {
-  Phase phase;
+  PhaseId phase;
+  std::string_view phaseName;
   uint64_t nanoseconds;
 };
 ```

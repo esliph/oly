@@ -333,12 +333,14 @@ namespace {
 
   struct ActionFixture : EngineFixture {
     double now = 0.0;
-
-    ActionFixture() {
-      olyEngineFrame(engine, now);
-    }
+    bool started = false;
 
     void stepOnce() {
+      if (!started) {
+        olyEngineFrame(engine, now);
+        started = true;
+      }
+
       now += 1.0 / 60;
       olyEngineFrame(engine, now);
     }

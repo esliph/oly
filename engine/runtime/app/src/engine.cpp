@@ -1,18 +1,36 @@
 #include "oly/app/engine.hpp"
 
+#include <algorithm>
 #include <chrono>
 #include <cmath>
 #include <optional>
-#include <ranges>
 
 #include "oly/app/task_context.hpp"
 #include "oly/core/assert.hpp"
+#include "oly/ecs/resource.hpp"
 
 namespace oly::app {
   namespace {
     uint64_t elapsedNanoseconds(std::chrono::steady_clock::time_point start) {
       return static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - start).count());
     }
+
+    ScheduleKey builtInKey(Phase phase) {
+      switch (phase) {
+        case Phase::UpdateBefore:
+          return scheduleKey<UpdateBefore>();
+        case Phase::Update:
+          return scheduleKey<Update>();
+        case Phase::UpdateAfter:
+          return scheduleKey<UpdateAfter>();
+        case Phase::Render:
+          break;
+      }
+
+      return scheduleKey<Render>();
+    }
+
+    constexpr uint32_t MissingIndex = 0xFFFFFFFFu;
   }
 
   Engine::Engine(ecs::World& world, EngineConfig config)
@@ -23,6 +41,18 @@ namespace oly::app {
     OLY_ASSERT(config.fixedHz > 0.0, "Engine: fixedHz=%f must be positive", config.fixedHz);
     OLY_ASSERT(config.maxStepsPerFrame > 0, "Engine: maxStepsPerFrame must be positive");
     OLY_ASSERT(config.maxEventRounds > 0, "Engine: maxEventRounds must be positive");
+
+    declarePhase(scheduleKey<UpdateBefore>(), ScheduleKind::FixedStep);
+    declarePhase(scheduleKey<Update>(), ScheduleKind::FixedStep);
+    declarePhase(scheduleKey<UpdateAfter>(), ScheduleKind::FixedStep);
+    declarePhase(scheduleKey<Render>(), ScheduleKind::Frame);
+    phaseConstraints_.emplace_back(scheduleKey<UpdateBefore>(), scheduleKey<Update>());
+    phaseConstraints_.emplace_back(scheduleKey<Update>(), scheduleKey<UpdateAfter>());
+
+    controls_.entries = {{{ecs::resourceId<StateRequest>(), &stateRequest_},
+                          {ecs::resourceId<PauseRequest>(), &pauseRequest_},
+                          {ecs::resourceId<input::ActionMap>(), &actions_},
+                          {ecs::resourceId<Scheduler>(), &scheduler_}}};
   }
 
   Engine::~Engine() {
@@ -52,33 +82,261 @@ namespace oly::app {
     return installed;
   }
 
-  SystemId Engine::addSystem(Phase phase, std::string_view name, SystemFunction function, void* userData, OrderBand band) {
-    OLY_ASSERT(!inFrame_, "addSystem: system \"%.*s\" registered during frame", static_cast<int>(name.size()), name.data());
+  void Engine::requireOpenRegistration(const char* operation, std::string_view name) const {
+    OLY_ASSERT(!registrationClosed_, "%s: \"%.*s\" registered after the first frame", operation, static_cast<int>(name.size()), name.data());
+  }
 
-    const SystemId id = static_cast<SystemId>(systemLocations_.size());
-    std::vector<SystemEntry>& entries = phases_[static_cast<uint32_t>(phase)][static_cast<uint32_t>(band)];
+  void Engine::claimKey(const char* operation, ScheduleKey key, KeyKind kind) {
+    for (const auto& [claimedKey, claimedKind] : keyKinds_) {
+      if (claimedKey == key) {
+        const std::string_view name = detail::scheduleName(key);
+        OLY_ASSERT(claimedKind == kind, "%s: type \"%.*s\" is used as both a phase and a set", operation, static_cast<int>(name.size()), name.data());
 
-    systemLocations_.push_back(SystemLocation{phase, band, static_cast<uint32_t>(entries.size())});
-    entries.push_back(SystemEntry{function, userData, std::string(name), id, false, 0});
-
-    if (timingEnabled_) {
-      rebuildTimingSlots();
+        return;
+      }
     }
 
-    return id;
+    keyKinds_.emplace_back(key, kind);
+  }
+
+  uint32_t Engine::ensurePhaseEntry(const char* operation, ScheduleKey key) {
+    claimKey(operation, key, KeyKind::Phase);
+
+    for (uint32_t index = 0; index < phases_.size(); ++index) {
+      if (phases_[index].key == key) {
+        return index;
+      }
+    }
+
+    phases_.push_back(PhaseEntry{key, std::string(detail::scheduleName(key)), ScheduleKind::FixedStep, false});
+
+    return static_cast<uint32_t>(phases_.size() - 1);
+  }
+
+  PhaseBuilder Engine::declarePhase(ScheduleKey key, ScheduleKind schedule) {
+    const std::string_view name = detail::scheduleName(key);
+    requireOpenRegistration("addPhase", name);
+
+    PhaseEntry& entry = phases_[ensurePhaseEntry("addPhase", key)];
+    OLY_ASSERT(!entry.declared, "addPhase: phase \"%.*s\" already declared", static_cast<int>(name.size()), name.data());
+
+    entry.declared = true;
+    entry.schedule = schedule;
+
+    return PhaseBuilder(*this, key);
+  }
+
+  PhaseBuilder Engine::referPhase(ScheduleKey key) {
+    requireOpenRegistration("phase", detail::scheduleName(key));
+    ensurePhaseEntry("phase", key);
+
+    return PhaseBuilder(*this, key);
+  }
+
+  SetBuilder Engine::declareSet(ScheduleKey key) {
+    requireOpenRegistration("set", detail::scheduleName(key));
+    claimKey("set", key, KeyKind::Set);
+
+    return SetBuilder(*this, key);
+  }
+
+  PhaseId Engine::declaredPhaseId(ScheduleKey key) const {
+    for (uint32_t index = 0; index < phases_.size(); ++index) {
+      if (phases_[index].key == key) {
+        OLY_ASSERT(phases_[index].declared, "phaseId: phase \"%s\" not declared", phases_[index].name.c_str());
+
+        return index;
+      }
+    }
+
+    const std::string_view name = detail::scheduleName(key);
+    OLY_ASSERT(false, "phaseId: phase \"%.*s\" not declared", static_cast<int>(name.size()), name.data());
+
+    return MissingIndex;
+  }
+
+  SystemId Engine::addSystemEntry(ScheduleKey phaseKey, std::string_view name, SystemEntry entry) {
+    OLY_ASSERT(!inFrame_, "addSystem: system \"%.*s\" registered during frame", static_cast<int>(name.size()), name.data());
+    requireOpenRegistration("addSystem", name);
+
+    for ([[maybe_unused]] const SystemEntry& registered : systems_) {
+      OLY_ASSERT(registered.name != name, "addSystem: system \"%.*s\" already registered", static_cast<int>(name.size()), name.data());
+    }
+
+    ensurePhaseEntry("addSystem", phaseKey);
+    entry.id = static_cast<SystemId>(systems_.size());
+    entry.name = std::string(name);
+    entry.phaseKey = phaseKey;
+    systems_.push_back(std::move(entry));
+
+    return systems_.back().id;
+  }
+
+  SystemId Engine::addSystem(Phase phase, std::string_view name, SystemFunction function, void* userData, OrderBand band) {
+    SystemEntry entry{};
+    entry.function = function;
+    entry.userData = userData;
+    entry.band = band;
+
+    return addSystemEntry(builtInKey(phase), name, std::move(entry));
+  }
+
+  SystemBuilder Engine::addSystem(ScheduleKey phase, std::string_view name, const SystemDescriptor& descriptor) {
+    SystemEntry entry{};
+    entry.descriptor = &descriptor;
+
+    return SystemBuilder(*this, addSystemEntry(phase, name, std::move(entry)));
+  }
+
+  void Engine::orderSystems(SystemId first, SystemId second) {
+    OLY_ASSERT(first < systems_.size() && second < systems_.size(), "orderSystems: system=%u or %u out of range (%zu systems)", first, second, systems_.size());
+    requireOpenRegistration("orderSystems", systems_[first].name);
+
+    constraints_.push_back(detail::OrderConstraint{detail::OrderTarget{detail::TargetKind::System, first, systems_[first].name}, detail::OrderTarget{detail::TargetKind::System, second, systems_[second].name}});
   }
 
   void Engine::setWhilePaused(SystemId system, bool whilePaused) {
     SystemEntry& entry = systemEntry(system);
-    OLY_ASSERT(isGameplayPhase(systemLocations_[system].phase), "setWhilePaused: render system \"%s\" cannot be whilePaused", entry.name.c_str());
+
+    for ([[maybe_unused]] const PhaseEntry& phase : phases_) {
+      OLY_ASSERT(phase.key != entry.phaseKey || phase.schedule == ScheduleKind::FixedStep, "setWhilePaused: frame system \"%s\" cannot be whilePaused", entry.name.c_str());
+    }
 
     entry.whilePaused = whilePaused;
   }
 
   Engine::SystemEntry& Engine::systemEntry(SystemId system) {
-    const SystemLocation location = systemLocations_[system];
+    return systems_[system];
+  }
 
-    return phases_[static_cast<uint32_t>(location.phase)][static_cast<uint32_t>(location.band)][location.position];
+  void PhaseBuilder::constrain(ScheduleKey first, ScheduleKey second) {
+    engine_->requireOpenRegistration("phase", detail::scheduleName(phase_));
+    engine_->ensurePhaseEntry("phase", first);
+    engine_->ensurePhaseEntry("phase", second);
+    engine_->phaseConstraints_.emplace_back(first, second);
+  }
+
+  void SetBuilder::constrain(bool selfFirst, detail::OrderTarget other) {
+    engine_->requireOpenRegistration("set", detail::scheduleName(set_));
+
+    if (other.kind == detail::TargetKind::Set) {
+      engine_->claimKey("set", other.key, Engine::KeyKind::Set);
+    }
+
+    detail::OrderTarget self{detail::TargetKind::Set, set_, std::string(detail::scheduleName(set_))};
+    engine_->constraints_.push_back(selfFirst ? detail::OrderConstraint{std::move(self), std::move(other)} : detail::OrderConstraint{std::move(other), std::move(self)});
+  }
+
+  void SystemBuilder::constrain(bool selfFirst, detail::OrderTarget other) {
+    engine_->requireOpenRegistration("addSystem", engine_->systems_[system_].name);
+
+    if (other.kind == detail::TargetKind::Set) {
+      engine_->claimKey("addSystem", other.key, Engine::KeyKind::Set);
+    }
+
+    detail::OrderTarget self{detail::TargetKind::System, system_, engine_->systems_[system_].name};
+    engine_->constraints_.push_back(selfFirst ? detail::OrderConstraint{std::move(self), std::move(other)} : detail::OrderConstraint{std::move(other), std::move(self)});
+  }
+
+  void SystemBuilder::joinSet(ScheduleKey set, std::string_view setName) {
+    engine_->requireOpenRegistration("inSet", setName);
+    engine_->claimKey("inSet", set, Engine::KeyKind::Set);
+
+    std::vector<ScheduleKey>& sets = engine_->systems_[system_].sets;
+
+    if (std::find(sets.begin(), sets.end(), set) == sets.end()) {
+      sets.push_back(set);
+    }
+  }
+
+  SystemBuilder& SystemBuilder::whilePaused(bool whilePaused) {
+    engine_->setWhilePaused(system_, whilePaused);
+
+    return *this;
+  }
+
+  SystemBuilder& SystemBuilder::inStates(std::initializer_list<StateId> states) {
+    engine_->setSystemStates(system_, states);
+
+    return *this;
+  }
+
+  // Constraints that keep the order of the legacy bridge: the Default band in registration order, then the Last band.
+  void Engine::chainLegacySystems(std::vector<detail::OrderConstraint>& constraints) const {
+    for (const PhaseEntry& phase : phases_) {
+      std::vector<const SystemEntry*> chain;
+
+      for (const OrderBand band : {OrderBand::Default, OrderBand::Last}) {
+        for (const SystemEntry& entry : systems_) {
+          if (entry.descriptor == nullptr && entry.phaseKey == phase.key && entry.band == band) {
+            chain.push_back(&entry);
+          }
+        }
+      }
+
+      for (size_t position = 1; position < chain.size(); ++position) {
+        const SystemEntry& previous = *chain[position - 1];
+        const SystemEntry& next = *chain[position];
+        constraints.push_back(detail::OrderConstraint{detail::OrderTarget{detail::TargetKind::System, previous.id, previous.name}, detail::OrderTarget{detail::TargetKind::System, next.id, next.name}});
+      }
+    }
+  }
+
+  void Engine::closeRegistration() {
+    detail::ScheduleInput input;
+
+    for (const PhaseEntry& phase : phases_) {
+      input.phases.push_back(detail::GraphPhase{phase.key, phase.name, phase.schedule, phase.declared});
+    }
+
+    input.phaseConstraints = phaseConstraints_;
+    input.constraints = constraints_;
+    chainLegacySystems(input.constraints);
+
+    for (SystemEntry& entry : systems_) {
+      const uint32_t phaseIndex = ensurePhaseEntry("frame", entry.phaseKey);
+      entry.info = SystemInfo{entry.id, entry.name, phaseIndex, phases_[phaseIndex].schedule};
+
+      detail::GraphSystem system{entry.name, entry.phaseKey, entry.descriptor != nullptr ? entry.descriptor->key : MissingIndex, entry.sets, {}};
+
+      if (entry.descriptor != nullptr) {
+        entry.descriptor->declare(system.access);
+      } else {
+        system.access.exclusive = true;
+      }
+
+      input.systems.push_back(std::move(system));
+    }
+
+    const detail::SchedulePlan plan = detail::buildSchedule(input);
+    std::vector<std::string> errors = plan.errors;
+
+    for (SystemEntry& entry : systems_) {
+      if (entry.descriptor != nullptr) {
+        detail::ResolveContext context{world_, controls_, queues_, scheduler_, entry.name, errors};
+        entry.descriptor->resolve(context, entry.slots);
+      }
+    }
+
+    registrationClosed_ = true;
+    fixedStepPhases_ = plan.fixedStepPhases;
+    framePhases_ = plan.framePhases;
+    dispatch_ = plan.systemsByPhase;
+
+    if (timingEnabled_) {
+      rebuildTimingSlots();
+    }
+
+    if (!errors.empty()) {
+      std::string text;
+
+      for (const std::string& error : errors) {
+        text += text.empty() ? "" : "\n";
+        text += "frame: " + error;
+      }
+
+      OLY_ASSERT(false, "%s", text.c_str());
+    }
   }
 
   EventTypeId Engine::declareEventType(EventKey key, std::string_view name, uint32_t size) {
@@ -141,6 +399,10 @@ namespace oly::app {
 
     started_ = true;
 
+    if (!registrationClosed_) {
+      closeRegistration();
+    }
+
     if (hidden_) {
       return;
     }
@@ -182,14 +444,17 @@ namespace oly::app {
     }
 
     interpolation_ = accumulator_ / fixedDeltaTime_;
-    runPhase(Phase::Render);
+    for (const uint32_t phase : framePhases_) {
+      runPhase(phase);
+    }
+
     inFrame_ = false;
     actions_.setDeclarationsLocked(false);
   }
 
   void Engine::runFixedStep() {
     // Fixed at the start: pause/resume requested by a system only take effect in the next step.
-    pausedThisStep_ = pauseRequested_;
+    pausedThisStep_ = pauseRequest_.requested();
     eventRoundsThisStep_ = 0;
 
     captureActions();
@@ -198,9 +463,9 @@ namespace oly::app {
       runDueSchedule();
     }
 
-    runPhase(Phase::UpdateBefore);
-    runPhase(Phase::Update);
-    runPhase(Phase::UpdateAfter);
+    for (const uint32_t phase : fixedStepPhases_) {
+      runPhase(phase);
+    }
 
     dispatchEvents();
     applyStateTransition();
@@ -260,52 +525,62 @@ namespace oly::app {
     queue.endRun();
   }
 
+  void Engine::runSystem(SystemEntry& entry, const StepInfo& step) {
+    if (entry.descriptor != nullptr) {
+      detail::RunContext context{world_, commands_, queues_, step, entry.info, state_ != NoState};
+      entry.descriptor->run(entry.slots, context);
+
+      return;
+    }
+
+    SystemContext context(*this, world_, commands_, static_cast<Phase>(entry.info.phase), entry.id, entry.name, entry.userData);
+    entry.function(context);
+  }
+
   template <bool Timed>
-  void Engine::runSystems(Phase phase) {
-    const uint32_t phaseIndex = static_cast<uint32_t>(phase);
-    uint32_t slot = Timed ? firstTimingSlot_[phaseIndex] : 0;
+  void Engine::runSystems(uint32_t phase) {
+    const bool pausable = phases_[phase].schedule == ScheduleKind::FixedStep;
+    const StepInfo step{time(), static_cast<float>(fixedDeltaTime_), static_cast<float>(interpolation_), state_, pauseRequest_.requested()};
+    uint32_t slot = Timed ? firstTimingSlot_[phase] : 0;
 
-    for (std::vector<SystemEntry>& band : phases_[phaseIndex]) {
-      for (SystemEntry& entry : band) {
-        SystemTiming* timing = nullptr;
+    for (const SystemId id : dispatch_[phase]) {
+      SystemEntry& entry = systems_[id];
+      SystemTiming* timing = nullptr;
 
-        if constexpr (Timed) {
-          timing = &systemTimings_[slot++];
-          timing->ran = false;
-          timing->nanoseconds = 0;
-        }
+      if constexpr (Timed) {
+        timing = &systemTimings_[slot++];
+        timing->ran = false;
+        timing->nanoseconds = 0;
+      }
 
-        if (isGameplayPhase(phase) && entry.whilePaused != pausedThisStep_) {
-          continue;
-        }
+      if (pausable && entry.whilePaused != pausedThisStep_) {
+        continue;
+      }
 
-        if (!runsInState(entry.states)) {
-          continue;
-        }
+      if (!runsInState(entry.states)) {
+        continue;
+      }
 
-        SystemContext context(*this, world_, commands_, phase, entry.id, entry.name, entry.userData);
-
-        if constexpr (Timed) {
-          const auto start = std::chrono::steady_clock::now();
-          entry.function(context);
-          timing->ran = true;
-          timing->nanoseconds = elapsedNanoseconds(start);
-        } else {
-          entry.function(context);
-        }
+      if constexpr (Timed) {
+        const auto start = std::chrono::steady_clock::now();
+        runSystem(entry, step);
+        timing->ran = true;
+        timing->nanoseconds = elapsedNanoseconds(start);
+      } else {
+        runSystem(entry, step);
       }
     }
 
     if constexpr (Timed) {
       const auto start = std::chrono::steady_clock::now();
       world_.flush(commands_);
-      flushTimings_[phaseIndex].nanoseconds = elapsedNanoseconds(start);
+      flushTimings_[flushSlot_[phase]].nanoseconds = elapsedNanoseconds(start);
     } else {
       world_.flush(commands_);
     }
   }
 
-  void Engine::runPhase(Phase phase) {
+  void Engine::runPhase(uint32_t phase) {
     if (timingEnabled_) {
       runSystems<true>(phase);
     } else {
@@ -329,16 +604,24 @@ namespace oly::app {
   void Engine::rebuildTimingSlots() {
     systemTimings_.clear();
     flushTimings_.clear();
+    firstTimingSlot_.assign(phases_.size(), 0);
+    flushSlot_.assign(phases_.size(), 0);
 
-    for (uint32_t phaseIndex = 0; phaseIndex < PhaseCount; ++phaseIndex) {
-      const Phase phase = static_cast<Phase>(phaseIndex);
-      firstTimingSlot_[phaseIndex] = static_cast<uint32_t>(systemTimings_.size());
+    if (!registrationClosed_) {
+      return;
+    }
 
-      for (const SystemEntry& entry : std::views::join(phases_[phaseIndex])) {
-        systemTimings_.push_back(SystemTiming{entry.id, entry.name, phase, false, 0});
+    for (const std::vector<uint32_t>* order : {&fixedStepPhases_, &framePhases_}) {
+      for (const uint32_t phase : *order) {
+        firstTimingSlot_[phase] = static_cast<uint32_t>(systemTimings_.size());
+
+        for (const SystemId id : dispatch_[phase]) {
+          systemTimings_.push_back(SystemTiming{id, systems_[id].name, phase, phases_[phase].name, false, 0});
+        }
+
+        flushSlot_[phase] = static_cast<uint32_t>(flushTimings_.size());
+        flushTimings_.push_back(FlushTiming{phase, phases_[phase].name, 0});
       }
-
-      flushTimings_.push_back(FlushTiming{phase, 0});
     }
   }
 }

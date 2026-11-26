@@ -11,14 +11,19 @@
 #include <utility>
 #include <vector>
 
+#include "oly/app/controls.hpp"
 #include "oly/app/detail/event_queues.hpp"
+#include "oly/app/detail/schedule_graph.hpp"
 #include "oly/app/event.hpp"
 #include "oly/app/handler.hpp"
+#include "oly/app/order.hpp"
 #include "oly/app/phase.hpp"
 #include "oly/app/plugin.hpp"
 #include "oly/app/scheduler.hpp"
 #include "oly/app/state.hpp"
 #include "oly/app/system.hpp"
+#include "oly/app/system_descriptor.hpp"
+#include "oly/app/system_parameters.hpp"
 #include "oly/app/timing.hpp"
 #include "oly/core/assert.hpp"
 #include "oly/core/type_name.hpp"
@@ -37,11 +42,31 @@ namespace oly::app {
     // Floating-point error in the accumulator must neither lose nor duplicate a step.
     static constexpr double StepTolerance = 1e-9;
 
+    friend class PhaseBuilder;
+    friend class SetBuilder;
+    friend class SystemBuilder;
+
+    enum class KeyKind : uint8_t { Phase,
+                                   Set };
+
+    struct PhaseEntry {
+      ScheduleKey key;
+      std::string name;
+      ScheduleKind schedule;
+      bool declared; // false while the phase is only named by a constraint or a system
+    };
+
     struct SystemEntry {
-      SystemFunction function;
-      void* userData;
+      SystemFunction function; // the legacy bridge only
+      void* userData; // the legacy bridge only
       std::string name;
       SystemId id;
+      ScheduleKey phaseKey;
+      OrderBand band; // the legacy bridge only
+      const SystemDescriptor* descriptor; // nullptr for the legacy bridge
+      detail::SystemSlots slots;
+      SystemInfo info; // filled when registration closes, once the names stop moving
+      std::vector<ScheduleKey> sets;
       bool whilePaused;
       StateMask states;
     };
@@ -58,15 +83,15 @@ namespace oly::app {
     EngineConfig config_;
     double fixedDeltaTime_;
 
-    struct SystemLocation {
-      Phase phase;
-      OrderBand band;
-      uint32_t position; // in the band
-    };
-
-    // One vector per band, so runPhase walks the bands in order with no branch per system.
-    std::array<std::array<std::vector<SystemEntry>, OrderBandCount>, PhaseCount> phases_;
-    std::vector<SystemLocation> systemLocations_; // [SystemId]
+    std::vector<PhaseEntry> phases_; // [PhaseId], declaration order, the built-in phases first
+    std::vector<std::pair<ScheduleKey, ScheduleKey>> phaseConstraints_; // (first, second)
+    std::vector<std::pair<ScheduleKey, KeyKind>> keyKinds_;
+    std::vector<SystemEntry> systems_; // [SystemId]
+    std::vector<detail::OrderConstraint> constraints_;
+    bool registrationClosed_ = false; // set by the first frame call, which builds the schedule below
+    std::vector<uint32_t> fixedStepPhases_; // run order
+    std::vector<uint32_t> framePhases_;
+    std::vector<std::vector<SystemId>> dispatch_; // [PhaseId], dispatch order
     ecs::CommandBuffer commands_;
 
     detail::EventQueues queues_;
@@ -76,6 +101,9 @@ namespace oly::app {
 
     input::ActionMap actions_;
     Scheduler scheduler_{*this};
+    StateRequest stateRequest_{*this};
+    PauseRequest pauseRequest_;
+    detail::EngineControls controls_{}; // the Engine's own resources, looked up before the World's
 
     struct StateHookEntry {
       StateHookFunction function;
@@ -107,11 +135,11 @@ namespace oly::app {
 
     // Slot i is the i-th system in dispatch order; each runPhase overwrites the slots of its phase in place.
     std::vector<SystemTiming> systemTimings_;
-    std::array<uint32_t, PhaseCount> firstTimingSlot_{}; // [Phase]
-    std::vector<FlushTiming> flushTimings_; // [Phase]
+    std::vector<uint32_t> firstTimingSlot_; // [PhaseId]
+    std::vector<uint32_t> flushSlot_; // [PhaseId]
+    std::vector<FlushTiming> flushTimings_;
     bool timingEnabled_ = false;
 
-    bool pauseRequested_ = false;
     bool pausedThisStep_ = false;
     bool inFrame_ = false;
     bool started_ = false; // set by the first frame call
@@ -154,10 +182,46 @@ namespace oly::app {
 
     // Cannot be called during frame (OLY_ASSERT). Within a phase, the Default band runs before the Last band, and
     // within a band systems run in registration order. The phase applies its commands once, after the Last band.
+    // The legacy form: registers an exclusive system in a built-in phase.
     SystemId addSystem(Phase phase, std::string_view name, SystemFunction function, void* userData = nullptr, OrderBand band = OrderBand::Default);
-    // In the gameplay phases, a whilePaused system runs only in paused steps and the others only in unpaused ones.
-    // Render does not accept whilePaused (OLY_ASSERT).
+    // In the fixed-step phases, a whilePaused system runs only in paused steps and the others only in unpaused ones.
+    // A frame system does not accept whilePaused (OLY_ASSERT).
     void setWhilePaused(SystemId system, bool whilePaused);
+
+    // Built in: UpdateBefore -> Update -> UpdateAfter in the fixed step, Render in the frame. Registration closes on the first
+    // frame call: a later addSystem, addPhase, set, phase or constraint is a contract error (OLY_ASSERT), and the schedule is
+    // built then (order and conflicts are checked, every parameter is resolved once).
+    template <class P, class Schedule>
+    PhaseBuilder addPhase(Schedule) {
+      static_assert(std::is_same_v<Schedule, FixedStep> || std::is_same_v<Schedule, Frame>, "addPhase: the schedule is FixedStep or Frame");
+
+      return declarePhase(scheduleKey<P>(), std::is_same_v<Schedule, FixedStep> ? ScheduleKind::FixedStep : ScheduleKind::Frame);
+    }
+    // Constraints on a phase declared now or later by a plugin.
+    template <class P>
+    PhaseBuilder phase() {
+      return referPhase(scheduleKey<P>());
+    }
+    template <class S>
+    SetBuilder set() {
+      return declareSet(scheduleKey<S>());
+    }
+    // Function is a function pointer whose parameters declare what the system reads and writes. The name is unique per Engine
+    // and breaks ties in the dispatch order.
+    template <auto Function, class P>
+    SystemBuilder addSystem(P, std::string_view name) {
+      return addSystem(scheduleKey<P>(), name, systemDescriptor<Function>());
+    }
+    SystemBuilder addSystem(ScheduleKey phase, std::string_view name, const SystemDescriptor& descriptor);
+    void orderSystems(SystemId first, SystemId second);
+    // The phase must be declared (OLY_ASSERT).
+    template <class P>
+    PhaseId phaseId() const {
+      return declaredPhaseId(scheduleKey<P>());
+    }
+    std::string_view phaseName(PhaseId phase) const {
+      return phases_[phase].name;
+    }
 
     // Declaration order is the dispatch order of the types. Cannot be called during frame or repeated for the
     // same type (OLY_ASSERT). The name appears in the error messages.
@@ -252,13 +316,13 @@ namespace oly::app {
 
     // Requests in the middle of a step take effect from the next fixed step on.
     void pause() noexcept {
-      pauseRequested_ = true;
+      pauseRequest_.pause();
     }
     void resume() noexcept {
-      pauseRequested_ = false;
+      pauseRequest_.resume();
     }
     bool paused() const noexcept {
-      return pauseRequested_;
+      return pauseRequest_.requested();
     }
 
     // Inside a system, it is the start of the current step; it does not advance in paused steps.
@@ -282,14 +346,16 @@ namespace oly::app {
     bool timingEnabled() const noexcept {
       return timingEnabled_;
     }
-    // One entry per registered system, in dispatch order (phase, then band, then registration), each with ran false and
-    // 0 ns until its phase runs. Each runPhase overwrites the entries of its phase, so after a frame the gameplay entries
-    // hold the last fixed step and the Render entries the last Render; a frame with no fixed step keeps the last step's.
-    // Empty while timing is off. The span, and the names in it, stay valid until the next addSystem or setTimingEnabled.
+    // One entry per registered system, in dispatch order (the fixed-step phases, then the frame phases), each with ran false
+    // and 0 ns until its phase runs. Each runPhase overwrites the entries of its phase, so after a frame the fixed-step entries
+    // hold the last fixed step and the frame entries the last frame; a frame with no fixed step keeps the last step's.
+    // Empty while timing is off and until registration closes. The span, and the names in it, stay valid until the next
+    // setTimingEnabled.
     std::span<const SystemTiming> systemTimings() const noexcept {
       return systemTimings_;
     }
-    // Four entries, in Phase order, while timing is on; empty otherwise. Same validity as systemTimings.
+    // One entry per phase, in the same order, while timing is on and registration is closed; empty otherwise. Same validity as
+    // systemTimings.
     std::span<const FlushTiming> flushTimings() const noexcept {
       return flushTimings_;
     }
@@ -302,10 +368,22 @@ namespace oly::app {
     void restartClock();
     void recoverFromInterruptedFrame();
     void runFixedStep();
-    void runPhase(Phase phase);
+    void runPhase(uint32_t phase);
     template <bool Timed>
-    void runSystems(Phase phase);
+    void runSystems(uint32_t phase);
+    void runSystem(SystemEntry& entry, const StepInfo& step);
     void rebuildTimingSlots();
+
+    void requireOpenRegistration(const char* operation, std::string_view name) const;
+    void claimKey(const char* operation, ScheduleKey key, KeyKind kind);
+    uint32_t ensurePhaseEntry(const char* operation, ScheduleKey key);
+    PhaseBuilder declarePhase(ScheduleKey key, ScheduleKind schedule);
+    PhaseBuilder referPhase(ScheduleKey key);
+    SetBuilder declareSet(ScheduleKey key);
+    PhaseId declaredPhaseId(ScheduleKey key) const;
+    SystemId addSystemEntry(ScheduleKey phaseKey, std::string_view name, SystemEntry entry);
+    void closeRegistration();
+    void chainLegacySystems(std::vector<detail::OrderConstraint>& constraints) const;
     void dispatchEvents();
     void runDueSchedule();
 

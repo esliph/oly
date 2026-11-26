@@ -14,6 +14,12 @@ The same verb stands for the same concept in C++, in the C API and in TS.
 | pause / resume | `Engine::pause`, `resume`, `paused`; `SystemContext::pause/resume` | `olyEnginePause/Resume/IsPaused` | `pause`, `resume`, `paused` |
 | register system | `Engine::addSystem(phase, name, function, userData, band)`, `OLY_SYSTEM(name)` (by name) | `olyEngineAddNativeSystem` (by name), `olyEngineAddScriptSystem` | `addSystem`, `addNativeSystem` |
 | order band: where a system runs inside its phase (`Default` first, then `Last`; registration order inside a band) | `OrderBand::Default`, `OrderBand::Last` (last parameter of `addSystem`) | — (always `Default`) | — (always `Default`) |
+| phase: a group of systems that runs together and ends with one flush (the built-ins are `UpdateBefore`, `Update`, `UpdateAfter`, `Render`) | `Engine::addPhase<P>(FixedStep{} or Frame{})`, `Engine::phase<P>()`, `PhaseId`, `Engine::phaseId<P>()` | — | — |
+| schedule: when a phase runs (`FixedStep`: each fixed step; `Frame`: once per frame, after the steps) | `FixedStep`, `Frame` | — | — |
+| system set: a tag that groups systems so a constraint names them together | `Engine::set<S>()`, `SystemBuilder::inSet<S>()` | — | — |
+| constraint: one `before`/`after` that orders two phases, sets, functions or systems; the rest runs in name order | `PhaseBuilder`, `SetBuilder`, `SystemBuilder::before/after`, `Engine::orderSystems` | — | — |
+| `StepInfo`, `SystemInfo`: the clock, state and pause at the start of the phase, and the system's name and id | `StepInfo`, `SystemInfo` (system parameters) | — | — |
+| engine controls: the request to change state or to pause, and the actions, as the system's own `Engine` sees them | `Res<StateRequest>`, `Res<PauseRequest>`, `Res<const ActionMap>` | — | — |
 | system runs while paused | `Engine::setWhilePaused` | `olyEngineSetWhilePaused` | `SystemRegistration.whilePaused()` |
 | deferred structural change (inside a system) | `SystemContext::spawn/destroy/add/remove` | `olySystemSpawn/Destroy/Add/Remove` | `context.spawn/destroy/add/remove` |
 | observer: run code when an entity gains (**on add**) or loses (**on remove**) a component | `World::onAdd<T>`, `onRemove<T>`, `observeById(kind, componentId, ...)`, `removeObserver`; `ObserverContext` | — | — |

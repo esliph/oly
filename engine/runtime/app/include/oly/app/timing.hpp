@@ -12,13 +12,15 @@ namespace oly::app {
   struct SystemTiming {
     SystemId system;
     std::string_view name;
-    Phase phase;
+    PhaseId phase;
+    std::string_view phaseName;
     bool ran;
     uint64_t nanoseconds;
   };
 
   struct FlushTiming {
-    Phase phase;
+    PhaseId phase;
+    std::string_view phaseName;
     uint64_t nanoseconds;
   };
 }

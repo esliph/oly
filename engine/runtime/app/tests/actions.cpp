@@ -67,16 +67,25 @@ namespace {
     Engine engine{world};
     Recorder recorder;
     double now = 0.0;
+    bool started = false;
 
     Fixture() {
       recorder.action = engine.actions().declareButton("jump");
       engine.actions().bind(recorder.action, Key::Space);
-      engine.frame(0.0);
+    }
+
+    void advance(double seconds) {
+      if (!started) {
+        engine.frame(0.0);
+        started = true;
+      }
+
+      now += seconds;
+      engine.frame(now);
     }
 
     void step() {
-      now += 1.0 / 60;
-      engine.frame(now);
+      advance(1.0 / 60);
     }
   };
 
@@ -108,8 +117,7 @@ TEST_CASE("edges only in the first step of the frame") {
 
   fixture.engine.actions().buttonDown(Key::Space);
   fixture.engine.actions().buttonUp(Key::Space);
-  fixture.now += 3.0 / 60 + 0.001;
-  fixture.engine.frame(fixture.now);
+  fixture.advance(3.0 / 60 + 0.001);
 
   REQUIRE(fixture.recorder.states.size() == 3);
   CHECK(fixture.recorder.states[0] == ButtonState{true, false, true});
@@ -124,12 +132,10 @@ TEST_CASE("frame without a step keeps the edge for the next step") {
 
   fixture.engine.actions().buttonDown(Key::Space);
   fixture.engine.actions().buttonUp(Key::Space);
-  fixture.now += 0.005;
-  fixture.engine.frame(fixture.now);
+  fixture.advance(0.005);
   CHECK(fixture.recorder.states.empty());
 
-  fixture.now += 0.0125;
-  fixture.engine.frame(fixture.now);
+  fixture.advance(0.0125);
 
   REQUIRE(fixture.recorder.states.size() == 1);
   CHECK(fixture.recorder.states[0] == ButtonState{true, false, true});

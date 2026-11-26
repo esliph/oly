@@ -33,21 +33,6 @@ namespace enxame {
 
     using File = std::unique_ptr<std::FILE, FileCloser>;
 
-    const char* phaseName(oly::app::Phase phase) {
-      switch (phase) {
-        case oly::app::Phase::UpdateBefore:
-          return "UpdateBefore";
-        case oly::app::Phase::Update:
-          return "Update";
-        case oly::app::Phase::UpdateAfter:
-          return "UpdateAfter";
-        case oly::app::Phase::Render:
-          return "Render";
-      }
-
-      return "";
-    }
-
     uint64_t nanosecondsSince(std::chrono::steady_clock::time_point start) {
       return static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now() - start).count());
     }
@@ -102,7 +87,7 @@ namespace enxame {
 
       for (size_t slot = 0; slot < systems.size(); ++slot) {
         const std::vector<uint64_t>& values = measurements.systemNanoseconds[slot];
-        std::fprintf(file, "%s\n    { \"name\": \"%.*s\", \"phase\": \"%s\", \"ran\": %zu, \"median\": %llu }", slot == 0 ? "" : ",", static_cast<int>(systems[slot].name.size()), systems[slot].name.data(), phaseName(systems[slot].phase), values.size(), static_cast<unsigned long long>(medianOf(values)));
+        std::fprintf(file, "%s\n    { \"name\": \"%.*s\", \"phase\": \"%.*s\", \"ran\": %zu, \"median\": %llu }", slot == 0 ? "" : ",", static_cast<int>(systems[slot].name.size()), systems[slot].name.data(), static_cast<int>(systems[slot].phaseName.size()), systems[slot].phaseName.data(), values.size(), static_cast<unsigned long long>(medianOf(values)));
       }
 
       std::fprintf(file, "%s],\n  \"flushes\": [", systems.empty() ? "" : "\n  ");
@@ -110,7 +95,7 @@ namespace enxame {
       const auto flushes = engine.flushTimings();
 
       for (size_t slot = 0; slot < flushes.size(); ++slot) {
-        std::fprintf(file, "%s\n    { \"phase\": \"%s\", \"median\": %llu }", slot == 0 ? "" : ",", phaseName(flushes[slot].phase), static_cast<unsigned long long>(medianOf(measurements.flushNanoseconds[slot])));
+        std::fprintf(file, "%s\n    { \"phase\": \"%.*s\", \"median\": %llu }", slot == 0 ? "" : ",", static_cast<int>(flushes[slot].phaseName.size()), flushes[slot].phaseName.data(), static_cast<unsigned long long>(medianOf(measurements.flushNanoseconds[slot])));
       }
 
       std::fprintf(file, "%s],\n  \"measures\": %s\n}\n", flushes.empty() ? "" : "\n  ", measuresJson.c_str());
@@ -190,7 +175,7 @@ namespace enxame {
         const auto flushes = engine.flushTimings();
 
         for (size_t slot = 0; slot < flushes.size() && slot < measurements.flushNanoseconds.size(); ++slot) {
-          if (flushes[slot].phase == oly::app::Phase::UpdateAfter) {
+          if (flushes[slot].phase == engine.phaseId<oly::app::UpdateAfter>()) {
             flushMedian = std::to_string(medianOf(measurements.flushNanoseconds[slot]));
           }
         }

@@ -39,7 +39,15 @@ TypeScript: [The loop](../../reference/typescript/engine-and-systems.md#the-loop
 | `Phase::UpdateAfter` | collision and physics, after everything moved |
 | `Phase::Render` | drawing; runs once per frame, not per step |
 
-Inside a phase, systems run in **registration order**. There is no dependency graph: the order you write is the order that runs. Systems written in different languages mix freely in one phase.
+Systems registered with `addSystem(Phase, name, function, userData, band)` run in **registration order** inside their phase. Systems registered with `addSystem<&function>(Phase, name)` run in the order their **constraints** give. Systems written in different languages mix freely in one phase.
+
+### Order by constraints
+
+A phase is a group that ends with one flush of the deferred changes, and a schedule says when it runs: `FixedStep` in each step, `Frame` once per frame. A plugin declares its own phase (`addPhase<Physics>(FixedStep{}).after<Update>().before<UpdateAfter>()`), and the engine puts it between the two. Systems join a **set** (`inSet<Spatial>()`) and say what they run before or after: a set, a function (every registration of it) or one system by name.
+
+Registration closes at the first `frame`, and the engine builds the order then. The rule is: constraints first, then **name order**. The result never depends on registration order or on the order the plugins were installed, so adding a plugin does not move unrelated systems. A cycle, two phases with no order between them, and a system that needs a missing resource stop the first `frame` with every problem listed ([Errors](../../reference/errors.md#c)). The legacy `addSystem(Phase, ...)` stays until the new API replaces it: its systems keep their registration order, and a new-API system in the same phase conflicts with them until a constraint orders it.
+
+Reference: [Phases, sets and constraints](../../reference/cpp/engine-and-systems.md#phases-sets-and-constraints).
 
 ### Order bands
 

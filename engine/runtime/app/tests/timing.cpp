@@ -77,12 +77,12 @@ TEST_CASE("timing on: one entry per system, in dispatch order, with its id and p
   REQUIRE(timings.size() == 4);
   CHECK(namesOf(timings) == std::vector<std::string>{"before", "update", "last", "render"});
   CHECK(timings[0].system == before);
-  CHECK(timings[0].phase == Phase::UpdateBefore);
+  CHECK(timings[0].phase == fixture.engine.phaseId<oly::app::UpdateBefore>());
   CHECK(timings[1].system == update);
   CHECK(timings[2].system == last);
-  CHECK(timings[2].phase == Phase::Update);
+  CHECK(timings[2].phase == fixture.engine.phaseId<oly::app::Update>());
   CHECK(timings[3].system == render);
-  CHECK(timings[3].phase == Phase::Render);
+  CHECK(timings[3].phase == fixture.engine.phaseId<oly::app::Render>());
   CHECK(timings[0].ran);
   CHECK(timings[1].ran);
   CHECK(timings[2].ran);
@@ -124,10 +124,10 @@ TEST_CASE("each gameplay phase and Render has its flush entry, in phase order") 
 
   const std::span<const FlushTiming> flushes = fixture.engine.flushTimings();
   REQUIRE(flushes.size() == 4);
-  CHECK(flushes[0].phase == Phase::UpdateBefore);
-  CHECK(flushes[1].phase == Phase::Update);
-  CHECK(flushes[2].phase == Phase::UpdateAfter);
-  CHECK(flushes[3].phase == Phase::Render);
+  CHECK(flushes[0].phase == fixture.engine.phaseId<oly::app::UpdateBefore>());
+  CHECK(flushes[1].phase == fixture.engine.phaseId<oly::app::Update>());
+  CHECK(flushes[2].phase == fixture.engine.phaseId<oly::app::UpdateAfter>());
+  CHECK(flushes[3].phase == fixture.engine.phaseId<oly::app::Render>());
   CHECK_INVARIANTS(fixture.world);
 }
 

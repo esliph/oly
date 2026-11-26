@@ -37,7 +37,7 @@ namespace oly::app {
 
   void Engine::setSystemStateMask(SystemId system, StateMask mask) {
     OLY_ASSERT(!inFrame_, "setSystemStates: state restriction during frame");
-    OLY_ASSERT(system < systemLocations_.size(), "setSystemStates: system=%u out of range (%zu systems)", system, systemLocations_.size());
+    OLY_ASSERT(system < systems_.size(), "setSystemStates: system=%u out of range (%zu systems)", system, systems_.size());
     checkStateMask("setSystemStates", mask);
 
     systemEntry(system).states = mask;

@@ -11,6 +11,8 @@
 #include "oly/app/handler.hpp"
 #include "oly/app/plugin.hpp"
 #include "oly/app/state_context.hpp"
+#include "oly/app/system_descriptor.hpp"
+#include "oly/app/system_parameters.hpp"
 #include "oly/app/task_context.hpp"
 #include "oly/core/assert.hpp"
 
@@ -21,6 +23,16 @@ namespace {
   using oly::app::SystemContext;
   using oly::app::TaskContext;
   using oly::app::TaskHandle;
+
+  struct Needed {};
+
+  struct Unannounced {
+    int value;
+  };
+
+  struct DeathFirst {};
+
+  struct DeathSecond {};
 
   const std::vector<const char*>* g_required = nullptr;
 
@@ -69,12 +81,75 @@ namespace {
     engine.frame(1.0 / 60);
   }
 
-  void whilePausedRender() {
+  void idle() {}
+
+  void idleWithResource(oly::app::Res<Needed>) {}
+
+  void idleWithEvent(oly::app::Events<Unannounced>) {}
+
+  void whilePausedFrameSystem() {
     oly::ecs::World world;
     Engine engine(world);
-    const auto system = engine.addSystem(Phase::Render, "drawing", [](SystemContext&) {});
+    const auto system = engine.addSystem<&idle>(oly::app::Render{}, "drawing");
 
-    engine.setWhilePaused(system, true);
+    engine.setWhilePaused(system.id(), true);
+  }
+
+  void systemCycle() {
+    oly::ecs::World world;
+    Engine engine(world);
+    engine.addSystem<&idle>(oly::app::Update{}, "a").before("b");
+    engine.addSystem<&idle>(oly::app::Update{}, "b").before("a");
+
+    engine.frame(0.0);
+  }
+
+  void phaseCycle() {
+    oly::ecs::World world;
+    Engine engine(world);
+    engine.phase<oly::app::UpdateAfter>().before<oly::app::UpdateBefore>();
+
+    engine.frame(0.0);
+  }
+
+  void unorderedPhases() {
+    oly::ecs::World world;
+    Engine engine(world);
+    engine.addPhase<DeathFirst>(oly::app::FixedStep{}).after<oly::app::Update>();
+    engine.addPhase<DeathSecond>(oly::app::FixedStep{}).after<oly::app::Update>();
+
+    engine.frame(0.0);
+  }
+
+  void duplicateSystemName() {
+    oly::ecs::World world;
+    Engine engine(world);
+    engine.addSystem<&idle>(oly::app::Update{}, "twice");
+    engine.addSystem<&idle>(oly::app::Update{}, "twice");
+  }
+
+  void addSystemAfterFirstFrame() {
+    oly::ecs::World world;
+    Engine engine(world);
+    engine.frame(0.0);
+
+    engine.addSystem<&idle>(oly::app::Update{}, "late");
+  }
+
+  void missingResource() {
+    oly::ecs::World world;
+    Engine engine(world);
+    engine.addSystem<&idleWithResource>(oly::app::Update{}, "needy");
+
+    engine.frame(0.0);
+  }
+
+  void undeclaredEvent() {
+    oly::ecs::World world;
+    Engine engine(world);
+    engine.addSystem<&idleWithEvent>(oly::app::Update{}, "announcer");
+
+    engine.frame(0.0);
   }
 
   void frameTimeBackwards() {
@@ -400,7 +475,14 @@ int main(int argumentCount, char** arguments) {
   static const std::vector<Case> cases = {
     {"add_system_during_frame", addSystemDuringFrame, {"addSystem", "during frame"}},
     {"set_timing_enabled_during_frame", setTimingEnabledDuringFrame, {"setTimingEnabled", "during frame"}},
-    {"while_paused_render", whilePausedRender, {"whilePaused", "render"}},
+    {"while_paused_frame_system", whilePausedFrameSystem, {"setWhilePaused", "cannot be whilePaused"}},
+    {"system_cycle", systemCycle, {"frame: cycle of system constraints", "a", "b"}},
+    {"phase_cycle", phaseCycle, {"frame: cycle of phase constraints"}},
+    {"unordered_phases", unorderedPhases, {"frame: ", "have no order between them"}},
+    {"duplicate_system_name", duplicateSystemName, {"already registered", "twice"}},
+    {"add_system_after_first_frame", addSystemAfterFirstFrame, {"addSystem", "registered after the first frame"}},
+    {"missing_resource", missingResource, {"frame: system \"needy\" needs resource"}},
+    {"undeclared_event", undeclaredEvent, {"frame: system \"announcer\" emits event"}},
     {"frame_time_backwards", frameTimeBackwards, {"frame", "time"}},
     {"emit_undeclared_event", emitUndeclaredEvent, {"emit", "not declared"}},
     {"on_undeclared_event", onUndeclaredEvent, {"on", "not declared"}},

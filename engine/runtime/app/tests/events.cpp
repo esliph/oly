@@ -48,14 +48,20 @@ namespace {
     Log log;
     double now = 0.0;
 
+    bool started = false;
+
     explicit Fixture(EngineConfig config = {})
       : engine(world, config) {
       engine.declareEvent<Ping>();
       engine.declareEvent<Echo>();
-      engine.frame(0.0);
     }
 
     void step() {
+      if (!started) {
+        engine.frame(0.0);
+        started = true;
+      }
+
       now += 1.0 / 60;
       engine.frame(now);
     }
