@@ -235,6 +235,12 @@ The order depends on names and constraints only, never on registration order or 
 
 `Engine::phaseId<P>()` returns the `PhaseId` of `P` (`OLY_ASSERT` when not declared) and `Engine::phaseName(PhaseId)` its name.
 
+### Access conflicts
+
+Two systems of one phase **conflict** when no path of constraints orders them, they touch the same component or resource, and at least one writes it: write–write and read–write. Two reads never conflict. An exclusive system (`ecs::World&`) conflicts with every system of its phase it is not ordered with. Filters (`With`, `Without`) never make two accesses disjoint, and a restriction (`inStates`, `whilePaused`) does not exempt a pair. Systems of different phases never conflict, because a phase ends before the next starts. Every conflict of the phase is listed in the error of the first `frame` ([Errors](../errors.md#c)); fix one by ordering the pair, moving one system to another phase, or reading instead of writing.
+
+A constraint across two phases must agree with the order of the phases; it adds no order inside a phase.
+
 ### Engine controls as parameters
 
 `Res<StateRequest>` requests a state (`request(StateId)`, as `Engine::requestState`); `Res<PauseRequest>` pauses and resumes (`pause()`, `resume()`, `requested()`); `Res<const ActionMap>` reads the actions of the step. They resolve to the `Engine` that runs the system, so two `Engine`s on one `World` do not share them. `StepInfo` holds the clock, the state and the pause as they were at the start of the phase; `SystemInfo` holds the system's name and id.

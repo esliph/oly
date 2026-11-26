@@ -14,6 +14,9 @@
 #include "oly/app/system_descriptor.hpp"
 #include "oly/app/system_parameters.hpp"
 #include "oly/app/task_context.hpp"
+#include "oly/core/type_name.hpp"
+#include "oly/ecs/component.hpp"
+#include "oly/ecs/resource.hpp"
 #include "oly/input/action_map.hpp"
 
 using oly::app::Access;
@@ -90,6 +93,54 @@ namespace {
   template <class P>
   GraphSystem systemIn(std::string name, Access access = {}) {
     return GraphSystem{std::move(name), oly::app::scheduleKey<P>(), NoFunction, {}, std::move(access)};
+  }
+
+  template <class T>
+  Access writes() {
+    Access access;
+    access.writeComponent(oly::ecs::componentId<T>());
+
+    return access;
+  }
+
+  template <class T>
+  Access reads() {
+    Access access;
+    access.readComponent(oly::ecs::componentId<T>());
+
+    return access;
+  }
+
+  template <class T>
+  Access writesResource() {
+    Access access;
+    access.writeResource(oly::ecs::resourceId<T>());
+
+    return access;
+  }
+
+  template <class T>
+  Access readsResource() {
+    Access access;
+    access.readResource(oly::ecs::resourceId<T>());
+
+    return access;
+  }
+
+  Access exclusive() {
+    Access access;
+    access.exclusive = true;
+
+    return access;
+  }
+
+  template <class T>
+  std::string componentName() {
+    return std::string(oly::ecs::typeInfo(oly::ecs::componentId<T>()).name);
+  }
+
+  std::string conflictOn(const char* kind, const std::string& name, const char* first, const char* second, const char* firstVerb, const char* secondVerb) {
+    return std::string("systems \"") + first + "\" and \"" + second + "\" of phase \"oly::app::Update\" have no order and both access " + kind + " \"" + name + "\" (" + first + " " + firstVerb + ", " + second + " " + secondVerb + ")";
   }
 
   OrderTarget nameTarget(std::string name) {
@@ -525,4 +576,109 @@ TEST_CASE("Tasks schedule a task on the game clock") {
 
   CHECK(taskRuns == 1);
   CHECK_INVARIANTS(fixture.world);
+}
+
+TEST_CASE("two unordered systems that write one component are refused") {
+  ScheduleInput input = builtInPhases();
+  input.systems = {systemIn<Update>("moveA", writes<Position>()), systemIn<Update>("moveB", writes<Position>())};
+
+  const SchedulePlan plan = buildSchedule(input);
+
+  CHECK(plan.errors == std::vector<std::string>{conflictOn("component", componentName<Position>(), "moveA", "moveB", "writes", "writes")});
+}
+
+TEST_CASE("a read and a write are refused") {
+  ScheduleInput input = builtInPhases();
+  input.systems = {systemIn<Update>("reader", reads<Position>()), systemIn<Update>("writer", writes<Position>())};
+
+  const SchedulePlan plan = buildSchedule(input);
+
+  CHECK(plan.errors == std::vector<std::string>{conflictOn("component", componentName<Position>(), "reader", "writer", "reads", "writes")});
+}
+
+TEST_CASE("two reads are accepted") {
+  ScheduleInput input = builtInPhases();
+  input.systems = {systemIn<Update>("a", reads<Position>()), systemIn<Update>("b", reads<Position>())};
+
+  CHECK(buildSchedule(input).errors.empty());
+}
+
+TEST_CASE("a constraint accepts the pair, directly or through a chain") {
+  ScheduleInput input = builtInPhases();
+  input.systems = {systemIn<Update>("a", writes<Position>()), systemIn<Update>("b"), systemIn<Update>("c", writes<Position>())};
+  input.constraints = {before(nameTarget("a"), nameTarget("b")), before(nameTarget("b"), nameTarget("c"))};
+
+  CHECK(buildSchedule(input).errors.empty());
+}
+
+TEST_CASE("a resource write and read are refused") {
+  ScheduleInput input = builtInPhases();
+  input.systems = {systemIn<Update>("reader", readsResource<Score>()), systemIn<Update>("writer", writesResource<Score>())};
+
+  const SchedulePlan plan = buildSchedule(input);
+
+  CHECK(plan.errors == std::vector<std::string>{conflictOn("resource", std::string(oly::core::typeName<Score>()), "reader", "writer", "reads", "writes")});
+}
+
+TEST_CASE("an exclusive system conflicts with every unordered system of its phase") {
+  ScheduleInput input = builtInPhases();
+  input.systems = {systemIn<Update>("alone", exclusive()), systemIn<Update>("other")};
+
+  const SchedulePlan plan = buildSchedule(input);
+
+  CHECK(plan.errors == std::vector<std::string>{"systems \"alone\" and \"other\" of phase \"oly::app::Update\" have no order and \"alone\" is exclusive"});
+}
+
+TEST_CASE("every conflict of a phase is reported") {
+  ScheduleInput input = builtInPhases();
+  input.systems = {systemIn<Update>("a", writes<Position>()), systemIn<Update>("b", writes<Position>()), systemIn<Update>("c", writes<Position>())};
+
+  const SchedulePlan plan = buildSchedule(input);
+
+  CHECK(plan.errors == std::vector<std::string>{conflictOn("component", componentName<Position>(), "a", "b", "writes", "writes"), conflictOn("component", componentName<Position>(), "a", "c", "writes", "writes"), conflictOn("component", componentName<Position>(), "b", "c", "writes", "writes")});
+}
+
+TEST_CASE("a system restricted to a state still conflicts") {
+  // Restrictions live on the Engine side and never reach the graph: the input carries the access only.
+  ScheduleInput input = builtInPhases();
+  input.systems = {systemIn<Update>("menuOnly", writes<Position>()), systemIn<Update>("playOnly", writes<Position>())};
+
+  CHECK(buildSchedule(input).errors.size() == 1);
+}
+
+TEST_CASE("systems of two phases never conflict") {
+  ScheduleInput input = builtInPhases();
+  input.systems = {systemIn<Update>("a", writes<Position>()), systemIn<UpdateAfter>("b", writes<Position>())};
+
+  CHECK(buildSchedule(input).errors.empty());
+}
+
+TEST_CASE("constraints naming a missing set, name or function are errors") {
+  ScheduleInput input = builtInPhases();
+  input.systems = {systemIn<Update>("a")};
+  input.constraints = {before(OrderTarget{TargetKind::Set, oly::app::scheduleKey<Spatial>(), std::string(oly::core::typeName<Spatial>())}, nameTarget("a")), before(nameTarget("a"), nameTarget("typo")), before(OrderTarget{TargetKind::Function, 12345, ""}, nameTarget("a"))};
+
+  const SchedulePlan plan = buildSchedule(input);
+
+  CHECK(plan.errors == std::vector<std::string>{"constraint names set \"" + std::string(oly::core::typeName<Spatial>()) + "\", which has no member", "constraint names system \"typo\", which is not registered", "constraint names a function that is never registered"});
+}
+
+TEST_CASE("a cross-phase constraint that agrees is accepted and one that contradicts is an error") {
+  ScheduleInput input = builtInPhases();
+  input.systems = {systemIn<UpdateBefore>("early"), systemIn<UpdateAfter>("late")};
+  input.constraints = {before(nameTarget("early"), nameTarget("late"))};
+
+  CHECK(buildSchedule(input).errors.empty());
+
+  input.constraints = {before(nameTarget("late"), nameTarget("early"))};
+
+  CHECK(buildSchedule(input).errors == std::vector<std::string>{"system \"late\" (phase \"oly::app::UpdateAfter\") must run before \"early\" (phase \"oly::app::UpdateBefore\"), but phase \"oly::app::UpdateBefore\" runs before \"oly::app::UpdateAfter\""});
+}
+
+TEST_CASE("a type cannot be both a phase and a set") {
+  ScheduleInput input = builtInPhases();
+  input.systems = {systemIn<Update>("a")};
+  input.systems[0].sets = {oly::app::scheduleKey<Update>()};
+
+  CHECK(buildSchedule(input).errors == std::vector<std::string>{"\"oly::app::Update\" is both a phase and a set"});
 }

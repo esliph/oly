@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <iterator>
 #include <vector>
 
 #include "oly/ecs/component.hpp"
@@ -59,4 +60,50 @@ namespace oly::app {
       detail::insertSorted(resourceWrites, id);
     }
   };
+
+  enum class ConflictKind : uint8_t { Component,
+                                      Resource,
+                                      Exclusive };
+
+  struct Conflict {
+    ConflictKind kind;
+    uint32_t id; // ComponentId or ResourceId; unused for Exclusive
+    bool firstWrites; // for Exclusive: the first system is the exclusive one
+    bool secondWrites; // for Exclusive: the second one is
+  };
+
+  namespace detail {
+    inline void conflictsOfKind(ConflictKind kind, const std::vector<uint32_t>& firstReads, const std::vector<uint32_t>& firstWrites, const std::vector<uint32_t>& secondReads, const std::vector<uint32_t>& secondWrites, std::vector<Conflict>& conflicts) {
+      std::vector<uint32_t> written;
+      std::set_union(firstWrites.begin(), firstWrites.end(), secondWrites.begin(), secondWrites.end(), std::back_inserter(written));
+
+      for (const uint32_t id : written) {
+        const bool firstWrote = containsSorted(firstWrites, id);
+        const bool secondWrote = containsSorted(secondWrites, id);
+        const bool firstTouches = firstWrote || containsSorted(firstReads, id);
+        const bool secondTouches = secondWrote || containsSorted(secondReads, id);
+
+        if (firstTouches && secondTouches) {
+          conflicts.push_back(Conflict{kind, id, firstWrote, secondWrote});
+        }
+      }
+    }
+  }
+
+  // Every type both touch where at least one writes, in id order (components, then resources); one Exclusive entry, alone,
+  // when either is exclusive.
+  inline std::vector<Conflict> conflictsBetween(const Access& first, const Access& second) {
+    std::vector<Conflict> conflicts;
+
+    if (first.exclusive || second.exclusive) {
+      conflicts.push_back(Conflict{ConflictKind::Exclusive, 0, first.exclusive, second.exclusive});
+
+      return conflicts;
+    }
+
+    detail::conflictsOfKind(ConflictKind::Component, first.componentReads, first.componentWrites, second.componentReads, second.componentWrites, conflicts);
+    detail::conflictsOfKind(ConflictKind::Resource, first.resourceReads, first.resourceWrites, second.resourceReads, second.resourceWrites, conflicts);
+
+    return conflicts;
+  }
 }

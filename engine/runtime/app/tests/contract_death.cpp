@@ -136,6 +136,75 @@ namespace {
     engine.addSystem<&idle>(oly::app::Update{}, "late");
   }
 
+  struct Health {
+    int value;
+  };
+
+  struct Gold {
+    int value;
+  };
+
+  void writeHealth(oly::app::Query<Health> query) {
+    query.each([](Health& health) { health.value += 1; });
+  }
+
+  void readHealth(oly::app::Query<const Health> query) {
+    query.each([](const Health&) {});
+  }
+
+  void writeGold(oly::app::Res<Gold> gold) {
+    gold->value += 1;
+  }
+
+  void readGold(oly::app::Res<const Gold> gold) {
+    (void)gold;
+  }
+
+  void writeWriteConflict() {
+    oly::ecs::World world;
+    Engine engine(world);
+    engine.addSystem<&writeHealth>(oly::app::Update{}, "healA");
+    engine.addSystem<&writeHealth>(oly::app::Update{}, "healB");
+
+    engine.frame(0.0);
+  }
+
+  void readWriteConflict() {
+    oly::ecs::World world;
+    Engine engine(world);
+    engine.addSystem<&writeHealth>(oly::app::Update{}, "heal");
+    engine.addSystem<&readHealth>(oly::app::Update{}, "show");
+
+    engine.frame(0.0);
+  }
+
+  void resourceConflict() {
+    oly::ecs::World world;
+    world.insertResource(Gold{0});
+    Engine engine(world);
+    engine.addSystem<&writeGold>(oly::app::Update{}, "earn");
+    engine.addSystem<&readGold>(oly::app::Update{}, "show");
+
+    engine.frame(0.0);
+  }
+
+  void missingConstraintTarget() {
+    oly::ecs::World world;
+    Engine engine(world);
+    engine.addSystem<&idle>(oly::app::Update{}, "a").before("typo");
+
+    engine.frame(0.0);
+  }
+
+  void contradictingCrossPhaseConstraint() {
+    oly::ecs::World world;
+    Engine engine(world);
+    engine.addSystem<&idle>(oly::app::UpdateAfter{}, "late").before("early");
+    engine.addSystem<&idle>(oly::app::UpdateBefore{}, "early");
+
+    engine.frame(0.0);
+  }
+
   void missingResource() {
     oly::ecs::World world;
     Engine engine(world);
@@ -481,6 +550,11 @@ int main(int argumentCount, char** arguments) {
     {"unordered_phases", unorderedPhases, {"frame: ", "have no order between them"}},
     {"duplicate_system_name", duplicateSystemName, {"already registered", "twice"}},
     {"add_system_after_first_frame", addSystemAfterFirstFrame, {"addSystem", "registered after the first frame"}},
+    {"write_write_conflict", writeWriteConflict, {"frame: systems", "have no order", "component", "writes"}},
+    {"read_write_conflict", readWriteConflict, {"frame: systems", "have no order", "component", "reads"}},
+    {"resource_conflict", resourceConflict, {"frame: systems", "have no order", "resource"}},
+    {"missing_constraint_target", missingConstraintTarget, {"which is not registered"}},
+    {"contradicting_cross_phase_constraint", contradictingCrossPhaseConstraint, {"runs before"}},
     {"missing_resource", missingResource, {"frame: system \"needy\" needs resource"}},
     {"undeclared_event", undeclaredEvent, {"frame: system \"announcer\" emits event"}},
     {"frame_time_backwards", frameTimeBackwards, {"frame", "time"}},

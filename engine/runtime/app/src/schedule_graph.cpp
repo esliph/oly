@@ -200,15 +200,16 @@ namespace oly::app::detail {
       return {};
     }
 
+    // What a constraint that names no system says about its target.
     std::string describe(const OrderTarget& target) {
       switch (target.kind) {
         case TargetKind::Set:
-          return "set \"" + target.name + "\"";
+          return "set \"" + target.name + "\", which has no member";
         case TargetKind::Function:
-          return "a function that no system uses";
+          return "a function that is never registered";
         case TargetKind::Name:
         case TargetKind::System:
-          return "system \"" + target.name + "\"";
+          return "system \"" + target.name + "\", which is not registered";
       }
 
       return {};
@@ -262,6 +263,57 @@ namespace oly::app::detail {
 
       return order;
     }
+
+    std::string conflictMessage(const GraphPhase& phase, const GraphSystem& first, const GraphSystem& second, const Conflict& conflict) {
+      const std::string pair = "systems \"" + first.name + "\" and \"" + second.name + "\" of phase \"" + phase.name + "\" have no order and ";
+
+      if (conflict.kind == ConflictKind::Exclusive) {
+        return pair + "\"" + (conflict.firstWrites ? first.name : second.name) + "\" is exclusive";
+      }
+
+      const std::string name = conflict.kind == ConflictKind::Component ? std::string(ecs::typeInfo(conflict.id).name) : std::string(ecs::resourceName(conflict.id));
+      const char* kind = conflict.kind == ConflictKind::Component ? "component" : "resource";
+
+      return pair + "both access " + kind + " \"" + name + "\" (" + first.name + (conflict.firstWrites ? " writes, " : " reads, ") + second.name + (conflict.secondWrites ? " writes)" : " reads)");
+    }
+
+    // Two systems of a phase that no path of constraints orders, and whose access conflicts, are refused. The pairs are
+    // visited in dispatch order of the first system, then of the second.
+    void reportConflicts(const ScheduleInput& input, const GraphPhase& phase, const std::vector<SystemId>& dispatch, const Successors& graph, const std::unordered_map<SystemId, uint32_t>& localOf, Errors& errors) {
+      std::vector<std::vector<bool>> reaches(graph.size(), std::vector<bool>(graph.size(), false));
+
+      for (uint32_t start = 0; start < graph.size(); ++start) {
+        std::vector<uint32_t> pending(graph[start].begin(), graph[start].end());
+
+        while (!pending.empty()) {
+          const uint32_t node = pending.back();
+          pending.pop_back();
+
+          if (!reaches[start][node]) {
+            reaches[start][node] = true;
+            pending.insert(pending.end(), graph[node].begin(), graph[node].end());
+          }
+        }
+      }
+
+      for (size_t firstSlot = 0; firstSlot < dispatch.size(); ++firstSlot) {
+        for (size_t secondSlot = firstSlot + 1; secondSlot < dispatch.size(); ++secondSlot) {
+          const uint32_t firstLocal = localOf.at(dispatch[firstSlot]);
+          const uint32_t secondLocal = localOf.at(dispatch[secondSlot]);
+
+          if (reaches[firstLocal][secondLocal] || reaches[secondLocal][firstLocal]) {
+            continue;
+          }
+
+          const GraphSystem& first = input.systems[dispatch[firstSlot]];
+          const GraphSystem& second = input.systems[dispatch[secondSlot]];
+
+          for (const Conflict& conflict : conflictsBetween(first.access, second.access)) {
+            errors.add(conflictMessage(phase, first, second, conflict));
+          }
+        }
+      }
+    }
   }
 
   SchedulePlan buildSchedule(const ScheduleInput& input) {
@@ -269,6 +321,26 @@ namespace oly::app::detail {
     plan.systemsByPhase.resize(input.phases.size());
     Errors errors(plan.errors);
     const Index index = indexOf(input);
+
+    std::set<ScheduleKey> setKeys;
+
+    for (const GraphSystem& system : input.systems) {
+      setKeys.insert(system.sets.begin(), system.sets.end());
+    }
+
+    for (const OrderConstraint& constraint : input.constraints) {
+      for (const OrderTarget* target : {&constraint.first, &constraint.second}) {
+        if (target->kind == TargetKind::Set) {
+          setKeys.insert(target->key);
+        }
+      }
+    }
+
+    for (const ScheduleKey key : setKeys) {
+      if (index.phaseByKey.count(key) != 0) {
+        errors.add("\"" + std::string(scheduleName(key)) + "\" is both a phase and a set");
+      }
+    }
 
     std::vector<std::pair<uint32_t, uint32_t>> phaseEdges;
 
@@ -342,7 +414,7 @@ namespace oly::app::detail {
 
       for (const auto& [target, expanded] : {std::pair{&constraint.first, &firsts}, std::pair{&constraint.second, &seconds}}) {
         if (expanded->empty()) {
-          errors.add("constraint names " + describe(*target) + ", which is not registered");
+          errors.add("constraint names " + describe(*target));
         }
       }
 
@@ -358,7 +430,7 @@ namespace oly::app::detail {
           if (firstPhase == secondPhase) {
             graphs[firstPhase][localOf[firstPhase][first]].insert(localOf[firstPhase][second]);
           } else if (position[firstPhase] > position[secondPhase]) {
-            errors.add("constraint \"" + input.systems[first].name + "\" before \"" + input.systems[second].name + "\" contradicts the order of phases \"" + input.phases[firstPhase].name + "\" and \"" + input.phases[secondPhase].name + "\"");
+            errors.add("system \"" + input.systems[first].name + "\" (phase \"" + input.phases[firstPhase].name + "\") must run before \"" + input.systems[second].name + "\" (phase \"" + input.phases[secondPhase].name + "\"), but phase \"" + input.phases[secondPhase].name + "\" runs before \"" + input.phases[firstPhase].name + "\"");
           }
         }
       }
@@ -383,6 +455,8 @@ namespace oly::app::detail {
       for (const uint32_t node : sorted.order) {
         plan.systemsByPhase[phase].push_back(phaseMembers[node]);
       }
+
+      reportConflicts(input, input.phases[phase], plan.systemsByPhase[phase], graphs[phase], localOf[phase], errors);
     }
 
     return plan;
