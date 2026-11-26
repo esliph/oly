@@ -1,0 +1,1813 @@
+{
+  "scenario": "S5",
+  "size": 2000,
+  "a": {
+    "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+    "label": "A",
+    "runs": [
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S5",
+        "size": 2000,
+        "seed": 5,
+        "warmup": 0,
+        "steps": 10000,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 24437,
+          "p99": 216008,
+          "max": 1839016
+        },
+        "systems": [
+          {
+            "name": "placeTurret",
+            "phase": "UpdateBefore",
+            "ran": 10000,
+            "median": 30
+          },
+          {
+            "name": "updateFlowField",
+            "phase": "UpdateBefore",
+            "ran": 10000,
+            "median": 20
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "Update",
+            "ran": 10000,
+            "median": 7845
+          },
+          {
+            "name": "moveHorde",
+            "phase": "Update",
+            "ran": 10000,
+            "median": 12724
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 10000,
+            "median": 451
+          },
+          {
+            "name": "fireTurrets",
+            "phase": "UpdateAfter",
+            "ran": 10000,
+            "median": 2064
+          },
+          {
+            "name": "moveProjectiles",
+            "phase": "UpdateAfter",
+            "ran": 10000,
+            "median": 110
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "Update",
+            "median": 40
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 40
+          },
+          {
+            "phase": "Render",
+            "median": 31
+          }
+        ],
+        "measures": {
+          "worldHash": "0x21c16d888746fd84",
+          "enemiesLeft": 0,
+          "turrets": 42
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S5",
+        "size": 2000,
+        "seed": 5,
+        "warmup": 0,
+        "steps": 10000,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 27181,
+          "p99": 312180,
+          "max": 2968762
+        },
+        "systems": [
+          {
+            "name": "placeTurret",
+            "phase": "UpdateBefore",
+            "ran": 10000,
+            "median": 30
+          },
+          {
+            "name": "updateFlowField",
+            "phase": "UpdateBefore",
+            "ran": 10000,
+            "median": 20
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "Update",
+            "ran": 10000,
+            "median": 9588
+          },
+          {
+            "name": "moveHorde",
+            "phase": "Update",
+            "ran": 10000,
+            "median": 13305
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 10000,
+            "median": 541
+          },
+          {
+            "name": "fireTurrets",
+            "phase": "UpdateAfter",
+            "ran": 10000,
+            "median": 2124
+          },
+          {
+            "name": "moveProjectiles",
+            "phase": "UpdateAfter",
+            "ran": 10000,
+            "median": 160
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 40
+          },
+          {
+            "phase": "Update",
+            "median": 40
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 40
+          },
+          {
+            "phase": "Render",
+            "median": 31
+          }
+        ],
+        "measures": {
+          "worldHash": "0x21c16d888746fd84",
+          "enemiesLeft": 0,
+          "turrets": 42
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S5",
+        "size": 2000,
+        "seed": 5,
+        "warmup": 0,
+        "steps": 10000,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 24477,
+          "p99": 209336,
+          "max": 1715072
+        },
+        "systems": [
+          {
+            "name": "placeTurret",
+            "phase": "UpdateBefore",
+            "ran": 10000,
+            "median": 30
+          },
+          {
+            "name": "updateFlowField",
+            "phase": "UpdateBefore",
+            "ran": 10000,
+            "median": 20
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "Update",
+            "ran": 10000,
+            "median": 7805
+          },
+          {
+            "name": "moveHorde",
+            "phase": "Update",
+            "ran": 10000,
+            "median": 12894
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 10000,
+            "median": 441
+          },
+          {
+            "name": "fireTurrets",
+            "phase": "UpdateAfter",
+            "ran": 10000,
+            "median": 2084
+          },
+          {
+            "name": "moveProjectiles",
+            "phase": "UpdateAfter",
+            "ran": 10000,
+            "median": 110
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "Update",
+            "median": 40
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 40
+          },
+          {
+            "phase": "Render",
+            "median": 30
+          }
+        ],
+        "measures": {
+          "worldHash": "0x21c16d888746fd84",
+          "enemiesLeft": 0,
+          "turrets": 42
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S5",
+        "size": 2000,
+        "seed": 5,
+        "warmup": 0,
+        "steps": 10000,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 25227,
+          "p99": 221057,
+          "max": 1831031
+        },
+        "systems": [
+          {
+            "name": "placeTurret",
+            "phase": "UpdateBefore",
+            "ran": 10000,
+            "median": 30
+          },
+          {
+            "name": "updateFlowField",
+            "phase": "UpdateBefore",
+            "ran": 10000,
+            "median": 20
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "Update",
+            "ran": 10000,
+            "median": 8166
+          },
+          {
+            "name": "moveHorde",
+            "phase": "Update",
+            "ran": 10000,
+            "median": 13245
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 10000,
+            "median": 471
+          },
+          {
+            "name": "fireTurrets",
+            "phase": "UpdateAfter",
+            "ran": 10000,
+            "median": 2094
+          },
+          {
+            "name": "moveProjectiles",
+            "phase": "UpdateAfter",
+            "ran": 10000,
+            "median": 120
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 40
+          },
+          {
+            "phase": "Update",
+            "median": 40
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 40
+          },
+          {
+            "phase": "Render",
+            "median": 31
+          }
+        ],
+        "measures": {
+          "worldHash": "0x21c16d888746fd84",
+          "enemiesLeft": 0,
+          "turrets": 42
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S5",
+        "size": 2000,
+        "seed": 5,
+        "warmup": 0,
+        "steps": 10000,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 26179,
+          "p99": 216198,
+          "max": 1966797
+        },
+        "systems": [
+          {
+            "name": "placeTurret",
+            "phase": "UpdateBefore",
+            "ran": 10000,
+            "median": 30
+          },
+          {
+            "name": "updateFlowField",
+            "phase": "UpdateBefore",
+            "ran": 10000,
+            "median": 20
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "Update",
+            "ran": 10000,
+            "median": 8386
+          },
+          {
+            "name": "moveHorde",
+            "phase": "Update",
+            "ran": 10000,
+            "median": 13365
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 10000,
+            "median": 471
+          },
+          {
+            "name": "fireTurrets",
+            "phase": "UpdateAfter",
+            "ran": 10000,
+            "median": 2114
+          },
+          {
+            "name": "moveProjectiles",
+            "phase": "UpdateAfter",
+            "ran": 10000,
+            "median": 120
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "Update",
+            "median": 40
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 40
+          },
+          {
+            "phase": "Render",
+            "median": 40
+          }
+        ],
+        "measures": {
+          "worldHash": "0x21c16d888746fd84",
+          "enemiesLeft": 0,
+          "turrets": 42
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S5",
+        "size": 2000,
+        "seed": 5,
+        "warmup": 0,
+        "steps": 10000,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 25057,
+          "p99": 298985,
+          "max": 2834577
+        },
+        "systems": [
+          {
+            "name": "placeTurret",
+            "phase": "UpdateBefore",
+            "ran": 10000,
+            "median": 30
+          },
+          {
+            "name": "updateFlowField",
+            "phase": "UpdateBefore",
+            "ran": 10000,
+            "median": 20
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "Update",
+            "ran": 10000,
+            "median": 8156
+          },
+          {
+            "name": "moveHorde",
+            "phase": "Update",
+            "ran": 10000,
+            "median": 12965
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 10000,
+            "median": 461
+          },
+          {
+            "name": "fireTurrets",
+            "phase": "UpdateAfter",
+            "ran": 10000,
+            "median": 2104
+          },
+          {
+            "name": "moveProjectiles",
+            "phase": "UpdateAfter",
+            "ran": 10000,
+            "median": 131
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 40
+          },
+          {
+            "phase": "Update",
+            "median": 40
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 40
+          },
+          {
+            "phase": "Render",
+            "median": 40
+          }
+        ],
+        "measures": {
+          "worldHash": "0x21c16d888746fd84",
+          "enemiesLeft": 0,
+          "turrets": 42
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S5",
+        "size": 2000,
+        "seed": 5,
+        "warmup": 0,
+        "steps": 10000,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 25368,
+          "p99": 314314,
+          "max": 2940377
+        },
+        "systems": [
+          {
+            "name": "placeTurret",
+            "phase": "UpdateBefore",
+            "ran": 10000,
+            "median": 30
+          },
+          {
+            "name": "updateFlowField",
+            "phase": "UpdateBefore",
+            "ran": 10000,
+            "median": 20
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "Update",
+            "ran": 10000,
+            "median": 8145
+          },
+          {
+            "name": "moveHorde",
+            "phase": "Update",
+            "ran": 10000,
+            "median": 13205
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 10000,
+            "median": 471
+          },
+          {
+            "name": "fireTurrets",
+            "phase": "UpdateAfter",
+            "ran": 10000,
+            "median": 2144
+          },
+          {
+            "name": "moveProjectiles",
+            "phase": "UpdateAfter",
+            "ran": 10000,
+            "median": 140
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 40
+          },
+          {
+            "phase": "Update",
+            "median": 40
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 40
+          },
+          {
+            "phase": "Render",
+            "median": 40
+          }
+        ],
+        "measures": {
+          "worldHash": "0x21c16d888746fd84",
+          "enemiesLeft": 0,
+          "turrets": 42
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S5",
+        "size": 2000,
+        "seed": 5,
+        "warmup": 0,
+        "steps": 10000,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 25599,
+          "p99": 274679,
+          "max": 2418020
+        },
+        "systems": [
+          {
+            "name": "placeTurret",
+            "phase": "UpdateBefore",
+            "ran": 10000,
+            "median": 30
+          },
+          {
+            "name": "updateFlowField",
+            "phase": "UpdateBefore",
+            "ran": 10000,
+            "median": 20
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "Update",
+            "ran": 10000,
+            "median": 8526
+          },
+          {
+            "name": "moveHorde",
+            "phase": "Update",
+            "ran": 10000,
+            "median": 13225
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 10000,
+            "median": 471
+          },
+          {
+            "name": "fireTurrets",
+            "phase": "UpdateAfter",
+            "ran": 10000,
+            "median": 2124
+          },
+          {
+            "name": "moveProjectiles",
+            "phase": "UpdateAfter",
+            "ran": 10000,
+            "median": 131
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 40
+          },
+          {
+            "phase": "Update",
+            "median": 40
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 40
+          },
+          {
+            "phase": "Render",
+            "median": 31
+          }
+        ],
+        "measures": {
+          "worldHash": "0x21c16d888746fd84",
+          "enemiesLeft": 0,
+          "turrets": 42
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S5",
+        "size": 2000,
+        "seed": 5,
+        "warmup": 0,
+        "steps": 10000,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 25509,
+          "p99": 220136,
+          "max": 2322901
+        },
+        "systems": [
+          {
+            "name": "placeTurret",
+            "phase": "UpdateBefore",
+            "ran": 10000,
+            "median": 30
+          },
+          {
+            "name": "updateFlowField",
+            "phase": "UpdateBefore",
+            "ran": 10000,
+            "median": 20
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "Update",
+            "ran": 10000,
+            "median": 8356
+          },
+          {
+            "name": "moveHorde",
+            "phase": "Update",
+            "ran": 10000,
+            "median": 13005
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 10000,
+            "median": 471
+          },
+          {
+            "name": "fireTurrets",
+            "phase": "UpdateAfter",
+            "ran": 10000,
+            "median": 2154
+          },
+          {
+            "name": "moveProjectiles",
+            "phase": "UpdateAfter",
+            "ran": 10000,
+            "median": 111
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "Update",
+            "median": 40
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 40
+          },
+          {
+            "phase": "Render",
+            "median": 30
+          }
+        ],
+        "measures": {
+          "worldHash": "0x21c16d888746fd84",
+          "enemiesLeft": 0,
+          "turrets": 42
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S5",
+        "size": 2000,
+        "seed": 5,
+        "warmup": 0,
+        "steps": 10000,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 24897,
+          "p99": 222070,
+          "max": 1795914
+        },
+        "systems": [
+          {
+            "name": "placeTurret",
+            "phase": "UpdateBefore",
+            "ran": 10000,
+            "median": 30
+          },
+          {
+            "name": "updateFlowField",
+            "phase": "UpdateBefore",
+            "ran": 10000,
+            "median": 20
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "Update",
+            "ran": 10000,
+            "median": 7885
+          },
+          {
+            "name": "moveHorde",
+            "phase": "Update",
+            "ran": 10000,
+            "median": 13025
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 10000,
+            "median": 460
+          },
+          {
+            "name": "fireTurrets",
+            "phase": "UpdateAfter",
+            "ran": 10000,
+            "median": 2104
+          },
+          {
+            "name": "moveProjectiles",
+            "phase": "UpdateAfter",
+            "ran": 10000,
+            "median": 130
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "Update",
+            "median": 40
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 40
+          },
+          {
+            "phase": "Render",
+            "median": 30
+          }
+        ],
+        "measures": {
+          "worldHash": "0x21c16d888746fd84",
+          "enemiesLeft": 0,
+          "turrets": 42
+        }
+      }
+    ],
+    "median": {
+      "p50": 25297.5,
+      "p99": 221563.5,
+      "max": 2144849.0,
+      "systems": {
+        "placeTurret": 30.0,
+        "updateFlowField": 20.0,
+        "rebuildSpatialHash": 8161.0,
+        "moveHorde": 13115.0,
+        "propagateTransforms": 471.0,
+        "fireTurrets": 2109.0,
+        "moveProjectiles": 125.0
+      },
+      "measures": {
+        "enemiesLeft": 0.0,
+        "turrets": 42.0
+      }
+    }
+  },
+  "b": {
+    "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+    "label": "B",
+    "runs": [
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S5",
+        "size": 2000,
+        "seed": 5,
+        "warmup": 0,
+        "steps": 10000,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 25819,
+          "p99": 220887,
+          "max": 1938204
+        },
+        "systems": [
+          {
+            "name": "placeTurret",
+            "phase": "oly::app::UpdateBefore",
+            "ran": 10000,
+            "median": 30
+          },
+          {
+            "name": "updateFlowField",
+            "phase": "oly::app::UpdateBefore",
+            "ran": 10000,
+            "median": 20
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "oly::app::Update",
+            "ran": 10000,
+            "median": 8686
+          },
+          {
+            "name": "moveHorde",
+            "phase": "oly::app::Update",
+            "ran": 10000,
+            "median": 13946
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 10000,
+            "median": 250
+          },
+          {
+            "name": "fireTurrets",
+            "phase": "oly::app::UpdateAfter",
+            "ran": 10000,
+            "median": 2034
+          },
+          {
+            "name": "moveProjectiles",
+            "phase": "oly::app::UpdateAfter",
+            "ran": 10000,
+            "median": 70
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 40
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 41
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 40
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 40
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 40
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 40
+          }
+        ],
+        "measures": {
+          "worldHash": "0x21c16d888746fd84",
+          "enemiesLeft": 0,
+          "turrets": 42
+        }
+      },
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S5",
+        "size": 2000,
+        "seed": 5,
+        "warmup": 0,
+        "steps": 10000,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 24827,
+          "p99": 212672,
+          "max": 1802668
+        },
+        "systems": [
+          {
+            "name": "placeTurret",
+            "phase": "oly::app::UpdateBefore",
+            "ran": 10000,
+            "median": 30
+          },
+          {
+            "name": "updateFlowField",
+            "phase": "oly::app::UpdateBefore",
+            "ran": 10000,
+            "median": 20
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "oly::app::Update",
+            "ran": 10000,
+            "median": 7905
+          },
+          {
+            "name": "moveHorde",
+            "phase": "oly::app::Update",
+            "ran": 10000,
+            "median": 13676
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 10000,
+            "median": 240
+          },
+          {
+            "name": "fireTurrets",
+            "phase": "oly::app::UpdateAfter",
+            "ran": 10000,
+            "median": 1883
+          },
+          {
+            "name": "moveProjectiles",
+            "phase": "oly::app::UpdateAfter",
+            "ran": 10000,
+            "median": 70
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 40
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 40
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 40
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 40
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 40
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 40
+          }
+        ],
+        "measures": {
+          "worldHash": "0x21c16d888746fd84",
+          "enemiesLeft": 0,
+          "turrets": 42
+        }
+      },
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S5",
+        "size": 2000,
+        "seed": 5,
+        "warmup": 0,
+        "steps": 10000,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 24526,
+          "p99": 207021,
+          "max": 1923112
+        },
+        "systems": [
+          {
+            "name": "placeTurret",
+            "phase": "oly::app::UpdateBefore",
+            "ran": 10000,
+            "median": 30
+          },
+          {
+            "name": "updateFlowField",
+            "phase": "oly::app::UpdateBefore",
+            "ran": 10000,
+            "median": 20
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "oly::app::Update",
+            "ran": 10000,
+            "median": 8025
+          },
+          {
+            "name": "moveHorde",
+            "phase": "oly::app::Update",
+            "ran": 10000,
+            "median": 13025
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 10000,
+            "median": 231
+          },
+          {
+            "name": "fireTurrets",
+            "phase": "oly::app::UpdateAfter",
+            "ran": 10000,
+            "median": 1893
+          },
+          {
+            "name": "moveProjectiles",
+            "phase": "oly::app::UpdateAfter",
+            "ran": 10000,
+            "median": 80
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 40
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 40
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 40
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 40
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 40
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 40
+          }
+        ],
+        "measures": {
+          "worldHash": "0x21c16d888746fd84",
+          "enemiesLeft": 0,
+          "turrets": 42
+        }
+      },
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S5",
+        "size": 2000,
+        "seed": 5,
+        "warmup": 0,
+        "steps": 10000,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 29676,
+          "p99": 215317,
+          "max": 2898980
+        },
+        "systems": [
+          {
+            "name": "placeTurret",
+            "phase": "oly::app::UpdateBefore",
+            "ran": 10000,
+            "median": 30
+          },
+          {
+            "name": "updateFlowField",
+            "phase": "oly::app::UpdateBefore",
+            "ran": 10000,
+            "median": 20
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "oly::app::Update",
+            "ran": 10000,
+            "median": 10730
+          },
+          {
+            "name": "moveHorde",
+            "phase": "oly::app::Update",
+            "ran": 10000,
+            "median": 13867
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 10000,
+            "median": 280
+          },
+          {
+            "name": "fireTurrets",
+            "phase": "oly::app::UpdateAfter",
+            "ran": 10000,
+            "median": 2515
+          },
+          {
+            "name": "moveProjectiles",
+            "phase": "oly::app::UpdateAfter",
+            "ran": 10000,
+            "median": 70
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 40
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 50
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 40
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 40
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 41
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 40
+          }
+        ],
+        "measures": {
+          "worldHash": "0x21c16d888746fd84",
+          "enemiesLeft": 0,
+          "turrets": 42
+        }
+      },
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S5",
+        "size": 2000,
+        "seed": 5,
+        "warmup": 0,
+        "steps": 10000,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 25799,
+          "p99": 348184,
+          "max": 3658129
+        },
+        "systems": [
+          {
+            "name": "placeTurret",
+            "phase": "oly::app::UpdateBefore",
+            "ran": 10000,
+            "median": 30
+          },
+          {
+            "name": "updateFlowField",
+            "phase": "oly::app::UpdateBefore",
+            "ran": 10000,
+            "median": 20
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "oly::app::Update",
+            "ran": 10000,
+            "median": 8687
+          },
+          {
+            "name": "moveHorde",
+            "phase": "oly::app::Update",
+            "ran": 10000,
+            "median": 13516
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 10000,
+            "median": 250
+          },
+          {
+            "name": "fireTurrets",
+            "phase": "oly::app::UpdateAfter",
+            "ran": 10000,
+            "median": 1954
+          },
+          {
+            "name": "moveProjectiles",
+            "phase": "oly::app::UpdateAfter",
+            "ran": 10000,
+            "median": 81
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 40
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 50
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 40
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 40
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 40
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 40
+          }
+        ],
+        "measures": {
+          "worldHash": "0x21c16d888746fd84",
+          "enemiesLeft": 0,
+          "turrets": 42
+        }
+      },
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S5",
+        "size": 2000,
+        "seed": 5,
+        "warmup": 0,
+        "steps": 10000,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 26550,
+          "p99": 234584,
+          "max": 2918767
+        },
+        "systems": [
+          {
+            "name": "placeTurret",
+            "phase": "oly::app::UpdateBefore",
+            "ran": 10000,
+            "median": 30
+          },
+          {
+            "name": "updateFlowField",
+            "phase": "oly::app::UpdateBefore",
+            "ran": 10000,
+            "median": 20
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "oly::app::Update",
+            "ran": 10000,
+            "median": 9167
+          },
+          {
+            "name": "moveHorde",
+            "phase": "oly::app::Update",
+            "ran": 10000,
+            "median": 13896
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 10000,
+            "median": 251
+          },
+          {
+            "name": "fireTurrets",
+            "phase": "oly::app::UpdateAfter",
+            "ran": 10000,
+            "median": 1994
+          },
+          {
+            "name": "moveProjectiles",
+            "phase": "oly::app::UpdateAfter",
+            "ran": 10000,
+            "median": 70
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 40
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 50
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 40
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 40
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 40
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 40
+          }
+        ],
+        "measures": {
+          "worldHash": "0x21c16d888746fd84",
+          "enemiesLeft": 0,
+          "turrets": 42
+        }
+      },
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S5",
+        "size": 2000,
+        "seed": 5,
+        "warmup": 0,
+        "steps": 10000,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 28213,
+          "p99": 215908,
+          "max": 2486239
+        },
+        "systems": [
+          {
+            "name": "placeTurret",
+            "phase": "oly::app::UpdateBefore",
+            "ran": 10000,
+            "median": 30
+          },
+          {
+            "name": "updateFlowField",
+            "phase": "oly::app::UpdateBefore",
+            "ran": 10000,
+            "median": 20
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "oly::app::Update",
+            "ran": 10000,
+            "median": 9598
+          },
+          {
+            "name": "moveHorde",
+            "phase": "oly::app::Update",
+            "ran": 10000,
+            "median": 15569
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 10000,
+            "median": 261
+          },
+          {
+            "name": "fireTurrets",
+            "phase": "oly::app::UpdateAfter",
+            "ran": 10000,
+            "median": 2014
+          },
+          {
+            "name": "moveProjectiles",
+            "phase": "oly::app::UpdateAfter",
+            "ran": 10000,
+            "median": 70
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 40
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 50
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 40
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 40
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 40
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 40
+          }
+        ],
+        "measures": {
+          "worldHash": "0x21c16d888746fd84",
+          "enemiesLeft": 0,
+          "turrets": 42
+        }
+      },
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S5",
+        "size": 2000,
+        "seed": 5,
+        "warmup": 0,
+        "steps": 10000,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 25257,
+          "p99": 289227,
+          "max": 8552210
+        },
+        "systems": [
+          {
+            "name": "placeTurret",
+            "phase": "oly::app::UpdateBefore",
+            "ran": 10000,
+            "median": 30
+          },
+          {
+            "name": "updateFlowField",
+            "phase": "oly::app::UpdateBefore",
+            "ran": 10000,
+            "median": 20
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "oly::app::Update",
+            "ran": 10000,
+            "median": 8085
+          },
+          {
+            "name": "moveHorde",
+            "phase": "oly::app::Update",
+            "ran": 10000,
+            "median": 13946
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 10000,
+            "median": 251
+          },
+          {
+            "name": "fireTurrets",
+            "phase": "oly::app::UpdateAfter",
+            "ran": 10000,
+            "median": 1934
+          },
+          {
+            "name": "moveProjectiles",
+            "phase": "oly::app::UpdateAfter",
+            "ran": 10000,
+            "median": 70
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 40
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 50
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 40
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 40
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 40
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 40
+          }
+        ],
+        "measures": {
+          "worldHash": "0x21c16d888746fd84",
+          "enemiesLeft": 0,
+          "turrets": 42
+        }
+      },
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S5",
+        "size": 2000,
+        "seed": 5,
+        "warmup": 0,
+        "steps": 10000,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 24456,
+          "p99": 209265,
+          "max": 1890779
+        },
+        "systems": [
+          {
+            "name": "placeTurret",
+            "phase": "oly::app::UpdateBefore",
+            "ran": 10000,
+            "median": 30
+          },
+          {
+            "name": "updateFlowField",
+            "phase": "oly::app::UpdateBefore",
+            "ran": 10000,
+            "median": 20
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "oly::app::Update",
+            "ran": 10000,
+            "median": 7814
+          },
+          {
+            "name": "moveHorde",
+            "phase": "oly::app::Update",
+            "ran": 10000,
+            "median": 13024
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 10000,
+            "median": 240
+          },
+          {
+            "name": "fireTurrets",
+            "phase": "oly::app::UpdateAfter",
+            "ran": 10000,
+            "median": 1923
+          },
+          {
+            "name": "moveProjectiles",
+            "phase": "oly::app::UpdateAfter",
+            "ran": 10000,
+            "median": 70
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 40
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 50
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 40
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 40
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 40
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 40
+          }
+        ],
+        "measures": {
+          "worldHash": "0x21c16d888746fd84",
+          "enemiesLeft": 0,
+          "turrets": 42
+        }
+      },
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S5",
+        "size": 2000,
+        "seed": 5,
+        "warmup": 0,
+        "steps": 10000,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 24266,
+          "p99": 215016,
+          "max": 1822486
+        },
+        "systems": [
+          {
+            "name": "placeTurret",
+            "phase": "oly::app::UpdateBefore",
+            "ran": 10000,
+            "median": 30
+          },
+          {
+            "name": "updateFlowField",
+            "phase": "oly::app::UpdateBefore",
+            "ran": 10000,
+            "median": 20
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "oly::app::Update",
+            "ran": 10000,
+            "median": 7895
+          },
+          {
+            "name": "moveHorde",
+            "phase": "oly::app::Update",
+            "ran": 10000,
+            "median": 12975
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 10000,
+            "median": 231
+          },
+          {
+            "name": "fireTurrets",
+            "phase": "oly::app::UpdateAfter",
+            "ran": 10000,
+            "median": 1893
+          },
+          {
+            "name": "moveProjectiles",
+            "phase": "oly::app::UpdateAfter",
+            "ran": 10000,
+            "median": 70
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 40
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 50
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 40
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 40
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 40
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 40
+          }
+        ],
+        "measures": {
+          "worldHash": "0x21c16d888746fd84",
+          "enemiesLeft": 0,
+          "turrets": 42
+        }
+      }
+    ],
+    "median": {
+      "p50": 25528.0,
+      "p99": 215612.5,
+      "max": 2212221.5,
+      "systems": {
+        "placeTurret": 30.0,
+        "updateFlowField": 20.0,
+        "rebuildSpatialHash": 8385.5,
+        "moveHorde": 13771.5,
+        "propagateTransforms": 250.0,
+        "fireTurrets": 1944.0,
+        "moveProjectiles": 70.0
+      },
+      "measures": {
+        "enemiesLeft": 0.0,
+        "turrets": 42.0
+      }
+    }
+  },
+  "ratio": {
+    "p50": 1.009111572289752,
+    "p99": 0.9731408828620237
+  },
+  "pairs": {
+    "p50": {
+      "values": [
+        1.056553586774154,
+        0.9133953864832052,
+        1.0020018793152756,
+        1.176358663336901,
+        0.9854845486840598,
+        1.0595841481422357,
+        1.1121491643014823,
+        0.9866401031290285,
+        0.9587204516053157,
+        0.974655580993694
+      ],
+      "min": 0.9133953864832052,
+      "max": 1.176358663336901,
+      "iqr": 0.08146368488392985
+    },
+    "p99": {
+      "values": [
+        1.0225871264027258,
+        0.6812479979499007,
+        0.9889412236786792,
+        0.9740338464739864,
+        1.610486683503085,
+        0.7846012341756275,
+        0.6869181773640373,
+        1.052963641195723,
+        0.9506168913762402,
+        0.968235241140181
+      ],
+      "min": 0.6812479979499007,
+      "max": 1.610486683503085,
+      "iqr": 0.18807050224593347
+    }
+  },
+  "worldHashEqual": true
+}

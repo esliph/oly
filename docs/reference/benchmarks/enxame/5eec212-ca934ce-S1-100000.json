@@ -1,0 +1,1381 @@
+{
+  "scenario": "S1",
+  "size": 100000,
+  "a": {
+    "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+    "label": "A",
+    "runs": [
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S1",
+        "size": 100000,
+        "seed": 1,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 14395758,
+          "p99": 22463346,
+          "max": 28300354
+        },
+        "systems": [
+          {
+            "name": "updateFlowField",
+            "phase": "UpdateBefore",
+            "ran": 600,
+            "median": 120
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "Update",
+            "ran": 600,
+            "median": 1501689
+          },
+          {
+            "name": "moveHorde",
+            "phase": "Update",
+            "ran": 600,
+            "median": 12753264
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 171063
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "Update",
+            "median": 902
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 80
+          },
+          {
+            "phase": "Render",
+            "median": 30
+          }
+        ],
+        "measures": {}
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S1",
+        "size": 100000,
+        "seed": 1,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 15152009,
+          "p99": 27092863,
+          "max": 31983945
+        },
+        "systems": [
+          {
+            "name": "updateFlowField",
+            "phase": "UpdateBefore",
+            "ran": 600,
+            "median": 131
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "Update",
+            "ran": 600,
+            "median": 1548948
+          },
+          {
+            "name": "moveHorde",
+            "phase": "Update",
+            "ran": 600,
+            "median": 13415768
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 179600
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "Update",
+            "median": 1082
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 51
+          },
+          {
+            "phase": "Render",
+            "median": 40
+          }
+        ],
+        "measures": {}
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S1",
+        "size": 100000,
+        "seed": 1,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 14116439,
+          "p99": 15880845,
+          "max": 16646131
+        },
+        "systems": [
+          {
+            "name": "updateFlowField",
+            "phase": "UpdateBefore",
+            "ran": 600,
+            "median": 40
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "Update",
+            "ran": 600,
+            "median": 1352035
+          },
+          {
+            "name": "moveHorde",
+            "phase": "Update",
+            "ran": 600,
+            "median": 12604081
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 120889
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "Update",
+            "median": 421
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 40
+          },
+          {
+            "phase": "Render",
+            "median": 31
+          }
+        ],
+        "measures": {}
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S1",
+        "size": 100000,
+        "seed": 1,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 14207482,
+          "p99": 17833706,
+          "max": 21109523
+        },
+        "systems": [
+          {
+            "name": "updateFlowField",
+            "phase": "UpdateBefore",
+            "ran": 600,
+            "median": 40
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "Update",
+            "ran": 600,
+            "median": 1387653
+          },
+          {
+            "name": "moveHorde",
+            "phase": "Update",
+            "ran": 600,
+            "median": 12653354
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 128202
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "Update",
+            "median": 460
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 40
+          },
+          {
+            "phase": "Render",
+            "median": 30
+          }
+        ],
+        "measures": {}
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S1",
+        "size": 100000,
+        "seed": 1,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 14962850,
+          "p99": 32469298,
+          "max": 66921550
+        },
+        "systems": [
+          {
+            "name": "updateFlowField",
+            "phase": "UpdateBefore",
+            "ran": 600,
+            "median": 120
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "Update",
+            "ran": 600,
+            "median": 1508572
+          },
+          {
+            "name": "moveHorde",
+            "phase": "Update",
+            "ran": 600,
+            "median": 13188036
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 168338
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "Update",
+            "median": 892
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 80
+          },
+          {
+            "phase": "Render",
+            "median": 31
+          }
+        ],
+        "measures": {}
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S1",
+        "size": 100000,
+        "seed": 1,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 14320035,
+          "p99": 16896346,
+          "max": 18864316
+        },
+        "systems": [
+          {
+            "name": "updateFlowField",
+            "phase": "UpdateBefore",
+            "ran": 600,
+            "median": 40
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "Update",
+            "ran": 600,
+            "median": 1428220
+          },
+          {
+            "name": "moveHorde",
+            "phase": "Update",
+            "ran": 600,
+            "median": 12607439
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 137780
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "Update",
+            "median": 541
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 40
+          },
+          {
+            "phase": "Render",
+            "median": 30
+          }
+        ],
+        "measures": {}
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S1",
+        "size": 100000,
+        "seed": 1,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 14329924,
+          "p99": 16729320,
+          "max": 27348917
+        },
+        "systems": [
+          {
+            "name": "updateFlowField",
+            "phase": "UpdateBefore",
+            "ran": 600,
+            "median": 40
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "Update",
+            "ran": 600,
+            "median": 1389606
+          },
+          {
+            "name": "moveHorde",
+            "phase": "Update",
+            "ran": 600,
+            "median": 12710763
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 137770
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 40
+          },
+          {
+            "phase": "Update",
+            "median": 741
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 40
+          },
+          {
+            "phase": "Render",
+            "median": 30
+          }
+        ],
+        "measures": {}
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S1",
+        "size": 100000,
+        "seed": 1,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 14385324,
+          "p99": 18250935,
+          "max": 19212502
+        },
+        "systems": [
+          {
+            "name": "updateFlowField",
+            "phase": "UpdateBefore",
+            "ran": 600,
+            "median": 40
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "Update",
+            "ran": 600,
+            "median": 1522618
+          },
+          {
+            "name": "moveHorde",
+            "phase": "Update",
+            "ran": 600,
+            "median": 12634291
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 168469
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "Update",
+            "median": 741
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 41
+          },
+          {
+            "phase": "Render",
+            "median": 30
+          }
+        ],
+        "measures": {}
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S1",
+        "size": 100000,
+        "seed": 1,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 14455141,
+          "p99": 17037134,
+          "max": 21433734
+        },
+        "systems": [
+          {
+            "name": "updateFlowField",
+            "phase": "UpdateBefore",
+            "ran": 600,
+            "median": 120
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "Update",
+            "ran": 600,
+            "median": 1423651
+          },
+          {
+            "name": "moveHorde",
+            "phase": "Update",
+            "ran": 600,
+            "median": 12821964
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 147539
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "Update",
+            "median": 702
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 50
+          },
+          {
+            "phase": "Render",
+            "median": 30
+          }
+        ],
+        "measures": {}
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S1",
+        "size": 100000,
+        "seed": 1,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 14447146,
+          "p99": 17841712,
+          "max": 20151978
+        },
+        "systems": [
+          {
+            "name": "updateFlowField",
+            "phase": "UpdateBefore",
+            "ran": 600,
+            "median": 40
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "Update",
+            "ran": 600,
+            "median": 1457755
+          },
+          {
+            "name": "moveHorde",
+            "phase": "Update",
+            "ran": 600,
+            "median": 12783151
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 161625
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "Update",
+            "median": 681
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 50
+          },
+          {
+            "phase": "Render",
+            "median": 30
+          }
+        ],
+        "measures": {}
+      }
+    ],
+    "median": {
+      "p50": 14390541.0,
+      "p99": 17837709.0,
+      "max": 21271628.5,
+      "systems": {
+        "updateFlowField": 40.0,
+        "rebuildSpatialHash": 1442987.5,
+        "moveHorde": 12732013.5,
+        "propagateTransforms": 154582.0
+      },
+      "measures": {}
+    }
+  },
+  "b": {
+    "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+    "label": "B",
+    "runs": [
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S1",
+        "size": 100000,
+        "seed": 1,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 15006093,
+          "p99": 23305025,
+          "max": 34812425
+        },
+        "systems": [
+          {
+            "name": "updateFlowField",
+            "phase": "oly::app::UpdateBefore",
+            "ran": 600,
+            "median": 440
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 1559487
+          },
+          {
+            "name": "moveHorde",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 13220719
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 600,
+            "median": 180632
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 902
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 60
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 170
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 30
+          }
+        ],
+        "measures": {
+          "worldHash": "0xc1419d3462aa410f"
+        }
+      },
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S1",
+        "size": 100000,
+        "seed": 1,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 15052211,
+          "p99": 22417396,
+          "max": 29385346
+        },
+        "systems": [
+          {
+            "name": "updateFlowField",
+            "phase": "oly::app::UpdateBefore",
+            "ran": 600,
+            "median": 401
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 1736612
+          },
+          {
+            "name": "moveHorde",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 13091555
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 600,
+            "median": 186041
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 732
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 50
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 271
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 30
+          }
+        ],
+        "measures": {
+          "worldHash": "0xc1419d3462aa410f"
+        }
+      },
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S1",
+        "size": 100000,
+        "seed": 1,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 13949326,
+          "p99": 16056609,
+          "max": 19199920
+        },
+        "systems": [
+          {
+            "name": "updateFlowField",
+            "phase": "oly::app::UpdateBefore",
+            "ran": 600,
+            "median": 100
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 1355783
+          },
+          {
+            "name": "moveHorde",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 12424674
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 600,
+            "median": 120247
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 411
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 40
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 50
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 30
+          }
+        ],
+        "measures": {
+          "worldHash": "0xc1419d3462aa410f"
+        }
+      },
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S1",
+        "size": 100000,
+        "seed": 1,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 13877600,
+          "p99": 15848705,
+          "max": 16228307
+        },
+        "systems": [
+          {
+            "name": "updateFlowField",
+            "phase": "oly::app::UpdateBefore",
+            "ran": 600,
+            "median": 150
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 1350532
+          },
+          {
+            "name": "moveHorde",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 12372405
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 600,
+            "median": 109888
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 481
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 40
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 50
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 30
+          }
+        ],
+        "measures": {
+          "worldHash": "0xc1419d3462aa410f"
+        }
+      },
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S1",
+        "size": 100000,
+        "seed": 1,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 14269911,
+          "p99": 17694243,
+          "max": 22212234
+        },
+        "systems": [
+          {
+            "name": "updateFlowField",
+            "phase": "oly::app::UpdateBefore",
+            "ran": 600,
+            "median": 351
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 1469287
+          },
+          {
+            "name": "moveHorde",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 12519102
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 600,
+            "median": 160202
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 691
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 41
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 110
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 30
+          }
+        ],
+        "measures": {
+          "worldHash": "0xc1419d3462aa410f"
+        }
+      },
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S1",
+        "size": 100000,
+        "seed": 1,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 14003448,
+          "p99": 15788421,
+          "max": 16723618
+        },
+        "systems": [
+          {
+            "name": "updateFlowField",
+            "phase": "oly::app::UpdateBefore",
+            "ran": 600,
+            "median": 81
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 1358548
+          },
+          {
+            "name": "moveHorde",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 12442938
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 600,
+            "median": 111100
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 581
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 41
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 50
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 30
+          }
+        ],
+        "measures": {
+          "worldHash": "0xc1419d3462aa410f"
+        }
+      },
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S1",
+        "size": 100000,
+        "seed": 1,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 14542606,
+          "p99": 21164572,
+          "max": 47057760
+        },
+        "systems": [
+          {
+            "name": "updateFlowField",
+            "phase": "oly::app::UpdateBefore",
+            "ran": 600,
+            "median": 261
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 1457215
+          },
+          {
+            "name": "moveHorde",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 12809691
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 600,
+            "median": 159030
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 792
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 50
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 70
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 30
+          }
+        ],
+        "measures": {
+          "worldHash": "0xc1419d3462aa410f"
+        }
+      },
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S1",
+        "size": 100000,
+        "seed": 1,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 14291271,
+          "p99": 16668876,
+          "max": 18958613
+        },
+        "systems": [
+          {
+            "name": "updateFlowField",
+            "phase": "oly::app::UpdateBefore",
+            "ran": 600,
+            "median": 200
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 1410944
+          },
+          {
+            "name": "moveHorde",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 12617668
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 600,
+            "median": 132330
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 591
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 50
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 180
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 30
+          }
+        ],
+        "measures": {
+          "worldHash": "0xc1419d3462aa410f"
+        }
+      },
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S1",
+        "size": 100000,
+        "seed": 1,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 14277202,
+          "p99": 17745316,
+          "max": 19546429
+        },
+        "systems": [
+          {
+            "name": "updateFlowField",
+            "phase": "oly::app::UpdateBefore",
+            "ran": 600,
+            "median": 340
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 1483094
+          },
+          {
+            "name": "moveHorde",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 12593590
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 600,
+            "median": 159432
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 731
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 50
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 270
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 30
+          }
+        ],
+        "measures": {
+          "worldHash": "0xc1419d3462aa410f"
+        }
+      },
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S1",
+        "size": 100000,
+        "seed": 1,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 14037282,
+          "p99": 16457226,
+          "max": 19058432
+        },
+        "systems": [
+          {
+            "name": "updateFlowField",
+            "phase": "oly::app::UpdateBefore",
+            "ran": 600,
+            "median": 150
+          },
+          {
+            "name": "rebuildSpatialHash",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 1402561
+          },
+          {
+            "name": "moveHorde",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 12433440
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 600,
+            "median": 148110
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 722
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 41
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 41
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 30
+          }
+        ],
+        "measures": {
+          "worldHash": "0xc1419d3462aa410f"
+        }
+      }
+    ],
+    "median": {
+      "p50": 14273556.5,
+      "p99": 17181559.5,
+      "max": 19373174.5,
+      "systems": {
+        "updateFlowField": 230.5,
+        "rebuildSpatialHash": 1434079.5,
+        "moveHorde": 12556346.0,
+        "propagateTransforms": 153570.0
+      },
+      "measures": {}
+    }
+  },
+  "ratio": {
+    "p50": 0.9918707364789134,
+    "p99": 0.9632155956799161
+  },
+  "pairs": {
+    "p50": {
+      "values": [
+        1.0423968644096406,
+        0.9934135466788595,
+        0.9881618161634106,
+        0.9767811073066994,
+        0.9536893706747044,
+        0.9778920233086023,
+        1.0148418093494425,
+        0.993461878230897,
+        0.987690261893675,
+        0.9716301060430897
+      ],
+      "min": 0.9536893706747044,
+      "max": 1.0423968644096406,
+      "iqr": 0.016390959035712527
+    },
+    "p99": {
+      "values": [
+        1.037468995046419,
+        0.8274280942549335,
+        1.01106767303629,
+        0.8886938586965604,
+        0.5449530507250264,
+        0.9344281302004587,
+        1.2651184865852287,
+        0.9133162766729486,
+        1.0415669677775616,
+        0.9224017291614168
+      ],
+      "min": 0.5449530507250264,
+      "max": 1.2651184865852287,
+      "iqr": 0.13601920135322954
+    }
+  },
+  "worldHashEqual": false
+}

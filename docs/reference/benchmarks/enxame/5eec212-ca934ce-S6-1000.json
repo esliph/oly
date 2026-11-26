@@ -1,0 +1,1193 @@
+{
+  "scenario": "S6",
+  "size": 1000,
+  "a": {
+    "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+    "label": "A",
+    "runs": [
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S6",
+        "size": 1000,
+        "seed": 6,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 141367,
+          "p99": 181663,
+          "max": 313133
+        },
+        "systems": [
+          {
+            "name": "moveVehicles",
+            "phase": "Update",
+            "ran": 600,
+            "median": 9007
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 131769
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "Update",
+            "median": 40
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 30
+          },
+          {
+            "phase": "Render",
+            "median": 30
+          }
+        ],
+        "measures": {
+          "visitedEntities": 5000,
+          "propagateTransformsNanosecondsPerEntity": 26.354
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S6",
+        "size": 1000,
+        "seed": 6,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 121750,
+          "p99": 149733,
+          "max": 300067
+        },
+        "systems": [
+          {
+            "name": "moveVehicles",
+            "phase": "Update",
+            "ran": 600,
+            "median": 9057
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 112392
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "Update",
+            "median": 40
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 30
+          },
+          {
+            "phase": "Render",
+            "median": 30
+          }
+        ],
+        "measures": {
+          "visitedEntities": 5000,
+          "propagateTransformsNanosecondsPerEntity": 22.478
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S6",
+        "size": 1000,
+        "seed": 6,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 122021,
+          "p99": 166395,
+          "max": 366147
+        },
+        "systems": [
+          {
+            "name": "moveVehicles",
+            "phase": "Update",
+            "ran": 600,
+            "median": 9027
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 112472
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "Update",
+            "median": 31
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 30
+          },
+          {
+            "phase": "Render",
+            "median": 30
+          }
+        ],
+        "measures": {
+          "visitedEntities": 5000,
+          "propagateTransformsNanosecondsPerEntity": 22.494
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S6",
+        "size": 1000,
+        "seed": 6,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 121630,
+          "p99": 167116,
+          "max": 492872
+        },
+        "systems": [
+          {
+            "name": "moveVehicles",
+            "phase": "Update",
+            "ran": 600,
+            "median": 9057
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 112213
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "Update",
+            "median": 40
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 30
+          },
+          {
+            "phase": "Render",
+            "median": 30
+          }
+        ],
+        "measures": {
+          "visitedEntities": 5000,
+          "propagateTransformsNanosecondsPerEntity": 22.443
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S6",
+        "size": 1000,
+        "seed": 6,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 122712,
+          "p99": 156405,
+          "max": 234073
+        },
+        "systems": [
+          {
+            "name": "moveVehicles",
+            "phase": "Update",
+            "ran": 600,
+            "median": 9107
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 113154
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "Update",
+            "median": 40
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 30
+          },
+          {
+            "phase": "Render",
+            "median": 30
+          }
+        ],
+        "measures": {
+          "visitedEntities": 5000,
+          "propagateTransformsNanosecondsPerEntity": 22.631
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S6",
+        "size": 1000,
+        "seed": 6,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 122361,
+          "p99": 166816,
+          "max": 217181
+        },
+        "systems": [
+          {
+            "name": "moveVehicles",
+            "phase": "Update",
+            "ran": 600,
+            "median": 9077
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 112923
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "Update",
+            "median": 40
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 30
+          },
+          {
+            "phase": "Render",
+            "median": 30
+          }
+        ],
+        "measures": {
+          "visitedEntities": 5000,
+          "propagateTransformsNanosecondsPerEntity": 22.585
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S6",
+        "size": 1000,
+        "seed": 6,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 122171,
+          "p99": 151236,
+          "max": 176864
+        },
+        "systems": [
+          {
+            "name": "moveVehicles",
+            "phase": "Update",
+            "ran": 600,
+            "median": 9068
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 112743
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "Update",
+            "median": 31
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 30
+          },
+          {
+            "phase": "Render",
+            "median": 30
+          }
+        ],
+        "measures": {
+          "visitedEntities": 5000,
+          "propagateTransformsNanosecondsPerEntity": 22.549
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S6",
+        "size": 1000,
+        "seed": 6,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 121630,
+          "p99": 154973,
+          "max": 203003
+        },
+        "systems": [
+          {
+            "name": "moveVehicles",
+            "phase": "Update",
+            "ran": 600,
+            "median": 9047
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 112232
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "Update",
+            "median": 40
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 30
+          },
+          {
+            "phase": "Render",
+            "median": 30
+          }
+        ],
+        "measures": {
+          "visitedEntities": 5000,
+          "propagateTransformsNanosecondsPerEntity": 22.446
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S6",
+        "size": 1000,
+        "seed": 6,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 122682,
+          "p99": 203925,
+          "max": 490560
+        },
+        "systems": [
+          {
+            "name": "moveVehicles",
+            "phase": "Update",
+            "ran": 600,
+            "median": 9127
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 113203
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "Update",
+            "median": 40
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 30
+          },
+          {
+            "phase": "Render",
+            "median": 30
+          }
+        ],
+        "measures": {
+          "visitedEntities": 5000,
+          "propagateTransformsNanosecondsPerEntity": 22.641
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S6",
+        "size": 1000,
+        "seed": 6,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 121620,
+          "p99": 180492,
+          "max": 233140
+        },
+        "systems": [
+          {
+            "name": "moveVehicles",
+            "phase": "Update",
+            "ran": 600,
+            "median": 9037
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 112222
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "Update",
+            "median": 40
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 30
+          },
+          {
+            "phase": "Render",
+            "median": 30
+          }
+        ],
+        "measures": {
+          "visitedEntities": 5000,
+          "propagateTransformsNanosecondsPerEntity": 22.444
+        }
+      }
+    ],
+    "median": {
+      "p50": 122096.0,
+      "p99": 166605.5,
+      "max": 267070.0,
+      "systems": {
+        "moveVehicles": 9057.0,
+        "propagateTransforms": 112607.5
+      },
+      "measures": {
+        "visitedEntities": 5000.0,
+        "propagateTransformsNanosecondsPerEntity": 22.5215
+      }
+    }
+  },
+  "b": {
+    "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+    "label": "B",
+    "runs": [
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S6",
+        "size": 1000,
+        "seed": 6,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 127982,
+          "p99": 156546,
+          "max": 285730
+        },
+        "systems": [
+          {
+            "name": "moveVehicles",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 8997
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 600,
+            "median": 118494
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 30
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 30
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 40
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 30
+          }
+        ],
+        "measures": {
+          "worldHash": "0x0fddd0baa8e20fbb",
+          "visitedEntities": 5000,
+          "propagateTransformsNanosecondsPerEntity": 23.699
+        }
+      },
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S6",
+        "size": 1000,
+        "seed": 6,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 126248,
+          "p99": 160313,
+          "max": 180781
+        },
+        "systems": [
+          {
+            "name": "moveVehicles",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 8977
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 600,
+            "median": 116561
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 30
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 30
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 30
+          }
+        ],
+        "measures": {
+          "worldHash": "0x0fddd0baa8e20fbb",
+          "visitedEntities": 5000,
+          "propagateTransformsNanosecondsPerEntity": 23.312
+        }
+      },
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S6",
+        "size": 1000,
+        "seed": 6,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 127862,
+          "p99": 180291,
+          "max": 270731
+        },
+        "systems": [
+          {
+            "name": "moveVehicles",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 8967
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 600,
+            "median": 118314
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 30
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 30
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 30
+          }
+        ],
+        "measures": {
+          "worldHash": "0x0fddd0baa8e20fbb",
+          "visitedEntities": 5000,
+          "propagateTransformsNanosecondsPerEntity": 23.663
+        }
+      },
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S6",
+        "size": 1000,
+        "seed": 6,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 128172,
+          "p99": 162427,
+          "max": 220777
+        },
+        "systems": [
+          {
+            "name": "moveVehicles",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 8987
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 600,
+            "median": 118694
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 30
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 30
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 40
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 30
+          }
+        ],
+        "measures": {
+          "worldHash": "0x0fddd0baa8e20fbb",
+          "visitedEntities": 5000,
+          "propagateTransformsNanosecondsPerEntity": 23.739
+        }
+      },
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S6",
+        "size": 1000,
+        "seed": 6,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 128102,
+          "p99": 161616,
+          "max": 518314
+        },
+        "systems": [
+          {
+            "name": "moveVehicles",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 8967
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 600,
+            "median": 118404
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 30
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 30
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 30
+          }
+        ],
+        "measures": {
+          "worldHash": "0x0fddd0baa8e20fbb",
+          "visitedEntities": 5000,
+          "propagateTransformsNanosecondsPerEntity": 23.681
+        }
+      },
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S6",
+        "size": 1000,
+        "seed": 6,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 128253,
+          "p99": 196181,
+          "max": 263658
+        },
+        "systems": [
+          {
+            "name": "moveVehicles",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 8987
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 600,
+            "median": 118765
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 30
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 30
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 31
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 30
+          }
+        ],
+        "measures": {
+          "worldHash": "0x0fddd0baa8e20fbb",
+          "visitedEntities": 5000,
+          "propagateTransformsNanosecondsPerEntity": 23.753
+        }
+      },
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S6",
+        "size": 1000,
+        "seed": 6,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 127391,
+          "p99": 155914,
+          "max": 290620
+        },
+        "systems": [
+          {
+            "name": "moveVehicles",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 8987
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 600,
+            "median": 117823
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 30
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 30
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 30
+          }
+        ],
+        "measures": {
+          "worldHash": "0x0fddd0baa8e20fbb",
+          "visitedEntities": 5000,
+          "propagateTransformsNanosecondsPerEntity": 23.565
+        }
+      },
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S6",
+        "size": 1000,
+        "seed": 6,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 130236,
+          "p99": 182695,
+          "max": 221299
+        },
+        "systems": [
+          {
+            "name": "moveVehicles",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 9087
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 600,
+            "median": 120658
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 30
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 30
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 40
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 30
+          }
+        ],
+        "measures": {
+          "worldHash": "0x0fddd0baa8e20fbb",
+          "visitedEntities": 5000,
+          "propagateTransformsNanosecondsPerEntity": 24.132
+        }
+      },
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S6",
+        "size": 1000,
+        "seed": 6,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 128573,
+          "p99": 233962,
+          "max": 326501
+        },
+        "systems": [
+          {
+            "name": "moveVehicles",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 9047
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 600,
+            "median": 118894
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 31
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 30
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 40
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 31
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 31
+          }
+        ],
+        "measures": {
+          "worldHash": "0x0fddd0baa8e20fbb",
+          "visitedEntities": 5000,
+          "propagateTransformsNanosecondsPerEntity": 23.779
+        }
+      },
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S6",
+        "size": 1000,
+        "seed": 6,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 128212,
+          "p99": 201781,
+          "max": 316734
+        },
+        "systems": [
+          {
+            "name": "moveVehicles",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 8987
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 600,
+            "median": 118584
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 30
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 30
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 30
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 30
+          }
+        ],
+        "measures": {
+          "worldHash": "0x0fddd0baa8e20fbb",
+          "visitedEntities": 5000,
+          "propagateTransformsNanosecondsPerEntity": 23.717
+        }
+      }
+    ],
+    "median": {
+      "p50": 128137.0,
+      "p99": 171359.0,
+      "max": 278230.5,
+      "systems": {
+        "moveVehicles": 8987.0,
+        "propagateTransforms": 118539.0
+      },
+      "measures": {
+        "visitedEntities": 5000.0,
+        "propagateTransformsNanosecondsPerEntity": 23.708
+      }
+    }
+  },
+  "ratio": {
+    "p50": 1.0494774603590618,
+    "p99": 1.0285314710498754
+  },
+  "pairs": {
+    "p50": {
+      "values": [
+        0.9053173654388931,
+        1.0369445585215606,
+        1.0478688094672228,
+        1.0537860725150046,
+        1.0439239846143817,
+        1.0481525976414054,
+        1.0427269974052762,
+        1.0707555701718325,
+        1.0480184542149622,
+        1.0542016115770432
+      ],
+      "min": 0.9053173654388931,
+      "max": 1.0707555701718325,
+      "iqr": 0.009351459589052258
+    },
+    "p99": {
+      "values": [
+        0.8617384938044621,
+        1.0706591065429798,
+        1.0835121247633643,
+        0.9719416453242059,
+        1.033317349189604,
+        1.1760322750815269,
+        1.0309317887275515,
+        1.1788827731282223,
+        1.1472943484124065,
+        1.1179498260310707
+      ],
+      "min": 0.8617384938044621,
+      "max": 1.1788827731282223,
+      "iqr": 0.10843003897400805
+    }
+  },
+  "worldHashEqual": false
+}

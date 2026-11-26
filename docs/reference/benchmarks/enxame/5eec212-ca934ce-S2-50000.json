@@ -1,0 +1,1377 @@
+{
+  "scenario": "S2",
+  "size": 50000,
+  "a": {
+    "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+    "label": "A",
+    "runs": [
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 51367,
+          "p99": 107984,
+          "max": 150825
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "Update",
+            "ran": 600,
+            "median": 26811
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "Update",
+            "ran": 600,
+            "median": 501
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 23375
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "Update",
+            "median": 140
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "allocationsPerStep": {
+            "p50": 21,
+            "max": 38,
+            "total": 13127
+          }
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 51428,
+          "p99": 117983,
+          "max": 160182
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "Update",
+            "ran": 600,
+            "median": 26780
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "Update",
+            "ran": 600,
+            "median": 511
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 23454
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "Update",
+            "median": 140
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "allocationsPerStep": {
+            "p50": 21,
+            "max": 38,
+            "total": 13127
+          }
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 51637,
+          "p99": 120077,
+          "max": 142379
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "Update",
+            "ran": 600,
+            "median": 27011
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "Update",
+            "ran": 600,
+            "median": 501
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 23404
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "Update",
+            "median": 131
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "allocationsPerStep": {
+            "p50": 21,
+            "max": 38,
+            "total": 13127
+          }
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 51317,
+          "p99": 108264,
+          "max": 139734
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "Update",
+            "ran": 600,
+            "median": 26831
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "Update",
+            "ran": 600,
+            "median": 511
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 23294
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "Update",
+            "median": 140
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "allocationsPerStep": {
+            "p50": 21,
+            "max": 38,
+            "total": 13127
+          }
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 51437,
+          "p99": 118264,
+          "max": 155820
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "Update",
+            "ran": 600,
+            "median": 26871
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "Update",
+            "ran": 600,
+            "median": 501
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 23354
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "Update",
+            "median": 140
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "allocationsPerStep": {
+            "p50": 21,
+            "max": 38,
+            "total": 13127
+          }
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 51437,
+          "p99": 112182,
+          "max": 160793
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "Update",
+            "ran": 600,
+            "median": 26821
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "Update",
+            "ran": 600,
+            "median": 501
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 23394
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "Update",
+            "median": 140
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "allocationsPerStep": {
+            "p50": 21,
+            "max": 38,
+            "total": 13127
+          }
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 56246,
+          "p99": 108115,
+          "max": 156967
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "Update",
+            "ran": 600,
+            "median": 31660
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "Update",
+            "ran": 600,
+            "median": 501
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 23354
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "Update",
+            "median": 140
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "allocationsPerStep": {
+            "p50": 21,
+            "max": 38,
+            "total": 13127
+          }
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 51417,
+          "p99": 107844,
+          "max": 171264
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "Update",
+            "ran": 600,
+            "median": 26861
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "Update",
+            "ran": 600,
+            "median": 501
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 23334
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "Update",
+            "median": 140
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "allocationsPerStep": {
+            "p50": 21,
+            "max": 38,
+            "total": 13127
+          }
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 51367,
+          "p99": 107393,
+          "max": 118594
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "Update",
+            "ran": 600,
+            "median": 26861
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "Update",
+            "ran": 600,
+            "median": 501
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 23314
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "Update",
+            "median": 140
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "allocationsPerStep": {
+            "p50": 21,
+            "max": 38,
+            "total": 13127
+          }
+        }
+      },
+      {
+        "commit": "5eec212189986ef8bd22deeb2a2fb60334cd72a4",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 51938,
+          "p99": 120979,
+          "max": 213814
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "Update",
+            "ran": 600,
+            "median": 27081
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "Update",
+            "ran": 600,
+            "median": 511
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "Update",
+            "ran": 600,
+            "median": 23635
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "Update",
+            "median": 140
+          },
+          {
+            "phase": "UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "allocationsPerStep": {
+            "p50": 21,
+            "max": 38,
+            "total": 13127
+          }
+        }
+      }
+    ],
+    "median": {
+      "p50": 51432.5,
+      "p99": 110223.0,
+      "max": 156393.5,
+      "systems": {
+        "moveBeltItems": 26861.0,
+        "runAssemblers": 501.0,
+        "propagateTransforms": 23364.5
+      },
+      "measures": {
+        "allocationsPerStep.p50": 21.0,
+        "allocationsPerStep.max": 38.0,
+        "allocationsPerStep.total": 13127.0
+      }
+    }
+  },
+  "b": {
+    "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+    "label": "B",
+    "runs": [
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 50776,
+          "p99": 122993,
+          "max": 307030
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 26120
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 361
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 600,
+            "median": 23193
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 140
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 90
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 141
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "worldHash": "0x93bd37c177a12362",
+          "allocationsPerStep": {
+            "p50": 0,
+            "max": 17,
+            "total": 527
+          }
+        }
+      },
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 50576,
+          "p99": 107784,
+          "max": 124145
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 26199
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 351
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 600,
+            "median": 23023
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 131
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 90
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 140
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "worldHash": "0x93bd37c177a12362",
+          "allocationsPerStep": {
+            "p50": 0,
+            "max": 17,
+            "total": 527
+          }
+        }
+      },
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 50626,
+          "p99": 108615,
+          "max": 301490
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 26250
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 361
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 600,
+            "median": 22993
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 140
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 90
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 131
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "worldHash": "0x93bd37c177a12362",
+          "allocationsPerStep": {
+            "p50": 0,
+            "max": 17,
+            "total": 527
+          }
+        }
+      },
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 50756,
+          "p99": 108946,
+          "max": 132039
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 26309
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 361
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 600,
+            "median": 23033
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 141
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 90
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 141
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "worldHash": "0x93bd37c177a12362",
+          "allocationsPerStep": {
+            "p50": 0,
+            "max": 17,
+            "total": 527
+          }
+        }
+      },
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 50735,
+          "p99": 108235,
+          "max": 162347
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 26330
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 361
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 600,
+            "median": 23004
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 140
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 90
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 141
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "worldHash": "0x93bd37c177a12362",
+          "allocationsPerStep": {
+            "p50": 0,
+            "max": 17,
+            "total": 527
+          }
+        }
+      },
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 51117,
+          "p99": 116220,
+          "max": 170331
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 26580
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 361
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 600,
+            "median": 23043
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 160
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 90
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 150
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "worldHash": "0x93bd37c177a12362",
+          "allocationsPerStep": {
+            "p50": 0,
+            "max": 17,
+            "total": 527
+          }
+        }
+      },
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 50625,
+          "p99": 115438,
+          "max": 277149
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 26239
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 361
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 600,
+            "median": 22964
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 131
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 90
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 140
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "worldHash": "0x93bd37c177a12362",
+          "allocationsPerStep": {
+            "p50": 0,
+            "max": 17,
+            "total": 527
+          }
+        }
+      },
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 50626,
+          "p99": 116240,
+          "max": 183747
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 26300
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 360
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 600,
+            "median": 22943
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 131
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 90
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 140
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "worldHash": "0x93bd37c177a12362",
+          "allocationsPerStep": {
+            "p50": 0,
+            "max": 17,
+            "total": 527
+          }
+        }
+      },
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 50345,
+          "p99": 111761,
+          "max": 197799
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 26029
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 361
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 600,
+            "median": 22843
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 131
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 90
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 140
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "worldHash": "0x93bd37c177a12362",
+          "allocationsPerStep": {
+            "p50": 0,
+            "max": 17,
+            "total": 527
+          }
+        }
+      },
+      {
+        "commit": "ca934ce928558d3927ecab3be49e827c6c39dbce",
+        "scenario": "S2",
+        "size": 50000,
+        "seed": 2,
+        "warmup": 60,
+        "steps": 600,
+        "stepsOverridden": false,
+        "timing": true,
+        "step": {
+          "p50": 51076,
+          "p99": 110058,
+          "max": 141808
+        },
+        "systems": [
+          {
+            "name": "moveBeltItems",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 26551
+          },
+          {
+            "name": "runAssemblers",
+            "phase": "oly::app::Update",
+            "ran": 600,
+            "median": 361
+          },
+          {
+            "name": "propagateTransforms",
+            "phase": "oly::essentials2d::Propagation",
+            "ran": 600,
+            "median": 23124
+          }
+        ],
+        "flushes": [
+          {
+            "phase": "oly::app::UpdateBefore",
+            "median": 90
+          },
+          {
+            "phase": "oly::app::Update",
+            "median": 131
+          },
+          {
+            "phase": "oly::physics2d::Physics",
+            "median": 90
+          },
+          {
+            "phase": "oly::essentials2d::Propagation",
+            "median": 131
+          },
+          {
+            "phase": "oly::app::UpdateAfter",
+            "median": 90
+          },
+          {
+            "phase": "oly::app::Render",
+            "median": 90
+          }
+        ],
+        "measures": {
+          "worldHash": "0x93bd37c177a12362",
+          "allocationsPerStep": {
+            "p50": 0,
+            "max": 17,
+            "total": 527
+          }
+        }
+      }
+    ],
+    "median": {
+      "p50": 50680.5,
+      "p99": 110909.5,
+      "max": 177039.0,
+      "systems": {
+        "moveBeltItems": 26275.0,
+        "runAssemblers": 361.0,
+        "propagateTransforms": 23013.5
+      },
+      "measures": {
+        "allocationsPerStep.p50": 0.0,
+        "allocationsPerStep.max": 17.0,
+        "allocationsPerStep.total": 527.0
+      }
+    }
+  },
+  "ratio": {
+    "p50": 0.9853788946677684,
+    "p99": 1.006228282663328
+  },
+  "pairs": {
+    "p50": {
+      "values": [
+        0.9884945587634084,
+        0.9834331492572139,
+        0.9804210159381839,
+        0.9890679501919442,
+        0.9863522367167603,
+        0.9937787973637654,
+        0.9000640045514348,
+        0.9846159830406286,
+        0.9801039577939143,
+        0.9834032885363317
+      ],
+      "min": 0.9000640045514348,
+      "max": 0.9937787973637654,
+      "iqr": 0.00679239416402555
+    },
+    "p99": {
+      "values": [
+        1.1389928137501852,
+        0.9135553427188663,
+        0.9045445838920027,
+        1.0062994162417793,
+        0.9151982006358655,
+        1.0359950794245065,
+        1.0677334319937104,
+        1.0778531953562553,
+        1.0406730420046,
+        0.9097281346349366
+      ],
+      "min": 0.9045445838920027,
+      "max": 1.1389928137501852,
+      "iqr": 0.1470022772983166
+    }
+  },
+  "worldHashEqual": false
+}

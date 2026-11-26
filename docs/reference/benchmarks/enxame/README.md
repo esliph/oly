@@ -62,6 +62,29 @@ Rule: a later gate closer to 1 than the spread of its scenario cannot be trusted
 
 The ratio sits inside the noise of the same scenario (IQR 0.028 in the A/A run): the "~1 µs per step" hypothesis is not contradicted, and the overhead is not measurable at this size. The raw summary is `5eec212-overhead-S1-10000.json`.
 
+## Phase 1
+
+The cost of declared access and the new dispatch against phase 0. Not a gate: the ratios are recorded, with no target.
+
+- Command: `sh games/enxame/compare/compare.sh 5eec212 ca934ce`, A is phase 0 (`5eec212`) and B is the end of phase 1 (`ca934ce`), built in two worktrees (`oly build --release`), 10 repetitions each, alternating, same machine and method as above.
+- The raw summaries are the `5eec212-ca934ce-<scenario>-<size>.json` files in this folder.
+
+Ratios are B over A. Step times are the median over repetitions.
+
+| scenario | size | A p50 (µs) | B p50 (µs) | ratio p50 | pairs p50 | ratio p99 | against the A/A noise of p50 |
+|---|---|---|---|---|---|---|---|
+| S1 | 1000 | 152.5 | 153.4 | 1.006 | 0.998 to 1.015 | 0.942 | inside |
+| S1 | 10000 | 764.2 | 767.3 | 1.004 | 0.973 to 1.021 | 0.936 | inside |
+| S1 | 100000 | 14390.5 | 14273.6 | 0.992 | 0.954 to 1.042 | 0.963 | inside |
+| S2 | 50000 | 51.4 | 50.7 | 0.985 | 0.900 to 0.994 | 1.006 | outside, 0.9 points faster than the A/A minimum |
+| S3 | 10000 | 951.6 | 967.0 | 1.016 | 0.999 to 1.033 | 0.985 | outside, 0.3 points slower than the A/A maximum |
+| S5 | 2000 | 25.3 | 25.5 | 1.009 | 0.913 to 1.176 | 0.973 | inside |
+| S6 | 1000 | 122.1 | 128.1 | 1.049 | 0.905 to 1.071 | 1.029 | outside, 3.6 points slower than the A/A maximum |
+| S8 | 2000 | 2.45 | 2.50 | 1.019 | 0.668 to 1.411 | 1.017 | inside |
+
+- **S5 world hash**: equal on both sides (`0x21c16d888746fd84`). S5 is the only scenario whose phase 0 run wrote a hash, so the summary marks the others `DIFFERENT`: the A side has none. Their phase 0 values are recorded as the `enxame.hash.*` tests of `games/enxame/tests`, which pass at `ca934ce`.
+- Six of the eight p50 ratios are inside the A/A spread of phase 0 (0.985 to 1.019 for the ones outside it or at its edge). S6 leaves it, by 3.6 points (`propagateTransforms` runs in its own phase now, with its own flush); S2 and S3 leave it by 1 point or less. The p99 ratios are inside the wide p99 spread of every scenario.
+
 ## Blocked scenarios
 
 - **S4**: blocked, the engine has no stable ids. The baseline is taken in phase 2.
