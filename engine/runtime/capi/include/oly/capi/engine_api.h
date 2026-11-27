@@ -73,9 +73,11 @@ OLY_API double olyEngineTime(OlyEngine* engine);
 OLY_API double olyEngineFixedDeltaTime(OlyEngine* engine);
 OLY_API double olyEngineInterpolation(OlyEngine* engine);
 
-// `phase` is an oly::app::Phase (out of range, OLY_ASSERT). Registering during olyEngineFrame is a contract violation.
-// OLY_INVALID_SYSTEM if there is no native system with that name (registered by OLY_SYSTEM). The system carries the access its
-// parameters declare, so it must be ordered against the systems of its phase that conflict with it.
+// `phase` numbers a built-in phase: 0 UpdateBefore, 1 Update, 2 UpdateAfter, 3 Render; a phase a plugin declares has no
+// number. Any other value is a contract violation (OLY_ASSERT, "phase=<phase> out of range (0..3)"), and so is registering
+// during olyEngineFrame. OLY_INVALID_SYSTEM if there is no native system with that name (registered by OLY_SYSTEM). The
+// system carries the access its parameters declare, so it must be ordered against the systems of its phase that conflict
+// with it.
 OLY_API uint32_t olyEngineAddNativeSystem(OlyEngine* engine, uint32_t phase, const char* name);
 // The system is called by the engine's script invoker with the id returned here. A script system is exclusive: it
 // conflicts with every other system of its phase, so it must be ordered against each of them.

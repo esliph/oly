@@ -97,7 +97,7 @@ engine.addNativeSystem(Phase.Update, "integrate").inState(playing);
 const Phase = { UpdateBefore: 0, Update: 1, UpdateAfter: 2, Render: 3 } as const;
 ```
 
-`addSystem` takes one of `Phase.UpdateBefore`, `Phase.Update`, `Phase.UpdateAfter` and `Phase.Render`. The first three run in each fixed step, in this order, and `Render` runs once per frame ([Phases](../../explanation/concepts/engine-and-systems.md#phases)). A TS system always runs in the `Default` band.
+`addSystem` takes one of `Phase.UpdateBefore`, `Phase.Update`, `Phase.UpdateAfter` and `Phase.Render`. The first three run in each fixed step, in this order, and `Render` runs once per frame ([Phases](../../explanation/concepts/engine-and-systems.md#phases)).
 
 C++ and TS systems mix in one phase once each pair that conflicts is ordered with `before` or `after`; a phase a plugin declares is not reachable from TS.
 

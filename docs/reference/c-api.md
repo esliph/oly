@@ -326,7 +326,7 @@ Returns how far, from 0 to 1, the real time is between the last fixed step and t
 uint32_t olyEngineAddNativeSystem(OlyEngine* engine, uint32_t phase, const char* name);
 ```
 
-Registers the C++ system that `OLY_SYSTEM` defined under `name`, in `phase`, and returns its system id. Returns `OLY_INVALID_SYSTEM` if no native system has that name. `phase` is an `oly::app::Phase`; a value out of range is a contract violation. Registering during `olyEngineFrame` is a contract violation. The system carries the access its parameters declare, so it must be ordered, with `olyEngineOrderSystems`, against every system of its phase that conflicts with it.
+Registers the C++ system that `OLY_SYSTEM` defined under `name`, in `phase`, and returns its system id. Returns `OLY_INVALID_SYSTEM` if no native system has that name. `phase` numbers a built-in phase: `0` `UpdateBefore`, `1` `Update`, `2` `UpdateAfter`, `3` `Render` ([Phases](../explanation/concepts/engine-and-systems.md#phases)); a phase a plugin declares has no number. Any other value is a contract violation (`olyEngineAddNativeSystem: phase=<phase> out of range (0..3)`). Registering during `olyEngineFrame` is a contract violation. The system carries the access its parameters declare, so it must be ordered, with `olyEngineOrderSystems`, against every system of its phase that conflicts with it.
 
 ### `olyEngineAddScriptSystem`
 
