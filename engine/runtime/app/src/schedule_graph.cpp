@@ -5,39 +5,27 @@
 #include <set>
 #include <unordered_map>
 
-namespace oly::app {
+namespace oly::app::detail {
   namespace {
     // Function with a local static: avoids initialization order problems. std::deque keeps the names in place.
     std::deque<std::string_view>& scheduleNames() {
       static std::deque<std::string_view> names;
       return names;
     }
-  }
 
-  ScheduleKey detail::registerSchedule(std::string_view name) {
-    scheduleNames().push_back(name);
-    return static_cast<ScheduleKey>(scheduleNames().size() - 1);
-  }
-
-  std::string_view detail::scheduleName(ScheduleKey key) {
-    return scheduleNames()[key];
-  }
-}
-
-namespace oly::app::detail {
-  namespace {
     using Successors = std::vector<std::set<uint32_t>>;
+    using NodePairs = std::set<std::pair<uint32_t, uint32_t>>;
 
     struct Sorted {
       std::vector<uint32_t> order;
       std::vector<uint32_t> cyclic;
-      std::set<std::pair<uint32_t, uint32_t>> ambiguous;
     };
 
     // Kahn's algorithm: each time, the ready node that `before` ranks first goes next, so the order depends on the ranking and
-    // the edges only. Nodes that never become ready are on, or behind, a cycle.
+    // the edges only. Nodes that never become ready are on, or behind, a cycle. Two nodes ready together have no path between
+    // them; `ambiguous`, when given, collects those pairs, which costs a pass over the ready set at every step (cubic overall).
     template <class Before>
-    Sorted sortGraph(const Successors& successors, Before before) {
+    Sorted sortGraph(const Successors& successors, Before before, NodePairs* ambiguous) {
       std::vector<uint32_t> indegree(successors.size(), 0);
 
       for (const std::set<uint32_t>& targets : successors) {
@@ -57,9 +45,11 @@ namespace oly::app::detail {
       Sorted sorted;
 
       while (!ready.empty()) {
-        for (auto first = ready.begin(); first != ready.end(); ++first) {
-          for (auto second = std::next(first); second != ready.end(); ++second) {
-            sorted.ambiguous.emplace(std::min(*first, *second), std::max(*first, *second));
+        if (ambiguous != nullptr) {
+          for (auto first = ready.begin(); first != ready.end(); ++first) {
+            for (auto second = std::next(first); second != ready.end(); ++second) {
+              ambiguous->emplace(std::min(*first, *second), std::max(*first, *second));
+            }
           }
         }
 
@@ -246,9 +236,10 @@ namespace oly::app::detail {
       }
 
       const auto byDeclaration = [](uint32_t left, uint32_t right) { return left < right; };
-      Sorted sorted = sortGraph(successors, byDeclaration);
+      NodePairs ambiguous;
+      Sorted sorted = sortGraph(successors, byDeclaration, &ambiguous);
 
-      for (const auto& [first, second] : sorted.ambiguous) {
+      for (const auto& [first, second] : ambiguous) {
         errors.add("phases \"" + input.phases[nodes[first]].name + "\" and \"" + input.phases[nodes[second]].name + "\" of " + scheduleLabel(schedule) + " have no order between them");
       }
 
@@ -317,6 +308,15 @@ namespace oly::app::detail {
         }
       }
     }
+  }
+
+  ScheduleKey registerSchedule(std::string_view name) {
+    scheduleNames().push_back(name);
+    return static_cast<ScheduleKey>(scheduleNames().size() - 1);
+  }
+
+  std::string_view scheduleName(ScheduleKey key) {
+    return scheduleNames()[key];
   }
 
   SchedulePlan buildSchedule(const ScheduleInput& input) {
@@ -447,7 +447,7 @@ namespace oly::app::detail {
 
         return leftName != rightName ? leftName < rightName : left < right;
       };
-      Sorted sorted = sortGraph(graphs[phase], byName);
+      Sorted sorted = sortGraph(graphs[phase], byName, nullptr);
 
       if (!sorted.cyclic.empty()) {
         const std::vector<uint32_t> cycle = findCycle(graphs[phase], sorted.cyclic, byName);
