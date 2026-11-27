@@ -383,6 +383,7 @@ The invariants below must hold **between** any two public calls. `checkInvariant
 | I-11 | Outside `each` and outside an observer, `iterating_ == 0` | Counter leaked by early return or exception |
 | I-12 | The `observed` byte of every archetype and the observer bits of every cached edge's `work` byte match the registered observers; a jump edge's `work` is 0 | Observer skipped after a registration, or cost paid with none registered |
 | I-13 | Every archetype signature is closed under implication | Implied component missing after a transition |
+| I-14 | In `resources_`, every slot with an `object` has a `destroy` function and appears exactly once in `insertionOrder`, and `insertionOrder` holds as many entries as there are occupied slots | Resource leaked, destroyed twice or destroyed without its destroy function when the store destroys in reverse insertion order |
 
 I-2 requires instrumentation: in debug, a `LifeCounter` test component increments and decrements a global counter in its constructor and destructor. The total must match the number of alive rows that contain that component.
 

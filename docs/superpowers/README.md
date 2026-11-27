@@ -8,7 +8,7 @@ The plans record, phase by phase, how each part was implemented and the decision
 
 | Document | Contents |
 |---|---|
-| [`specs/2026-10-16-ecs-archetype-spec.md`](specs/2026-10-16-ecs-archetype-spec.md) | ECS: requirements `R-*`, invariants `I-1..I-13`, targets `NF-*` |
+| [`specs/2026-10-16-ecs-archetype-spec.md`](specs/2026-10-16-ecs-archetype-spec.md) | ECS: requirements `R-*`, invariants `I-1..I-14`, targets `NF-*` |
 | [`specs/2026-11-06-wasm-cost-study-design.md`](specs/2026-11-06-wasm-cost-study-design.md) | native × WASM cost study |
 | [`specs/2026-11-09-game-engine-design.md`](specs/2026-11-09-game-engine-design.md) | the engine: loop, events, input, schedule, states, validation game |
 | [`specs/2026-11-09-oly-modularization-design.md`](specs/2026-11-09-oly-modularization-design.md) | modules, boundaries, names and public surfaces |
