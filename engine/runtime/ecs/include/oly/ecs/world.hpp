@@ -388,7 +388,11 @@ namespace oly::ecs {
     OLY_ASSERT(resources_.find(id) == nullptr, "insertResource type=%.*s already inserted", int(resourceName(id).size()), resourceName(id).data());
 
     std::unique_ptr<U> owned(new U(std::forward<T>(value)));
-    resources_.adopt(id, owned.get(), [](void* object) noexcept { delete static_cast<U*>(object); });
+
+    if (!resources_.adopt(id, owned.get(), [](void* object) noexcept { delete static_cast<U*>(object); })) {
+      // Asserts off: the first resource stays, so references to it remain valid, and owned destroys the new value.
+      return *static_cast<U*>(resources_.find(id));
+    }
 
     return *owned.release();
   }

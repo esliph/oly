@@ -45,8 +45,9 @@ namespace oly::ecs {
         return id < slots_.size() ? slots_[id].object : nullptr;
       }
 
-      // Takes ownership only when it returns: if it throws, the caller still owns `object`.
-      void adopt(ResourceId id, void* object, void (*destroy)(void* object) noexcept);
+      // Takes ownership only when it returns true. When `id` already has an object it keeps that one and returns false, and
+      // when it throws, the caller still owns `object`.
+      [[nodiscard]] bool adopt(ResourceId id, void* object, void (*destroy)(void* object) noexcept);
 
       const std::vector<ResourceSlot>& slots() const noexcept {
         return slots_;

@@ -53,6 +53,10 @@ namespace {
   void insertFillers(oly::ecs::World& world, std::integer_sequence<int, Indices...>) {
     (world.insertResource(Filler<Indices>{Indices}), ...);
   }
+
+  void countDestruction(void* counter) noexcept {
+    ++*static_cast<int*>(counter);
+  }
 }
 
 TEST_CASE("an inserted resource is reachable by type and by id") {
@@ -100,6 +104,45 @@ TEST_CASE("resources are destroyed in reverse insertion order") {
 
   CHECK(order == std::vector<std::string>{"second", "first"});
 }
+
+TEST_CASE("the store refuses a second object for an id, keeps the first and destroys it once") {
+  int firstDestroyed = 0;
+  int secondDestroyed = 0;
+  const oly::ecs::ResourceId id = oly::ecs::resourceId<Score>();
+
+  {
+    oly::ecs::detail::ResourceStore store;
+    CHECK(store.adopt(id, &firstDestroyed, countDestruction));
+
+    CHECK_FALSE(store.adopt(id, &secondDestroyed, countDestruction));
+
+    CHECK(store.find(id) == &firstDestroyed);
+    CHECK(store.insertionOrder() == std::vector<oly::ecs::ResourceId>{id});
+  }
+
+  CHECK(firstDestroyed == 1);
+  CHECK(secondDestroyed == 0);
+}
+
+#if !OLY_ENABLE_ASSERTS
+TEST_CASE("without asserts, a second insertResource keeps the first resource and destroys the second value") {
+  std::vector<std::string> order;
+
+  {
+    oly::ecs::World world;
+    First& kept = world.insertResource(First{&order, "kept"});
+
+    First& again = world.insertResource(First{&order, "discarded"});
+
+    CHECK(&again == &kept);
+    CHECK(std::string(world.resource<First>().name) == "kept");
+    CHECK(order == std::vector<std::string>{"discarded"});
+    CHECK_INVARIANTS(world);
+  }
+
+  CHECK(order == std::vector<std::string>{"discarded", "kept"});
+}
+#endif
 
 TEST_CASE("resourceId ignores const and reference") {
   CHECK(oly::ecs::resourceId<const Score&>() == oly::ecs::resourceId<Score>());

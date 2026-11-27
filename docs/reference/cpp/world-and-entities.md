@@ -483,7 +483,7 @@ T* tryResource() noexcept;
 void* tryResourceById(ResourceId id) noexcept;
 ```
 
-`insertResource` moves or copies `value` into the `World` and returns it. The address never changes until the `World` is destroyed, which destroys the resources in reverse insertion order. Inserting a type twice stops with `OLY_ASSERT` (`insertResource type=<T> already inserted`). `resource` stops with `resource type=<T> not inserted` when the type is missing; `tryResource` returns `nullptr` instead. `tryResourceById` answers for an id that was never inserted, or is beyond the registry, with `nullptr`.
+`insertResource` moves or copies `value` into the `World` and returns it. The address never changes until the `World` is destroyed, which destroys the resources in reverse insertion order. Inserting a type twice stops with `OLY_ASSERT` (`insertResource type=<T> already inserted`); with asserts off, the second call keeps the first resource, destroys the new value and returns the first. `resource` stops with `resource type=<T> not inserted` when the type is missing; `tryResource` returns `nullptr` instead. `tryResourceById` answers for an id that was never inserted, or is beyond the registry, with `nullptr`.
 
 `resourceId<T>()` is dense, assigned on the first call for each type, and ignores `const`, `volatile` and references. It depends on the order of those calls, so it is not for persisting. `resourceName(id)` is the type name and `registeredResourceCount()` the number of ids assigned.
 

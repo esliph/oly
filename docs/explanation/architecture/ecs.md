@@ -68,6 +68,11 @@ Validity rules:
 - The flush runs on remove before each entity's transition and queues on add until after the last transition (R-OB-7), so an on add observer sees the world as the whole buffer left it.
 - **Implied components** (`imply<T, Implied>`) live in `detail::ImplicationTable`. `resolve(source, changed)` is the one signature resolver: `edgeFor`, `spawn<Ts...>` and the flush memo call it, so the three paths cannot disagree. An add edge stores the destination columns to value-initialize (`initializedColumns`), so a cached transition with an implication still does no lookup. R-IM-4 is asserted where the edge is built, once per (archetype, component).
 
+## Resources
+
+- `detail::ResourceStore` keeps one slot per `ResourceId` and the insertion order, which its destructor walks backwards. I-14 checks that each occupied slot has a destroy function and appears in the order exactly once.
+- A second `insertResource` of a type is a contract violation. Without asserts the store refuses the second object: the first one stays at its address, and `insertResource` destroys the new value and returns the first, so nothing leaks or is destroyed twice.
+
 ## Correctness
 
 - Invariants I-1 to I-14, the fuzz against a model and `LifeCounter` are in [Build, tests and tools](build-and-tests.md#tests).

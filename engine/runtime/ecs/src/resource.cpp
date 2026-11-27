@@ -25,13 +25,18 @@ namespace oly::ecs {
     return static_cast<ResourceId>(registry().size() - 1);
   }
 
-  void detail::ResourceStore::adopt(ResourceId id, void* object, void (*destroy)(void* object) noexcept) {
+  bool detail::ResourceStore::adopt(ResourceId id, void* object, void (*destroy)(void* object) noexcept) {
+    if (find(id) != nullptr) {
+      return false;
+    }
+
     if (id >= slots_.size()) {
       slots_.resize(size_t(id) + 1);
     }
 
     insertionOrder_.push_back(id);
     slots_[id] = ResourceSlot{object, destroy};
+    return true;
   }
 
   detail::ResourceStore::~ResourceStore() {
