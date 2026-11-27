@@ -9,6 +9,17 @@
 #include "oly/ecs/resource.hpp"
 
 namespace oly::app {
+  enum class ConflictKind : uint8_t { Component,
+                                      Resource,
+                                      Exclusive };
+
+  struct Conflict {
+    ConflictKind kind;
+    uint32_t id; // ComponentId or ResourceId; unused for Exclusive
+    bool firstWrites; // for Exclusive: the first system is the exclusive one
+    bool secondWrites; // for Exclusive: the second one is
+  };
+
   namespace detail {
     inline bool containsSorted(const std::vector<uint32_t>& ids, uint32_t id) {
       return std::binary_search(ids.begin(), ids.end(), id);
@@ -27,6 +38,22 @@ namespace oly::app {
 
       if (position != ids.end() && *position == id) {
         ids.erase(position);
+      }
+    }
+
+    inline void conflictsOfKind(ConflictKind kind, const std::vector<uint32_t>& firstReads, const std::vector<uint32_t>& firstWrites, const std::vector<uint32_t>& secondReads, const std::vector<uint32_t>& secondWrites, std::vector<Conflict>& conflicts) {
+      std::vector<uint32_t> written;
+      std::set_union(firstWrites.begin(), firstWrites.end(), secondWrites.begin(), secondWrites.end(), std::back_inserter(written));
+
+      for (const uint32_t id : written) {
+        const bool firstWrote = containsSorted(firstWrites, id);
+        const bool secondWrote = containsSorted(secondWrites, id);
+        const bool firstTouches = firstWrote || containsSorted(firstReads, id);
+        const bool secondTouches = secondWrote || containsSorted(secondReads, id);
+
+        if (firstTouches && secondTouches) {
+          conflicts.push_back(Conflict{kind, id, firstWrote, secondWrote});
+        }
       }
     }
   }
@@ -60,35 +87,6 @@ namespace oly::app {
       detail::insertSorted(resourceWrites, id);
     }
   };
-
-  enum class ConflictKind : uint8_t { Component,
-                                      Resource,
-                                      Exclusive };
-
-  struct Conflict {
-    ConflictKind kind;
-    uint32_t id; // ComponentId or ResourceId; unused for Exclusive
-    bool firstWrites; // for Exclusive: the first system is the exclusive one
-    bool secondWrites; // for Exclusive: the second one is
-  };
-
-  namespace detail {
-    inline void conflictsOfKind(ConflictKind kind, const std::vector<uint32_t>& firstReads, const std::vector<uint32_t>& firstWrites, const std::vector<uint32_t>& secondReads, const std::vector<uint32_t>& secondWrites, std::vector<Conflict>& conflicts) {
-      std::vector<uint32_t> written;
-      std::set_union(firstWrites.begin(), firstWrites.end(), secondWrites.begin(), secondWrites.end(), std::back_inserter(written));
-
-      for (const uint32_t id : written) {
-        const bool firstWrote = containsSorted(firstWrites, id);
-        const bool secondWrote = containsSorted(secondWrites, id);
-        const bool firstTouches = firstWrote || containsSorted(firstReads, id);
-        const bool secondTouches = secondWrote || containsSorted(secondReads, id);
-
-        if (firstTouches && secondTouches) {
-          conflicts.push_back(Conflict{kind, id, firstWrote, secondWrote});
-        }
-      }
-    }
-  }
 
   // Every type both touch where at least one writes, in id order (components, then resources); one Exclusive entry, alone,
   // when either is exclusive.
