@@ -67,14 +67,14 @@ namespace oly::app {
     return installed;
   }
 
-  void Engine::requireOpenRegistration(const char* operation, std::string_view name) const {
+  void Engine::requireOpenRegistration([[maybe_unused]] const char* operation, [[maybe_unused]] std::string_view name) const {
     OLY_ASSERT(!registrationClosed_, "%s: \"%.*s\" registered after the first frame", operation, static_cast<int>(name.size()), name.data());
   }
 
-  void Engine::claimKey(const char* operation, ScheduleKey key, KeyKind kind) {
+  void Engine::claimKey([[maybe_unused]] const char* operation, ScheduleKey key, KeyKind kind) {
     for (const auto& [claimedKey, claimedKind] : keyKinds_) {
       if (claimedKey == key) {
-        const std::string_view name = detail::scheduleName(key);
+        [[maybe_unused]] const std::string_view name = detail::scheduleName(key);
         OLY_ASSERT(claimedKind == kind, "%s: type \"%.*s\" is used as both a phase and a set", operation, static_cast<int>(name.size()), name.data());
 
         return;
@@ -134,7 +134,7 @@ namespace oly::app {
       }
     }
 
-    const std::string_view name = detail::scheduleName(key);
+    [[maybe_unused]] const std::string_view name = detail::scheduleName(key);
     OLY_ASSERT(false, "phaseId: phase \"%.*s\" not declared", static_cast<int>(name.size()), name.data());
 
     return MissingIndex;
