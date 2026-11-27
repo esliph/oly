@@ -541,9 +541,10 @@ TEST_CASE("a frame after an exception keeps the closed schedule") {
   Fixture fixture;
   fixture.world.insertResource(Counter{});
   fixture.world.spawn(Position{1, 2});
-  fixture.engine.addSystem<&throwOnce>(Update{}, "a");
-  fixture.engine.addSystem<&countEntities>(Update{}, "b").after("a");
-  fixture.engine.addSystem<&record>(Update{}, "c").after("b");
+  // The constraints give an order that is neither the registration order nor the name order.
+  fixture.engine.addSystem<&countEntities>(Update{}, "mike").after("zulu");
+  fixture.engine.addSystem<&record>(Update{}, "alpha").after("mike");
+  fixture.engine.addSystem<&throwOnce>(Update{}, "zulu");
 
   fixture.engine.frame(0.0);
   CHECK_THROWS(fixture.step());
@@ -553,7 +554,7 @@ TEST_CASE("a frame after an exception keeps the closed schedule") {
 
   fixture.step();
 
-  CHECK(trace == std::vector<std::string>{"a", "b", "c"});
+  CHECK(trace == std::vector<std::string>{"zulu", "mike", "alpha"});
   CHECK(counts == std::vector<size_t>{1});
   CHECK_INVARIANTS(fixture.world);
 }
