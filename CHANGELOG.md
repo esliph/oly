@@ -9,6 +9,7 @@ Each version of the engine has one section. While Oly is `0.x`, a minor version 
 - `SystemContext`, the `userData` of a system, `OrderBand`, the `Phase` enum and `addSystem(Phase, name, function, userData, band)` are removed. A system declares its access through its parameters and is registered with `addSystem<&f>(phase, name)`.
 - The order of systems of one phase is the constraints `before` / `after` and then the system name, never the registration order or the plugin install order. Two systems that conflict (one writes what the other touches) with no constraint between them stop the first `frame`.
 - Registration closes at the first `frame`: `addSystem`, `addPhase`, `set` and a constraint after it stop with `OLY_ASSERT`.
+- A constraint against a set or a function no longer orders a system against itself: `after<&f>()` on a registration of `f` orders it after the other registrations instead of reporting a cycle. A system ordered against its own name or `SystemId` is still a cycle ([Phases, sets and constraints](docs/reference/cpp/engine-and-systems.md#phases-sets-and-constraints)).
 - With asserts off, a second `World::insertResource` of a type keeps the first resource and destroys the new value, instead of destroying an object twice ([Resources](docs/reference/cpp/world-and-entities.md#resources)).
 
 ### Migration

@@ -308,6 +308,46 @@ TEST_CASE("a cycle of systems is an error naming the cycle") {
   CHECK(plan.errors == std::vector<std::string>{"cycle of system constraints in phase \"" + phaseName + "\": a -> b -> a"});
 }
 
+TEST_CASE("a function constraint does not order a registration against itself") {
+  constexpr oly::app::SystemFunctionKey sharedFunction = 7;
+  ScheduleInput input = builtInPhases();
+  input.systems = {systemIn<Update>("first"), systemIn<Update>("second")};
+  input.systems[0].function = sharedFunction;
+  input.systems[1].function = sharedFunction;
+  input.constraints = {before(OrderTarget{TargetKind::Function, sharedFunction, ""}, nameTarget("first"))};
+
+  const SchedulePlan plan = buildSchedule(input);
+
+  CHECK(plan.errors.empty());
+  CHECK(namesIn<Update>(plan, input) == std::vector<std::string>{"second", "first"});
+}
+
+TEST_CASE("a set constraint does not order a member against itself") {
+  ScheduleInput input = builtInPhases();
+  input.systems = {systemIn<Update>("first"), systemIn<Update>("second")};
+  input.systems[0].sets = {oly::app::scheduleKey<Spatial>()};
+  input.systems[1].sets = {oly::app::scheduleKey<Spatial>()};
+  input.constraints = {before(OrderTarget{TargetKind::Set, oly::app::scheduleKey<Spatial>(), std::string(oly::core::typeName<Spatial>())}, nameTarget("first"))};
+
+  const SchedulePlan plan = buildSchedule(input);
+
+  CHECK(plan.errors.empty());
+  CHECK(namesIn<Update>(plan, input) == std::vector<std::string>{"second", "first"});
+}
+
+TEST_CASE("a system ordered against its own name or id is a cycle") {
+  const std::string cycle = "cycle of system constraints in phase \"" + std::string(oly::core::typeName<Update>()) + "\": alone -> alone";
+  ScheduleInput input = builtInPhases();
+  input.systems = {systemIn<Update>("alone")};
+  input.constraints = {before(nameTarget("alone"), nameTarget("alone"))};
+
+  CHECK(buildSchedule(input).errors == std::vector<std::string>{cycle});
+
+  input.constraints = {before(OrderTarget{TargetKind::System, 0, "alone"}, OrderTarget{TargetKind::System, 0, "alone"})};
+
+  CHECK(buildSchedule(input).errors == std::vector<std::string>{cycle});
+}
+
 TEST_CASE("a cycle is reported when a system behind it sorts first") {
   ScheduleInput input = builtInPhases();
   input.systems = {systemIn<Update>("a"), systemIn<Update>("x"), systemIn<Update>("y")};

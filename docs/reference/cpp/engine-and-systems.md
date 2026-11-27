@@ -181,7 +181,7 @@ template <class P> PhaseBuilder phase();
 template <class S> SetBuilder set();
 ```
 
-A **system set** is a tag `S` that groups systems. `set<S>().before<Q>()` and `after<Q>()` order every member of `S`; the target is a set, a function (`before<&f>()`, every registration of `f`) or a system name (`before("name")`). A set orders its members in each phase they are in.
+A **system set** is a tag `S` that groups systems. `set<S>().before<Q>()` and `after<Q>()` order every member of `S`; the target is a set, a function (`before<&f>()`, every registration of `f`) or a system name (`before("name")`). A set orders its members in each phase they are in. A set or a function never orders a system against itself: `after<&f>()` on a registration of `f` puts it after the other registrations of `f`. A system ordered against its own name or `SystemId` is a cycle.
 
 ### `Engine::addSystem`
 

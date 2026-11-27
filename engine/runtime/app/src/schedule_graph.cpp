@@ -193,6 +193,12 @@ namespace oly::app::detail {
       return {};
     }
 
+    // A set or a function names a group, which orders its members against the other side only, so a system on both sides is
+    // not ordered against itself. A constraint whose two targets each name one system keeps that pair: it is a cycle.
+    bool namesOneSystem(const OrderTarget& target) {
+      return target.kind == TargetKind::Name || target.kind == TargetKind::System;
+    }
+
     // What a constraint that names no system says about its target.
     std::string describe(const OrderTarget& target) {
       switch (target.kind) {
@@ -421,12 +427,17 @@ namespace oly::app::detail {
         }
       }
 
+      const bool betweenSingleSystems = namesOneSystem(constraint.first) && namesOneSystem(constraint.second);
+
       for (const SystemId first : firsts) {
         for (const SystemId second : seconds) {
           const uint32_t firstPhase = phaseOfSystem[first];
           const uint32_t secondPhase = phaseOfSystem[second];
 
           if (firstPhase == Missing || secondPhase == Missing) {
+            continue;
+          }
+          if (first == second && !betweenSingleSystems) {
             continue;
           }
 
