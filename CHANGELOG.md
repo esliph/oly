@@ -11,6 +11,7 @@ Each version of the engine has one section. While Oly is `0.x`, a minor version 
 - Registration closes at the first `frame`: `addSystem`, `addPhase`, `set` and a constraint after it stop with `OLY_ASSERT`.
 - `.whilePaused()` on a system of a `Frame` phase that `addPhase` declares after the system stops the first `frame` (`frame: system "<name>" of phase "<P>" of the frame cannot be whilePaused`); before, it passed ([Errors](docs/reference/errors.md)).
 - A constraint against a set or a function no longer orders a system against itself: `after<&f>()` on a registration of `f` orders it after the other registrations instead of reporting a cycle. A system ordered against its own name or `SystemId` is still a cycle ([Phases, sets and constraints](docs/reference/cpp/engine-and-systems.md#phases-sets-and-constraints)).
+- Installing `essentials2d` or `essentials3d` on a `World` that already had it installed, by a live `Engine` or a destroyed one, stops with `OLY_ASSERT` (`install type=oly::essentials2d::Plugin: the World already had it installed; essentials installs once per World`); before, it stopped inside `insertResource` or `imply` with a message about those ([A World that outlives the Engine](docs/explanation/concepts/transforms.md#a-world-that-outlives-the-engine)).
 - With asserts off, a second `World::insertResource` of a type keeps the first resource and destroys the new value, instead of destroying an object twice ([Resources](docs/reference/cpp/world-and-entities.md#resources)).
 
 ### Migration

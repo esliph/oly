@@ -3,6 +3,8 @@
 #include <cstdio>
 
 #include "oly/app/engine.hpp"
+#include "oly/core/assert.hpp"
+#include "oly/core/type_name.hpp"
 #include "oly/essentials3d/schema.generated.hpp"
 
 namespace oly::essentials3d {
@@ -33,6 +35,11 @@ namespace oly::essentials3d {
   }
 
   void Plugin::install(app::Engine& engine) {
+    // The Hierarchy resource marks an earlier install and outlives its Engine. Installing again cannot work: imply refuses a
+    // World where an archetype holds Position, and the old index stopped following the World with the old observers.
+    OLY_ASSERT(engine.world().tryResource<detail::Hierarchy>() == nullptr, "install type=%.*s: the World already had it installed; essentials installs once per World",
+               int(core::typeName<Plugin>().size()), core::typeName<Plugin>().data());
+
     world_ = &engine.world();
     detail::Hierarchy& hierarchy = world_->insertResource(detail::Hierarchy{});
     world_->imply<Position, WorldTransform>();

@@ -84,7 +84,7 @@ At install the plugin:
 
 - registers `imply<Position, WorldTransform>()` on the `World`; the implication cannot be undone, so it outlives the plugin's destructor;
 - registers four observers (`onAdd<Parent>`, `onRemove<Parent>`, `onAdd<WorldTransform>`, `onRemove<detail::HasChildren>`), which its destructor removes;
-- inserts the `detail::Hierarchy` resource (the children index, the slots and the propagation order), which the observers receive as `userData`;
+- inserts the `detail::Hierarchy` resource (the children index, the slots and the propagation order), which the observers receive as `userData`. The resource outlives the `Engine`, so it marks a `World` that already had the plugin installed. `install` checks it before anything else and stops with an `OLY_ASSERT` when it is there, by a live `Engine` or by one already destroyed: the plugin installs once per `World`;
 - declares the `Propagation` phase in the fixed step, after `Update` and before `UpdateAfter`, and registers `propagateTransforms` in it.
 
 | Part | What it does |

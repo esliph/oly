@@ -76,6 +76,28 @@ namespace {
     fixture.world.flush(commands);
   }
 
+  void installWithLiveEngine() {
+    Fixture fixture;
+    oly::app::Engine second(fixture.world);
+
+    second.installPlugin<oly::essentials3d::Plugin>();
+  }
+
+  void installAfterDestroyedEngine() {
+    oly::ecs::World world;
+
+    {
+      oly::app::Engine first(world);
+      first.installPlugin<oly::essentials3d::Plugin>();
+      const Entity parent = world.spawn(Position{0, 0, 0});
+      world.spawn(Position{1, 0, 0}, Parent{parent});
+    }
+
+    oly::app::Engine second(world);
+
+    second.installPlugin<oly::essentials3d::Plugin>();
+  }
+
   struct Case {
     const char* name;
     void (*run)();
@@ -90,6 +112,8 @@ int main(int argumentCount, char** arguments) {
     {"parent_cycle", parentCycle, {"Parent", "descendant"}},
     {"parent_destroyed_in_same_buffer", parentDestroyedInSameBuffer, {"Parent", "dead"}},
     {"parent_destroyed_before_in_same_buffer", parentDestroyedBeforeInSameBuffer, {"Parent", "dead"}},
+    {"install_with_live_engine", installWithLiveEngine, {"install", "essentials3d::Plugin", "once per World"}},
+    {"install_after_destroyed_engine", installAfterDestroyedEngine, {"install", "essentials3d::Plugin", "once per World"}},
   };
 
   if (argumentCount != 2) {

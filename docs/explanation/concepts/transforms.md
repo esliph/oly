@@ -28,6 +28,8 @@ A parent with no `Position` (a group) counts as the identity, and so does the ch
 
 The implication of `WorldTransform` by `Position` stays on the `World` when the `Engine` is destroyed, because an implication cannot be undone. A `World` that outlives its `Engine` keeps giving `Position` a `WorldTransform`, and nothing updates it any more.
 
+`essentials` installs once per `World`. Installing it on a `World` that already had it installed stops with an `OLY_ASSERT`, whether the `Engine` that installed it is still alive or already destroyed ([Errors](../../reference/errors.md)). A new `Engine` that needs `essentials` gets a new `World`.
+
 ## Parent and children
 
 ```cpp

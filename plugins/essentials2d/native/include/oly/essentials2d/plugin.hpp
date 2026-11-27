@@ -47,6 +47,7 @@ namespace oly::essentials2d {
   // updates.
   //
   // A Parent that points to a dead entity, to its own entity or to one of its descendants is a contract error (OLY_ASSERT).
+  // So is installing the plugin on a World that already had it installed, by a live Engine or a destroyed one: it installs once per World.
   class Plugin final : public app::Plugin {
    private:
     static constexpr uint32_t ObserverCount = 4;
