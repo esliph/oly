@@ -15,12 +15,14 @@ oly_add_test(MODULE app NAME system_parameters SOURCES system_parameters.cpp SUP
 oly_add_test(MODULE app NAME system_order SOURCES system_order.cpp SUPPORT engine/runtime/ecs/tests/support)
 
 # A negative case holds one system the adapter must refuse. The build exits non-zero by design, so the test passes only
-# when the expected compiler error is printed.
+# when the expected compiler error is printed. Every case builds the same binary tree, and two builds of one tree at once
+# write the same build-tool state and can run the same step (a re-configure, a shared dependency) together, so the cases
+# share one RESOURCE_LOCK and never overlap under ctest -j.
 function(oly_add_negative_compile case expected)
   add_library(app_negative_${case} OBJECT EXCLUDE_FROM_ALL negative/${case}.cpp)
   target_link_libraries(app_negative_${case} PRIVATE oly::app)
   add_test(NAME app.negative_compile.${case} COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target app_negative_${case})
-  set_tests_properties(app.negative_compile.${case} PROPERTIES PASS_REGULAR_EXPRESSION "${expected}")
+  set_tests_properties(app.negative_compile.${case} PROPERTIES PASS_REGULAR_EXPRESSION "${expected}" RESOURCE_LOCK oly_binary_tree_build)
 endfunction()
 
 oly_add_negative_compile(unknown_parameter "is not a system parameter")
