@@ -43,6 +43,8 @@ namespace {
 
   struct DeathSecond {};
 
+  struct DeathOverlay {};
+
   const std::vector<const char*>* g_required = nullptr;
 
   void handler(const char* message) noexcept {
@@ -100,6 +102,15 @@ namespace {
     const auto system = engine.addSystem<&idle>(oly::app::Render{}, "drawing");
 
     engine.setWhilePaused(system.id(), true);
+  }
+
+  void whilePausedBeforeFramePhase() {
+    oly::ecs::World world;
+    Engine engine(world);
+    engine.addSystem<&idle>(DeathOverlay{}, "overlay").whilePaused();
+    engine.addPhase<DeathOverlay>(oly::app::Frame{}).after<oly::app::Render>();
+
+    engine.frame(0.0);
   }
 
   void systemCycle() {
@@ -564,6 +575,7 @@ int main(int argumentCount, char** arguments) {
     {"add_system_during_frame", addSystemDuringFrame, {"addSystem", "during frame"}},
     {"set_timing_enabled_during_frame", setTimingEnabledDuringFrame, {"setTimingEnabled", "during frame"}},
     {"while_paused_frame_system", whilePausedFrameSystem, {"setWhilePaused", "cannot be whilePaused"}},
+    {"while_paused_before_frame_phase", whilePausedBeforeFramePhase, {"frame: system \"overlay\"", "DeathOverlay", "of the frame cannot be whilePaused"}},
     {"system_cycle", systemCycle, {"frame: cycle of system constraints", "a", "b"}},
     {"phase_cycle", phaseCycle, {"frame: cycle of phase constraints"}},
     {"unordered_phases", unorderedPhases, {"frame: ", "have no order between them"}},

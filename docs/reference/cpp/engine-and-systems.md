@@ -119,7 +119,7 @@ engine.requestState(states::playing);
 void setWhilePaused(SystemId system, bool whilePaused);
 ```
 
-In the gameplay phases, a `whilePaused` system runs only in paused steps and the others only in unpaused ones. A Render system cannot be `whilePaused`: the call stops with `OLY_ASSERT` (`setWhilePaused: render system "<name>" cannot be whilePaused`).
+In the gameplay phases, a `whilePaused` system runs only in paused steps and the others only in unpaused ones. A system of a `Frame` phase, such as Render, cannot be `whilePaused`: the call stops with `OLY_ASSERT` (`setWhilePaused: frame system "<name>" cannot be whilePaused`) when the phase is already declared, and the first `frame` stops when `addPhase` declares it later (`frame: system "<name>" of phase "<P>" of the frame cannot be whilePaused`).
 
 ### `Engine::setSystemStates`
 
@@ -194,7 +194,7 @@ Registers `Function` in the phase `P` with the access its parameters declare ([S
 
 - `inSet<S>()`: the system joins the set `S`.
 - `before` / `after`, each as `<S>()` (a set), `<&f>()` (every registration of `f`) or `("name")` (one system).
-- `whilePaused(bool = true)`: as [`setWhilePaused`](#enginesetwhilepaused). A system of a `Frame` phase cannot be `whilePaused` (`setWhilePaused: frame system "<name>" cannot be whilePaused`).
+- `whilePaused(bool = true)`: as [`setWhilePaused`](#enginesetwhilepaused). A system of a `Frame` phase cannot be `whilePaused`.
 - `inStates({...})`: as [`setSystemStates`](#enginesetsystemstates).
 - `id()`: the `SystemId`.
 

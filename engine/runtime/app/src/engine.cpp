@@ -261,6 +261,13 @@ namespace oly::app {
     const detail::SchedulePlan plan = detail::buildSchedule(input);
     std::vector<std::string> errors = plan.errors;
 
+    // setWhilePaused checks only a phase declared by then; a phase that addPhase declared later is checked here.
+    for (const SystemEntry& entry : systems_) {
+      if (entry.whilePaused && entry.info.schedule == ScheduleKind::Frame) {
+        errors.push_back("system \"" + entry.name + "\" of phase \"" + phases_[entry.info.phase].name + "\" of the frame cannot be whilePaused");
+      }
+    }
+
     for (SystemEntry& entry : systems_) {
       detail::ResolveContext context{world_, controls_, queues_, scheduler_, entry.name, errors};
       entry.descriptor->resolve(context, entry.slots);
